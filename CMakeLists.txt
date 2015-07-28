@@ -21,14 +21,21 @@ set(SRC src/ads)
 include_directories("${PROJECT_BINARY_DIR}/src")
 
 add_executable(ads
+    ${SRC}/spline.cpp
     src/main.cpp)
-    
+
+set(TSRC test)
+
+add_executable(test_solver
+    ${TSRC}/solver.cpp)
+
 target_link_libraries(ads lapack blas)
+
+target_link_libraries(test_solver lapack blas)
 
 # Unit testing
 # enable_testing()
 
-# set(TSRC test/ads)
 
 # add_executable(runUnitTests
 #     ${TSRC}/example.cpp)
