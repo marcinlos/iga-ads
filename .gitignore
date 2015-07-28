@@ -4,3 +4,6 @@ CMakeFiles/
 Makefile
 bin/
 cmake_install.cmake
+.cproject
+.project
+.settings
