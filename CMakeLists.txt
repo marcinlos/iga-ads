@@ -21,7 +21,7 @@ set(SRC src/ads)
 include_directories("${PROJECT_BINARY_DIR}/src")
 
 add_executable(ads
-    ${SRC}/spline.cpp
+    ${SRC}/bspline/bspline.cpp
     src/main.cpp)
 
 set(TSRC test)
@@ -34,11 +34,12 @@ target_link_libraries(ads lapack blas)
 target_link_libraries(test_solver lapack blas)
 
 # Unit testing
-# enable_testing()
+enable_testing()
 
 
-# add_executable(runUnitTests
-#     ${TSRC}/example.cpp)
+add_executable(runUnitTests
+    ${SRC}/bspline/bspline.cpp
+    ${TSRC}/ads/bspline/bspline_test.cpp
+    ${TSRC}/ads/bspline/eval_test.cpp)
     
-# target_link_libraries(runUnitTests unittest)
-    
+target_link_libraries(runUnitTests unittest pthread)

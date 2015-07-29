@@ -4,6 +4,7 @@ CMakeFiles/
 Makefile
 bin/
 cmake_install.cmake
+CTestTestfile.cmake
 .cproject
 .project
 .settings
