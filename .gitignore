@@ -1,6 +1,7 @@
 *.swp
 CMakeCache.txt
 CMakeFiles/
+Testing/
 Makefile
 bin/
 cmake_install.cmake

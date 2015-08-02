@@ -1,12 +1,9 @@
 #ifndef ADS_UTIL_HPP_
 #define ADS_UTIL_HPP_
 
+
 namespace ads {
 
-template <std::size_t N, typename T>
-constexpr std::size_t array_size(const T (&)[N]) {
-    return N;
-}
 
 template <typename Num>
 Num lerp(Num t, Num a, Num b) {

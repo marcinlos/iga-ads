@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include "ads/lin/band_matrix.hpp"
-#include "ads/lin/matrix.hpp"
+#include "ads/lin/tensor.hpp"
 
 // LAPACK routines
 extern "C" {
@@ -41,7 +41,7 @@ inline void factorize(band_matrix& a, solver_ctx& ctx) {
 }
 
 inline void solve_with_factorized(band_matrix& a, matrix& b, solver_ctx& ctx) {
-    int nrhs = b.cols();
+    int nrhs = b.size(1);
     const char* trans = "No transpose";
 
     dgbtrs_(trans, &a.n, &a.kl, &a.ku, &nrhs, a.data(), &ctx.ldab, ctx.pivot(), b.data(), &a.n, &ctx.info);
@@ -51,6 +51,7 @@ inline void solve(band_matrix& a, matrix& b, solver_ctx& ctx) {
     factorize(a, ctx);
     solve_with_factorized(a, b, ctx);
 }
+
 
 }
 }

@@ -1,8 +1,9 @@
 #ifndef ADS_LIN_BANDED_MATRIX_HPP_
 #define ADS_LIN_BANDED_MATRIX_HPP_
 
+#include <cstddef>
 #include <vector>
-#include "ads/lin/print_matrix.hpp"
+#include <iomanip>
 
 namespace ads {
 namespace lin {
@@ -70,9 +71,17 @@ private:
     }
 };
 
-inline std::ostream& operator <<(std::ostream& os, const band_matrix& m) {
-    return print_matrix(os, m);
+
+inline std::ostream& operator <<(std::ostream& os, const band_matrix& M) {
+    for (int i = 0; i < M.rows(); ++ i) {
+        for (int j = 0; j < M.cols(); ++ j) {
+            os << std::setw(12) << M(i, j) << ' ';
+        }
+        os << std::endl;
+    }
+    return os;
 }
+
 
 }
 }
