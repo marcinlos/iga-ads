@@ -85,7 +85,11 @@ struct standard_ordering : private impl::standard_ordering_indexer_<0, Rank> {
         return Indexer::sizes[dim];
     }
 
-    std::array<std::size_t, Rank> sizes() const {
+    std::size_t size() const {
+        return Indexer::size();
+    }
+
+    size_array sizes() const {
         return Indexer::sizes();
     }
 };

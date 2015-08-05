@@ -43,6 +43,14 @@ public:
         return Ordering::size(dim);
     }
 
+    std::size_t size() const {
+        return Ordering::size();
+    }
+
+    size_array sizes() const {
+        return Ordering::sizes();
+    }
+
 private:
     template <typename... Indices>
     void check_indices_(Indices...) const {

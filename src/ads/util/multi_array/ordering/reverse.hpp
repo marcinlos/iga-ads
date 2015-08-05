@@ -84,6 +84,10 @@ struct reverse_ordering : private impl::reverse_ordering_indexer_<Rank, Rank> {
         return Indexer::sizes[dim];
     }
 
+    std::size_t size() const {
+        return Indexer::size();
+    }
+
     size_array sizes() const {
         return Indexer::sizes;
     }
