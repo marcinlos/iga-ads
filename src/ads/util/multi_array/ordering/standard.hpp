@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <cassert>
+#include <array>
 #include "ads/util/meta.hpp"
 
 
@@ -17,40 +18,41 @@ struct standard_ordering_indexer_ : standard_ordering_indexer_<I + 1, Rank> {
     static_assert(I < Rank, "Index larger than rank");
 
     using Base = standard_ordering_indexer_<I + 1, Rank>;
+    using size_array = typename Base::size_array;
 
-    std::size_t n;
-
-    template <typename... Sizes>
-    standard_ordering_indexer_(std::size_t n, Sizes... extents)
-    : Base(extents...)
-    , n(n)
+    standard_ordering_indexer_(size_array sizes)
+    : Base { sizes }
     { }
 
     template <typename... Indices>
     std::size_t linearize(std::size_t base, std::size_t idx, Indices... indices) const {
-        assert(idx < n && "Index out of bounds");
-        return Base::linearize(base * n + idx, indices...);
-    }
-
-    std::size_t size(std::size_t dim) const {
-        return I == dim ? n : Base::size(dim);
+        assert(idx < n() && "Index out of bounds");
+        return Base::linearize(base * n() + idx, indices...);
     }
 
     std::size_t size() const {
-        return n * Base::size();
+        return n() * Base::size();
+    }
+
+private:
+    std::size_t n() const {
+        return std::get<I>(Base::sizes);
     }
 };
 
 template <std::size_t Rank>
 struct standard_ordering_indexer_<Rank, Rank> {
 
+    using size_array = std::array<std::size_t, Rank>;
+
+    size_array sizes;
+
+    standard_ordering_indexer_(size_array sizes)
+    : sizes(sizes)
+    { }
+
     std::size_t linearize(std::size_t base) const {
         return base;
-    }
-
-    std::size_t size(std::size_t) const {
-        assert(false && "Impossible");
-        return 0;
     }
 
     std::size_t size() const {
@@ -64,11 +66,12 @@ struct standard_ordering_indexer_<Rank, Rank> {
 template <std::size_t Rank>
 struct standard_ordering : private impl::standard_ordering_indexer_<0, Rank> {
 
+    using Self = standard_ordering<Rank>;
     using Indexer = impl::standard_ordering_indexer_<0, Rank>;
+    using size_array = std::array<std::size_t, Rank>;
 
-    template <typename... Sizes>
-    standard_ordering(Sizes... sizes)
-    : Indexer(sizes...)
+    standard_ordering(size_array sizes)
+    : Indexer { sizes }
     { }
 
     template <typename... Indices>
@@ -79,7 +82,11 @@ struct standard_ordering : private impl::standard_ordering_indexer_<0, Rank> {
 
     std::size_t size(std::size_t dim) const {
         assert(dim < Rank && "Index larger than rank");
-        return Indexer::size(dim);
+        return Indexer::sizes[dim];
+    }
+
+    std::array<std::size_t, Rank> sizes() const {
+        return Indexer::sizes();
     }
 };
 

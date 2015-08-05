@@ -16,7 +16,7 @@ template <
     typename... Sizes
 >
 multi_array_wrapper<T, DestDim, Buffer, DestOrder> reshape(multi_array_wrapper<T, D, Buffer, Order> a, Sizes... sizes) {
-    return { a.data, sizes... };
+    return { a.data, { sizes... } };
 }
 
 

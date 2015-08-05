@@ -40,14 +40,16 @@ inline void factorize(band_matrix& a, solver_ctx& ctx) {
     dgbtrf_(&a.n, &a.n, &a.kl, &a.ku, a.data(), &ctx.ldab, ctx.pivot(), &ctx.info);
 }
 
-inline void solve_with_factorized(band_matrix& a, matrix& b, solver_ctx& ctx) {
+template <typename Rhs>
+inline void solve_with_factorized(band_matrix& a, Rhs& b, solver_ctx& ctx) {
     int nrhs = b.size(1);
     const char* trans = "No transpose";
 
     dgbtrs_(trans, &a.n, &a.kl, &a.ku, &nrhs, a.data(), &ctx.ldab, ctx.pivot(), b.data(), &a.n, &ctx.info);
 }
 
-inline void solve(band_matrix& a, matrix& b, solver_ctx& ctx) {
+template <typename Rhs>
+inline void solve(band_matrix& a, Rhs& b, solver_ctx& ctx) {
     factorize(a, ctx);
     solve_with_factorized(a, b, ctx);
 }

@@ -2,6 +2,8 @@
 #define ADS_LIN_TENSOR_CYCLIC_TRANSPOSE_HPP_
 
 #include <cstddef>
+#include "ads/lin/tensor/base.hpp"
+#include "ads/lin/tensor/view.hpp"
 
 
 namespace ads {
@@ -60,6 +62,14 @@ struct cyclic_transpose_helper<T, S, Rank, Impl1, Impl2, Rank, std::size_t, Indi
 template <typename T, typename S, std::size_t Rank, typename Impl1, typename Impl2>
 void cyclic_transpose(const tensor_base<T, Rank, Impl1>& a, tensor_base<S, Rank, Impl2>& out) {
     impl::cyclic_transpose_helper<T, S, Rank, Impl1, Impl2, 0>::do_transpose(a, out);
+}
+
+
+template <typename T, std::size_t Rank, typename Impl>
+tensor_view<T, Rank> cyclic_transpose(const tensor_base<T, Rank, Impl>& a, double* out) {
+    tensor_view<T, Rank> view { out };
+    impl::cyclic_transpose_helper<T, T, Rank, Impl, decltype(view), 0>::do_transpose(a, out);
+    return view;
 }
 
 

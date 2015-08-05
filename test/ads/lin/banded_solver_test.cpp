@@ -25,7 +25,7 @@ struct banded_solver_test : unittest::testcase<> {
         int d = 4;
 
         band_matrix m(kl, ku, n);
-        matrix b(n, d);
+        matrix b({n, d});
 
         for (int i = 0; i < n; ++ i) {
             for (int j = std::max(0, i - kl); j < std::min(n, i + ku + 1); ++ j) {
@@ -37,7 +37,7 @@ struct banded_solver_test : unittest::testcase<> {
         }
 
         double solution[] = { 0.230377, -0.126052, -0.0016554, -0.00111222, 0.203603, -0.109609 };
-        matrix x(n, d);
+        matrix x({n, d});
         for (int i = 0; i < n; ++ i) {
             for (int j = 0; j < d; ++ j) {
                 x(i, j) = (j + 1) * solution[i];

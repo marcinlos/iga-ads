@@ -19,14 +19,11 @@ struct multi_array_base: private Order<Rank> {
 public:
     using Ordering = Order<Rank>;
     using Self = multi_array_base<T, Rank, Array>;
+    using size_array = typename Ordering::size_array;
 
-    template <typename... Sizes>
-    multi_array_base(Sizes... sizes)
-    : Ordering(sizes...)
-    {
-        static_assert(sizeof...(sizes) == Rank, "Invalid number of dimension sizes passed");
-        static_assert(util::all_<std::is_integral, Sizes...>::value, "Sizes need to be of integral type");
-    }
+    multi_array_base(const size_array& sizes)
+    : Ordering { sizes }
+    { }
 
     template <typename... Indices>
     const T& operator ()(Indices... indices) const {

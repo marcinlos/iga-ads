@@ -18,13 +18,13 @@ struct multi_array_wrapper : multi_array_base<T, Rank, multi_array_wrapper<T, Ra
 
     using Self = multi_array_wrapper<T, Rank, Buffer, Order>;
     using Base = multi_array_base<T, Rank, Self, Order>;
+    using size_array = typename Base::size_array;
 
     Buffer data;
 
-    template <typename... Sizes>
-    multi_array_wrapper(Buffer s, Sizes... sizes)
-    : Base(sizes...)
-    , data(s)
+    multi_array_wrapper(Buffer s, const size_array& sizes)
+    : Base { sizes }
+    , data { s }
     { }
 
 private:

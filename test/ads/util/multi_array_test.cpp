@@ -17,7 +17,7 @@ struct multi_array_test: unittest::testcase<> {
     void test_wrapper_indexing_2d() {
         constexpr int n = 2, m = 5;
         int buffer[n * m] = {0};
-        ads::multi_array_wrapper<int, 2, int*> a(buffer, n, m);
+        ads::multi_array_wrapper<int, 2, int*> a(buffer, {n, m});
         for (int i = 0; i < n; ++ i) {
             for (int j = 0; j < m; ++ j) {
                 a(i, j) = 10 * (i + 1) + j + 1;
@@ -30,7 +30,7 @@ struct multi_array_test: unittest::testcase<> {
     void test_simple_reshape() {
         constexpr int n = 2, m = 5;
         int buffer[n * m] = {0};
-        ads::multi_array_wrapper<int, 1, int*> a(buffer, n * m);
+        ads::multi_array_wrapper<int, 1, int*> a(buffer, {n * m});
         a(7) = 7;
         ads::multi_array_wrapper<int, 2, int*> a2 = reshape<2>(a, n, m);
         assert_equal(7, a2(1, 2));
@@ -39,7 +39,7 @@ struct multi_array_test: unittest::testcase<> {
     void test_constant_access() {
         constexpr int n = 2, m = 5;
         int buffer[n * m] = {0};
-        ads::multi_array_wrapper<int, 2, int*> a(buffer, n, m);
+        ads::multi_array_wrapper<int, 2, int*> a(buffer, {n, m});
         const auto& ca = a;
         ca(0, 1);
         // ca(0, 1) = 3; // doesn't compile
@@ -48,7 +48,7 @@ struct multi_array_test: unittest::testcase<> {
     void test_size_query() {
         constexpr int p = 2, q = 5, r = 3, s = 2;
         int buffer[p * q * r * s] = {0};
-        ads::multi_array_wrapper<int, 4, int*> a(buffer, p, q, r, s);
+        ads::multi_array_wrapper<int, 4, int*> a(buffer, {p, q, r, s});
 
         assert_equal(p, a.size(0));
         assert_equal(q, a.size(1));

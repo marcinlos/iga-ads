@@ -15,10 +15,13 @@ private:
     using Self = tensor_base<T, Rank, Impl>;
     using Base = multi_array_base<T, Rank, Self, reverse_ordering>;
 
+protected:
+    using size_array = std::array<std::size_t, Rank>;
+
 public:
-    template <typename... Sizes>
-    tensor_base(Sizes... sizes)
-    : Base { sizes... }
+
+    tensor_base(const size_array& sizes)
+    : Base { sizes }
     { }
 
     T* data() {

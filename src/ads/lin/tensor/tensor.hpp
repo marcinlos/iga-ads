@@ -9,13 +9,13 @@ namespace lin {
 
 namespace impl {
 
-constexpr inline std::size_t product() {
-    return 1;
-}
-
-template <typename Value, typename... Values>
-constexpr Value product(Value a, Values... as) {
-    return a * product(as...);
+template <std::size_t N>
+inline std::size_t product(const std::array<std::size_t, N>& ns) {
+    std::size_t p = 1;
+    for (auto n: ns) {
+        p *= n;
+    }
+    return p;
 }
 
 }
@@ -26,14 +26,14 @@ private:
 
     using Self = tensor<T, Rank>;
     using Base = tensor_base<T, Rank, Self>;
+    using size_array = typename Base::size_array;
 
     std::vector<T> buffer_;
 
 public:
-    template <typename... Sizes>
-    tensor(Sizes... sizes)
-    : Base { sizes... }
-    , buffer_(impl::product(sizes...))
+    tensor(const size_array& sizes)
+    : Base { sizes }
+    , buffer_(impl::product(sizes))
     { }
 
     T* data() {

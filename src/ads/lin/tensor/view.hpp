@@ -13,13 +13,13 @@ private:
 
     using Self = tensor_view<T, Rank>;
     using Base = tensor_base<T, Rank, Self>;
+    using size_array = typename Base::size_array;
 
     T* data_;
 
 public:
-    template <typename... Sizes>
-    tensor_view(T* data, Sizes... sizes)
-    : Base { sizes... }
+    tensor_view(T* data, const size_array& sizes)
+    : Base { sizes }
     , data_ { data }
     { }
 
@@ -32,6 +32,12 @@ public:
     }
 };
 
+template <typename T, typename... Sizes>
+tensor_view<T, sizeof...(Sizes)> as_tensor(T* data, Sizes... sizes) {
+    constexpr auto N = sizeof...(Sizes);
+    std::array<std::size_t, N> sz { sizes... };
+    return { data, sz };
+}
 
 }
 }
