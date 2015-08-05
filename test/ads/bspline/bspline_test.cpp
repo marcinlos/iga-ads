@@ -2,7 +2,9 @@
 #include "ads/bspline/bspline.hpp"
 
 using namespace unittest::assertions;
-using namespace ads::bspline;
+
+namespace ads {
+namespace bspline {
 
 struct bspline_test: unittest::testcase<> {
 
@@ -10,12 +12,13 @@ struct bspline_test: unittest::testcase<> {
         UNITTEST_CLASS(bspline_test)
         UNITTEST_RUN(create_basis_test)
         UNITTEST_RUN(find_span_test)
+        UNITTEST_RUN(first_nonzero_dofs_test)
     }
 
     void create_basis_test() {
         basis b = create_basis(0, 1, 2, 4);
         double expected[] = { 0, 0, 0, 0.25, 0.5, 0.75, 1, 1, 1 };
-        assert_equal_containers(b.knot, expected, "quadratic basis");
+        assert_equal_containers(expected, b.knot, "quadratic basis");
     }
 
     void find_span_test() {
@@ -32,6 +35,16 @@ struct bspline_test: unittest::testcase<> {
         assert_equal(5, find_span(1, b), "x = 1");
         assert_equal(5, find_span(2, b), "x = 2");
     }
+
+    void first_nonzero_dofs_test() {
+        basis b = create_basis(0, 1, 2, 4);
+        std::vector<int> dofs = first_nonzero_dofs(b);
+        int expected[] = { 0, 1, 2, 3 };
+        assert_equal_containers(expected, dofs);
+    }
 };
 
 REGISTER(bspline_test)
+
+}
+}

@@ -2,6 +2,7 @@
 #define ADS_SPLINE_HPP_
 
 #include <vector>
+#include "ads/util/multi_array.hpp"
 
 namespace ads {
 namespace bspline {
@@ -18,6 +19,10 @@ struct basis {
 
     int dofs() const {
         return knot_size() - degree - 1;
+    }
+
+    int dofs_per_element() const {
+        return degree + 1;
     }
 
     int elements() const {
@@ -45,7 +50,7 @@ struct basis {
     }
 };
 
-struct eval_array {
+struct basis_eval_array {
 private:
     double* data_;
     int cols;
@@ -54,7 +59,7 @@ private:
         return i * cols + j;
     }
 public:
-    eval_array(double* data, int cols)
+    basis_eval_array(double* data, int cols)
     : data_(data)
     , cols(cols)
     { }
@@ -69,16 +74,16 @@ public:
     }
 };
 
-struct eval_ctx {
+struct basis_eval_ctx {
 private:
     std::vector<double> buffer;
     int right_offset;
 
 public:
-    eval_array ndu;
-    eval_array a;
+    basis_eval_array ndu;
+    basis_eval_array a;
 
-    eval_ctx(int p)
+    basis_eval_ctx(int p)
     : buffer((p + 1) * (2 + (p + 1) + 2))
     , right_offset(p + 1)
     , ndu(buffer.data() + 2 * (p + 1), p + 1)
@@ -94,6 +99,23 @@ public:
     }
 };
 
+
+struct eval_ctx : public basis_eval_ctx {
+private:
+    std::vector<double> buffer_;
+public:
+
+    eval_ctx(int p)
+    : basis_eval_ctx(p)
+    , buffer_(p + 1)
+    { }
+
+    double* basis_vals() {
+        return buffer_.data();
+    }
+};
+
+
 /**
  * Create B-spline basis of specified order with given number of elements on given interval
  *
@@ -106,9 +128,13 @@ basis create_basis(double a, double b, int degree, int elements);
 
 int find_span(double x, const basis& b);
 
-void eval_basis(int i, double x, const basis& b, double* out, eval_ctx& ctx);
+void eval_basis(int i, double x, const basis& b, double* out, basis_eval_ctx& ctx);
 
-void eval_basis_with_derivatives(int i, double x, const basis& b, double** out, int d, eval_ctx& ctx);
+void eval_basis_with_derivatives(int i, double x, const basis& b, double** out, int d, basis_eval_ctx& ctx);
+
+double eval(double x, const double* u, const basis& b, eval_ctx& ctx);
+
+std::vector<int> first_nonzero_dofs(const basis& b);
 
 }
 }

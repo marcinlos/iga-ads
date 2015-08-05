@@ -1,4 +1,4 @@
-#include <ads/bspline/bspline.hpp>
+#include "ads/bspline/bspline.hpp"
 #include "ads/util.hpp"
 #include <iostream>
 #include <vector>
@@ -46,7 +46,7 @@ int find_span(double x, const basis& b) {
 }
 
 
-void eval_basis(int i, double x, const basis& b, double* out, eval_ctx& ctx) {
+void eval_basis(int i, double x, const basis& b, double* out, basis_eval_ctx& ctx) {
     auto left = ctx.left();
     auto right = ctx.right();
 
@@ -66,7 +66,7 @@ void eval_basis(int i, double x, const basis& b, double* out, eval_ctx& ctx) {
 }
 
 
-void eval_basis_with_derivatives(int i, double x, const basis& b, double** out, int der, eval_ctx& ctx) {
+void eval_basis_with_derivatives(int i, double x, const basis& b, double** out, int der, basis_eval_ctx& ctx) {
     auto& ndu = ctx.ndu;
     auto& a = ctx.a;
     auto left = ctx.left();
@@ -121,6 +121,31 @@ void eval_basis_with_derivatives(int i, double x, const basis& b, double** out, 
         }
         r *= (b.degree - k);
     }
+}
+
+double eval(double x, const double* u, const basis& b, eval_ctx& ctx) {
+    int span = find_span(x, b);
+    double* bvals = ctx.basis_vals();
+    eval_basis(span, x, b, bvals, ctx);
+    int offset = span - b.degree; // first nonzero function on element
+
+    double value = 0;
+    for (int i = 0; i <= b.degree; ++ i) {
+        value += u[i + offset] * bvals[i];
+    }
+    return value;
+}
+
+std::vector<int> first_nonzero_dofs(const basis& b) {
+    std::vector<int> dofs(b.elements());
+    int p = b.degree;
+    int e = 0;
+    for (int i = p; i < b.knot_size() - p; ++ i) {
+        if (b.knot[i] != b.knot[i + 1]) {
+            dofs[e ++] = i - p;
+        }
+    }
+    return dofs;
 }
 
 }
