@@ -43,7 +43,16 @@ public:
     const T* data() const {
         return buffer_.data();
     }
+
+    void fill_with_zeros() {
+        buffer_.assign(buffer_.size(), T{});
+    }
 };
+
+template <typename T, std::size_t Rank>
+void zero(tensor<T, Rank>& tensor) {
+    tensor.fill_with_zeros();
+}
 
 }
 }

@@ -32,6 +32,7 @@ public:
         return self_()->data();
     }
 
+
 private:
     friend Base;
 
