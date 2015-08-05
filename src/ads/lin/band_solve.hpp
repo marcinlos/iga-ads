@@ -8,10 +8,33 @@
 // LAPACK routines
 extern "C" {
 
-int dgbtrf_(int* m, int* n, int* kl, int* ku, double* ab, int* ldab, int* ipiv, int* info);
+using in_int = const int*;
+using in_int_array = const int*;
+using out_int = int*;
+using out_int_array = int*;
 
-int dgbtrs_(const char* trans, int* n, int* kl, int* ku, int* nrhs, double* ab, int* ldab,
-        int* ipiv, double* b, int* ldb, int* info);
+int dgbtrf_(
+        in_int m,
+        in_int n,
+        in_int kl,
+        in_int ku,
+        double* ab,
+        in_int ldab,
+        out_int_array ipiv,
+        out_int info);
+
+int dgbtrs_(
+        const char* trans,
+        in_int n,
+        in_int kl,
+        in_int ku,
+        in_int nrhs,
+        const double* ab,
+        in_int ldab,
+        in_int_array ipiv,
+        double* b,
+        in_int ldb,
+        out_int info);
 }
 
 namespace ads {
@@ -41,8 +64,8 @@ inline void factorize(band_matrix& a, solver_ctx& ctx) {
 }
 
 template <typename Rhs>
-inline void solve_with_factorized(band_matrix& a, Rhs& b, solver_ctx& ctx) {
-    int nrhs = b.size(1);
+inline void solve_with_factorized(const band_matrix& a, Rhs& b, solver_ctx& ctx) {
+    int nrhs = b.size() / b.size(0);
     const char* trans = "No transpose";
 
     dgbtrs_(trans, &a.n, &a.kl, &a.ku, &nrhs, a.data(), &ctx.ldab, ctx.pivot(), b.data(), &a.n, &ctx.info);
