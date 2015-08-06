@@ -78,14 +78,13 @@ struct vtk : output_base {
     : output_base { format }
     { }
 
-    template <typename... Iters, typename... Values>
-    void print(std::ostream& os, const grid<Iters...>& grid, const Values&... values) {
+    template <typename... Iters>
+    void print_header(std::ostream& os, const grid<Iters...>& grid, std::size_t value_count) {
         using boost::format;
-        constexpr auto dim = sizeof...(Iters);
-        auto origin = repeat(0, dim);
+        constexpr auto paraview_dim = 3;
+        auto origin = repeat(0, paraview_dim);
         auto extent = make_extent(dims(grid));
-        auto spacing = repeat(1, dim);
-        auto value_count = sizeof...(Values);
+        auto spacing = repeat(1, paraview_dim);
 
         os << "<?xml version=\"1.0\"?>" << std::endl;
         os << "<VTKFile type=\"ImageData\" version=\"0.1\">" << std::endl;
@@ -95,14 +94,24 @@ struct vtk : output_base {
         os <<        "      <PointData Scalars=\"Result\">" << std::endl;
         os << format("        <DataArray Name=\"Result\"  type=\"Float32\" "
                 "format=\"ascii\" NumberOfComponents=\"%d\">") % value_count << std::endl;
-        impl::vtk_print_helper<Iters...> printer { output_base::format };
-        printer.print(os, grid, values...);
-        // data
+    }
+
+    void print_end(std::ostream& os) {
         os << "        </DataArray>" << std::endl;
         os << "      </PointData>" << std::endl;
         os << "    </Piece>" << std::endl;
         os << "  </ImageData>" << std::endl;
         os << "</VTKFile>" << std::endl;
+    }
+
+    template <typename... Iters, typename... Values>
+    void print(std::ostream& os, const grid<Iters...>& grid, const Values&... values) {
+        auto value_count = sizeof...(Values);
+        impl::vtk_print_helper<Iters...> printer { output_base::format };
+
+        print_header(os, grid, value_count);
+        printer.print(os, grid, values...);
+        print_end(os);
     }
 
 private:
@@ -114,7 +123,8 @@ private:
 
     template <typename T, std::size_t N>
     std::string make_extent(const std::array<T, N>& extents) {
-        std::vector<T> exts(2 * N);
+        constexpr std::size_t dim = 3; // paraview needs 3D
+        std::vector<T> exts(2 * dim);
         for (std::size_t i = 0; i < N; ++ i) {
             exts[2 * i + 1] = extents[i] - 1;
         }
