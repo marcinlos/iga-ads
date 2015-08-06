@@ -24,9 +24,11 @@ double eval(double x, double y, const U& u, const basis& bx, const basis& by, ev
 
     double value = 0;
     for (int ix = 0; ix < bx.dofs_per_element(); ++ ix) {
-        for (int iy = 0; iy < by.dofs_per_element(); ++ iy) {
-            value += u(ix + offsetx, iy + offsety) * bvx[ix] * bvy[iy];
-        }
+    for (int iy = 0; iy < by.dofs_per_element(); ++ iy) {
+        int ixx = ix + offsetx;
+        int iyy = iy + offsety;
+        value += u(ixx, iyy) * bvx[ix] * bvy[iy];
+    }
     }
     return value;
 }
