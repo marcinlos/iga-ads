@@ -26,9 +26,6 @@ void ads_solve(Rhs& rhs, Rhs& buf, const dim_data& dim1, const dim_data& dim2) {
 
     lin::solve_with_factorized(dim2.M, F2, dim2.ctx);
     lin::cyclic_transpose(F2, rhs);
-
-    using std::swap;
-    swap(buf, rhs);
 }
 
 
