@@ -11,9 +11,9 @@ using knot_vector = std::vector<double>;
 
 struct basis {
     knot_vector knot;
-    int degree;
+    std::size_t degree;
 
-    int knot_size() const {
+    std::size_t knot_size() const {
         return knot.size();
     }
 
