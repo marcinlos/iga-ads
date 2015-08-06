@@ -140,7 +140,7 @@ std::vector<int> first_nonzero_dofs(const basis& b) {
     std::vector<int> dofs(b.elements());
     int p = b.degree;
     int e = 0;
-    for (int i = p; i < b.knot_size() - p; ++ i) {
+    for (std::size_t i = p; i < b.knot_size() - p; ++ i) {
         if (b.knot[i] != b.knot[i + 1]) {
             dofs[e ++] = i - p;
         }
