@@ -52,7 +52,7 @@ public:
     }
 };
 
-output_format fixed_format(std::streamsize precision, std::streamsize width) {
+inline output_format fixed_format(std::streamsize precision, std::streamsize width) {
     output_format fmt { precision, width };
     fmt.flags(std::ios_base::fixed, std::ios_base::floatfield);
     return fmt;

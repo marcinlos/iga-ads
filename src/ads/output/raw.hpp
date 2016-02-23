@@ -22,7 +22,7 @@ struct raw_printer : output_base {
         ads::util::stream_state_saver guard(os);
         prepare_stream(os);
         for (std::size_t i = 0; i < count; ++ i) {
-            print_row(os, data[i]...);
+            print_row(os, data(i)...);
         }
     }
 

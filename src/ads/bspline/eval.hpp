@@ -1,10 +1,25 @@
-#ifndef ADS_BSPLINE_MULTIDIMENSIONAL_HPP_
-#define ADS_BSPLINE_MULTIDIMENSIONAL_HPP_
+#ifndef ADS_BSPLINE_EVAL_HPP_
+#define ADS_BSPLINE_EVAL_HPP_
 
 #include "ads/bspline/bspline.hpp"
 
 namespace ads {
 namespace bspline {
+
+
+template <typename U>
+double eval(double x, const U& u, const basis& b, eval_ctx& ctx) {
+    int span = find_span(x, b);
+    double* bvals = ctx.basis_vals();
+    eval_basis(span, x, b, bvals, ctx);
+    int offset = span - b.degree; // first nonzero function on element
+
+    double value = 0;
+    for (int i = 0; i <= b.degree; ++ i) {
+        value += u(i + offset) * bvals[i];
+    }
+    return value;
+}
 
 
 template <typename U>
@@ -76,4 +91,4 @@ double eval(double x, double y, double z,
 }
 
 
-#endif /* ADS_BSPLINE_MULTIDIMENSIONAL_HPP_ */
+#endif /* ADS_BSPLINE_EVAL_HPP_ */

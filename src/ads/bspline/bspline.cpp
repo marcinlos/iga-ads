@@ -123,19 +123,6 @@ void eval_basis_with_derivatives(int i, double x, const basis& b, double** out, 
     }
 }
 
-double eval(double x, const double* u, const basis& b, eval_ctx& ctx) {
-    int span = find_span(x, b);
-    double* bvals = ctx.basis_vals();
-    eval_basis(span, x, b, bvals, ctx);
-    int offset = span - b.degree; // first nonzero function on element
-
-    double value = 0;
-    for (int i = 0; i <= b.degree; ++ i) {
-        value += u[i + offset] * bvals[i];
-    }
-    return value;
-}
-
 std::vector<int> first_nonzero_dofs(const basis& b) {
     std::vector<int> dofs(b.elements());
     int p = b.degree;

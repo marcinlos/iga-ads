@@ -1,22 +1,70 @@
 #ifndef ADS_OUTPUT_MANAGER_HPP_
 #define ADS_OUTPUT_MANAGER_HPP_
 
+#include <ads/bspline/eval.hpp>
 #include <cstddef>
 #include <vector>
 #include <fstream>
 #include <boost/format.hpp>
 #include "ads/bspline/bspline.hpp"
-#include "ads/bspline/multidimensional.hpp"
 #include "ads/output/output_format.hpp"
 #include "ads/output/range.hpp"
 #include "ads/output/grid.hpp"
 #include "ads/output/vtk.hpp"
+#include "ads/output/gnuplot.hpp"
 
 
 namespace ads {
 
 template <std::size_t Dim>
 struct output_manager;
+
+
+
+template <>
+struct output_manager<1> {
+
+    std::size_t n;
+    const bspline::basis& bx;
+    std::vector<double> xs;
+    lin::tensor<double, 1> vals;
+    bspline::eval_ctx cx;
+
+    output_manager(const bspline::basis& bx, std::size_t n)
+    : n { n }
+    , bx { bx }
+    , xs(n + 1)
+    , vals {{ n + 1 }}
+    , cx { bx.degree }
+    {
+        for (std::size_t i = 0; i <= n; ++ i) {
+            xs[i] = ads::lerp(i, n, bx.begin(), bx.end());
+        }
+    }
+
+    template <typename Solution>
+    void to_file(const Solution& sol, const std::string& output_file) {
+        for (std::size_t i = 0; i <= n; ++ i) {
+            vals(i) = bspline::eval(xs[i], sol, bx, cx);
+        }
+
+        auto xrange = output::from_container(xs);
+        auto grid = output::make_grid(xrange);
+
+        output::gnuplot_printer<1> output { output::fixed_format(10, 18) };
+        std::ofstream os { output_file };
+        output.print(os, grid, vals);
+    }
+
+    template <typename Solution>
+    void to_file(const Solution& sol, const std::string& file_pattern, int iter) {
+        auto name = str(boost::format(file_pattern) % iter);
+        to_file(sol, name);
+    }
+
+};
+
+
 
 
 template <>

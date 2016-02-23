@@ -22,22 +22,15 @@ struct gnuplot_printer<1> : output_base {
     : output_base { format }
     { }
 
-    template <typename Seq, typename... Values>
-    void print(std::ostream& os, const Seq& x, const Values&... values) {
-        raw_printer printer { format };
-        printer.print(os, x, values...);
-    }
-
     template <typename RangeIter, typename... Values>
     void print(std::ostream& os, const range<RangeIter>& xrange, const Values&... values) {
-        raw_printer printer { format };
-        printer.print(os, xrange.size(), xrange, values...);
+        print(os, make_grid(xrange), values...);
     }
 
     template <typename Iter, typename... Values>
     void print(std::ostream& os, const grid<Iter>& grid, const Values&... values) {
         raw_printer printer { format };
-        printer.print(os, values...);
+        printer.print(os, get_range<0>(grid).size(), values...);
     }
 };
 
@@ -59,7 +52,7 @@ struct gnuplot_printer<2> : output_base {
         const auto& ys = get_range<1>(grid);
         for (std::size_t i = 0; i < xs.size(); ++ i) {
             for (std::size_t j = 0; j < ys.size(); ++ j) {
-                print_row(os, xs[i], ys[j], values[i][j]...);
+                print_row(os, xs[i], ys[j], values(i, j)...);
             }
         }
     }
