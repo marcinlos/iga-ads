@@ -10,6 +10,54 @@ namespace heat {
 
 
 template <typename Rhs>
+void rhs1d(const Rhs& U_prev, Rhs& U, const basis_data& d1, double dt) {
+    zero(U);
+
+    for (element_id e1 = 0; e1 < d1.elements; ++ e1) {
+        double J = d1.J[e1];
+        int first1 = d1.first_dof(e1);
+        int last1 = d1.last_dof(e1);
+
+        for (int q1 = 0; q1 < d1.quad_order; ++ q1) {
+            double w = d1.w[q1];
+
+            for (int a1 = 0; a1 + first1 <= last1; ++ a1) {
+                int i1 = a1 + first1;
+
+                double B1 = d1.b[e1][q1][0][a1];
+                double dB1 = d1.b[e1][q1][1][a1];
+
+                double v = B1;
+                double dxv = dB1;
+
+                double u = 0;
+                double dxu = 0;
+                for (int b1 = 0; b1 + first1 <= last1; ++ b1) {
+                    int j1 = b1 + first1;
+
+                    double B1 = d1.b[e1][q1][0][b1];
+                    double dB1 = d1.b[e1][q1][1][b1];
+
+                    double B = B1;
+                    double dxB = dB1;
+
+                    double c = U_prev(j1);
+                    u   += c * B;
+                    dxu += c * dxB;
+                }
+
+                double gradient_prod = dxu * dxv;
+                double val = u * v - dt * gradient_prod;
+                U(i1) += val * w * J;
+            }
+        }
+    }
+}
+
+
+
+
+template <typename Rhs>
 void rhs2d(const Rhs& U_prev, Rhs& U, const basis_data& d1, const basis_data& d2, double dt) {
     zero(U);
 
