@@ -15,7 +15,7 @@ include_directories("${PROJECT_SOURCE_DIR}/src")
 # We use C++14
 set(std_version "-std=c++14")
 set(optimization "-O2")
-set(warnings "-Wall -Wextra -pedantic")
+set(warnings "-Wall -Wextra -pedantic -Wno-narrowing")
 
 set(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} -g ${optimization} ${warnings} ${std_version}")
