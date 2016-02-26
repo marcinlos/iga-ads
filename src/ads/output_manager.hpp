@@ -1,12 +1,17 @@
 #ifndef ADS_OUTPUT_MANAGER_HPP_
 #define ADS_OUTPUT_MANAGER_HPP_
 
-#include <ads/bspline/eval.hpp>
 #include <cstddef>
 #include <vector>
 #include <fstream>
 #include <boost/format.hpp>
+
+#include "ads/util.hpp"
 #include "ads/bspline/bspline.hpp"
+#include "ads/bspline/eval.hpp"
+
+#include "ads/lin/tensor.hpp"
+
 #include "ads/output/output_format.hpp"
 #include "ads/output/range.hpp"
 #include "ads/output/grid.hpp"
@@ -18,8 +23,6 @@ namespace ads {
 
 template <std::size_t Dim>
 struct output_manager;
-
-
 
 template <>
 struct output_manager<1> {
