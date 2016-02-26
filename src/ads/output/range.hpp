@@ -50,7 +50,7 @@ RangeIter end(const range<RangeIter>& r) {
 
 
 template <typename Cont>
-auto from_container(const Cont& cont) {
+auto from_container(const Cont& cont) -> range<decltype(begin(cont))> {
     using std::begin;
     using std::end;
     return range<decltype(begin(cont))> { begin(cont), end(cont) };
