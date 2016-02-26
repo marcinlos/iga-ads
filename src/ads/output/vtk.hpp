@@ -5,6 +5,7 @@
 #include "ads/output/output_base.hpp"
 #include "ads/output/grid.hpp"
 #include "ads/lin/tensor/base.hpp"
+#include "ads/lin/tensor/for_each.hpp"
 #include "ads/util/io.hpp"
 
 
@@ -25,50 +26,10 @@ struct vtk_print_helper : output_base {
         util::stream_state_saver guard(os);
         prepare_stream(os);
         for_each_multiindex([this,&os,&value,&values...](auto... is) {
-            this->print_row(os, value(is...), values(is...)...);
+            print_row(os, value(is...), values(is...)...);
         }, value);
     }
-
 };
-
-template <
-    typename T,
-    std::size_t Rank,
-    std::size_t I,
-    typename Tensor,
-    typename... Indices
->
-struct tensor_helper {
-
-    using Next = tensor_helper<T, Rank, I + 1, Tensor, std::size_t, Indices...>;
-
-    template <typename F>
-    static void for_each_multiindex(F fun, const Tensor& t, Indices... indices) {
-        auto size = t.size(I);
-        for (std::size_t i = 0; i < size; ++ i) {
-            Next::for_each_multiindex(fun, t, i, indices...);
-        }
-    }
-};
-
-template <
-    typename T,
-    std::size_t Rank,
-    typename Tensor,
-    typename... Indices
->
-struct tensor_helper<T, Rank, Rank, Tensor, Indices...> {
-
-    template <typename F>
-    static void for_each_multiindex(F fun, const Tensor&, Indices... indices) {
-        fun(indices...);
-    }
-};
-
-template <typename T, std::size_t Rank, typename Impl, typename F>
-void for_each_multiindex(F fun, const lin::tensor_base<T, Rank, Impl>& t) {
-    tensor_helper<T, Rank, 0, lin::tensor_base<T, Rank, Impl>>::for_each_multiindex(fun, t);
-}
 
 }
 
