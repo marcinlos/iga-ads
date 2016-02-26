@@ -4,6 +4,10 @@
 
 namespace ads {
 
+template <typename T>
+T clamp(T x, T min, T max) {
+    return x < min ? min : x > max ? max : x;
+}
 
 template <typename Num>
 Num lerp(Num t, Num a, Num b) {
