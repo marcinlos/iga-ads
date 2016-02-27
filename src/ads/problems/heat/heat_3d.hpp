@@ -7,6 +7,7 @@
 #include "ads/simulation.hpp"
 #include <complex>
 
+
 namespace ads {
 namespace problems {
 
@@ -53,47 +54,22 @@ private:
     void compute_rhs() {
         auto& rhs = u;
 
-        const auto& bx = x.basis;
-        const auto& by = y.basis;
-        const auto& bz = z.basis;
-
         zero(rhs);
-        for (element_id e1 = 0; e1 < bx.elements; ++ e1) {
-        for (element_id e2 = 0; e2 < by.elements; ++ e2) {
-        for (element_id e3 = 0; e3 < bz.elements; ++ e3) {
-            double J = bx.J[e1] * by.J[e2] * bz.J[e3];
-            int first1 = bx.first_dof(e1);
-            int last1 = bx.last_dof(e1);
-            int first2 = by.first_dof(e2);
-            int last2 = by.last_dof(e2);
-            int first3 = bz.first_dof(e3);
-            int last3 = bz.last_dof(e3);
-
-            for (int q1 = 0; q1 < bx.quad_order; ++ q1) {
-            for (int q2 = 0; q2 < by.quad_order; ++ q2) {
-            for (int q3 = 0; q3 < bz.quad_order; ++ q3) {
-                double w = bx.w[q1] * by.w[q2] * bz.w[q3];
-
-                for (int a1 = first1; a1 <= last1; ++ a1) {
-                for (int a2 = first2; a2 <= last2; ++ a2) {
-                for (int a3 = first3; a3 <= last3; ++ a3) {
-                    value_type v = eval_basis(e1, e2, e3, q1, q2, q3, a1, a2, a3);
-                    value_type u = eval_fun(u_prev, e1, e2, e3, q1, q2, q3);
+        for (auto e : elements()) {
+            double J = jacobian(e);
+            for (auto q : quad_points()) {
+                double w = weigth(q);
+                for (auto a : dofs_on_element(e)) {
+                    value_type v = eval_basis(e, q, a);
+                    value_type u = eval_fun(u_prev, e, q);
 
                     double gradient_prod = u.dx * v.dx + u.dy * v.dy + u.dz * v.dz;
                     double val = u.val * v.val - steps.dt * gradient_prod;
-                    rhs(a1, a2, a3) += val * w * J;
-                }
-                }
+                    rhs(a[0], a[1], a[2]) += val * w * J;
                 }
             }
-            }
-            }
-        }
-        }
         }
     }
-
 };
 
 }

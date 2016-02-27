@@ -1,6 +1,8 @@
 #ifndef ADS_SIMULATION_DIMENSION_HPP_
 #define ADS_SIMULATION_DIMENSION_HPP_
 
+#include <boost/range/counting_range.hpp>
+
 #include "ads/lin/band_matrix.hpp"
 #include "ads/lin/band_solve.hpp"
 #include "ads/solver.hpp"
@@ -15,6 +17,8 @@ namespace ads {
 
 class dimension {
 public:
+    using element_range_type = decltype(boost::counting_range(0, 0));
+
     int p;
     int elements;
     double a;
@@ -39,6 +43,10 @@ public:
 
     int dofs() const {
         return B.dofs();
+    }
+
+    element_range_type element_indices() const {
+        return boost::counting_range(0, elements);
     }
 
     dim_data data() {
