@@ -3,7 +3,11 @@
 
 #include <array>
 #include <cstddef>
+#include <array>
+#include <boost/range/counting_range.hpp>
+
 #include "ads/util/function_value.hpp"
+#include "ads/util/iter/product.hpp"
 #include "ads/simulation/dimension.hpp"
 #include "ads/lin/tensor.hpp"
 #include "ads/solver.hpp"
@@ -19,6 +23,13 @@ protected:
     using vector_type = lin::tensor<double, 2>;
     using value_type = function_value_2d;
 
+    using index_type = std::array<int, 2>;
+    using index_1d_iter_type = boost::counting_iterator<int>;
+    using index_iter_type = util::iter_product2<index_1d_iter_type, index_type>;
+    using index_range = boost::iterator_range<index_iter_type>;
+
+    using point_type = std::array<double, 2>;
+
     dimension x, y;
     vector_type buffer;
 
@@ -31,6 +42,10 @@ protected:
         compute_projection(v, x.basis, y.basis, f);
     }
 
+    double grad_dot(value_type a, value_type b) const {
+        return a.dx * b.dx + a.dy * b.dy;
+    }
+
     std::array<std::size_t, 2> shape() const {
         return {x.dofs(), y.dofs()};
     }
@@ -40,17 +55,47 @@ protected:
         y.factorize_matrix();
     }
 
-    value_type eval_basis(int e1, int e2, int q1, int q2, int a1, int a2) {
+    index_range elements() const {
+        return util::product_range<index_type>(x.element_indices(), y.element_indices());
+    }
+
+    index_range quad_points() const {
+        auto rx = boost::counting_range(0, x.basis.quad_order);
+        auto ry = boost::counting_range(0, y.basis.quad_order);
+        return util::product_range<index_type>(rx, ry);
+    }
+
+    index_range dofs_on_element(index_type e) const {
+        auto rx = x.basis.dof_range(e[0]);
+        auto ry = y.basis.dof_range(e[1]);
+        return util::product_range<index_type>(rx, ry);
+    }
+
+    double jacobian(index_type e) const {
+        return x.basis.J[e[0]] * y.basis.J[e[1]];
+    }
+
+    double weigth(index_type q) const {
+        return x.basis.w[q[0]] * y.basis.w[q[1]];
+    }
+
+    point_type point(index_type e, index_type q) const {
+        double px = x.basis.x[e[0]][q[0]];
+        double py = y.basis.x[e[1]][q[1]];
+        return { px, py };
+    }
+
+    value_type eval_basis(index_type e, index_type q, index_type a) {
         const auto& bx = x.basis;
         const auto& by = y.basis;
 
-        int first1 = bx.first_dof(e1);
-        int first2 = by.first_dof(e2);
+        int first1 = bx.first_dof(e[0]);
+        int first2 = by.first_dof(e[1]);
 
-        double B1  = bx.b[e1][q1][0][a1 - first1];
-        double B2  = by.b[e2][q2][0][a2 - first2];
-        double dB1 = bx.b[e1][q1][1][a1 - first1];
-        double dB2 = by.b[e2][q2][1][a2 - first2];
+        double B1  = bx.b[e[0]][q[0]][0][a[0] - first1];
+        double B2  = by.b[e[1]][q[1]][0][a[1] - first2];
+        double dB1 = bx.b[e[0]][q[0]][1][a[0] - first1];
+        double dB2 = by.b[e[1]][q[1]][1][a[1] - first2];
 
         double v = B1 * B2;
         double dxv = dB1 *  B2;
@@ -59,19 +104,12 @@ protected:
         return { v, dxv, dyv };
     }
 
-    value_type eval_fun(const vector_type& v, int e1, int e2, int q1, int q2) {
-        int first1 = x.basis.first_dof(e1);
-        int last1  = x.basis.last_dof(e1);
-        int first2 = y.basis.first_dof(e2);
-        int last2  = y.basis.last_dof(e2);
-
+    value_type eval_fun(const vector_type& v, index_type e, index_type q) {
         value_type u{};
-        for (int b1 = first1; b1 <= last1; ++ b1) {
-        for (int b2 = first2; b2 <= last2; ++ b2) {
-            double c = v(b1, b2);
-            value_type B = eval_basis(e1, e2, q1, q2, b1, b2);
+        for (auto b : dofs_on_element(e)) {
+            double c = v(b[0], b[1]);
+            value_type B = eval_basis(e, q, b);
             u += c * B;
-        }
         }
         return u;
     }
@@ -85,6 +123,8 @@ public:
     , buffer{shape()}
     { }
 };
+
+}
 
 
 #endif /* ADS_SIMULATION_SIMULATION_2D_HPP_ */

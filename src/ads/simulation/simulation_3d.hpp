@@ -3,7 +3,6 @@
 
 #include <cstddef>
 #include <array>
-#include <tuple>
 #include <boost/range/counting_range.hpp>
 
 #include "ads/util/function_value.hpp"
@@ -28,6 +27,8 @@ protected:
     using index_iter_type = util::iter_product3<index_1d_iter_type, index_type>;
     using index_range = boost::iterator_range<index_iter_type>;
 
+    using point_type = std::array<double, 3>;
+
     dimension x, y, z;
     vector_type buffer;
 
@@ -38,6 +39,10 @@ protected:
     template <typename Function>
     void projection(vector_type& v, Function f) {
         compute_projection(v, x.basis, y.basis, z.basis, f);
+    }
+
+    double grad_dot(value_type a, value_type b) const {
+        return a.dx * b.dx + a.dy * b.dy + a.dz * b.dz;
     }
 
     std::array<std::size_t, 3> shape() const {
@@ -74,6 +79,13 @@ protected:
 
     double weigth(index_type q) const {
         return x.basis.w[q[0]] * y.basis.w[q[1]] * z.basis.w[q[2]];
+    }
+
+    point_type point(index_type e, index_type q) const {
+        double px = x.basis.x[e[0]][q[0]];
+        double py = y.basis.x[e[1]][q[1]];
+        double pz = z.basis.x[e[2]][q[2]];
+        return { px, py, pz };
     }
 
     value_type eval_basis(index_type e, index_type q, index_type a) {

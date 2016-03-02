@@ -19,6 +19,12 @@ protected:
     using vector_type = lin::vector;
     using value_type = function_value_1d;
 
+    using index_type = int;
+    using index_iter_type = boost::counting_iterator<int>;
+    using index_range = boost::iterator_range<index_iter_type>;
+
+    using point_type = double;
+
     dimension x;
 
     void solve(vector_type& rhs) {
@@ -30,6 +36,10 @@ protected:
         compute_projection(v, x.basis, f);
     }
 
+    double grad_dot(value_type a, value_type b) const {
+        return a.dx * b.dx;
+    }
+
     std::array<std::size_t, 1> shape() const {
         return {x.dofs()};
     }
@@ -38,7 +48,31 @@ protected:
         x.factorize_matrix();
     }
 
-    value_type eval_basis(int e, int q, int a) {
+    index_range elements() const {
+        return x.element_indices();
+    }
+
+    index_range quad_points() const {
+        return boost::counting_range(0, x.basis.quad_order);
+    }
+
+    index_range dofs_on_element(index_type e) const {
+        return x.basis.dof_range(e);
+    }
+
+    double jacobian(index_type e) const {
+        return x.basis.J[e];
+    }
+
+    double weigth(index_type q) const {
+        return x.basis.w[q];
+    }
+
+    point_type point(index_type e, index_type q) const {
+        return x.basis.x[e][q];
+    }
+
+    value_type eval_basis(index_type e, index_type q, index_type a) {
         const auto& bx = x.basis;
         int first = bx.first_dof(e);
 
@@ -48,7 +82,7 @@ protected:
         return { v, dv };
     }
 
-    value_type eval_fun(const vector_type& v, int e, int q) {
+    value_type eval_fun(const vector_type& v, index_type e, index_type q) {
         int first = x.basis.first_dof(e);
         int last  = x.basis.last_dof(e);
 

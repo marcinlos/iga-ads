@@ -6,6 +6,7 @@
 #include "ads/simulation/simulation_base.hpp"
 
 #include "ads/simulation/simulation_1d.hpp"
+#include "ads/simulation/simulation_2d.hpp"
 #include "ads/simulation/simulation_3d.hpp"
 
 
