@@ -14,12 +14,12 @@ namespace problems {
 
 class heat_3d : public simulation_3d {
 private:
-    using Base = simulation_1d;
+    using Base = simulation_3d;
     vector_type u, u_prev;
 
 public:
     heat_3d(const config_3d& config)
-    : simulation_3d{config}
+    : Base{config}
     , u{shape()}
     , u_prev{shape()}
     { }
