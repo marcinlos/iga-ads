@@ -41,6 +41,11 @@ inline vec<3> cross(const vec<3>& u, const vec<3>& v) {
     };
 }
 
+template <std::size_t D>
+vec<D> normalized(vec<D> u) {
+    return u /= norm(u);
+}
+
 
 
 }
