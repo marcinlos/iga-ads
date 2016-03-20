@@ -58,7 +58,7 @@ struct output_manager<2> : output_manager_base<output_manager<2>> {
 private:
     output::axis x, y;
     lin::tensor<double, 2> vals;
-    output::vtk output{ DEFAULT_FMT };
+    output::gnuplot_printer<2> output{ DEFAULT_FMT };
 
 public:
     output_manager(const bspline::basis& bx, const bspline::basis& by, std::size_t n)
