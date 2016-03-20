@@ -17,9 +17,10 @@ set(std_version "-std=c++14")
 set(optimization "-O2")
 set(ignored_warnings "-Wno-narrowing -Wno-deprecated-declarations")
 set(warnings "-Wall -Wextra -pedantic ${ignored_warnings}")
+set(debug_opts "-g")
 
 set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} -g ${optimization} ${warnings} ${std_version}")
+    "${CMAKE_CXX_FLAGS} ${debug_opts} ${optimization} ${warnings} ${std_version}")
 
 # Packages
 find_package(BLAS REQUIRED)
