@@ -20,11 +20,11 @@ public:
     static constexpr std::size_t layer_count = static_cast<std::size_t>(layer::count);
 
     double diffusion_coefficient[layer_count] = {
-        2.5, // stratum corneum
-        15,  // stratum spinosum
-        0.1, // basement membrame
-        7.5, // dermis
-        2.5, // hypodermis
+        2.5  / 50, // stratum corneum
+        15.0 / 50, // stratum spinosum
+        0.1 / 50,  // basement membrame
+        7.5 / 50,  // dermis
+        2.5 / 50,  // hypodermis
     };
 
     double layer_size[layer_count] = {
