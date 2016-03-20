@@ -115,6 +115,33 @@ public:
     }
 };
 
+struct eval_ders_ctx : public basis_eval_ctx {
+private:
+    std::vector<double*> buffer_;
+    int ders;
+public:
+
+    eval_ders_ctx(int p, int ders)
+    : basis_eval_ctx(p + 1)
+    , buffer_(p + 1)
+    , ders(ders)
+    {
+        for (int i = 0; i <= ders; ++ i) {
+            buffer_[i] = new double[p + 1];
+        }
+    }
+
+    double** basis_vals() {
+        return buffer_.data();
+    }
+
+    ~eval_ders_ctx() {
+        for (int i = 0; i <= ders; ++ i) {
+            delete[] buffer_[i];
+        }
+    }
+};
+
 
 /**
  * Create B-spline basis of specified order with given number of elements on given interval
