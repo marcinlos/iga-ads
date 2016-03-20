@@ -10,3 +10,4 @@ CTestTestfile.cmake
 .project
 .settings
 *.vti
+*.data
