@@ -9,13 +9,6 @@
 namespace ads {
 namespace output {
 
-inline std::vector<double> linspace(const bspline::basis& basis, std::size_t n) {
-    std::vector<double> xs(n + 1);
-    for (std::size_t i = 0; i <= n; ++ i) {
-        xs[i] = lerp(i, n, basis.begin(), basis.end());
-    }
-    return xs;
-}
 
 struct axis {
     const bspline::basis& basis;
@@ -27,7 +20,7 @@ struct axis {
     axis(const bspline::basis& basis, std::size_t intervals)
     : basis{ basis }
     , ctx{ basis.degree }
-    , points{ linspace(basis, intervals) }
+    , points{ linspace(basis.begin(), basis.end(), intervals) }
     { }
 
     std::size_t size() const {
