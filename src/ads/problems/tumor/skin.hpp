@@ -49,14 +49,17 @@ public:
         hypodermis_top
     };
 
-
-    double diffusion(double /*x*/, double /*y*/, double z) const {
+    layer layer_at(double /*x*/, double /*y*/, double z) const {
         for (std::size_t i = 1; i < layer_count; ++ i) {
             if (z > top[i]) {
-                return diffusion_coefficient[i - 1];
+                return static_cast<layer>(i - 1);
             }
         }
-        return diffusion_coefficient[hypodermis];
+        return layer::hypodermis;
+    }
+
+    double diffusion(double x, double y, double z) const {
+        return diffusion_coefficient[layer_at(x, y, z)];
     }
 };
 
