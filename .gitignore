@@ -11,3 +11,5 @@ CTestTestfile.cmake
 .settings
 *.vti
 *.data
+*.png
+*.gif
