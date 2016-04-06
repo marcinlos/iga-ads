@@ -66,7 +66,7 @@ private:
 
     output_manager<2> output;
 
-    int save_every = 10;
+    int save_every = 100;
 
     int vasc_update_every = 10;
 
