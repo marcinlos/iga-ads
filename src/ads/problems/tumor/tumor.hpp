@@ -47,7 +47,6 @@ struct params {
     double epsilon_m = 0.01;   // MDA diffusion coefficient
     double upsilon_m = 3;      // MDA degradation rage
 
-    double eta_c = 0.1;   // TAF consumption rate
     double diff_c = 0.01; // TAF diffusion rate
     double cons_c = 0.3;  // TAF consumption
 
@@ -299,7 +298,7 @@ private:
 
                     // TAF
                     double c_src = o < p.o_death_TC ? b.val * (1 - c.val): 0;
-                    double cv = - p.diff_c * grad_dot(c, v) + c_src - 0.3 * o * c.val;
+                    double cv = - p.diff_c * grad_dot(c, v) + c_src - p.cons_c * o * c.val;
                     val(now.c, a) += (c.val * v.val + cv * steps.dt) * w * J;
                 }
             }
