@@ -12,41 +12,45 @@ struct dim_data {
     lin::solver_ctx& ctx;
 };
 
+template <typename Rhs, typename Buf, typename Dim, typename... Dims>
+void solve_worker(Rhs& rhs, Buf& buf, const Dim& dim, const Dims&... dims) {
+
+    lin::solve_with_factorized(dim.M, rhs, dim.ctx);
+    auto F = lin::cyclic_transpose(rhs, buf.data());
+
+    solve_worker(F, rhs, dims...);
+}
+
+template <typename Rhs, typename Buf>
+void solve_worker(Rhs&, Buf&) {
+    // base case
+}
+
+
 template <typename Rhs>
 void ads_solve(Rhs& rhs, const dim_data& dim) {
     lin::solve_with_factorized(dim.M, rhs, dim.ctx);
 }
 
-template <typename Rhs>
-void ads_solve(Rhs& rhs, Rhs& buf, const dim_data& dim1, const dim_data& dim2) {
-    double* buffer2 = buf.data();
-
-    lin::solve_with_factorized(dim1.M, rhs, dim1.ctx);
-    auto F2 = lin::cyclic_transpose(rhs, buffer2);
-
-    lin::solve_with_factorized(dim2.M, F2, dim2.ctx);
-    lin::cyclic_transpose(F2, rhs);
-}
-
 
 template <typename Rhs>
-void ads_solve(Rhs& rhs, Rhs& buf, const dim_data& dim1, const dim_data& dim2, const dim_data& dim3) {
-    double* buffer1 = rhs.data();
-    double* buffer2 = buf.data();
-
-    lin::solve_with_factorized(dim1.M, rhs, dim1.ctx);
-    auto F2 = lin::cyclic_transpose(rhs, buffer2);
-
-    lin::solve_with_factorized(dim2.M, F2, dim2.ctx);
-    auto F3 = lin::cyclic_transpose(F2, buffer1);
-
-    lin::solve_with_factorized(dim3.M, F3, dim3.ctx);
-    lin::cyclic_transpose(F3, buf);
-
-    using std::swap;
-    swap(buf, rhs);
+void ads_solve(Rhs& rhs, Rhs& buf, const dim_data& dim) {
+    lin::solve_with_factorized(dim.M, rhs, dim.ctx);
 }
 
+template <typename Rhs, typename... Dims>
+void ads_solve(Rhs& rhs, Rhs& buf, const Dims&... dims) {
+    solve_worker(rhs, buf, dims...);
+
+    constexpr std::size_t N = sizeof...(Dims);
+
+    // for N > 1 we perform transposition N times
+    // transposition swaps rhs and buffer, so for odd N we need one more swap
+    if (N % 2 == 1) {
+        using std::swap;
+        swap(buf, rhs);
+    }
+}
 
 }
 
