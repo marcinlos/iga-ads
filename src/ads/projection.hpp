@@ -6,105 +6,158 @@
 
 namespace ads {
 
+
+template <std::size_t N>
+struct projector {
+    std::array<basis_data, N> bases;
+
+    using index_type = std::array<int, N>;
+
+    using point_type = std::array<double, N>;
+
+    double jacobian(index_type e) const {
+        double j = 1;
+        for (std::size_t i = 0u; i < N; ++ i) {
+            j *= bases[i].J[e[i]];
+        }
+        return j;
+    }
+
+    double weight(index_type q) const {
+        double w = 1;
+        for (std::size_t i = 0u; i < N; ++ i) {
+            w *= bases[i].w[q[i]];
+        }
+        return w;
+    }
+
+    point_type point(index_type e, index_type q) const {
+        point_type p;
+        for (std::size_t i = 0u; i < N; ++ i) {
+            p[i] = bases[i].x[e[i]][q[i]];
+        }
+        return p;
+    }
+
+    template <typename Rhs, typename F>
+    void operator () (Rhs& u, F&& f) {
+        auto ev = evaluator<Rhs, F>{ *this, u, std::forward<F>(f) };
+        ev.eval();
+    }
+
+    template <typename Rhs, typename F>
+    struct evaluator {
+        projector& proj;
+        Rhs& u;
+        F&& f;
+
+        void eval() {
+            index_type e;
+            element_loop(e, 0);
+        }
+
+        void element_loop(index_type& e, std::size_t level) {
+            if (level < N) {
+                auto& basis = proj.bases[level];
+                for (int i = 0; i < basis.elements; ++ i) {
+                    e[level] = i;
+                    element_loop(e, level + 1);
+                }
+            } else {
+                double J = proj.jacobian(e);
+                index_type q;
+                quad_loop(e, q, J, 0);
+            }
+        }
+
+        void quad_loop(const index_type& e, index_type& q, double J, std::size_t level) {
+            if (level < N) {
+                auto& basis = proj.bases[level];
+                for (int i = 0; i < basis.quad_order; ++ i) {
+                    q[level] = i;
+                    quad_loop(e, q, J, level + 1);
+                }
+            } else {
+                double w = proj.weight(q);
+                auto x = proj.point(e, q);
+                index_type a;
+                dof_loop(e, q, a, J, w, x, 0);
+            }
+        }
+
+        void dof_loop(const index_type& e, const index_type& q, index_type& a, double J, double w, const point_type& x, std::size_t level) {
+            if (level < N) {
+                auto& basis = proj.bases[level];
+                for (int i = 0; i <= basis.degree; ++ i) {
+                    a[level] = i;
+                    dof_loop(e, q, a, J, w, x, level + 1);
+                }
+            } else {
+                double B = 1;
+                index_type idx = a;
+                for (std::size_t i = 0u; i < N; ++ i) {
+                    B *= proj.bases[i].b[e[i]][q[i]][0][a[i]];
+                    idx[i] += proj.bases[i].first_dof(e[i]);
+                }
+
+                rhs(idx) += call_f(x) * B * w * J;
+            }
+        }
+
+        double& rhs(index_type a) {
+            return indexer(a);
+        }
+
+        double call_f(point_type x) {
+            return call(x);
+        }
+
+        template <typename... Idx>
+        std::enable_if_t<sizeof...(Idx) == N, double&>
+        indexer(const index_type&, Idx... indices) {
+            return u(indices...);
+        }
+
+        template <typename... Idx>
+        std::enable_if_t<sizeof...(Idx) < N, double&>
+        indexer(const index_type& idx, Idx... indices) {
+            return indexer(idx, idx[N - sizeof...(Idx) - 1], indices...);
+        }
+
+        template <typename... Xs>
+        std::enable_if_t<sizeof...(Xs) == N, double>
+        call(const point_type&, Xs... xs) {
+            return f(xs...);
+        }
+
+        template <typename... Xs>
+        std::enable_if_t<sizeof...(Xs) < N, double>
+        call(const point_type& x, Xs... xs) {
+            return call(x, x[N - sizeof...(Xs) - 1], xs...);
+        }
+    };
+
+};
+
+
 template <typename Rhs, typename Function>
 void compute_projection(Rhs& u, const basis_data& d1, Function f) {
-    for (element_id e1 = 0; e1 < d1.elements; ++ e1) {
-        double J = d1.J[e1];
-        int first1 = d1.first_dof(e1);
-        int last1  = d1.last_dof(e1);
-
-        for (int q1 = 0; q1 < d1.quad_order; ++ q1) {
-            double w = d1.w[q1];
-            double x1 = d1.x[e1][q1];
-
-            for (int a1 = 0; a1 + first1 <= last1; ++ a1) {
-                int i1 = a1 + first1;
-
-                double B1 = d1.b[e1][q1][0][a1];
-                double B = B1;
-                u(i1) += f(x1) * B * w * J;
-            }
-        }
-    }
+    projector<1> project {{d1}};
+    project(u, f);
 }
 
 
 template <typename Rhs, typename Function>
-void compute_projection(Rhs& u, const basis_data& d1, const basis_data& d2, Function f) {
-    for (element_id e1 = 0; e1 < d1.elements; ++ e1) {
-    for (element_id e2 = 0; e2 < d2.elements; ++ e2) {
-        double J = d1.J[e1] * d2.J[e2];
-        int first1 = d1.first_dof(e1);
-        int last1  = d1.last_dof(e1);
-        int first2 = d2.first_dof(e2);
-        int last2  = d2.last_dof(e2);
-
-        for (int q1 = 0; q1 < d1.quad_order; ++ q1) {
-        for (int q2 = 0; q2 < d2.quad_order; ++ q2) {
-            double w = d1.w[q1] * d2.w[q2];
-            double x1 = d1.x[e1][q1];
-            double x2 = d2.x[e2][q2];
-
-            for (int a1 = 0; a1 + first1 <= last1; ++ a1) {
-            for (int a2 = 0; a2 + first2 <= last2; ++ a2) {
-                int i1 = a1 + first1;
-                int i2 = a2 + first2;
-
-                double B1 = d1.b[e1][q1][0][a1];
-                double B2 = d2.b[e2][q2][0][a2];
-                double B = B1 * B2;
-                u(i1, i2) += f(x1, x2) * B * w * J;
-            }
-            }
-        }
-        }
-    }
-    }
+void compute_projection(Rhs& u, const basis_data& d1, const basis_data& d2, Function&& f) {
+    projector<2> project {{d1, d2}};
+    project(u, f);
 }
 
 
 template <typename Rhs, typename Function>
-void compute_projection(Rhs& u, const basis_data& d1, const basis_data& d2, const basis_data& d3, Function f) {
-    for (element_id e1 = 0; e1 < d1.elements; ++ e1) {
-    for (element_id e2 = 0; e2 < d2.elements; ++ e2) {
-    for (element_id e3 = 0; e3 < d3.elements; ++ e3) {
-        double J = d1.J[e1] * d2.J[e2] * d3.J[e3];
-        int first1 = d1.first_dof(e1);
-        int last1  = d1.last_dof(e1);
-        int first2 = d2.first_dof(e2);
-        int last2  = d2.last_dof(e2);
-        int first3 = d3.first_dof(e3);
-        int last3  = d3.last_dof(e3);
-
-        for (int q1 = 0; q1 < d1.quad_order; ++ q1) {
-        for (int q2 = 0; q2 < d2.quad_order; ++ q2) {
-        for (int q3 = 0; q3 < d3.quad_order; ++ q3) {
-            double w = d1.w[q1] * d2.w[q2] * d3.w[q3];
-            double x1 = d1.x[e1][q1];
-            double x2 = d2.x[e2][q2];
-            double x3 = d3.x[e3][q3];
-
-            for (int a1 = 0; a1 + first1 <= last1; ++ a1) {
-            for (int a2 = 0; a2 + first2 <= last2; ++ a2) {
-            for (int a3 = 0; a3 + first3 <= last3; ++ a3) {
-                int i1 = a1 + first1;
-                int i2 = a2 + first2;
-                int i3 = a3 + first3;
-
-                double B1 = d1.b[e1][q1][0][a1];
-                double B2 = d2.b[e2][q2][0][a2];
-                double B3 = d3.b[e3][q3][0][a3];
-                double B = B1 * B2 * B3;
-                u(i1, i2, i3) += f(x1, x2, x3) * B * w * J;
-            }
-            }
-            }
-        }
-        }
-        }
-    }
-    }
-    }
+void compute_projection(Rhs& u, const basis_data& d1, const basis_data& d2, const basis_data& d3, Function&& f) {
+    projector<3> project {{d1, d2, d3}};
+    project(u, f);
 }
 
 
