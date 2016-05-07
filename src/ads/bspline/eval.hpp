@@ -1,11 +1,76 @@
 #ifndef ADS_BSPLINE_EVAL_HPP_
 #define ADS_BSPLINE_EVAL_HPP_
 
+#include <utility>
 #include "ads/bspline/bspline.hpp"
 #include "ads/util/function_value.hpp"
 
 namespace ads {
 namespace bspline {
+
+struct full_eval_ctx {
+    const basis* b;
+    eval_ctx* ctx;
+};
+
+template <std::size_t N, typename U>
+struct evaluator {
+    using index_type = std::array<int, N>;
+    using buffer_array = std::array<double*, N>;
+
+    const U& u;
+    std::array<const basis*, N> bs;
+    std::array<eval_ctx*, N> ctxs;
+
+    evaluator(const U& u, const std::array<full_eval_ctx, N>& contexts): u(u) {
+        for (std::size_t i = 0; i < N; ++ i) {
+            bs[i] = contexts[i].b;
+            ctxs[i] = contexts[i].ctx;
+        }
+    }
+
+    template <typename Point>
+    double operator () (const Point& p) {
+
+        index_type spans;
+        buffer_array bufs;
+
+        for (std::size_t i = 0; i < N; ++ i) {
+            const basis& b = *bs[i];
+            eval_ctx& ctx = *ctxs[i];
+
+            spans[i] = find_span(p[i], b);
+            bufs[i] = ctx.basis_vals();
+            eval_basis(spans[i], p[i], b, bufs[i], ctx);
+        }
+
+        index_type idx;
+        return eval(p, spans, bufs, idx, 1, 0);
+        return 0;
+    }
+
+    template <typename Point>
+    double eval(const Point& p, index_type spans, const buffer_array& bufs, index_type& idx, double v, std::size_t lvl) {
+        if (lvl < N) {
+            double val = 0;
+            int offset = spans[lvl] - bs[lvl]->degree;
+            for (int i = 0; i < bs[lvl]->dofs_per_element(); ++ i) {
+                idx[lvl] = i + offset;
+                double basis_val = bufs[lvl][i];
+                val += eval(p, spans, bufs, idx, v * basis_val, lvl + 1);
+            }
+            return val;
+        } else {
+            return v * uval(idx, std::make_index_sequence<N>{});
+        }
+    }
+
+    template <std::size_t... Idx>
+    double uval(const index_type& idx, std::index_sequence<Idx...>) {
+        return u(idx[Idx]...);
+    }
+};
+
 
 template <typename U>
 double eval(double x, const U& u, const basis& b, eval_ctx& ctx) {
