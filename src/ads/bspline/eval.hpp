@@ -135,7 +135,7 @@ double eval(double x, double y, double z,
 }
 
 template <typename U>
-function_value_2d eval_ders(double x, double y, double z, const U& u, const basis& bx,
+function_value_3d eval_ders(double x, double y, double z, const U& u, const basis& bx,
         const basis& by, const basis& bz, eval_ders_ctx& cx, eval_ders_ctx& cy, eval_ders_ctx& cz) {
 
     int spanx = find_span(x, bx);
