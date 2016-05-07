@@ -43,10 +43,10 @@ struct basis_data {
         bspline::eval_ctx ctx(p);
 
         for (int e = 0; e < elements; ++ e) {
-            J[e] = 0.5 / elements;
             x[e] = new double[q];
             double x1 = basis.knot[p + e];
             double x2 = basis.knot[p + e + 1];
+            J[e] = 0.5 * (x2 - x1);
 
             for (int k = 0; k < q; ++ k) {
                 double tx = ads::quad::gauss::Xs[q][k];
