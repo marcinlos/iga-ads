@@ -28,18 +28,18 @@ void solve_worker(Rhs&, Buf&) {
 
 
 template <typename Rhs>
-void ads_solve(Rhs& rhs, const dim_data& dim) {
+void ads_solve(Rhs& rhs, dim_data dim) {
     lin::solve_with_factorized(dim.M, rhs, dim.ctx);
 }
 
 
 template <typename Rhs>
-void ads_solve(Rhs& rhs, Rhs& /*buf*/, const dim_data& dim) {
+void ads_solve(Rhs& rhs, Rhs& /*buf*/, dim_data dim) {
     lin::solve_with_factorized(dim.M, rhs, dim.ctx);
 }
 
 template <typename Rhs, typename... Dims>
-void ads_solve(Rhs& rhs, Rhs& buf, const Dims&... dims) {
+void ads_solve(Rhs& rhs, Rhs& buf, Dims... dims) {
     solve_worker(rhs, buf, dims...);
 
     constexpr std::size_t N = sizeof...(Dims);
@@ -50,6 +50,18 @@ void ads_solve(Rhs& rhs, Rhs& buf, const Dims&... dims) {
         using std::swap;
         swap(buf, rhs);
     }
+}
+
+template <typename Rhs, std::size_t D, std::size_t... Idx>
+void ads_solve_aux(Rhs& rhs, Rhs& buf, const std::array<dim_data, D>& dims,
+                   std::index_sequence<Idx...>) {
+    ads_solve(rhs, buf, dims[Idx]...);
+}
+
+
+template <typename Rhs, std::size_t D>
+void ads_solve(Rhs& rhs, Rhs& buf, const std::array<dim_data, D>& dims) {
+    ads_solve_aux(rhs, buf, dims, std::make_index_sequence<D>{});
 }
 
 }
