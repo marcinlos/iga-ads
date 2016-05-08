@@ -33,12 +33,15 @@ add_executable(ads
 
 target_link_libraries(ads ${numerical_libs})
 
-# Unit testing
-enable_testing()
+set(COMPILE_TESTS OFF CACHE BOOL "Enable unit tests")
 
-set(TSRC test)
+if (COMPILE_TESTS)
+  # Unit testing
+  enable_testing()
 
-add_executable(runUnitTests
+  set(TSRC test)
+
+  add_executable(runUnitTests
     ${SRC}/bspline/bspline.cpp
     ${TSRC}/ads/bspline/bspline_test.cpp
     ${TSRC}/ads/bspline/eval_test.cpp
@@ -46,7 +49,8 @@ add_executable(runUnitTests
     ${TSRC}/ads/lin/banded_solver_test.cpp
     ${TSRC}/ads/util/multi_array_test.cpp)
 
-target_link_libraries(runUnitTests ${numerical_libs} unittest pthread)
+  target_link_libraries(runUnitTests ${numerical_libs} unittest pthread)
 
-add_test(NAME AllTests COMMAND $<TARGET_FILE:runUnitTests>)
+  add_test(NAME AllTests COMMAND $<TARGET_FILE:runUnitTests>)
 
+endif()
