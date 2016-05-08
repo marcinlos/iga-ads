@@ -2,10 +2,8 @@
 #define ADS_PROBLEMS_HEAT_HEAT_2D_HPP_
 
 
-#include "ads/output_manager.hpp"
-#include "ads/problems/heat.hpp"
-
 #include "ads/simulation.hpp"
+#include "ads/output_manager.hpp"
 
 
 namespace ads {
@@ -47,9 +45,6 @@ private:
 
     void prepare_matrices() {
         x.fix_left();
-//        x.fix_right();
-//        y.fix_left();
-//        y.fix_right();
         Base::prepare_matrices();
     }
 
