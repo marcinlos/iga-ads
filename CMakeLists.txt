@@ -15,23 +15,36 @@ set(warnings "-Wall -Wextra -pedantic ${ignored_warnings}")
 set(debug_opts "-g")
 
 set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} ${debug_opts} ${optimization} ${warnings} ${std_version}")
+  "${CMAKE_CXX_FLAGS} ${debug_opts} ${optimization} ${warnings} ${std_version}")
+
+add_executable(ads
+  ${SRC}/bspline/bspline.cpp
+  ${SRC}/quad/gauss_data.cpp
+  src/main.cpp)
+
+# Libraries to link
+list(APPEND libs)
 
 # Packages
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 
-list(APPEND numerical_libs lapack blas)
+list(APPEND libs lapack blas)
 
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
-add_executable(ads
-    ${SRC}/bspline/bspline.cpp
-    ${SRC}/quad/gauss_data.cpp
-    src/main.cpp)
+set(USE_GALOIS OFF CACHE BOOL "Use Galois framework")
 
-target_link_libraries(ads ${numerical_libs})
+if (USE_GALOIS)
+  find_package(Galois REQUIRED)
+  include_directories(${Galois_INCLUDE_DIRS})
+  set(CMAKE_CXX_COMPILER ${Galois_CXX_COMPILER})
+  set(CMAKE_CXX_FLAGS "${Galois_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
+  list(APPEND libs ${Galois_LIBRARIES})
+endif()
+
+target_link_libraries(ads ${libs})
 
 set(COMPILE_TESTS OFF CACHE BOOL "Enable unit tests")
 
@@ -49,7 +62,7 @@ if (COMPILE_TESTS)
     ${TSRC}/ads/lin/banded_solver_test.cpp
     ${TSRC}/ads/util/multi_array_test.cpp)
 
-  target_link_libraries(runUnitTests ${numerical_libs} unittest pthread)
+  target_link_libraries(runUnitTests ${libs} unittest pthread)
 
   add_test(NAME AllTests COMMAND $<TARGET_FILE:runUnitTests>)
 
