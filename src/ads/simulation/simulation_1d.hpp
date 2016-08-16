@@ -73,11 +73,12 @@ protected:
     }
 
     value_type eval_basis(index_type e, index_type q, index_type a) const {
-        const auto& bx = x.basis;
-        int first = bx.first_dof(e);
+        auto loc = dof_global_to_local(e, a);
 
-        double v  = bx.b[e][q][0][a - first];
-        double dv = bx.b[e][q][1][a - first];
+        const auto& bx = x.basis;
+
+        double v  = bx.b[e][q][0][loc];
+        double dv = bx.b[e][q][1][loc];
 
         return { v, dv };
     }
@@ -93,6 +94,21 @@ protected:
             u += c * B;
         }
         return u;
+    }
+
+    index_type dof_global_to_local(index_type e, index_type a) const {
+        return { a - x.basis.first_dof(e) };
+    }
+
+    vector_type element_rhs() const {
+        return {{x.basis.dofs_per_element()}};
+    }
+
+    void update_global_rhs(vector_type& global, vector_type& local, index_type e) const {
+        for (auto a : dofs_on_element(e)) {
+            auto loc = dof_global_to_local(e, a);
+            global(a) += local(loc);
+        }
     }
 
 public:

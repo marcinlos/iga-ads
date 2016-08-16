@@ -119,11 +119,11 @@ protected:
         return {{ a[0] - bx.first_dof(e[0]), a[1] - by.first_dof(e[1]) }};
     }
 
-    vector_type element_matrix() const {
+    vector_type element_rhs() const {
         return {{x.basis.dofs_per_element(), y.basis.dofs_per_element()}};
     }
 
-    void update_global_matrix(vector_type& global, vector_type& local, index_type e) const {
+    void update_global_rhs(vector_type& global, vector_type& local, index_type e) const {
         for (auto a : dofs_on_element(e)) {
             auto loc = dof_global_to_local(e, a);
             global(a[0], a[1]) += local(loc[0], loc[1]);

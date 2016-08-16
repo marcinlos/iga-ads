@@ -85,7 +85,7 @@ private:
         zero(rhs);
 
         executor.for_each(elements(), [&](index_type e) {
-            auto U = element_matrix();
+            auto U = element_rhs();
 
             double J = jacobian(e);
             for (auto q : quad_points()) {
@@ -102,7 +102,7 @@ private:
             }
 
             executor.synchronized([&]() {
-                update_global_matrix(rhs, U, e);
+                update_global_rhs(rhs, U, e);
             });
         });
         integration_timer.stop();
