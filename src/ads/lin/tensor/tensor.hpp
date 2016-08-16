@@ -1,6 +1,7 @@
 #ifndef ADS_LIN_TENSOR_TENSOR_HPP_
 #define ADS_LIN_TENSOR_TENSOR_HPP_
 
+#include <vector>
 #include "ads/lin/tensor/base.hpp"
 
 
