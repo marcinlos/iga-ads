@@ -9,6 +9,9 @@
 #include "ads/simulation.hpp"
 #include "ads/output_manager.hpp"
 
+#include "ads/executor/galois.hpp"
+
+
 #include <cmath>
 #include <boost/format.hpp>
 
@@ -69,6 +72,9 @@ private:
     int save_every = 100;
 
     int vasc_update_every = 10;
+
+    galois_executor executor{8};
+
 
 
     bspline::eval_ctx xctx;
@@ -191,6 +197,7 @@ private:
         output.to_file(now.c, "taf_%d.data", iter);
         output.to_file(now.M, "ecm_%d.data", iter);
         output.to_file(now.A, "degraded_ecm_%d.data", iter);
+        plot_vasculature(iter);
     }
 
     void after_step(int iter, double /*t*/) override {
@@ -232,12 +239,15 @@ private:
     }
 
     void compute_rhs() {
-        for (auto e : elements()) {
+        executor.for_each(elements(), [&](index_type e) {
+            state loc{ local_shape() };
+
             double J = jacobian(e);
             for (auto q : quad_points()) {
                 double w = weigth(q);
                 auto x = point(e, q);
                 for (auto a : dofs_on_element(e)) {
+                    auto aa = dof_global_to_local(e, a);
                     value_type v = eval_basis(e, q, a);
 
                     value_type b = ensure_positive(eval_fun(prev.b, e, q));
@@ -273,36 +283,45 @@ private:
                     double divJv = D_b * b.val * (grad_Pv + p.r_b * grad_Av);
 
                     double bv = - divJv + (b_src + b_sink) * v.val;
-                    val(now.b, a) += (b.val * v.val + bv * steps.dt) * w * J;
+                    val(loc.b, aa) += (b.val * v.val + bv * steps.dt) * w * J;
 
                     // endothelial cells
                     double X = p.chi_n / (1 + p.delta_n * c.val);
 //                    double nv = - p.D_n * grad_dot(n, v) + grad_dot(n.val * X * c, v) + p.rho_n * grad_dot(n.val * f, v);
                     double nv = grad_dot(-p.D_n * n + n.val * X * c + n.val * f, v);
-                    val(now.n, a) += (n.val * v.val + nv * steps.dt) * w * J;
+                    val(loc.n, aa) += (n.val * v.val + nv * steps.dt) * w * J;
 
                     // fibronectin
                     double fv = p.beta_f * n.val - p.gamma_f * m.val * f.val;
-                    val(now.f, a) += (f.val * v.val + fv * steps.dt) * w * J;
+                    val(loc.f, aa) += (f.val * v.val + fv * steps.dt) * w * J;
 
                     // MDE
                     double mv = p.alpha_m * n.val - p.epsilon_m * grad_dot(m, v) - p.upsilon_m * m.val;
-                    val(now.m, a) += (m.val * v.val + mv * steps.dt) * w * J;
+                    val(loc.m, aa) += (m.val * v.val + mv * steps.dt) * w * J;
 
                     // ECM evolution
                     double Mv = - p.beta_m * M.val * b.val * v.val;
-                    val(now.M, a) += (M.val * v.val + Mv * steps.dt) * w * J;
+                    val(loc.M, aa) += (M.val * v.val + Mv * steps.dt) * w * J;
 
                     double Av = (p.gamma_a * M.val * b.val - p.gamma_oA * A.val) * v.val - p.chi_aA * grad_Av;
-                    val(now.A, a) += (A.val * v.val + Av * steps.dt) * w * J;
+                    val(loc.A, aa) += (A.val * v.val + Av * steps.dt) * w * J;
 
                     // TAF
                     double c_src = o < p.o_death_TC ? b.val * (1 - c.val): 0;
                     double cv = - p.diff_c * grad_dot(c, v) + c_src - p.cons_c * o * c.val;
-                    val(now.c, a) += (c.val * v.val + cv * steps.dt) * w * J;
+                    val(loc.c, aa) += (c.val * v.val + cv * steps.dt) * w * J;
                 }
             }
-        }
+            executor.synchronized([&]() {
+                update_global_rhs(now.b, loc.b, e);
+                update_global_rhs(now.n, loc.n, e);
+                update_global_rhs(now.f, loc.f, e);
+                update_global_rhs(now.m, loc.m, e);
+                update_global_rhs(now.M, loc.M, e);
+                update_global_rhs(now.A, loc.A, e);
+                update_global_rhs(now.c, loc.c, e);
+            });
+        });
     }
 
     void update_vasculature(int iter) {
@@ -319,7 +338,6 @@ private:
             vasculature.update(tumor, taf, steps.dt * vasc_update_every);
 
             vasculature.discretize();
-            plot_vasculature(next_iter);
         }
     }
 
