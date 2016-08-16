@@ -88,7 +88,7 @@ protected:
         return { px, py, pz };
     }
 
-    value_type eval_basis(index_type e, index_type q, index_type a) {
+    value_type eval_basis(index_type e, index_type q, index_type a) const {
         const auto& bx = x.basis;
         const auto& by = y.basis;
         const auto& bz = z.basis;
@@ -112,7 +112,7 @@ protected:
         return { v, dxv, dyv, dzv };
     }
 
-    value_type eval_fun(const vector_type& v, index_type e, index_type q) {
+    value_type eval_fun(const vector_type& v, index_type e, index_type q) const {
         value_type u{};
         for (auto b : dofs_on_element(e)) {
             double c = v(b[0], b[1], b[2]);
@@ -123,13 +123,7 @@ protected:
     }
 
 public:
-    simulation_3d(const config_3d& config)
-    : simulation_base{config.steps}
-    , x{config.x, config.derivatives}
-    , y{config.y, config.derivatives}
-    , z{config.z, config.derivatives}
-    , buffer{shape()}
-    { }
+    simulation_3d(const config_3d& config);
 };
 
 

@@ -72,7 +72,7 @@ protected:
         return x.basis.x[e][q];
     }
 
-    value_type eval_basis(index_type e, index_type q, index_type a) {
+    value_type eval_basis(index_type e, index_type q, index_type a) const {
         const auto& bx = x.basis;
         int first = bx.first_dof(e);
 
@@ -82,7 +82,7 @@ protected:
         return { v, dv };
     }
 
-    value_type eval_fun(const vector_type& v, index_type e, index_type q) {
+    value_type eval_fun(const vector_type& v, index_type e, index_type q) const  {
         int first = x.basis.first_dof(e);
         int last  = x.basis.last_dof(e);
 
@@ -96,10 +96,7 @@ protected:
     }
 
 public:
-    simulation_1d(const config_1d& config)
-    : simulation_base{config.steps}
-    , x{config.x, config.derivatives}
-    { }
+    simulation_1d(const config_1d& config);
 };
 
 

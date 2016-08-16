@@ -17,9 +17,19 @@ set(debug_opts "-g")
 set(CMAKE_CXX_FLAGS
   "${CMAKE_CXX_FLAGS} ${debug_opts} ${optimization} ${warnings} ${std_version}")
 
-add_executable(ads
+set(ads_SRC
+  ${SRC}/mass_matrix.cpp
   ${SRC}/bspline/bspline.cpp
   ${SRC}/quad/gauss_data.cpp
+  ${SRC}/simulation/dimension.cpp
+  ${SRC}/simulation/simulation_base.cpp
+  ${SRC}/simulation/simulation_1d.cpp
+  ${SRC}/simulation/simulation_2d.cpp
+  ${SRC}/simulation/simulation_3d.cpp
+  )
+
+add_executable(ads
+  ${ads_SRC}
   src/main.cpp)
 
 # Libraries to link
@@ -55,7 +65,7 @@ if (COMPILE_TESTS)
   set(TSRC test)
 
   add_executable(runUnitTests
-    ${SRC}/bspline/bspline.cpp
+    ${ads_SRC}
     ${TSRC}/ads/bspline/bspline_test.cpp
     ${TSRC}/ads/bspline/eval_test.cpp
     ${TSRC}/ads/lin/tensor_test.cpp
