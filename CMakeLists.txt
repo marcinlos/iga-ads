@@ -26,7 +26,7 @@ set(ads_SRC
   ${SRC}/simulation/simulation_1d.cpp
   ${SRC}/simulation/simulation_2d.cpp
   ${SRC}/simulation/simulation_3d.cpp
-  )
+  ${SRC}/executor/galois.cpp)
 
 add_executable(ads
   ${ads_SRC}
