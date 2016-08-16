@@ -4,6 +4,7 @@
 
 #include "ads/simulation.hpp"
 #include "ads/output_manager.hpp"
+#include "ads/executor/galois.hpp"
 
 
 namespace ads {
@@ -16,6 +17,9 @@ private:
     vector_type u, u_prev;
 
     output_manager<2> output;
+    Galois::StatTimer integration_timer{"integration"};
+    galois_executor executor{1};
+
 public:
     heat_2d(const config_2d& config)
     : Base{ config }
@@ -75,23 +79,37 @@ private:
     }
 
     void compute_rhs() {
+        integration_timer.start();
         auto& rhs = u;
 
         zero(rhs);
-        for (auto e : elements()) {
+
+        executor.for_each(elements(), [&](index_type e) {
+            auto U = element_matrix();
+
             double J = jacobian(e);
             for (auto q : quad_points()) {
                 double w = weigth(q);
                 for (auto a : dofs_on_element(e)) {
+                    auto aa = dof_global_to_local(e, a);
                     value_type v = eval_basis(e, q, a);
                     value_type u = eval_fun(u_prev, e, q);
 
                     double gradient_prod = grad_dot(u, v);
                     double val = u.val * v.val - steps.dt * gradient_prod;
-                    rhs(a[0], a[1]) += val * w * J;
+                    U(aa[0], aa[1]) += val * w * J;
                 }
             }
-        }
+
+            executor.synchronized([&]() {
+                update_global_matrix(rhs, U, e);
+            });
+        });
+        integration_timer.stop();
+    }
+
+    virtual void after() override {
+        std::cout << "integration: " << static_cast<double>(integration_timer.get())  << std::endl;
     }
 };
 

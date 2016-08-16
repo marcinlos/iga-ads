@@ -86,16 +86,15 @@ protected:
     }
 
     value_type eval_basis(index_type e, index_type q, index_type a) const  {
+        auto loc = dof_global_to_local(e, a);
+
         const auto& bx = x.basis;
         const auto& by = y.basis;
 
-        int first1 = bx.first_dof(e[0]);
-        int first2 = by.first_dof(e[1]);
-
-        double B1  = bx.b[e[0]][q[0]][0][a[0] - first1];
-        double B2  = by.b[e[1]][q[1]][0][a[1] - first2];
-        double dB1 = bx.b[e[0]][q[0]][1][a[0] - first1];
-        double dB2 = by.b[e[1]][q[1]][1][a[1] - first2];
+        double B1  = bx.b[e[0]][q[0]][0][loc[0]];
+        double B2  = by.b[e[1]][q[1]][0][loc[1]];
+        double dB1 = bx.b[e[0]][q[0]][1][loc[0]];
+        double dB2 = by.b[e[1]][q[1]][1][loc[1]];
 
         double v = B1 * B2;
         double dxv = dB1 *  B2;
@@ -112,6 +111,23 @@ protected:
             u += c * B;
         }
         return u;
+    }
+
+    index_type dof_global_to_local(index_type e, index_type a) const {
+        const auto& bx = x.basis;
+        const auto& by = y.basis;
+        return {{ a[0] - bx.first_dof(e[0]), a[1] - by.first_dof(e[1]) }};
+    }
+
+    vector_type element_matrix() const {
+        return {{x.basis.dofs_per_element(), y.basis.dofs_per_element()}};
+    }
+
+    void update_global_matrix(vector_type& global, vector_type& local, index_type e) const {
+        for (auto a : dofs_on_element(e)) {
+            auto loc = dof_global_to_local(e, a);
+            global(a[0], a[1]) += local(loc[0], loc[1]);
+        }
     }
 
 

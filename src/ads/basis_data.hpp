@@ -75,6 +75,10 @@ struct basis_data {
         return first_dof(e) + degree;
     }
 
+    int dofs_per_element() const {
+        return degree + 1;
+    }
+
     dof_range_type dof_range(element_id e) const {
         return boost::counting_range(first_dof(e), last_dof(e) + 1);
     }
