@@ -50,6 +50,10 @@ protected:
         return {x.dofs(), y.dofs()};
     }
 
+    std::array<std::size_t, 2> local_shape() const {
+        return {x.basis.dofs_per_element(), y.basis.dofs_per_element()};
+    }
+
     void prepare_matrices() {
         x.factorize_matrix();
         y.factorize_matrix();
@@ -120,7 +124,7 @@ protected:
     }
 
     vector_type element_rhs() const {
-        return {{x.basis.dofs_per_element(), y.basis.dofs_per_element()}};
+        return {local_shape()};
     }
 
     void update_global_rhs(vector_type& global, vector_type& local, index_type e) const {
