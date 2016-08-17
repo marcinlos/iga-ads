@@ -1,6 +1,7 @@
 #ifndef ADS_PROBLEMS_TUMOR_SKIN_HPP_
 #define ADS_PROBLEMS_TUMOR_SKIN_HPP_
 
+#include <cstddef>
 
 namespace ads {
 namespace tumor {
