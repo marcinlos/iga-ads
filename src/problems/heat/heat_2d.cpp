@@ -1,6 +1,4 @@
-#include <iostream>
-
-#include "ads/problems/heat/heat_2d.hpp"
+#include "problems/heat/heat_2d.hpp"
 
 using namespace ads;
 using namespace ads::problems;

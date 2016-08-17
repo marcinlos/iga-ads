@@ -2,8 +2,6 @@
 #define ADS_PROBLEMS_HEAT_HEAT_1D_HPP_
 
 #include "ads/output_manager.hpp"
-#include "ads/problems/heat.hpp"
-
 #include "ads/simulation.hpp"
 
 

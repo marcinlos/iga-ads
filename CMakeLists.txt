@@ -2,21 +2,18 @@ cmake_minimum_required(VERSION 2.8)
 project(ADS CXX)
 
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-set(SRC src/ads)
-
-include_directories("${PROJECT_SOURCE_DIR}/src")
-
 # We use C++14
 set(std_version "-std=c++14")
 set(optimization "-O2")
 set(ignored_warnings "-Wno-narrowing -Wno-deprecated-declarations")
 set(warnings "-Wall -Wextra -pedantic ${ignored_warnings}")
-set(debug_opts "-g")
 
 set(CMAKE_CXX_FLAGS
-  "${CMAKE_CXX_FLAGS} ${debug_opts} ${optimization} ${warnings} ${std_version}")
+  "${CMAKE_CXX_FLAGS} ${optimization} ${warnings} ${std_version}")
 
+include_directories("${PROJECT_SOURCE_DIR}/src")
+
+set(SRC src/ads)
 set(ads_SRC
   ${SRC}/mass_matrix.cpp
   ${SRC}/bspline/bspline.cpp
@@ -26,21 +23,16 @@ set(ads_SRC
   ${SRC}/simulation/simulation_base.cpp
   ${SRC}/simulation/simulation_1d.cpp
   ${SRC}/simulation/simulation_2d.cpp
-  ${SRC}/simulation/simulation_3d.cpp
-  ${SRC}/executor/galois.cpp)
-
-add_executable(ads
-  ${ads_SRC}
-  src/main.cpp)
+  ${SRC}/simulation/simulation_3d.cpp)
 
 # Libraries to link
-list(APPEND libs)
+set(ads_LIBS)
 
 # Packages
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 
-list(APPEND libs lapack blas)
+list(APPEND ads_LIBS lapack blas)
 
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
@@ -52,10 +44,13 @@ if (USE_GALOIS)
   include_directories(${Galois_INCLUDE_DIRS})
   set(CMAKE_CXX_COMPILER ${Galois_CXX_COMPILER})
   set(CMAKE_CXX_FLAGS "${Galois_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
-  list(APPEND libs ${Galois_LIBRARIES})
+
+  list(APPEND ads_LIBS ${Galois_LIBRARIES})
+  list(APPEND ads_SRC ${SRC}/executor/galois.cpp)
 endif()
 
-target_link_libraries(ads ${libs})
+add_library(ads STATIC ${ads_SRC})
+target_link_libraries(ads ${ads_LIBS})
 
 set(COMPILE_TESTS OFF CACHE BOOL "Enable unit tests")
 
@@ -63,18 +58,32 @@ if (COMPILE_TESTS)
   # Unit testing
   enable_testing()
 
+  function(define_test name)
+    add_executable(${name}-test ${ARGN})
+    set_target_properties(${name}-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
+    target_link_libraries(${name}-test ads unittest pthread)
+    add_test(NAME ${name} COMMAND ${name}-test -v)
+  endfunction()
+
   set(TSRC test)
 
-  add_executable(runUnitTests
-    ${ads_SRC}
+  define_test(bspline
     ${TSRC}/ads/bspline/bspline_test.cpp
-    ${TSRC}/ads/bspline/eval_test.cpp
-    ${TSRC}/ads/lin/tensor_test.cpp
-    ${TSRC}/ads/lin/banded_solver_test.cpp
-    ${TSRC}/ads/util/multi_array_test.cpp)
-
-  target_link_libraries(runUnitTests ${libs} unittest pthread)
-
-  add_test(NAME AllTests COMMAND $<TARGET_FILE:runUnitTests>)
+    ${TSRC}/ads/bspline/eval_test.cpp)
+  define_test(tensor ${TSRC}/ads/lin/tensor_test.cpp)
+  define_test(solver ${TSRC}/ads/lin/banded_solver_test.cpp)
+  define_test(array ${TSRC}/ads/util/multi_array_test.cpp)
 
 endif()
+
+# --------------------------------------------------------------------
+# PROBLEMS
+# --------------------------------------------------------------------
+
+function(define_problem name)
+  add_executable(${name} ${ARGN})
+  target_link_libraries(${name} ads)
+endfunction()
+
+define_problem(heat_2d
+  src/problems/heat/heat_2d.cpp)
