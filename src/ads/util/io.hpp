@@ -1,7 +1,7 @@
 #ifndef ADS_UTIL_IO_HPP_
 #define ADS_UTIL_IO_HPP_
 
-#include <ios>
+#include <ostream>
 
 namespace ads {
 namespace util {

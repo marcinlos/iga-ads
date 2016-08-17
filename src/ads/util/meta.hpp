@@ -1,6 +1,8 @@
 #ifndef ADS_UTIL_META_HPP_
 #define ADS_UTIL_META_HPP_
 
+#include <type_traits>
+
 namespace ads {
 namespace util {
 

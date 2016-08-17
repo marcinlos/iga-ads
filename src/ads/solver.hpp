@@ -34,7 +34,7 @@ void ads_solve(Rhs& rhs, const dim_data& dim) {
 
 
 template <typename Rhs>
-void ads_solve(Rhs& rhs, Rhs& buf, const dim_data& dim) {
+void ads_solve(Rhs& rhs, Rhs& /*buf*/, const dim_data& dim) {
     lin::solve_with_factorized(dim.M, rhs, dim.ctx);
 }
 
