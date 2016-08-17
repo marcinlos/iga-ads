@@ -1,6 +1,7 @@
 #ifndef ADS_OUTPUT_VTK_HPP_
 #define ADS_OUTPUT_VTK_HPP_
 
+#include <sstream>
 #include <boost/format.hpp>
 #include "ads/output/output_base.hpp"
 #include "ads/output/grid.hpp"

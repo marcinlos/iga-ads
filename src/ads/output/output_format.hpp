@@ -2,6 +2,8 @@
 #ifndef ADS_OUTPUT_OUTPUT_FORMAT_HPP_
 #define ADS_OUTPUT_OUTPUT_FORMAT_HPP_
 
+#include <iostream>
+
 namespace ads {
 namespace output {
 
