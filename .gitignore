@@ -13,3 +13,4 @@ CTestTestfile.cmake
 *.data
 *.png
 *.gif
+build/
