@@ -1,6 +1,6 @@
 #include "ads/simulation.hpp"
-#include "ads/problems/tumor/vasculature.hpp"
-#include "ads/problems/tumor/tumor.hpp"
+#include "problems/tumor/vasculature.hpp"
+#include "problems/tumor/tumor.hpp"
 
 
 using namespace ads;

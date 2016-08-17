@@ -2,9 +2,9 @@
 #define ADS_PROBLEMS_TUMOR_TUMOR_HPP_
 
 
-#include "ads/problems/tumor/skin.hpp"
-#include "ads/problems/tumor/state.hpp"
-#include "ads/problems/tumor/vasculature.hpp"
+#include "problems/tumor/skin.hpp"
+#include "problems/tumor/state.hpp"
+#include "problems/tumor/vasculature.hpp"
 
 #include "ads/simulation.hpp"
 #include "ads/output_manager.hpp"

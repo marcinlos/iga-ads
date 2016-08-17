@@ -4,8 +4,8 @@
 #include <random>
 #include <cmath>
 
-#include "ads/problems/tumor/vasculature/defs.hpp"
-#include "ads/problems/tumor/vasculature/vasculature.hpp"
+#include "problems/tumor/vasculature/defs.hpp"
+#include "problems/tumor/vasculature/vasculature.hpp"
 
 
 namespace ads {

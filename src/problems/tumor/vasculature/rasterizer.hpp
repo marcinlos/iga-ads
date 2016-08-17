@@ -2,7 +2,7 @@
 #define ADS_PROBLEMS_TUMOR_VASCULATURE_RASTERIZER_HPP_
 
 
-#include "ads/problems/tumor/vasculature/defs.hpp"
+#include "problems/tumor/vasculature/defs.hpp"
 
 
 namespace ads {

@@ -4,7 +4,7 @@
 #include <ostream>
 #include <fstream>
 
-#include "ads/problems/tumor/vasculature/defs.hpp"
+#include "problems/tumor/vasculature/defs.hpp"
 #include "ads/util.hpp"
 #include "ads/output_manager.hpp"
 #include "ads/output/gnuplot.hpp"

@@ -7,9 +7,9 @@
 #include <random>
 #include <algorithm>
 #include "ads/util/function_value.hpp"
-#include "ads/problems/tumor/vasculature/defs.hpp"
-#include "ads/problems/tumor/vasculature/rasterizer.hpp"
-#include "ads/problems/tumor/vasculature/plot.hpp"
+#include "problems/tumor/vasculature/defs.hpp"
+#include "problems/tumor/vasculature/rasterizer.hpp"
+#include "problems/tumor/vasculature/plot.hpp"
 
 
 
