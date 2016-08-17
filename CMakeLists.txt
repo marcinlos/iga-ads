@@ -103,7 +103,6 @@ function(define_problem name)
   target_link_libraries(${name} ads)
 endfunction()
 
-<<<<<<< bfb6a21731bcfd9dbc78164b77b3b7d759de3757
 if (NOT SKIP_PROBLEMS)
 
   if (USE_GALOIS)
@@ -127,6 +126,8 @@ if (NOT SKIP_PROBLEMS)
     src/problems/heat/heat_3d.cpp)
 
   define_problem(tumor
+    src/problems/tumor/vasculature/plot.cpp
+    src/problems/tumor/tumor.cpp
     src/problems/tumor.cpp)
 
 endif()
