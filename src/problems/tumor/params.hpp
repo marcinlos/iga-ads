@@ -1,5 +1,5 @@
-#ifndef PROBLEMS_TUMOR_PARAMS_HPP
-#define PROBLEMS_TUMOR_PARAMS_HPP
+#ifndef PROBLEMS_TUMOR_PARAMS_HPP_
+#define PROBLEMS_TUMOR_PARAMS_HPP_
 
 #include "problems/tumor/skin.hpp"
 
@@ -49,5 +49,4 @@ struct params {
 }
 
 
-
-#endif /* PROBLEMS_TUMOR_PARAMS_HPP */
+#endif /* PROBLEMS_TUMOR_PARAMS_HPP_ */

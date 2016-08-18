@@ -1,5 +1,5 @@
-#ifndef ADS_PROBLEMS_TUMOR_VASCULATURE_DEFS_HPP_
-#define ADS_PROBLEMS_TUMOR_VASCULATURE_DEFS_HPP_
+#ifndef PROBLEMS_TUMOR_VASCULATURE_DEFS_HPP_
+#define PROBLEMS_TUMOR_VASCULATURE_DEFS_HPP_
 
 #include <cstddef>
 #include "ads/lin/tensor.hpp"
@@ -21,4 +21,4 @@ using val_array = lin::tensor<double, Dim>;
 }
 
 
-#endif /* ADS_PROBLEMS_TUMOR_VASCULATURE_DEFS_HPP_ */
+#endif /* PROBLEMS_TUMOR_VASCULATURE_DEFS_HPP_ */

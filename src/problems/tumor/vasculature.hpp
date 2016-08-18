@@ -1,5 +1,5 @@
-#ifndef ADS_PROBLEMS_TUMOR_VASCULATURE_HPP_
-#define ADS_PROBLEMS_TUMOR_VASCULATURE_HPP_
+#ifndef PROBLEMS_TUMOR_VASCULATURE_HPP_
+#define PROBLEMS_TUMOR_VASCULATURE_HPP_
 
 
 #include "problems/tumor/vasculature/defs.hpp"
@@ -8,4 +8,4 @@
 #include "problems/tumor/vasculature/plot.hpp"
 
 
-#endif /* ADS_PROBLEMS_TUMOR_VASCULATURE_HPP_ */
+#endif /* PROBLEMS_TUMOR_VASCULATURE_HPP_ */

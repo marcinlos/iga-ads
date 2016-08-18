@@ -1,5 +1,5 @@
-#ifndef ADS_PROBLEMS_TUMOR_STATE_HPP_
-#define ADS_PROBLEMS_TUMOR_STATE_HPP_
+#ifndef PROBLEMS_TUMOR_STATE_HPP_
+#define PROBLEMS_TUMOR_STATE_HPP_
 
 #include "ads/lin/tensor.hpp"
 
@@ -40,4 +40,4 @@ struct state {
 
 
 
-#endif /* ADS_PROBLEMS_TUMOR_STATE_HPP_ */
+#endif /* PROBLEMS_TUMOR_STATE_HPP_ */

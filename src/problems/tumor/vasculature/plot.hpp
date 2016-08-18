@@ -1,5 +1,5 @@
-#ifndef ADS_PROBLEMS_TUMOR_VASCULATURE_PLOT_HPP_
-#define ADS_PROBLEMS_TUMOR_VASCULATURE_PLOT_HPP_
+#ifndef PROBLEMS_TUMOR_VASCULATURE_PLOT_HPP_
+#define PROBLEMS_TUMOR_VASCULATURE_PLOT_HPP_
 
 #include <ostream>
 
@@ -17,4 +17,4 @@ void plot(const std::string& file, const val_array& v);
 }
 }
 
-#endif /* ADS_PROBLEMS_TUMOR_VASCULATURE_PLOT_HPP_ */
+#endif /* PROBLEMS_TUMOR_VASCULATURE_PLOT_HPP_ */

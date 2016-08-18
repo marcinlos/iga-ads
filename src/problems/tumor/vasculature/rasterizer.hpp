@@ -1,5 +1,5 @@
-#ifndef ADS_PROBLEMS_TUMOR_VASCULATURE_RASTERIZER_HPP_
-#define ADS_PROBLEMS_TUMOR_VASCULATURE_RASTERIZER_HPP_
+#ifndef PROBLEMS_TUMOR_VASCULATURE_RASTERIZER_HPP_
+#define PROBLEMS_TUMOR_VASCULATURE_RASTERIZER_HPP_
 
 
 #include "problems/tumor/vasculature/defs.hpp"
@@ -102,4 +102,4 @@ void draw_segment(vector a, vector b, Array& v, Value val) {
 }
 
 
-#endif /* ADS_PROBLEMS_TUMOR_VASCULATURE_RASTERIZER_HPP_ */
+#endif /* PROBLEMS_TUMOR_VASCULATURE_RASTERIZER_HPP_ */

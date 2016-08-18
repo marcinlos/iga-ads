@@ -1,5 +1,5 @@
-#ifndef ADS_PROBLEMS_TUMOR_SKIN_HPP_
-#define ADS_PROBLEMS_TUMOR_SKIN_HPP_
+#ifndef PROBLEMS_TUMOR_SKIN_HPP_
+#define PROBLEMS_TUMOR_SKIN_HPP_
 
 #include <cstddef>
 
@@ -69,4 +69,4 @@ public:
 }
 
 
-#endif /* ADS_PROBLEMS_TUMOR_SKIN_HPP_ */
+#endif /* PROBLEMS_TUMOR_SKIN_HPP_ */
