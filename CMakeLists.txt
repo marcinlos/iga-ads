@@ -25,10 +25,12 @@ set(ads_SRC
   ${SRC}/simulation/simulation_2d.cpp
   ${SRC}/simulation/simulation_3d.cpp)
 
-# Libraries to link
+# --------------------------------------------------------------------
+# Libraries
+# --------------------------------------------------------------------
 set(ads_LIBS)
 
-# Packages
+# Numerical libraries
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 
@@ -37,6 +39,7 @@ list(APPEND ads_LIBS lapack blas)
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
+# Galois
 set(USE_GALOIS OFF CACHE BOOL "Use Galois framework")
 
 if (USE_GALOIS)
@@ -49,8 +52,14 @@ if (USE_GALOIS)
   list(APPEND ads_SRC ${SRC}/executor/galois.cpp)
 endif()
 
+
+# Target library definition
 add_library(ads STATIC ${ads_SRC})
 target_link_libraries(ads ${ads_LIBS})
+
+# --------------------------------------------------------------------
+# Tests
+# --------------------------------------------------------------------
 
 set(COMPILE_TESTS OFF CACHE BOOL "Enable unit tests")
 
@@ -77,7 +86,7 @@ if (COMPILE_TESTS)
 endif()
 
 # --------------------------------------------------------------------
-# PROBLEMS
+# Problems
 # --------------------------------------------------------------------
 
 function(define_problem name)
