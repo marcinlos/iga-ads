@@ -6,17 +6,15 @@
 #include "ads/util/math/vec.hpp"
 
 
-namespace ads {
 namespace tumor {
 namespace vasc {
 
 constexpr std::size_t Dim = 2;
 
-using vector = math::vec<Dim>;
-using val_array = lin::tensor<double, Dim>;
+using vector = ads::math::vec<Dim>;
+using val_array = ads::lin::tensor<double, Dim>;
 
 
-}
 }
 }
 

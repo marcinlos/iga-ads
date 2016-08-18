@@ -3,7 +3,6 @@
 
 #include "problems/tumor/skin.hpp"
 
-namespace ads {
 namespace tumor {
 
 
@@ -46,7 +45,5 @@ struct params {
 
 
 }
-}
-
 
 #endif /* PROBLEMS_TUMOR_PARAMS_HPP_ */

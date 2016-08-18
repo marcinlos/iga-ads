@@ -8,7 +8,6 @@
 #include "problems/tumor/vasculature/vasculature.hpp"
 #include "ads/util.hpp"
 
-namespace ads {
 namespace tumor {
 namespace vasc {
 
@@ -31,13 +30,13 @@ public:
         std::vector<vasculature::node_ptr> nodes;
         int n = 5;
         for (int i = 0; i <= n; ++ i) {
-            vector pos = { 0.1, lerp(i, n, 0.1, 0.9) }; // random_point({0.05, 0.1}, {0.1, 0.9});
+            vector pos = { 0.1, ads::lerp(i, n, 0.1, 0.9) }; // random_point({0.05, 0.1}, {0.1, 0.9});
             vector bias = {1, 0};
             node_ptr root = grow_tree(pos, bias);
             nodes.push_back(root);
         }
         for (int i = 0; i <= n; ++ i) {
-            vector pos = { 0.9, lerp(i, n, 0.1, 0.9) }; //random_point({0.9, 0.1}, {0.85, 0.9});
+            vector pos = { 0.9, ads::lerp(i, n, 0.1, 0.9) }; //random_point({0.9, 0.1}, {0.85, 0.9});
             vector bias = {- 1, 0};
             node_ptr root = grow_tree(pos, bias);
             nodes.push_back(root);
@@ -182,7 +181,7 @@ private:
 
 }
 }
-}
+
 
 
 #endif /* PROBLEMS_TUMOR_VASCULATURE_GENERATOR_HPP_ */

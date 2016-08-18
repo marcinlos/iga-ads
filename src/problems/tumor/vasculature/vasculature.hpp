@@ -8,33 +8,13 @@
 #include <algorithm>
 #include "ads/util/function_value.hpp"
 #include "problems/tumor/vasculature/defs.hpp"
+#include "problems/tumor/vasculature/config.hpp"
 #include "problems/tumor/vasculature/rasterizer.hpp"
 #include "problems/tumor/vasculature/plot.hpp"
 
 
-
-namespace ads {
 namespace tumor {
 namespace vasc {
-
-
-struct config {
-    double init_stability = 0.5;
-    double degeneration = 0.05;
-
-//    double t_ec_sprout = 0.5;
-//    double t_ec_migr = 100;
-
-    double t_ec_sprout = 10;
-    double t_ec_migr = 2;
-
-
-    // my values
-    double segment_length = 0.03;
-    double t_ec_collapse = 10;
-    double c_min = 0.2;
-};
-
 
 class vasculature {
 
@@ -61,7 +41,7 @@ public:
 
 private:
     static constexpr std::size_t N = 500;
-    using array = lin::tensor<double, Dim>;
+    using array = ads::lin::tensor<double, Dim>;
 
     config cfg;
     array veins{{ N + 1, N + 1 }}, oxygen{{ N + 1, N + 1 }};
@@ -74,27 +54,7 @@ private:
 
 public:
 
-    vasculature(std::vector<node_ptr> roots)
-    : roots{ std::move(roots) }
-    {
-        std::queue<node_ptr> q;
-        for (node_ptr node : this->roots) {
-            q.push(node);
-        }
-        while (! q.empty()) {
-            node_ptr n = q.front();
-            q.pop();
-
-            auto res = nodes.insert(n);
-            if (res.second) {
-                for (segment_ptr s : n->segments) {
-                    segments.insert(s);
-                    node_ptr other = s->begin != n ? s->begin : s->end;
-                    q.push(other);
-                }
-            }
-        }
-    }
+    vasculature(std::vector<node_ptr> roots);
 
     void plot_veins(const std::string& file) const {
         plot(file, veins);
@@ -167,7 +127,7 @@ public:
     std::vector<sprout> sprouts;
     std::set<node_ptr> sprout_nodes;
 
-    using value_type = function_value_2d;
+    using value_type = ads::function_value_2d;
 
     node_ptr find_neighbor(node_ptr node, node_ptr prev, double dist) {
         for (node_ptr n : nodes) {
@@ -265,28 +225,12 @@ public:
         return dist(rng);
     }
 
-    void blur(array& src, array& dst, int r, double scale) const {
-        double w = scale / ((2 * r + 1) * (2 * r + 1));
-        for (int i = r; i <= N - r; ++ i) {
-            for (int j = r; j <= N - r; ++ j) {
-                double v = 0;
-                for (int p = -r; p <= r; ++ p) {
-                    for (int q = -r; q <= r; ++ q) {
-                        v += src(i + p, j + q);
-                    }
-                }
-                v *= w;
-                dst(i, j) = v;
-            }
-        }
-    }
+    void blur(array& src, array& dst, int r, double scale) const;
 };
 
 
 }
 }
-}
-
 
 
 #endif /* PROBLEMS_TUMOR_VASCULATURE_VASCULATURE_HPP_ */

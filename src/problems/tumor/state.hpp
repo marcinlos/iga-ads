@@ -4,14 +4,12 @@
 #include "ads/lin/tensor.hpp"
 
 
-namespace ads {
 namespace tumor {
-
 
 template <std::size_t Dim>
 struct state {
 
-    using field = lin::tensor<double, Dim>;
+    using field = ads::lin::tensor<double, Dim>;
 
     field b;
     field c;
@@ -34,10 +32,6 @@ struct state {
     }
 };
 
-
 }
-}
-
-
 
 #endif /* PROBLEMS_TUMOR_STATE_HPP_ */

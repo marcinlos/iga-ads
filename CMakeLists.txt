@@ -127,6 +127,7 @@ if (NOT SKIP_PROBLEMS)
 
   define_problem(tumor
     src/problems/tumor/vasculature/plot.cpp
+    src/problems/tumor/vasculature/vasculature.cpp
     src/problems/tumor/tumor.cpp
     src/problems/tumor.cpp)
 

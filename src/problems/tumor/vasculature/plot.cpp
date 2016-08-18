@@ -7,19 +7,18 @@
 #include "ads/output/range.hpp"
 #include "ads/output/grid.hpp"
 
-namespace ads {
 namespace tumor {
 namespace vasc {
 
     void plot(std::ostream& os, const val_array& v) {
         auto s = v.sizes();
-        auto xs = linspace(0.0, 1.0, s[0] - 1);
-        auto ys = linspace(0.0, 1.0, s[1] - 1);
-        auto rx = output::from_container(xs);
-        auto ry = output::from_container(xs);
-        auto grid = output::make_grid(rx, ry);
+        auto xs = ads::linspace(0.0, 1.0, s[0] - 1);
+        auto ys = ads::linspace(0.0, 1.0, s[1] - 1);
+        auto rx = ads::output::from_container(xs);
+        auto ry = ads::output::from_container(xs);
+        auto grid = ads::output::make_grid(rx, ry);
 
-        output::gnuplot_printer<2> printer { DEFAULT_FMT };
+        ads::output::gnuplot_printer<2> printer { ads::DEFAULT_FMT };
         printer.print(os, grid, v);
     }
 
@@ -28,6 +27,5 @@ namespace vasc {
         plot(os, v);
     }
 
-}
 }
 }

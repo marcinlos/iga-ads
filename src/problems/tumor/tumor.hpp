@@ -16,35 +16,35 @@
 #include <cmath>
 #include <boost/format.hpp>
 
+namespace bsp = ads::bspline;
 
-namespace ads {
 namespace tumor {
 
-class tumor_2d : public simulation_2d {
+class tumor_2d : public ads::simulation_2d {
 private:
     static constexpr std::size_t Dim = 2;
-    using Base = simulation_2d;
+    using Base = ads::simulation_2d;
 
     state<Dim> now, prev;
     params p;
 
     vasc::vasculature vasculature;
 
-    output_manager<2> output;
+    ads::output_manager<2> output;
 
     int save_every = 100;
 
     int vasc_update_every = 10;
 
-    galois_executor executor{8};
+    ads::galois_executor executor{8};
 
-    bspline::eval_ctx xctx;
-    bspline::eval_ctx yctx;
-    bspline::eval_ders_ctx xdctx;
-    bspline::eval_ders_ctx ydctx;
+    ads::bspline::eval_ctx xctx;
+    ads::bspline::eval_ctx yctx;
+    ads::bspline::eval_ders_ctx xdctx;
+    ads::bspline::eval_ders_ctx ydctx;
 
 public:
-    tumor_2d(const config_2d& config, const params& params, vasc::vasculature vasculature);
+    tumor_2d(const ads::config_2d& config, const params& params, vasc::vasculature vasculature);
 
 private:
 
@@ -148,10 +148,6 @@ private:
     }
 };
 
-
 }
-}
-
-
 
 #endif /* ADS_PROBLEMS_TUMOR_TUMOR_HPP_ */

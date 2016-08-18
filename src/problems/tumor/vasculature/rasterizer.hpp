@@ -5,7 +5,6 @@
 #include "problems/tumor/vasculature/defs.hpp"
 
 
-namespace ads {
 namespace tumor {
 namespace vasc {
 
@@ -97,7 +96,6 @@ void draw_segment(vector a, vector b, Array& v, Value val) {
     }
 }
 
-}
 }
 }
 

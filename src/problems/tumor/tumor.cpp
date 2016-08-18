@@ -1,6 +1,7 @@
 #include "problems/tumor/tumor.hpp"
 
-namespace ads {
+using ads::config_2d;
+
 namespace tumor {
 
     tumor_2d::tumor_2d(const config_2d& config, const params& params, vasc::vasculature vasculature)
@@ -159,11 +160,11 @@ namespace tumor {
         int next_iter = iter + 1;
         if (next_iter % vasc_update_every == 0) {
             auto taf = [&,this](double x, double y) {
-                return bspline::eval_ders(x, y, now.c, this->x.B, this->y.B, xdctx, ydctx);
+                return ads::bspline::eval_ders(x, y, now.c, this->x.B, this->y.B, xdctx, ydctx);
             };
 
             auto tumor = [&,this](double x, double y) {
-                return bspline::eval(x, y, now.b, this->x.B, this->y.B, xctx, yctx);
+                return ads::bspline::eval(x, y, now.b, this->x.B, this->y.B, xctx, yctx);
             };
 
             vasculature.update(tumor, taf, steps.dt * vasc_update_every);
@@ -172,5 +173,4 @@ namespace tumor {
         }
     }
 
-}
 }

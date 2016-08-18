@@ -3,9 +3,7 @@
 
 #include <cstddef>
 
-namespace ads {
 namespace tumor {
-
 
 class skin_model {
 public:
@@ -66,7 +64,5 @@ public:
 
 
 }
-}
-
 
 #endif /* PROBLEMS_TUMOR_SKIN_HPP_ */
