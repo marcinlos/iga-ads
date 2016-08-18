@@ -8,8 +8,8 @@ namespace ads {
 namespace tumor {
 
 
+template <std::size_t Dim>
 struct state {
-    static constexpr std::size_t Dim = 2;
 
     using field = lin::tensor<double, Dim>;
 
@@ -20,7 +20,7 @@ struct state {
 
     field M, A;
 
-    state(const std::array<std::size_t, Dim>& shape)
+    state(std::array<std::size_t, Dim> shape)
     : b{ shape }
     , c{ shape }
     , n{ shape }, f{ shape }, m{ shape }

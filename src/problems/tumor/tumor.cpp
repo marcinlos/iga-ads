@@ -3,7 +3,7 @@
 namespace ads {
 namespace tumor {
 
-    tumor::tumor(const config_2d& config, const params& params, vasc::vasculature vasculature)
+    tumor_2d::tumor_2d(const config_2d& config, const params& params, vasc::vasculature vasculature)
     : Base{config}
     , now{ shape() }
     , prev{ shape() }
@@ -16,7 +16,7 @@ namespace tumor {
     , ydctx{ x.B.degree, 1 }
     { }
 
-    void tumor::save_to_file(int iter) {
+    void tumor_2d::save_to_file(int iter) {
         output.to_file(now.b, "tumor_%d.data", iter);
         output.to_file(now.n, "endothelial_%d.data", iter);
         output.to_file(now.f, "fibronectin_%d.data", iter);
@@ -27,7 +27,7 @@ namespace tumor {
         plot_vasculature(iter);
     }
 
-    void tumor::before() {
+    void tumor_2d::before() {
         prepare_matrices();
 
         auto tumor = [this](double x, double y) { return init_tumor(x, y); };
@@ -46,7 +46,7 @@ namespace tumor {
         plot_vasculature(0);
     }
 
-    void tumor::solve_all() {
+    void tumor_2d::solve_all() {
         apply_boundary_conditions(now.b);
         solve(now.b);
 
@@ -69,9 +69,9 @@ namespace tumor {
         solve(now.A);
     }
 
-    void tumor::compute_rhs() {
+    void tumor_2d::compute_rhs() {
         executor.for_each(elements(), [&](index_type e) {
-            state loc{ local_shape() };
+            state<Dim> loc{ local_shape() };
 
             double J = jacobian(e);
             for (auto q : quad_points()) {
@@ -155,7 +155,7 @@ namespace tumor {
         });
     }
 
-    void tumor::update_vasculature(int iter) {
+    void tumor_2d::update_vasculature(int iter) {
         int next_iter = iter + 1;
         if (next_iter % vasc_update_every == 0) {
             auto taf = [&,this](double x, double y) {

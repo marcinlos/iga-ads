@@ -20,11 +20,12 @@
 namespace ads {
 namespace tumor {
 
-class tumor : public simulation_2d {
+class tumor_2d : public simulation_2d {
 private:
+    static constexpr std::size_t Dim = 2;
     using Base = simulation_2d;
 
-    state now, prev;
+    state<Dim> now, prev;
     params p;
 
     vasc::vasculature vasculature;
@@ -43,7 +44,7 @@ private:
     bspline::eval_ders_ctx ydctx;
 
 public:
-    tumor(const config_2d& config, const params& params, vasc::vasculature vasculature);
+    tumor_2d(const config_2d& config, const params& params, vasc::vasculature vasculature);
 
 private:
 

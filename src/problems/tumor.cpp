@@ -15,6 +15,6 @@ int main() {
     tumor::params p;
     tumor::vasc::random_vasculature rand_vasc { 0 };
 
-    tumor::tumor sim { c, p, rand_vasc() };
+    tumor::tumor_2d sim { c, p, rand_vasc() };
     sim.run();
 }
