@@ -27,7 +27,7 @@ struct vtk_print_helper : output_base {
         util::stream_state_saver guard(os);
         prepare_stream(os);
         for_each_multiindex([this,&os,&value,&values...](auto... is) {
-            print_row(os, value(is...), values(is...)...);
+            this->print_row(os, value(is...), values(is...)...);
         }, value);
     }
 };
