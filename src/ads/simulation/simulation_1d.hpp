@@ -108,7 +108,7 @@ protected:
         return {local_shape()};
     }
 
-    void update_global_rhs(vector_type& global, vector_type& local, index_type e) const {
+    void update_global_rhs(vector_type& global, const vector_type& local, index_type e) const {
         for (auto a : dofs_on_element(e)) {
             auto loc = dof_global_to_local(e, a);
             global(a) += local(loc);
