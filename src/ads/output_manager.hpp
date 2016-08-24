@@ -85,8 +85,9 @@ public:
 template <>
 struct output_manager<3> : output_manager_base<output_manager<3>> {
 private:
+    using value_array = lin::tensor<double, 3>;
     output::axis x, y, z;
-    lin::tensor<double, 3> vals;
+    value_array vals;
     output::vtk output{ DEFAULT_FMT };
 
 public:
@@ -100,7 +101,7 @@ public:
     using output_manager_base::to_file;
 
     template <typename Solution>
-    void write(const Solution& sol, std::ostream& os) {
+    void evaluate(const Solution& sol, value_array& vals) {
         for (std::size_t i = 0; i < x.size(); ++ i) {
         for (std::size_t j = 0; j < y.size(); ++ j) {
         for (std::size_t k = 0; k < z.size(); ++ k) {
@@ -108,9 +109,42 @@ public:
         }
         }
         }
+    }
+
+    template <typename Solution>
+    value_array evaluate(const Solution& sol) {
+        value_array vals{{ x.size(), y.size(), z.size() }};
+        evaluate(sol, vals);
+        return vals;
+    }
+
+    template <typename Solution>
+    void write(const Solution& sol, std::ostream& os) {
+        evaluate(sol, vals);
         auto grid = make_grid(x.range(), y.range(), z.range());
         output.print(os, grid, vals);
     }
+
+    template <typename... Values>
+    void to_file(const std::string& file_pattern, int iter, const Values&... values) {
+        auto name = str(boost::format(file_pattern) % iter);
+        to_file(name, values...);
+    }
+
+    template <typename... Values>
+    void to_file(const std::string& output_file, const Values&... values) {
+        std::ofstream os { output_file };
+        auto grid = make_grid(x.range(), y.range(), z.range());
+        output.print(os, grid, values...);
+    }
+
+private:
+    template <typename... Values>
+    void print(std::ostream& os, const Values&... values) {
+        auto grid = make_grid(x.range(), y.range(), z.range());
+        output.print(os, grid, values...);
+    }
+
 };
 
 
