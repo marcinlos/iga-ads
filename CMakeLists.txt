@@ -99,3 +99,7 @@ define_problem(heat_2d
 
 define_problem(flow
   src/problems/flow/main.cpp)
+
+define_problem(linear_elasticity
+  src/problems/elasticity/main.cpp)
+
