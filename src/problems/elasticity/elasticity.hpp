@@ -34,8 +34,8 @@ namespace problems {
             fun(s.uy);
             fun(s.uz);
             fun(s.vx);
-            fun(s.vx);
-            fun(s.vx);
+            fun(s.vy);
+            fun(s.vz);
         }
 
     public:
@@ -50,14 +50,18 @@ namespace problems {
         void before() override {
             prepare_matrices();
 
+            // auto init = [this](double x, double y, double z) { return 1; };
+            // projection(now.vx, init);
+            // solve(now.vx);
+
             // auto init = [this](double x, double y, double z) { return x; };
             // projection(now.ux, init);
             // solve(now.ux);
 
-            output.to_file("init.vti",
-                           output.evaluate(now.ux),
-                           output.evaluate(now.uy),
-                           output.evaluate(now.uz));
+            // output.to_file("init.vti",
+            //                output.evaluate(now.ux),
+            //                output.evaluate(now.uy),
+            //                output.evaluate(now.uz));
         }
 
         void compute_rhs(double t) {
@@ -72,43 +76,45 @@ namespace problems {
 
         state local_contribution(index_type e, double t) const {
             auto local = state{ local_shape() };
+
             double J = jacobian(e);
             for (auto q : quad_points()) {
                 auto x = point(e, q);
                 double w = weigth(q);
+                value_type ux = eval_fun(prev.ux, e, q);
+                value_type uy = eval_fun(prev.uy, e, q);
+                value_type uz = eval_fun(prev.uz, e, q);
+                value_type vx = eval_fun(prev.vx, e, q);
+                value_type vy = eval_fun(prev.vy, e, q);
+                value_type vz = eval_fun(prev.vz, e, q);
+
+                tensor eps = {
+                    {         ux.dx,         0.5 * (ux.dy + uy.dx), 0.5 * (ux.dz + uz.dx) },
+                    { 0.5 * (ux.dy + uy.dx),         uy.dy,         0.5 * (uy.dz + uz.dy) },
+                    { 0.5 * (ux.dz + uz.dx), 0.5 * (uy.dz + uz.dy),         uz.dz         }
+                };
+                tensor s{};
+                stress_tensor(s, eps);
+                auto F = force(x, t);
+
                 for (auto a : dofs_on_element(e)) {
-                    value_type ux = eval_fun(prev.ux, e, q);
-                    value_type uy = eval_fun(prev.uy, e, q);
-                    value_type uz = eval_fun(prev.uz, e, q);
-                    value_type vx = eval_fun(prev.vx, e, q);
-                    value_type vy = eval_fun(prev.vy, e, q);
-                    value_type vz = eval_fun(prev.vz, e, q);
-
-                    tensor eps = {
-                        {         ux.dx,         0.5 * (ux.dy + uy.dx), 0.5 * (ux.dz + uz.dx) },
-                        { 0.5 * (ux.dy + uy.dx),         uy.dy,         0.5 * (uy.dz + uz.dy) },
-                        { 0.5 * (ux.dz + uz.dx), 0.5 * (uy.dz + uz.dy),         uz.dz         }
-                    };
-                    tensor s;
-                    stress_tensor(s, eps);
-
                     value_type b = eval_basis(e, q, a);
 
-                    auto F = force(x, t);
                     double rho = 1;
-                    double axb = (-eps[0][0] * b.dx - eps[0][1] * b.dy - eps[0][2] * b.dz + F[0] * b.val) / rho;
-                    double ayb = (-eps[1][0] * b.dx - eps[1][1] * b.dy - eps[1][2] * b.dz + F[1] * b.val) / rho;
-                    double azb = (-eps[2][0] * b.dx - eps[2][1] * b.dy - eps[2][2] * b.dz + F[2] * b.val) / rho;
+                    double axb = (-s[0][0] * b.dx - s[0][1] * b.dy - s[0][2] * b.dz + F[0] * b.val) / rho;
+                    double ayb = (-s[1][0] * b.dx - s[1][1] * b.dy - s[1][2] * b.dz + F[1] * b.val) / rho;
+                    double azb = (-s[2][0] * b.dx - s[2][1] * b.dy - s[2][2] * b.dz + F[2] * b.val) / rho;
 
-                    double t2 = steps.dt * steps.dt / 2;
+                    double dt = steps.dt;
+                    double t2 = dt * dt / 2;
                     auto aa = dof_global_to_local(e, a);
-                    ref(local.ux, aa) += ((ux.val + steps.dt * vx.val) * b.val + t2 * axb) * w * J;
-                    ref(local.uy, aa) += ((uy.val + steps.dt * vy.val) * b.val + t2 * ayb) * w * J;
-                    ref(local.uz, aa) += ((uz.val + steps.dt * vz.val) * b.val + t2 * azb) * w * J;
+                    ref(local.ux, aa) += ((ux.val + dt * vx.val) * b.val + t2 * axb) * w * J;
+                    ref(local.uy, aa) += ((uy.val + dt * vy.val) * b.val + t2 * ayb) * w * J;
+                    ref(local.uz, aa) += ((uz.val + dt * vz.val) * b.val + t2 * azb) * w * J;
 
-                    ref(local.vx, aa) += (ux.val * b.val + steps.dt * axb) * w * J;
-                    ref(local.vy, aa) += (uy.val * b.val + steps.dt * ayb) * w * J;
-                    ref(local.vz, aa) += (uz.val * b.val + steps.dt * azb) * w * J;
+                    ref(local.vx, aa) += (vx.val * b.val + dt * axb) * w * J;
+                    ref(local.vy, aa) += (vy.val * b.val + dt * ayb) * w * J;
+                    ref(local.vz, aa) += (vz.val * b.val + dt * azb) * w * J;
                 }
             }
             return local;
@@ -123,53 +129,37 @@ namespace problems {
             update_global_rhs(now.vz, loc.vz, e);
         }
 
-
-        void compute_rhs__(double t) {
+        double kinetic_energy() const {
+            double E = 0;
             for (auto e : elements()) {
                 double J = jacobian(e);
                 for (auto q : quad_points()) {
-                    auto x = point(e, q);
                     double w = weigth(q);
-                    for (auto a : dofs_on_element(e)) {
-                        value_type ux = eval_fun(prev.ux, e, q);
-                        value_type uy = eval_fun(prev.uy, e, q);
-                        value_type uz = eval_fun(prev.uz, e, q);
-                        value_type vx = eval_fun(prev.vx, e, q);
-                        value_type vy = eval_fun(prev.vy, e, q);
-                        value_type vz = eval_fun(prev.vz, e, q);
-
-                        tensor eps = {
-                            {         ux.dx,         0.5 * (ux.dy + uy.dx), 0.5 * (ux.dz + uz.dx) },
-                            { 0.5 * (ux.dy + uy.dx),         uy.dy,         0.5 * (uy.dz + uz.dy) },
-                            { 0.5 * (ux.dz + uz.dx), 0.5 * (uy.dz + uz.dy),         uz.dz         }
-                        };
-                        tensor s{};
-                        stress_tensor(s, eps);
-
-                        value_type b = eval_basis(e, q, a);
-
-                        auto F = force(x, t);
-                        double rho = 1;
-                        double axb = (-eps[0][0] * b.dx - eps[0][1] * b.dy - eps[0][2] * b.dz + F[0] * b.val) / rho;
-                        double ayb = (-eps[1][0] * b.dx - eps[1][1] * b.dy - eps[1][2] * b.dz + F[1] * b.val) / rho;
-                        double azb = (-eps[2][0] * b.dx - eps[2][1] * b.dy - eps[2][2] * b.dz + F[2] * b.val) / rho;
-
-                        double t2 = steps.dt * steps.dt / 2;
-                        ref(now.ux, a) += ((ux.val + steps.dt * vx.val) * b.val + t2 * axb) * w * J;
-                        ref(now.uy, a) += ((uy.val + steps.dt * vy.val) * b.val + t2 * ayb) * w * J;
-                        ref(now.uz, a) += ((uz.val + steps.dt * vz.val) * b.val + t2 * azb) * w * J;
-
-                        ref(now.vx, a) += (ux.val * b.val + steps.dt * axb) * w * J;
-                        ref(now.vy, a) += (uy.val * b.val + steps.dt * ayb) * w * J;
-                        ref(now.vz, a) += (uz.val * b.val + steps.dt * azb) * w * J;
-                    }
+                    value_type vx = eval_fun(prev.vx, e, q);
+                    value_type vy = eval_fun(prev.vy, e, q);
+                    value_type vz = eval_fun(prev.vz, e, q);
+                    E += w * J * 0.5 * (vx.val * vx.val + vy.val * vy.val + vz.val * vz.val);
                 }
             }
+            return E;
+        }
+
+        double total() const {
+            double E = 0;
+            for (auto e : elements()) {
+                double J = jacobian(e);
+                for (auto q : quad_points()) {
+                    double w = weigth(q);
+                    value_type vx = eval_fun(prev.vx, e, q);
+                    E += w * J * vx.val;
+                }
+            }
+            return E;
         }
 
         void stress_tensor(tensor& s, const tensor& eps) const {
-            double lambda = 0.1;
-            double mi = 0.1;
+            double lambda = 1;
+            double mi = 1;
             double tr = eps[0][0] + eps[1][1] + eps[2][2];
 
             for (int i = 0; i < 3; ++ i) {
@@ -184,7 +174,7 @@ namespace problems {
             using std::pow;
             constexpr double t0 = 0.02;
             double tt = t / t0;
-            double f = pow(tt * (1 - tt), 2);
+            double f = tt < 1 ? pow(tt * (1 - tt), 2) : 0;
             double r = pow(x[0] - 1, 2) + pow(x[1] - 1, 2) + pow(x[2] - 1, 2);
             double a = - 10 * f * std::exp(- 10 * r);
             return {a, a, a};
@@ -200,16 +190,20 @@ namespace problems {
             for_all(now, [this](vector_type& a) { solve(a); });
         }
 
-        void after_step(int iter, double /*t*/) override {
-            std::cout << "Iteration " << iter << std::endl;
-            if (iter % 10 == 0) {
-                std::cout << "Outputting..." << std::endl;
-                output.to_file("out_%d.vti", iter,
-                               output.evaluate(now.ux),
-                               output.evaluate(now.uy),
-                               output.evaluate(now.uz));
-            }
-        }
+        // void after_step(int iter, double /*t*/) override {
+        //     std::cout << "** Iteration " << iter << std::endl;
+        //     std::cout << "Kinetic energy: " << kinetic_energy() << std::endl;
+        //     std::cout << "Total disp:   : " << total() << std::endl;
+
+        //     std::cout << std::endl;
+        //     if (iter % 10 == 0) {
+        //         std::cout << "Outputting..." << std::endl;
+        //         output.to_file("out_%d.vti", iter,
+        //                        output.evaluate(now.vx),
+        //                        output.evaluate(now.vy),
+        //                        output.evaluate(now.vz));
+        //     }
+        // }
 
 
         double& ref(vector_type& v, index_type idx) const {
