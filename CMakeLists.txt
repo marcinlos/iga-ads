@@ -96,3 +96,6 @@ endfunction()
 
 define_problem(heat_2d
   src/problems/heat/heat_2d.cpp)
+
+define_problem(flow
+  src/problems/flow/main.cpp)
