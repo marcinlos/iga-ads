@@ -110,7 +110,7 @@ private:
         return E;
     }
 
-    void after_step(int iter, double t) override {
+    void after_step(int iter, double /*t*/) override {
         if (iter % 10 == 0) {
             std::cout << "Energy: " << energy(u) << std::endl;
         }
