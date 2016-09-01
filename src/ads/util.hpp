@@ -6,13 +6,14 @@
 
 namespace ads {
 
-template <typename T>
-T clamp(T x, T min, T max) {
-    return x < min ? min : x > max ? max : x;
+
+template <typename T, typename TMin, typename TMax>
+auto clamp(T v, TMin min, TMax max) {
+    return v < min ? min : v > max ? max : v;
 }
 
-template <typename Num>
-Num lerp(Num t, Num a, Num b) {
+template <typename Num, typename Val>
+Val lerp(Num t, Val a, Val b) {
     return (1 - t) * a + t * b;
 }
 
