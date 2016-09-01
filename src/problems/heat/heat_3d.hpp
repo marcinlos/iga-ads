@@ -1,12 +1,7 @@
 #ifndef ADS_PROBLEMS_HEAT_HEAT_3D_HPP_
 #define ADS_PROBLEMS_HEAT_HEAT_3D_HPP_
 
-#include "ads/output_manager.hpp"
-#include "ads/problems/heat.hpp"
-
 #include "ads/simulation.hpp"
-#include <complex>
-
 
 namespace ads {
 namespace problems {
@@ -74,8 +69,6 @@ private:
 
 }
 }
-
-
 
 
 #endif /* ADS_PROBLEMS_HEAT_HEAT_3D_HPP_ */

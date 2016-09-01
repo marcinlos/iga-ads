@@ -101,6 +101,9 @@ if (NOT SKIP_PROBLEMS)
   define_problem(heat_2d
     src/problems/heat/heat_2d.cpp)
 
+  define_problem(heat_3d
+    src/problems/heat/heat_3d.cpp)
+
   define_problem(flow
     src/problems/flow/main.cpp)
 
