@@ -89,17 +89,22 @@ endif()
 # Problems
 # --------------------------------------------------------------------
 
+option(SKIP_PROBLEMS "skip compiling example problems" OFF)
+
 function(define_problem name)
   add_executable(${name} ${ARGN})
   target_link_libraries(${name} ads)
 endfunction()
 
-define_problem(heat_2d
-  src/problems/heat/heat_2d.cpp)
+if (NOT SKIP_PROBLEMS)
 
-define_problem(flow
-  src/problems/flow/main.cpp)
+  define_problem(heat_2d
+    src/problems/heat/heat_2d.cpp)
 
-define_problem(linear_elasticity
-  src/problems/elasticity/main.cpp)
+  define_problem(flow
+    src/problems/flow/main.cpp)
 
+  define_problem(linear_elasticity
+    src/problems/elasticity/main.cpp)
+
+endif()
