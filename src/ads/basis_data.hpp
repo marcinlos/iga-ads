@@ -18,13 +18,13 @@ struct basis_data {
     int elements;
     int quad_order;
     bspline::knot_vector knot;
-    const bspline::basis& basis;
+    bspline::basis basis;
     double**** b;
     double** x;
     const double* w;
     double* J;
 
-    basis_data(const bspline::basis& basis, int derivatives);
+    basis_data(bspline::basis basis, int derivatives);
 
     int first_dof(element_id e) const {
         return first_dofs[e];

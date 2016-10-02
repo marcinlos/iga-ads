@@ -5,16 +5,16 @@
 
 namespace ads {
 
-    basis_data::basis_data(const bspline::basis& basis, int derivatives)
+    basis_data::basis_data(bspline::basis basis, int derivatives)
     : first_dofs(bspline::first_nonzero_dofs(basis))
     , degree(basis.degree)
     , elements(basis.elements())
     , quad_order(basis.degree + 1)
     , knot(basis.knot)
-    , basis(basis)
+    , basis(std::move(basis))
     , w(quad::gauss::Ws[quad_order])
     {
-        int p = basis.degree;
+        int p = this->basis.degree;
         int q = quad_order;
         x = new double*[elements];
         J = new double[elements];
@@ -24,8 +24,8 @@ namespace ads {
 
         for (int e = 0; e < elements; ++ e) {
             x[e] = new double[q];
-            double x1 = basis.knot[p + e];
-            double x2 = basis.knot[p + e + 1];
+            double x1 = this->basis.knot[p + e];
+            double x2 = this->basis.knot[p + e + 1];
             J[e] = 0.5 * (x2 - x1);
 
             for (int k = 0; k < q; ++ k) {
@@ -40,8 +40,8 @@ namespace ads {
                 for (int d = 0; d <= derivatives; ++ d) {
                     b[e][k][d] = new double[p + 1];
                 }
-                for (int i = 0; i < basis.dofs_per_element(); ++ i) {
-                    eval_basis_with_derivatives(e + p, x[e][k], basis, b[e][k], derivatives, ctx);
+                for (int i = 0; i < this->basis.dofs_per_element(); ++ i) {
+                    eval_basis_with_derivatives(e + p, x[e][k], this->basis, b[e][k], derivatives, ctx);
                 }
             }
         }
