@@ -34,7 +34,17 @@ set(ads_LIBS)
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 
+
 list(APPEND ads_LIBS ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+
+# MUMPS
+set(USE_MUMPS OFF CACHE BOOL "Use MUMPS solver")
+
+if (USE_MUMPS)
+  set(MUMPS_LIBRARIES "dmumps_seq")
+  list(APPEND ads_LIBS ${MUMPS_LIBRARIES})
+endif()
+
 
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
