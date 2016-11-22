@@ -131,13 +131,21 @@ public:
         }
     }
 
+    eval_ders_ctx(eval_ders_ctx&& other)
+    : basis_eval_ctx(std::move(other))
+    , buffer_(std::move(other.buffer_))
+    , ders(other.ders)
+    {
+        other.buffer_.clear();
+    }
+
     double** basis_vals() {
         return buffer_.data();
     }
 
     ~eval_ders_ctx() {
-        for (int i = 0; i <= ders; ++ i) {
-            delete[] buffer_[i];
+        for (auto b : buffer_) {
+            delete[] b;
         }
     }
 };
