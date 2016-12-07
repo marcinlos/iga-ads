@@ -6,6 +6,7 @@
 #include "ads/executor/galois.hpp"
 #include "problems/flow/pumps.hpp"
 #include "problems/flow/environment.hpp"
+#include "ads/output_manager.hpp"
 
 
 namespace ads {
@@ -21,6 +22,7 @@ private:
 
     environment env {1};
     lin::tensor<double, 6> kq;
+    output_manager<3> output;
 
 public:
     flow(const config_3d& config)
@@ -31,11 +33,12 @@ public:
         x.basis.elements, y.basis.elements, z.basis.elements,
         x.basis.quad_order + 1, y.basis.quad_order + 1, z.basis.quad_order + 1
     }}
+    , output{ x.B, y.B, z.B, 50 }
     { }
 
     double init_state(double x, double y, double z) {
         double r = 0.1;
-        double R = 0.25;
+        double R = 0.5;
         return ads::bump(r, R, x, y, z);
     };
 
@@ -47,6 +50,7 @@ private:
         auto init = [this](double x, double y, double z) { return init_state(x, y, z); };
         projection(u, init);
         solve(u);
+        output.to_file(u, "out_%d.vti", 0);
     }
 
     void fill_permeability_map() {
@@ -112,7 +116,10 @@ private:
 
     void after_step(int iter, double /*t*/) override {
         if (iter % 10 == 0) {
-            std::cout << "Energy: " << energy(u) << std::endl;
+            std::cout << "Step " << iter << ", energy: " << energy(u) << std::endl;
+        }
+        if ((iter + 1) % 100 == 0) {
+            output.to_file(u, "out_%d.vti", iter + 1);
         }
     }
 
@@ -123,7 +130,7 @@ private:
     double forcing(point_type x, double /*t*/) const {
         using std::sin;
         double pi2 = 2 * M_PI;
-        return sin(pi2 * x[0]) * sin(pi2 * x[1]) * sin(pi2 * x[2]);
+        return 1 + sin(pi2 * x[0]) * sin(pi2 * x[1]) * sin(pi2 * x[2]);
     }
 };
 
