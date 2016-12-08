@@ -1,15 +1,15 @@
-cmake_minimum_required(VERSION 2.8)
-project(ADS CXX)
+cmake_minimum_required(VERSION 3.1)
+project(ADS C CXX)
 
 
 # We use C++14
-set(std_version "-std=c++14")
-set(optimization "-O2")
-set(ignored_warnings "-Wno-narrowing -Wno-deprecated-declarations")
-set(warnings "-Wall -Wextra -pedantic ${ignored_warnings}")
+set (CMAKE_CXX_STANDARD 14)
 
-set(CMAKE_CXX_FLAGS
-  "${CMAKE_CXX_FLAGS} ${optimization} ${warnings} ${std_version}")
+# Default to Release build
+if(NOT CMAKE_BUILD_TYPE)
+  message(STATUS "No build type selected, default to Release")
+  set(CMAKE_BUILD_TYPE "Release")
+endif()
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
 
@@ -34,7 +34,7 @@ set(ads_LIBS)
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 
-list(APPEND ads_LIBS lapack blas)
+list(APPEND ads_LIBS ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 
 find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
@@ -52,6 +52,13 @@ if (USE_GALOIS)
   list(APPEND ads_SRC ${SRC}/executor/galois.cpp)
 endif()
 
+if (CMAKE_COMPILER_IS_GNUCXX)
+  set(ignored_warnings "-Wno-narrowing -Wno-deprecated-declarations")
+  set(warnings "-Wall -Wextra -pedantic ${ignored_warnings}")
+
+  set(CMAKE_CXX_FLAGS
+    "${CMAKE_CXX_FLAGS} ${optimization} ${warnings} ${std_version}")
+endif()
 
 # Target library definition
 add_library(ads STATIC ${ads_SRC})
