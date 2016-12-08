@@ -23,6 +23,7 @@ namespace problems {
         };
 
         state now, prev;
+        vector_type energy;
 
         ads::output_manager<3> output;
 
@@ -42,6 +43,7 @@ namespace problems {
         linear_elasticity(const ads::config_3d& config)
         : Base{ config }
         , now{ shape() }, prev{ shape() }
+        , energy{ shape() }
         , output{ x.B, y.B, z.B, 50 }
         { }
 
@@ -49,19 +51,6 @@ namespace problems {
 
         void before() override {
             prepare_matrices();
-
-            // auto init = [this](double x, double y, double z) { return 1; };
-            // projection(now.vx, init);
-            // solve(now.vx);
-
-            // auto init = [this](double x, double y, double z) { return x; };
-            // projection(now.ux, init);
-            // solve(now.ux);
-
-            // output.to_file("init.vti",
-            //                output.evaluate(now.ux),
-            //                output.evaluate(now.uy),
-            //                output.evaluate(now.uz));
         }
 
         void compute_rhs(double t) {
@@ -135,13 +124,74 @@ namespace problems {
                 double J = jacobian(e);
                 for (auto q : quad_points()) {
                     double w = weigth(q);
-                    value_type vx = eval_fun(prev.vx, e, q);
-                    value_type vy = eval_fun(prev.vy, e, q);
-                    value_type vz = eval_fun(prev.vz, e, q);
+                    value_type vx = eval_fun(now.vx, e, q);
+                    value_type vy = eval_fun(now.vy, e, q);
+                    value_type vz = eval_fun(now.vz, e, q);
                     E += w * J * 0.5 * (vx.val * vx.val + vy.val * vy.val + vz.val * vz.val);
                 }
             }
             return E;
+        }
+
+        double potential_energy() const {
+            double E = 0;
+            for (auto e : elements()) {
+                double J = jacobian(e);
+                for (auto q : quad_points()) {
+                    double w = weigth(q);
+                    value_type ux = eval_fun(now.ux, e, q);
+                    value_type uy = eval_fun(now.uy, e, q);
+                    value_type uz = eval_fun(now.uz, e, q);
+
+                    tensor eps = {
+                        {         ux.dx,         0.5 * (ux.dy + uy.dx), 0.5 * (ux.dz + uz.dx) },
+                        { 0.5 * (ux.dy + uy.dx),         uy.dy,         0.5 * (uy.dz + uz.dy) },
+                        { 0.5 * (ux.dz + uz.dx), 0.5 * (uy.dz + uz.dy),         uz.dz         }
+                    };
+                    tensor s{};
+                    stress_tensor(s, eps);
+                    double U = 0;
+                    for (int i = 0; i < 3; ++ i) {
+                        for (int j = 0; j < 3; ++ j) {
+                            U += 0.5 * s[i][j] * eps[i][j];
+                        }
+                    }
+                    E += w * J * U;
+                }
+            }
+            return E;
+        }
+
+        void compute_potential_energy() {
+            zero(energy);
+            for (auto e : elements()) {
+                double J = jacobian(e);
+                for (auto q : quad_points()) {
+                    double w = weigth(q);
+                    value_type ux = eval_fun(now.ux, e, q);
+                    value_type uy = eval_fun(now.uy, e, q);
+                    value_type uz = eval_fun(now.uz, e, q);
+
+                    tensor eps = {
+                        {         ux.dx,         0.5 * (ux.dy + uy.dx), 0.5 * (ux.dz + uz.dx) },
+                        { 0.5 * (ux.dy + uy.dx),         uy.dy,         0.5 * (uy.dz + uz.dy) },
+                        { 0.5 * (ux.dz + uz.dx), 0.5 * (uy.dz + uz.dy),         uz.dz         }
+                    };
+                    tensor s{};
+                    stress_tensor(s, eps);
+                    double U = 0;
+                    for (int i = 0; i < 3; ++ i) {
+                        for (int j = 0; j < 3; ++ j) {
+                            U += 0.5 * s[i][j] * eps[i][j];
+                        }
+                    }
+                    for (auto a : dofs_on_element(e)) {
+                        value_type v = eval_basis(e, q, a);
+                        energy(a[0], a[1], a[2]) += w * J * v.val * U;
+                    }
+                }
+            }
+            solve(energy);
         }
 
         double total() const {
@@ -150,7 +200,7 @@ namespace problems {
                 double J = jacobian(e);
                 for (auto q : quad_points()) {
                     double w = weigth(q);
-                    value_type vx = eval_fun(prev.vx, e, q);
+                    value_type vx = eval_fun(now.vx, e, q);
                     E += w * J * vx.val;
                 }
             }
@@ -190,20 +240,28 @@ namespace problems {
             for_all(now, [this](vector_type& a) { solve(a); });
         }
 
-        // void after_step(int iter, double /*t*/) override {
-        //     std::cout << "** Iteration " << iter << std::endl;
-        //     std::cout << "Kinetic energy: " << kinetic_energy() << std::endl;
-        //     std::cout << "Total disp:   : " << total() << std::endl;
+        void after_step(int iter, double t) override {
+            if (iter % 100 == 0) {
+                std::cout << "** Iteration " << iter << ", t = " << t << std::endl;
 
-        //     std::cout << std::endl;
-        //     if (iter % 10 == 0) {
-        //         std::cout << "Outputting..." << std::endl;
-        //         output.to_file("out_%d.vti", iter,
-        //                        output.evaluate(now.vx),
-        //                        output.evaluate(now.vy),
-        //                        output.evaluate(now.vz));
-        //     }
-        // }
+                double Ek = kinetic_energy();
+                double Ep = potential_energy();
+                compute_potential_energy();
+
+                std::cout << "Kinetic energy: " << Ek << std::endl;
+                std::cout << "Potential energy: " << Ep << std::endl;
+                std::cout << "Total energy: " << Ek + Ep << std::endl;
+
+                std::cout << "Total disp:   : " << total() << std::endl;
+                std::cout << std::endl;
+
+                output.to_file("out_%d.vti", iter,
+                               output.evaluate(now.ux),
+                               output.evaluate(now.uy),
+                               output.evaluate(now.uz),
+                               output.evaluate(energy));
+            }
+        }
 
 
         double& ref(vector_type& v, index_type idx) const {
