@@ -107,6 +107,9 @@ if (NOT SKIP_PROBLEMS)
 
     define_problem(linear_elasticity
       src/problems/elasticity/main.cpp)
+
+    define_problem(validation
+      src/problems/validation/main.cpp)
   endif()
 
   define_problem(heat_3d
