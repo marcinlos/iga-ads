@@ -28,7 +28,7 @@ public:
     , output{ x.B, y.B, 200 }
     { }
 
-    double init_state(double x, double y) {
+    double init_state(double /*x*/, double /*y*/) {
         // double dx = x - 0.5;
         // double dy = y - 0.5;
         // double r2 = std::min(8 * (dx * dx + dy * dy), 1.0);
