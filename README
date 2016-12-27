@@ -17,7 +17,7 @@ Galois is required for parallelism, libunittest for unit tests only.
 
 2. Tools
 - compiler: reasonable C++14 support is required (framework has been tested with GCC 5.3.1)
-- build system: CMake 2.8 or higher
+- build system: CMake 3.1 or higher
 
 
 2. Compilation
@@ -155,6 +155,8 @@ Problem implementations:
   src/problems/heat/heat_2d.hpp
   src/problems/heat/heat_3d.cpp
   src/problems/heat/heat_3d.hpp
+  src/problems/validation/main.cpp
+  src/problems/validation/validation.hpp
 
 Unit tests:
   test/ads/bspline/bspline_test.cpp
