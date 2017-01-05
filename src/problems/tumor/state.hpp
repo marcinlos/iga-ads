@@ -14,19 +14,16 @@ struct state {
     field b;
     field c;
 
-    field n, f, m;
-
     field M, A;
 
     state(std::array<std::size_t, Dim> shape)
     : b{ shape }
     , c{ shape }
-    , n{ shape }, f{ shape }, m{ shape }
     , M{ shape }, A{ shape }
     { }
 
     void clear() {
-        for (field* x : { &b, &c, &n, &f, &m, &M, &A }) {
+        for (field* x : { &b, &c, &M, &A }) {
             zero(*x);
         }
     }

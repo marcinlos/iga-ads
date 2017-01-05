@@ -19,9 +19,6 @@ namespace tumor {
 
     void tumor_2d::save_to_file(int iter) {
         output.to_file(now.b, "tumor_%d.data", iter);
-        output.to_file(now.n, "endothelial_%d.data", iter);
-        output.to_file(now.f, "fibronectin_%d.data", iter);
-        output.to_file(now.m, "mde_%d.data", iter);
         output.to_file(now.c, "taf_%d.data", iter);
         output.to_file(now.M, "ecm_%d.data", iter);
         output.to_file(now.A, "degraded_ecm_%d.data", iter);
@@ -32,12 +29,10 @@ namespace tumor {
         prepare_matrices();
 
         auto tumor = [this](double x, double y) { return init_tumor(x, y); };
-        auto fibro = [this](double x, double y) { return init_fibronectin(x, y); };
         auto m = [this](double x, double y) { return init_M(x, y); };
         projection(now.b, tumor);
         projection(now.A, constant(0));
         projection(now.M, m);
-        projection(now.f, fibro);
 
         solve_all();
 
@@ -53,15 +48,6 @@ namespace tumor {
 
         apply_boundary_conditions(now.c);
         solve(now.c);
-
-        apply_boundary_conditions(now.n);
-        solve(now.n);
-
-        apply_boundary_conditions(now.f);
-        solve(now.f);
-
-        apply_boundary_conditions(now.m);
-        solve(now.m);
 
         apply_boundary_conditions(now.M);
         solve(now.M);
@@ -84,10 +70,6 @@ namespace tumor {
 
                     value_type b = ensure_positive(eval_fun(prev.b, e, q));
                     value_type c = ensure_positive(eval_fun(prev.c, e, q));
-                    value_type n = ensure_positive(eval_fun(prev.n, e, q));
-                    value_type f = ensure_positive(eval_fun(prev.f, e, q));
-                    value_type m = ensure_positive(eval_fun(prev.m, e, q));
-
                     value_type M = ensure_positive(eval_fun(prev.M, e, q));
                     value_type A = ensure_positive(eval_fun(prev.A, e, q));
 
@@ -107,7 +89,6 @@ namespace tumor {
                         b_sink = -b.val / p.t_death_TC;
                     }
 
-//                    double D_b = p.skin.diffusion(x[0], x[1], x[2]);
                     double D_b = p.skin.diffusion(x[0], x[1], x[0]) * 0.01; // ????
                     double grad_Av = grad_dot(A, v);
                     double grad_Pv = b.val >= p.c_b_norm ? grad_dot(b, v) / (p.c_b_max - p.c_b_norm) : 0;
@@ -117,19 +98,6 @@ namespace tumor {
                     double bv = - divJv + (b_src + b_sink) * v.val;
                     val(loc.b, aa) += (b.val * v.val + bv * steps.dt) * w * J;
 
-                    // endothelial cells
-                    double X = p.chi_n / (1 + p.delta_n * c.val);
-//                    double nv = - p.D_n * grad_dot(n, v) + grad_dot(n.val * X * c, v) + p.rho_n * grad_dot(n.val * f, v);
-                    double nv = grad_dot(-p.D_n * n + n.val * X * c + n.val * f, v);
-                    val(loc.n, aa) += (n.val * v.val + nv * steps.dt) * w * J;
-
-                    // fibronectin
-                    double fv = p.beta_f * n.val - p.gamma_f * m.val * f.val;
-                    val(loc.f, aa) += (f.val * v.val + fv * steps.dt) * w * J;
-
-                    // MDE
-                    double mv = p.alpha_m * n.val - p.epsilon_m * grad_dot(m, v) - p.upsilon_m * m.val;
-                    val(loc.m, aa) += (m.val * v.val + mv * steps.dt) * w * J;
 
                     // ECM evolution
                     double Mv = - p.beta_m * M.val * b.val * v.val;
@@ -146,9 +114,6 @@ namespace tumor {
             }
             executor.synchronized([&]() {
                 update_global_rhs(now.b, loc.b, e);
-                update_global_rhs(now.n, loc.n, e);
-                update_global_rhs(now.f, loc.f, e);
-                update_global_rhs(now.m, loc.m, e);
                 update_global_rhs(now.M, loc.M, e);
                 update_global_rhs(now.A, loc.A, e);
                 update_global_rhs(now.c, loc.c, e);
