@@ -131,4 +131,7 @@ if (NOT SKIP_PROBLEMS)
     src/problems/tumor/tumor.cpp
     src/problems/tumor.cpp)
 
+  define_problem(tumor_3d
+    src/problems/tumor/3d/main.cpp)
+
 endif()
