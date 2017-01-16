@@ -11,25 +11,17 @@ struct params {
     double c_b_max = 2; // maximal concentration of tumor cells
     double tau_b = 0.5; // ?
 
-    double o_prol_TC = 0.1;   // oxygen proliferation threshold
-    double o_death_TC = 0.01; // oxygen survival threshold
+    double o_prol_TC = 10;   // oxygen proliferation threshold
+    double o_death_TC = 2; // oxygen survival threshold
     double t_prol_TC = 10;
     double t_death_TC = 100;
     double P_b = 0.001; // stimulated mitosis rate
-    double r_b = 1e-4;  // chemoattractant sensitivity, 1-3-5 x 10^-4
+    double r_b = 0.3;  // chemoattractant sensitivity, 1-3-5 x 10^-4
 
-    double beta_m = 1;      // ???? some ECM decay coefficient
-    double gamma_a = 0.5;   // production rate of attractants
-    double chi_aA = 0.01;   // diffusion of degraded ECM
-    double gamma_oA = 0.01; // decay of degraded ECM
-
-    double rho_n = 0.28;  // haptotactic cell migration
-    double D_n = 0.0003;  // diffusion of endothelial cells
-    double chi_n = 0.38;  // chemotactic cell migration
-    double delta_n = 0.6; // chemotactic constant
-
-    double beta_f = 0.05; // production rate of fibronectin
-    double gamma_f = 0.1; // degradation rate of fibronectin
+    double beta_m = 1 / 16.0;      // ???? some ECM decay coefficient
+    double gamma_a = 0.5 / 15.6;   // production rate of attractants
+    double chi_aA = 0.01 / 15.6;   // diffusion of degraded ECM
+    double gamma_oA = 0.01 / 15.6; // decay of degraded ECM
 
     double alpha_m = 0.000001; // MDA generation rate
     double epsilon_m = 0.01;   // MDA diffusion coefficient
@@ -37,6 +29,10 @@ struct params {
 
     double diff_c = 0.01; // TAF diffusion rate
     double cons_c = 0.3;  // TAF consumption
+
+    double alpha_0 = 0.0000555;
+    double gamma_T = 0.01;
+    double alpha_1 = 0.4;
 
     skin_model skin;
 

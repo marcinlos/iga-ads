@@ -19,26 +19,18 @@ public:
     static constexpr std::size_t layer_count = static_cast<std::size_t>(layer::count);
 
     double diffusion_coefficient[layer_count] = {
-        2.5  / 50, // stratum corneum
-        15.0 / 50, // stratum spinosum
-        0.1 / 50,  // basement membrame
-        7.5 / 50,  // dermis
-        2.5 / 50,  // hypodermis
+        20 * 1e-6, // stratum corneum
+        83 * 1e-6, // stratum spinosum
+        0.83 * 1e-6,  // basement membrame
+        41.5 * 1e-6,  // dermis
+        20 * 1e-6,  // hypodermis
     };
 
-    double layer_size[layer_count] = {
-        0.1,  // stratum corneum
-        0.15, // stratum spinosum
-        0.05, // basement membrame
-        0.5,  // dermis
-        0.2,  // hypodermis
-    };
-
-    double stratum_corneum_top = 1;
-    double stratum_spinosum_top = 1 - layer_size[stratum_corneum];
-    double basement_membrame_top = stratum_spinosum_top - layer_size[stratum_spinosum];
-    double dermis_top = basement_membrame_top - layer_size[basement_membrame];
-    double hypodermis_top = dermis_top - layer_size[dermis];
+    double stratum_corneum_top = 3000;
+    double stratum_spinosum_top = 2820;
+    double basement_membrame_top = 2440;
+    double dermis_top = 2400;
+    double hypodermis_top = 600;
 
     double top[layer_count] = {
         stratum_corneum_top,
@@ -59,6 +51,10 @@ public:
 
     double diffusion(double x, double y, double z) const {
         return diffusion_coefficient[layer_at(x, y, z)];
+    }
+
+    double init_M(double x, double y, double z) const {
+        return layer_at(x, y, z) == dermis ? 1.0 : 0.1;
     }
 };
 
