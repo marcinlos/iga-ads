@@ -26,6 +26,7 @@ struct params {
     double diff_c = 0.01; // TAF diffusion rate
     double cons_c = 0.3;  // TAF consumption
 
+    double o_max = 60.0;
     double alpha_0 = 0.0000555;
     double gamma_T = 0.01;
     double alpha_1 = 0.4;
