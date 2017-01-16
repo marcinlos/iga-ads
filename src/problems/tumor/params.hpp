@@ -23,10 +23,6 @@ struct params {
     double chi_aA = 0.01 / 15.6;   // diffusion of degraded ECM
     double gamma_oA = 0.01 / 15.6; // decay of degraded ECM
 
-    double alpha_m = 0.000001; // MDA generation rate
-    double epsilon_m = 0.01;   // MDA diffusion coefficient
-    double upsilon_m = 3;      // MDA degradation rage
-
     double diff_c = 0.01; // TAF diffusion rate
     double cons_c = 0.3;  // TAF consumption
 
