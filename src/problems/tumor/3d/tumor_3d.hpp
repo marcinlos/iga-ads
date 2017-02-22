@@ -41,6 +41,7 @@ namespace tumor {
         ads::galois_executor executor;
 
         Galois::StatTimer timer{"total"};
+        Galois::StatTimer integration_timer{"integration"};
 
     public:
         tumor_3d(const ads::config_3d& config, const params& params, vasculature vasc, int threads)
@@ -336,6 +337,19 @@ namespace tumor {
             solve(s.A);
         }
 
+        void compute_rhs() {
+            now.clear();
+
+            integration_timer.start();
+            executor.for_each(elements(), [&](index_type e) {
+                auto local = local_contribution(e);
+                executor.synchronized([&] {
+                    apply_local_contribution(local, e);
+                });
+            });
+            integration_timer.stop();
+        }
+
         state<Dim> local_contribution(const state<Dim>& s, index_type e, double h) const {
             auto local = state<Dim>{ local_shape() };
 
@@ -457,6 +471,12 @@ namespace tumor {
                 return ads::bspline::eval(xx, yy, zz, now.b, this->x.B, this->y.B, this->z.B, xctx, yctx, zctx);
             };
             vasc.update(tumor, taf, iter, steps.dt);
+        }
+
+        virtual void after() override {
+            auto total = static_cast<double>(integration_timer.get());
+            auto avg = total / steps.step_count;
+            std::cout << "{ 'integration' : " << avg  << "}" << std::endl;
         }
     };
 
