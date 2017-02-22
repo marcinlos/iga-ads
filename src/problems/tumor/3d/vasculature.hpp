@@ -1,0 +1,293 @@
+#ifndef ADS_PROBLEMS_TUMOR_3D_VASCULATURE_HPP
+#define ADS_PROBLEMS_TUMOR_3D_VASCULATURE_HPP
+
+#include <algorithm>
+#include <vector>
+#include <set>
+#include <random>
+
+
+#include "ads/lin/tensor.hpp"
+#include "ads/util/math/vec.hpp"
+#include "problems/tumor/3d/rasterizer.hpp"
+#include "problems/tumor/vasculature/config.hpp"
+#include "ads/util/function_value.hpp"
+
+
+#include "ads/output_manager.hpp"
+#include "ads/output/vtk.hpp"
+
+
+
+namespace tumor {
+
+class vessels {
+public:
+    using point_type = ads::math::vec<3>;
+    using value_type = ads::function_value_3d;
+
+    struct node;
+    struct edge;
+
+    using node_ptr = node*;
+    using edge_ptr = edge*;
+
+    struct node {
+        point_type pos;
+        std::vector<edge_ptr> edges;
+    };
+
+    struct edge {
+        node_ptr src, dst;
+        double stability;
+        double size;
+    };
+
+    struct sprout {
+        node_ptr tip;
+        point_type dir;
+        double time;
+    };
+
+private:
+    std::vector<node_ptr> roots_;
+    tumor::vasc::config cfg;
+    std::mt19937 rng;
+
+    std::set<node_ptr> nodes_;
+    std::set<edge_ptr> edges_;
+    std::vector<sprout> sprouts_;
+
+public:
+    vessels() {
+        make_line({0.1, 0.5, 0.3}, {0.9, 0.5, 0.3}, 10);
+        make_line({0.1, 0.3, 0.3}, {0.9, 0.3, 0.3}, 10);
+        make_line({0.1, 0.7, 0.3}, {0.9, 0.7, 0.3}, 10);
+    }
+
+    void make_line(point_type a, point_type b, int steps) {
+        auto na = make_node(a);
+        roots_.push_back(na);
+        for (int i = 0; i < steps; ++ i) {
+            double t = static_cast<double>(i) / (steps - 1);
+            auto nb = make_node(a + t * b);
+            connect(na, nb, 1.0);
+            na = nb;
+        }
+    }
+
+    const std::set<edge_ptr>& edges() const {
+        return edges_;
+    }
+
+    template <typename Tumor, typename TAF>
+    void update(Tumor&& tumor, TAF&& taf, double dt) {
+        auto nodes_copy = nodes_;
+        for (node_ptr n : nodes_copy) {
+            auto p = n->pos;
+            value_type c = taf(p.x, p.y, p.z);
+
+            if (c.val > cfg.c_min) {
+                std::cout << "Maybe sprout" << std::endl;
+                if (flip_coin(dt / cfg.t_ec_sprout)) {
+                    auto dir = normalized(grad(c));
+                    auto end = p + cfg.segment_length * dir;
+                    if (inside_domain(end)) {
+                        std::cout << "Sprout indeed!" << std::endl;
+                        node_ptr tip = make_node(end);
+                        connect(n, tip, 1.0);
+                        sprouts_.push_back({ tip, dir, 0 });
+                    }
+                }
+            }
+        }
+
+        // Wywalic - tworzenei sproutow zalatwi sprawe
+
+        // for (auto it = begin(sprouts_); it != end(sprouts_); ) {
+        //     sprout& s = *it;
+        //     node_ptr tip = s.tip;
+
+        //     bool to_remove = false;
+        //     auto p = tip->pos;
+        //     value_type c = taf(p.x, p.y, p.z);
+
+        //     // TODO: magic number
+        //     if (c.val < cfg.c_min || s.time > 10) {
+        //         to_remove = true;
+        //     } else if (flip_coin(dt / cfg.t_ec_migr)) {
+        //         auto dir = normalized(grad(c));
+        //         auto end = p + cfg.segment_length * dir;
+        //         if (inside_domain(end)) {
+        //             node_ptr new_tip = make_node(end);
+        //             connect(tip, new_tip, 1.0);
+        //             s.tip = new_tip;
+        //         }
+        //     }
+        //     s.time += dt;
+        //     if (to_remove) {
+        //         it = sprouts_.erase(it);
+        //     } else {
+        //         ++ it;
+        //     }
+        // }
+
+        // 3 typy naczyn - zyly, tetnice, kapilary
+        // nowo tworzone zawsze sa kapilara
+        for (edge_ptr s : edges_) {
+            auto c = center(s);
+            double b = tumor(c.x, c.y, c.z);
+            if (b > 1) {
+                std::cout << "Stability going down" << std::endl;
+                s->stability -= cfg.degeneration * dt;
+            }
+            if (s->stability <= 0) {
+                std::cout << "Checking to remove segment" << std::endl;
+                if (flip_coin(dt / cfg.t_ec_collapse)) {
+                    remove(s);
+                    std::cout << "Removed segment" << std::endl;
+                }
+            }
+        }
+        std::cout << "Vasculature nodes: " << nodes_.size() << std::endl;
+    }
+
+private:
+    edge_ptr connect(node_ptr a, node_ptr b, double size) {
+        edge_ptr e = new edge{ a, b, cfg.init_stability, size };
+        edges_.insert(e);
+        a->edges.push_back(e);
+        b->edges.push_back(e);
+        return e;
+    }
+
+    void remove(edge_ptr e) {
+        remove_node(e, e->src->edges);
+        remove_node(e, e->dst->edges);
+        edges_.erase(e);
+        delete e;
+    }
+
+    void remove_node(edge_ptr e, std::vector<edge_ptr>& v) {
+        using std::begin;
+        using std::end;
+        auto it = std::find(begin(v), end(v), e);
+        v.erase(it);
+    }
+
+    node_ptr make_node(point_type p) {
+        node_ptr n = new node{ p, {} };
+        nodes_.insert(n);
+        return n;
+    }
+
+    bool inside_domain(point_type v) const {
+        return 0 <= v.x && v.x <= 1 && 0 <= v.y && v.y <= 1 && 0 <= v.z && v.z <= 1;
+    }
+
+    point_type center(edge_ptr s) {
+        return 0.5 * (s->src->pos + s->dst->pos);
+    }
+
+    point_type grad(value_type v) {
+        return { v.dx, v.dy, v.dz };
+    }
+
+    bool flip_coin(double p) {
+        return rand(0, 1) < p;
+    }
+
+    double rand(double a, double b) {
+        std::uniform_real_distribution<> dist{ a, b };
+        return dist(rng);
+    }
+
+};
+
+
+class vasculature {
+private:
+
+    using value_array = ads::lin::tensor<double, 3>;
+    value_array src;
+    int sx, sy, sz;
+    vessels vs;
+    rasterizer raster;
+
+public:
+    vasculature(int sx, int sy, int sz)
+    : src{{ sx, sy, sz }}
+    , sx{ sx }, sy{ sy }, sz{ sz }
+    {
+        rasterize();
+    }
+
+    double source(double x, double y, double z) const {
+        using std::max;
+        int ix = coord(x, sx);
+        int iy = coord(y, sy);
+        int iz = coord(z, sz);
+
+        return src(ix, iy, iz);
+    }
+
+    void to_file(const std::string& name) const {
+        using namespace ads;
+        output::vtk output{ ads::DEFAULT_FMT };
+        std::vector<double> px, py, pz;
+        for (int i = 0; i < sx; ++ i) {
+            px.push_back(i);
+        }
+        for (int i = 0; i < sy; ++ i) {
+            py.push_back(i);
+        }
+        for (int i = 0; i < sz; ++ i) {
+            pz.push_back(i);
+        }
+        auto rx = output::from_container(px);
+        auto ry = output::from_container(py);
+        auto rz = output::from_container(pz);
+        auto grid = output::make_grid(rx, ry, rz);
+        std::ofstream os{ name };
+        output.print(os, grid, src);
+    }
+
+    template <typename Tumor, typename TAF>
+    void update(Tumor&& tumor, TAF&& taf, double dt) {
+        vs.update(tumor, taf, dt);
+        recompute();
+    }
+
+
+private:
+    int coord(double t, int s) const {
+        return static_cast<int>(t * s - 0.5);
+    }
+
+    void recompute() {
+        clear();
+        rasterize();
+    }
+
+    void clear() {
+        zero(src);
+    }
+
+    void draw(const vessels::edge& e) {
+        auto a = e.src->pos;
+        auto b = e.dst->pos;
+        raster.draw(a, b, e.size, src);
+    }
+
+    void rasterize() {
+        for (auto e : vs.edges()) {
+            draw(*e);
+        }
+    }
+};
+
+
+}
+
+
+#endif /* ADS_PROBLEMS_TUMOR_3D_VASCULATURE_HPP */
