@@ -13,6 +13,8 @@
 
 #include "ads/executor/galois.hpp"
 
+#include "problems/tumor/3d/vasculature.hpp"
+
 
 namespace tumor {
 
@@ -21,8 +23,19 @@ namespace tumor {
         static constexpr std::size_t Dim = 3;
         using Base = ads::simulation_3d;
 
+        const int VASC_SIZE = 100;
+
         state<Dim> now, prev;
         params p;
+        vasculature vasc{ VASC_SIZE, VASC_SIZE, VASC_SIZE };
+
+        ads::bspline::eval_ctx xctx;
+        ads::bspline::eval_ctx yctx;
+        ads::bspline::eval_ctx zctx;
+
+        ads::bspline::eval_ders_ctx xdctx;
+        ads::bspline::eval_ders_ctx ydctx;
+        ads::bspline::eval_ders_ctx zdctx;
 
         ads::output_manager<3> output;
 
@@ -34,6 +47,12 @@ namespace tumor {
         , now{ shape() }
         , prev{ shape() }
         , p{ params }
+        , xctx{ x.B.degree }
+        , yctx{ y.B.degree }
+        , zctx{ z.B.degree }
+        , xdctx{ x.B.degree, 1 }
+        , ydctx{ y.B.degree, 1 }
+        , zdctx{ z.B.degree, 1}
         , output{ x.B, y.B, z.B, 50 }
         { }
 
@@ -220,7 +239,15 @@ namespace tumor {
         void before() override {
             prepare_matrices();
 
-            projection(now.b, constant(0));
+            // projection(now.b, constant(0));
+            projection(now.b, [](double x, double y, double z) {
+                double dx = (x - 1500) / 3000;
+                double dy = (y - 1500) / 3000;
+                double dz = (z - 1500) / 3000;;
+                double r2 = std::min(1.0, 12*(dx*dx + dy*dy + dz*dz));
+                return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
+            });
+
             projection(now.c, constant(0));
             projection(now.o, constant(0));
 
@@ -230,11 +257,29 @@ namespace tumor {
             solve_all();
 
             save_to_file(0);
+            vasc.to_file("vasculature.vti");
         }
 
-        void step(int /*iter*/, double /*t*/) override {
+        void before_step(int /*iter*/, double /*t*/) override {
+            using std::swap;
+            swap(now, prev);
+
+            now.clear();
+        }
+
+        void step(int iter, double /*t*/) override {
             compute_rhs();
             solve_all();
+            if ((iter + 1) % 10 == 0) {
+                update_vasculature(iter);
+            }
+        }
+
+        void after_step(int iter, double /*t*/) override {
+            std::cout << "Iter " << iter << " done" << std::endl;
+            if ((iter + 1) % 10 == 0) {
+                save_to_file(iter + 1);
+            }
         }
 
 
@@ -314,20 +359,27 @@ namespace tumor {
                     ref(local.A, aa) += (A.val * v.val + Av * steps.dt) * w * J;
 
                     // TAF
-                    double c_src = o.val < p.o_death_TC ? b.val * (1 - c.val): 0;
-                    double cv = - p.diff_c * grad_dot(c, v) + c_src - p.cons_c * o.val * c.val;
+                    double c_src = o.val < p.o_death_TC ? b.val * (1 - c.val) : 0;
+                    double cv = - p.diff_c * grad_dot(c, v) + (c_src - p.cons_c * c.val * o.val) * v.val;
                     ref(local.c, aa) += (c.val * v.val + cv * steps.dt) * w * J;
 
                     // oxygen
                     using std::max;
-                    double o2src = 1.0;
-                    double ov = - p.alpha_0 * grad_dot(o, v) + (- p.gamma_T * b.val * o.val + p.alpha_1 * max(0.0, 60 - o.val) * o2src) * v.val;
+                    double o2src = oxygen(x);
+                    double o_rhs = - p.gamma_T * b.val * o.val + p.alpha_1 * max(0.0, p.o_max - o.val) * o2src;
+                    double ov = - p.alpha_0 * grad_dot(o, v) + o_rhs * v.val;
                     ref(local.o, aa) += (o.val * v.val + ov * steps.dt) * w * J;
                 }
             }
             return local;
         }
 
+        double oxygen(point_type p) const {
+            double xx = (p[0] - x.a) / (x.b - x.a);
+            double yy = (p[1] - y.a) / (y.b - y.a);
+            double zz = (p[2] - z.a) / (z.b - z.a);
+            return vasc.source(xx, yy, zz);
+        }
 
         void apply_local_contribution(const state<Dim>& loc, index_type e) {
             update_global_rhs(now.b, loc.b, e);
@@ -352,6 +404,27 @@ namespace tumor {
             output.to_file(now.o, "oxygen_%d.vti", iter);
             output.to_file(now.M, "ecm_%d.vti", iter);
             output.to_file(now.A, "degraded_ecm_%d.vti", iter);
+        }
+
+        void update_vasculature(int iter) {
+            auto taf = [&,this](double px, double py, double pz) {
+                double xx = x.a + px * (x.b - x.a);
+                double yy = y.a + py * (y.b - y.a);
+                double zz = z.a + pz * (z.b - z.a);
+                return ads::bspline::eval_ders(xx, yy, zz, now.c, this->x.B, this->y.B, this->z.B, xdctx, ydctx, zdctx);
+            };
+
+            auto tumor = [&,this](double px, double py, double pz) {
+                double xx = x.a + px * (x.b - x.a);
+                double yy = y.a + py * (y.b - y.a);
+                double zz = z.a + pz * (z.b - z.a);
+                return ads::bspline::eval(xx, yy, zz, now.b, this->x.B, this->y.B, this->z.B, xctx, yctx, zctx);
+            };
+            vasc.update(tumor, taf, steps.dt);
+
+            using boost::format;
+            vasc.to_file(str(format("vasculature_%d.vti") % iter));
+
         }
 
     };

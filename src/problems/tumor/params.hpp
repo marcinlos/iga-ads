@@ -23,8 +23,8 @@ struct params {
     double chi_aA = 0.01 / 15.6;   // diffusion of degraded ECM
     double gamma_oA = 0.01 / 15.6; // decay of degraded ECM
 
-    double diff_c = 0.01; // TAF diffusion rate
-    double cons_c = 0.3;  // TAF consumption
+    double diff_c = 0.0000555 ; // TAF diffusion rate
+    double cons_c = 0.01; // TAF consumption
 
     double o_max = 60.0;
     double alpha_0 = 0.0000555;

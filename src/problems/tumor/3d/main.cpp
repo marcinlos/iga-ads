@@ -6,10 +6,10 @@
 using namespace ads;
 
 int main() {
-    dim_config dim { 2, 30, 0, 3000.0 };
+    dim_config dim { 2, 16, 0, 3000.0 };
     int ders = 1;
 
-    timesteps_config steps { 1000, 0.001 };
+    timesteps_config steps { 10000, 0.1 };
     config_3d c { dim, dim, dim, steps, ders };
 
     tumor::params p;
