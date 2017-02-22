@@ -42,6 +42,8 @@ namespace tumor {
 
         Galois::StatTimer timer{"total"};
         Galois::StatTimer integration_timer{"integration"};
+        Galois::StatTimer bc_timer{"bc"};
+        Galois::StatTimer init_timer{"init"};
 
     public:
         tumor_3d(const ads::config_3d& config, const params& params, vasculature vasc, int threads)
@@ -242,6 +244,7 @@ namespace tumor {
         }
 
         void before() override {
+            init_timer.start();
             prepare_matrices();
 
             // projection(now.b, [](double x, double y, double z) {
@@ -262,6 +265,7 @@ namespace tumor {
             solve_all(now);
 
             save_to_file(0);
+            init_timer.stop();
         }
 
         void before_step(int /*iter*/, double /*t*/) override {
@@ -275,10 +279,12 @@ namespace tumor {
             timer.start();
 
             double h = steps.dt;
+            integration_timer.start();
             rk_step(prev, k1, h/2);
             rk_step(k1, k2, h/2);
             rk_step(k2, k3, h);
             rk_step(k3, k4, -h/2);
+            integration_timer.stop();
 
             for (int i = 0; i < x.dofs(); ++ i) {
                 for (int j = 0; j < y.dofs(); ++ j) {
@@ -313,41 +319,21 @@ namespace tumor {
             }
         }
 
-        virtual void after() override {
-            auto total = static_cast<double>(timer.get());
-            auto avg = total / steps.step_count;
-            std::cout << "{ 'total' : " << avg  << "}" << std::endl;
-        }
-
 
         void solve_all(state<Dim>& s) {
+            bc_timer.start();
             zero_bc(s.b);
-            solve(s.b);
-
             zero_bc(s.c);
-            solve(s.c);
-
             zero_bc(s.o);
-            solve(s.o);
-
             apply_bc(s.M, [this](double x, double y, double z) { return p.skin.init_M(x, y, z); });
-            solve(s.M);
-
             zero_bc(s.A);
+            bc_timer.stop();
+
+            solve(s.b);
+            solve(s.c);
+            solve(s.o);
+            solve(s.M);
             solve(s.A);
-        }
-
-        void compute_rhs() {
-            now.clear();
-
-            integration_timer.start();
-            executor.for_each(elements(), [&](index_type e) {
-                auto local = local_contribution(e);
-                executor.synchronized([&] {
-                    apply_local_contribution(local, e);
-                });
-            });
-            integration_timer.stop();
         }
 
         state<Dim> local_contribution(const state<Dim>& s, index_type e, double h) const {
@@ -476,7 +462,15 @@ namespace tumor {
         virtual void after() override {
             auto total = static_cast<double>(integration_timer.get());
             auto avg = total / steps.step_count;
-            std::cout << "{ 'integration' : " << avg  << "}" << std::endl;
+
+            auto init = static_cast<double>(init_timer.get());
+            auto bc_total = static_cast<double>(bc_timer.get());
+            auto bc = bc_total / (steps.step_count + 1);
+
+            std::cout << "{ 'integration' : " << avg
+                      << ", 'init' : " << init
+                      << ", 'bc' : " << bc
+                      << "}" << std::endl;
         }
     };
 
