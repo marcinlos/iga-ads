@@ -4,13 +4,14 @@ using ads::config_2d;
 
 namespace tumor {
 
-    tumor_2d::tumor_2d(const config_2d& config, const params& params, vasc::vasculature vasculature)
+    tumor_2d::tumor_2d(const config_2d& config, const params& params, int save_every, vasc::vasculature vasculature)
     : Base{config}
     , now{ shape() }
     , prev{ shape() }
     , p{ params }
     , vasculature{ std::move(vasculature) }
     , output{ x.B, y.B, 200 }
+    , save_every{ save_every }
     , xctx{ x.B.degree }
     , yctx{ x.B.degree }
     , xdctx{ x.B.degree, 1 }

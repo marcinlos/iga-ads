@@ -54,7 +54,7 @@ private:
 
 public:
 
-    vasculature(std::vector<node_ptr> roots);
+    vasculature(std::vector<node_ptr> roots, config cfg);
 
     void plot_veins(const std::string& file) const {
         plot(file, veins);

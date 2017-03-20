@@ -4,8 +4,9 @@
 namespace tumor {
 namespace vasc {
 
-    vasculature::vasculature(std::vector<node_ptr> roots)
-    : roots{ std::move(roots) }
+    vasculature::vasculature(std::vector<node_ptr> roots, config cfg)
+    : cfg{ cfg }
+    , roots{ std::move(roots) }
     {
         std::queue<node_ptr> q;
         for (node_ptr node : this->roots) {
@@ -28,8 +29,8 @@ namespace vasc {
 
     void vasculature::blur(array& src, array& dst, int r, double scale) const {
         double w = scale / ((2 * r + 1) * (2 * r + 1));
-        for (int i = r; i <= N - r; ++ i) {
-            for (int j = r; j <= N - r; ++ j) {
+        for (unsigned i = r; i <= N - r; ++ i) {
+            for (unsigned j = r; j <= N - r; ++ j) {
                 double v = 0;
                 for (int p = -r; p <= r; ++ p) {
                     for (int q = -r; q <= r; ++ q) {

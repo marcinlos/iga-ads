@@ -32,7 +32,7 @@ private:
 
     ads::output_manager<2> output;
 
-    int save_every = 10;
+    int save_every;
 
     int vasc_update_every = 10;
 
@@ -44,7 +44,7 @@ private:
     ads::bspline::eval_ders_ctx ydctx;
 
 public:
-    tumor_2d(const ads::config_2d& config, const params& params, vasc::vasculature vasculature);
+    tumor_2d(const ads::config_2d& config, const params& params, int save_every, vasc::vasculature vasculature);
 
 private:
 

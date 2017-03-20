@@ -15,6 +15,7 @@ namespace vasc {
 class random_vasculature {
 private:
     std::mt19937 rng;
+    config cfg;
 
     using node = vasculature::node;
     using node_ptr = vasculature::node_ptr;
@@ -22,8 +23,9 @@ private:
     using segment_ptr = vasculature::segment_ptr;
 
 public:
-    random_vasculature(int seed = 0)
+    random_vasculature(config cfg, int seed = 0)
     : rng{ seed }
+    , cfg{ cfg }
     { }
 
     vasculature operator() () {
@@ -41,7 +43,7 @@ public:
             node_ptr root = grow_tree(pos, bias);
             nodes.push_back(root);
         }
-        return vasculature{ nodes };
+        return vasculature{ nodes, cfg };
     }
 
 private:
