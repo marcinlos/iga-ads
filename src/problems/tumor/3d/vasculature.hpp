@@ -112,7 +112,7 @@ public:
 
 private:
     template <typename Tumor, typename TAF>
-    void create_sprouts(Tumor&& tumor, TAF&& taf, double dt) {
+    void create_sprouts(Tumor&&, TAF&& taf, double dt) {
         auto nodes_copy = nodes_;
         for (node_ptr n : nodes_copy) {
             auto p = n->pos;

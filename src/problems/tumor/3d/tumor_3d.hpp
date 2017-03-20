@@ -257,7 +257,6 @@ namespace tumor {
             solve_all();
 
             save_to_file(0);
-            vasc.to_file("vasculature.vti");
         }
 
         void before_step(int /*iter*/, double /*t*/) override {
@@ -402,6 +401,9 @@ namespace tumor {
             output.to_file(now.o, "oxygen_%d.vti", iter);
             output.to_file(now.M, "ecm_%d.vti", iter);
             output.to_file(now.A, "degraded_ecm_%d.vti", iter);
+
+            using boost::format;
+            vasc.to_file(str(format("vasculature_%d.vti") % iter));
         }
 
         void update_vasculature(int iter) {
@@ -419,8 +421,6 @@ namespace tumor {
                 return ads::bspline::eval(xx, yy, zz, now.b, this->x.B, this->y.B, this->z.B, xctx, yctx, zctx);
             };
             vasc.update(tumor, taf, iter, steps.dt);
-            using boost::format;
-            vasc.to_file(str(format("vasculature_%d.vti") % iter));
         }
     };
 
