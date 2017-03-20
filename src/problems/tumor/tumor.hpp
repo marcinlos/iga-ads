@@ -32,11 +32,11 @@ private:
 
     ads::output_manager<2> output;
 
-    int save_every = 100;
+    int save_every = 10;
 
     int vasc_update_every = 10;
 
-    ads::galois_executor executor{8};
+    ads::galois_executor executor{4};
 
     ads::bspline::eval_ctx xctx;
     ads::bspline::eval_ctx yctx;
@@ -61,15 +61,10 @@ private:
     };
 
     double init_tumor(double x, double y) {
-        double dx = x - 0.5;
-        double dy = y - 0.5;
-        double r2 = std::min(12 * (dx * dx + dy * dy), 1.0);
+        double dx = (x - 1500) / 600;
+        double dy = (y - 1500) / 600;
+        double r2 = std::min(dx * dx + dy * dy, 1.0);
         return 0.8 * (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
-    }
-
-    double init_fibronectin(double x, double y) {
-        auto lay = p.skin.layer_at(x, y, x);
-        return lay == skin_model::layer::dermis || lay == skin_model::layer::hypodermis ? 0.8 : 0;
     }
 
     double init_M(double x, double y) {
@@ -93,6 +88,10 @@ private:
             v(i, 0) = 0;
             v(i, y.dofs() - 1) = 0;
         }
+    }
+
+    point_type normalize(point_type p) const {
+        return { (p[0] - x.a) / (x.b - x.a), (p[1] - y.a) / (y.b - y.a) };
     }
 
     void prepare_matrices() {

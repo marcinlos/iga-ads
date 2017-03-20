@@ -101,7 +101,7 @@ public:
         for (segment_ptr s : segments) {
             draw_segment(s->begin->position, s->end->position, veins, 1);
         }
-        blur(veins, oxygen, 3, 3);
+        blur(veins, oxygen, 3, 1);
     }
 
     const array& veins_grid() const {
@@ -149,7 +149,7 @@ public:
             value_type c = taf(p.x, p.y);
 
             if (c.val > cfg.c_min) {
-                if (flip_coin(dt / cfg.t_ec_sprout)) {
+                if (flip_coin(dt / 24 / cfg.t_ec_sprout)) {
                     vector dir = normalized(grad(c));
                     vector end = p + cfg.segment_length * dir;
                     if (inside_domain(end)) {
@@ -166,7 +166,7 @@ public:
             node_ptr tip = s.tip;
 
             bool removed = false;
-            if (flip_coin(dt / cfg.t_ec_migr)) {
+            if (flip_coin(dt / 10 / cfg.t_ec_migr)) {
                 vector p = tip->position;
                 value_type c = taf(p.x, p.y);
                 vector dir = normalized(grad(c));
@@ -191,13 +191,11 @@ public:
         for (segment_ptr s : segments) {
             vector c = center(s);
             double b = tumor(c.x, c.y);
-            if (b > 0.5) {
-                s->stability -= b;
+            if (b > 1) {
+                s->stability -= cfg.degeneration * dt * 10;
             }
             if (s->stability <= 0) {
-                if (flip_coin(dt / cfg.t_ec_collapse)) {
-//                    node_ptr begin = s->begin;
-//                    node_ptr end = s->end;
+                if (flip_coin(10 * dt / cfg.t_ec_collapse)) {
                     remove(s);
                 }
             }
