@@ -40,7 +40,8 @@ public:
     struct edge {
         node_ptr src, dst;
         double stability;
-        double size;
+        double radius;
+        double inside_tumor;
     };
 
     struct sprout {
@@ -56,7 +57,6 @@ private:
 
     std::set<node_ptr> nodes_;
     std::set<edge_ptr> edges_;
-    std::vector<sprout> sprouts_;
 
 public:
     vessels() {
@@ -81,80 +81,60 @@ public:
     }
 
     template <typename Tumor, typename TAF>
-    void update(Tumor&& tumor, TAF&& taf, double dt) {
+    void update(Tumor&& tumor, TAF&& taf, int iter, double dt) {
+        if (iter % 240 == 0) {
+            create_sprouts(tumor, taf, dt);
+        }
+
+        for (edge_ptr s : edges_) {
+            auto p = center(s);
+            double b = tumor(p.x, p.y, p.z);
+            // Wall degradation
+            if (b > 1) {
+                s->stability -= cfg.degeneration * dt;
+                s->inside_tumor += dt;
+            }
+            // Vessel collapse
+            if (s->stability <= 0) {
+                if (flip_coin(dt / cfg.t_ec_collapse)) {
+                    remove(s);
+                }
+            }
+            // Vessel dilatation
+            if (s->inside_tumor > cfg.t_ec_switch && s->radius < cfg.r_max) {
+                double c = taf(p.x, p.y, p.z).val;
+                if (c > cfg.c_switch) {
+                    s->radius += dt * cfg.dilatation;
+                }
+            }
+        }
+    }
+
+private:
+    template <typename Tumor, typename TAF>
+    void create_sprouts(Tumor&& tumor, TAF&& taf, double dt) {
         auto nodes_copy = nodes_;
         for (node_ptr n : nodes_copy) {
             auto p = n->pos;
             value_type c = taf(p.x, p.y, p.z);
 
             if (c.val > cfg.c_min) {
-                std::cout << "Maybe sprout" << std::endl;
+                // std::cout << "Maybe sprout" << std::endl;
                 if (flip_coin(dt / cfg.t_ec_sprout)) {
                     auto dir = normalized(grad(c));
                     auto end = p + cfg.segment_length * dir;
                     if (inside_domain(end)) {
-                        std::cout << "Sprout indeed!" << std::endl;
+                        // std::cout << "Sprout indeed!" << std::endl;
                         node_ptr tip = make_node(end);
-                        connect(n, tip, 1.0);
-                        sprouts_.push_back({ tip, dir, 0 });
+                        connect(n, tip, cfg.r_sprout);
                     }
                 }
             }
         }
-
-        // Wywalic - tworzenei sproutow zalatwi sprawe
-
-        // for (auto it = begin(sprouts_); it != end(sprouts_); ) {
-        //     sprout& s = *it;
-        //     node_ptr tip = s.tip;
-
-        //     bool to_remove = false;
-        //     auto p = tip->pos;
-        //     value_type c = taf(p.x, p.y, p.z);
-
-        //     // TODO: magic number
-        //     if (c.val < cfg.c_min || s.time > 10) {
-        //         to_remove = true;
-        //     } else if (flip_coin(dt / cfg.t_ec_migr)) {
-        //         auto dir = normalized(grad(c));
-        //         auto end = p + cfg.segment_length * dir;
-        //         if (inside_domain(end)) {
-        //             node_ptr new_tip = make_node(end);
-        //             connect(tip, new_tip, 1.0);
-        //             s.tip = new_tip;
-        //         }
-        //     }
-        //     s.time += dt;
-        //     if (to_remove) {
-        //         it = sprouts_.erase(it);
-        //     } else {
-        //         ++ it;
-        //     }
-        // }
-
-        // 3 typy naczyn - zyly, tetnice, kapilary
-        // nowo tworzone zawsze sa kapilara
-        for (edge_ptr s : edges_) {
-            auto c = center(s);
-            double b = tumor(c.x, c.y, c.z);
-            if (b > 1) {
-                std::cout << "Stability going down" << std::endl;
-                s->stability -= cfg.degeneration * dt;
-            }
-            if (s->stability <= 0) {
-                std::cout << "Checking to remove segment" << std::endl;
-                if (flip_coin(dt / cfg.t_ec_collapse)) {
-                    remove(s);
-                    std::cout << "Removed segment" << std::endl;
-                }
-            }
-        }
-        std::cout << "Vasculature nodes: " << nodes_.size() << std::endl;
     }
 
-private:
-    edge_ptr connect(node_ptr a, node_ptr b, double size) {
-        edge_ptr e = new edge{ a, b, cfg.init_stability, size };
+    edge_ptr connect(node_ptr a, node_ptr b, double radius) {
+        edge_ptr e = new edge{ a, b, cfg.init_stability, radius, 0 };
         edges_.insert(e);
         a->edges.push_back(e);
         b->edges.push_back(e);
@@ -253,8 +233,8 @@ public:
     }
 
     template <typename Tumor, typename TAF>
-    void update(Tumor&& tumor, TAF&& taf, double dt) {
-        vs.update(tumor, taf, dt);
+    void update(Tumor&& tumor, TAF&& taf, int iter, double dt) {
+        vs.update(tumor, taf, iter, dt);
         recompute();
     }
 
@@ -276,7 +256,7 @@ private:
     void draw(const vessels::edge& e) {
         auto a = e.src->pos;
         auto b = e.dst->pos;
-        raster.draw(a, b, e.size, src);
+        raster.draw(a, b, e.radius, src);
     }
 
     void rasterize() {

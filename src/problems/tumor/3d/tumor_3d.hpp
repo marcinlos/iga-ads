@@ -241,10 +241,10 @@ namespace tumor {
 
             // projection(now.b, constant(0));
             projection(now.b, [](double x, double y, double z) {
-                double dx = (x - 1500) / 3000;
-                double dy = (y - 1500) / 3000;
-                double dz = (z - 1500) / 3000;;
-                double r2 = std::min(1.0, 12*(dx*dx + dy*dy + dz*dz));
+                double dx = (x - 1500) / 200;
+                double dy = (y - 1500) / 200;
+                double dz = (z - 2440) / 200;
+                double r2 = std::min(1.0, dx*dx + dy*dy + dz*dz);
                 return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
             });
 
@@ -270,9 +270,7 @@ namespace tumor {
         void step(int iter, double /*t*/) override {
             compute_rhs();
             solve_all();
-            if ((iter + 1) % 10 == 0) {
-                update_vasculature(iter);
-            }
+            update_vasculature(iter);
         }
 
         void after_step(int iter, double /*t*/) override {
@@ -420,13 +418,10 @@ namespace tumor {
                 double zz = z.a + pz * (z.b - z.a);
                 return ads::bspline::eval(xx, yy, zz, now.b, this->x.B, this->y.B, this->z.B, xctx, yctx, zctx);
             };
-            vasc.update(tumor, taf, steps.dt);
-
+            vasc.update(tumor, taf, iter, steps.dt);
             using boost::format;
             vasc.to_file(str(format("vasculature_%d.vti") % iter));
-
         }
-
     };
 
 }
