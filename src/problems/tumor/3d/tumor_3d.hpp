@@ -39,7 +39,7 @@ namespace tumor {
 
         ads::output_manager<3> output;
 
-        ads::galois_executor executor{4};
+        ads::galois_executor executor{8};
 
     public:
         tumor_3d(const ads::config_3d& config, const params& params)
@@ -241,11 +241,11 @@ namespace tumor {
 
             // projection(now.b, constant(0));
             projection(now.b, [](double x, double y, double z) {
-                double dx = (x - 1500) / 200;
-                double dy = (y - 1500) / 200;
-                double dz = (z - 2440) / 200;
+                double dx = (x - 2500) / 400;
+                double dy = (y - 2500) / 400;
+                double dz = (z - 2440) / 400;
                 double r2 = std::min(1.0, dx*dx + dy*dy + dz*dz);
-                return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
+                return 1.2 * (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
             });
 
             projection(now.c, constant(0));
@@ -269,12 +269,12 @@ namespace tumor {
         void step(int iter, double /*t*/) override {
             compute_rhs();
             solve_all();
-            update_vasculature(iter);
+            // update_vasculature(iter);
         }
 
         void after_step(int iter, double /*t*/) override {
             std::cout << "Iter " << iter << " done" << std::endl;
-            if ((iter + 1) % 10 == 0) {
+            if ((iter + 1) % 100 == 0) {
                 save_to_file(iter + 1);
             }
         }
