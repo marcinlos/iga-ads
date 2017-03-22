@@ -70,7 +70,7 @@ public:
         roots_.push_back(na);
         for (int i = 0; i < steps; ++ i) {
             double t = static_cast<double>(i) / (steps - 1);
-            auto nb = make_node(a + t * b);
+            auto nb = make_node(a + t * (b - a));
             connect(na, nb, 1.0);
             na = nb;
         }
