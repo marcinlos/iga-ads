@@ -21,6 +21,10 @@
 
 namespace tumor {
 
+enum class vessel_type {
+    vein, arthery, capillary, sprout
+};
+
 class vessels {
 public:
     using point_type = ads::math::vec<3>;
@@ -39,15 +43,10 @@ public:
 
     struct edge {
         node_ptr src, dst;
+        vessel_type type;
         double stability;
         double radius;
         double inside_tumor;
-    };
-
-    struct sprout {
-        node_ptr tip;
-        point_type dir;
-        double time;
     };
 
 private:
@@ -64,29 +63,29 @@ public:
         // make_line({0.1, 0.3, 0.3}, {0.9, 0.3, 0.3}, 10);
         // make_line({0.1, 0.7, 0.3}, {0.9, 0.7, 0.3}, 10);
 
-        auto xysize = 5000.0;
-        auto zsize = 3000.0;
-        auto dh = 200.0 / xysize;
-        auto zmin = 300 / zsize;
-        auto zmax = 2400 / zsize;
+        // auto xysize = 5000.0;
+        // auto zsize = 3000.0;
+        // auto dh = 200.0 / xysize;
+        // auto zmin = 300 / zsize;
+        // auto zmax = 2400 / zsize;
 
-        for (auto x = dh/2; x < 1; x += dh) {
-            for (auto y = dh/2; y < 1; y += dh) {
-                make_line({x, y, zmin}, {x, y, zmax}, 5);
-            }
-        }
+        // for (auto x = dh/2; x < 1; x += dh) {
+        //     for (auto y = dh/2; y < 1; y += dh) {
+        //         make_line({x, y, zmin}, {x, y, zmax}, 5);
+        //     }
+        // }
     }
 
-    void make_line(point_type a, point_type b, int steps) {
-        auto na = make_node(a);
-        roots_.push_back(na);
-        for (int i = 0; i < steps; ++ i) {
-            double t = static_cast<double>(i) / (steps - 1);
-            auto nb = make_node(a + t * (b - a));
-            connect(na, nb, 1.0);
-            na = nb;
-        }
-    }
+    // void make_line(point_type a, point_type b, int steps) {
+    //     auto na = make_node(a);
+    //     roots_.push_back(na);
+    //     for (int i = 0; i < steps; ++ i) {
+    //         double t = static_cast<double>(i) / (steps - 1);
+    //         auto nb = make_node(a + t * (b - a));
+    //         connect(na, nb, 1.0);
+    //         na = nb;
+    //     }
+    // }
 
     const std::set<edge_ptr>& edges() const {
         return edges_;
@@ -122,6 +121,20 @@ public:
         }
     }
 
+    node_ptr make_node(point_type p) {
+        node_ptr n = new node{ p, {} };
+        nodes_.insert(n);
+        return n;
+    }
+
+    edge_ptr connect(node_ptr a, node_ptr b, vessel_type type, double radius) {
+        edge_ptr e = new edge{ a, b, type, cfg.init_stability, radius, 0 };
+        edges_.insert(e);
+        a->edges.push_back(e);
+        b->edges.push_back(e);
+        return e;
+    }
+
 private:
     template <typename Tumor, typename TAF>
     void create_sprouts(Tumor&&, TAF&& taf, double dt) {
@@ -138,19 +151,11 @@ private:
                     if (inside_domain(end)) {
                         // std::cout << "Sprout indeed!" << std::endl;
                         node_ptr tip = make_node(end);
-                        connect(n, tip, cfg.r_sprout);
+                        connect(n, tip, vessel_type::sprout, cfg.r_sprout);
                     }
                 }
             }
         }
-    }
-
-    edge_ptr connect(node_ptr a, node_ptr b, double radius) {
-        edge_ptr e = new edge{ a, b, cfg.init_stability, radius, 0 };
-        edges_.insert(e);
-        a->edges.push_back(e);
-        b->edges.push_back(e);
-        return e;
     }
 
     void remove(edge_ptr e) {
@@ -165,12 +170,6 @@ private:
         using std::end;
         auto it = std::find(begin(v), end(v), e);
         v.erase(it);
-    }
-
-    node_ptr make_node(point_type p) {
-        node_ptr n = new node{ p, {} };
-        nodes_.insert(n);
-        return n;
     }
 
     bool inside_domain(point_type v) const {
@@ -207,9 +206,10 @@ private:
     rasterizer raster;
 
 public:
-    vasculature(int sx, int sy, int sz)
+    vasculature(int sx, int sy, int sz, vessels vs)
     : src{{ sx, sy, sz }}
     , sx{ sx }, sy{ sy }, sz{ sz }
+    , vs{ std::move(vs) }
     {
         rasterize();
     }

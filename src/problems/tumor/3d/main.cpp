@@ -3,9 +3,16 @@
 #include "problems/tumor/3d/tumor_3d.hpp"
 
 
+#include "problems/tumor/3d/vasculature_parser.hpp"
+
 using namespace ads;
 
 int main() {
+    auto vessels = tumor::parse_vessels(std::cin);
+
+    constexpr int vasc_size = 100;
+    auto vasc = tumor::vasculature{ vasc_size, vasc_size, vasc_size, std::move(vessels) };
+
     int n = 20;
     dim_config dim { 2, n, 0, 5000.0 };
     dim_config dimz { 2, n, 0, 3000.0 };
@@ -17,6 +24,7 @@ int main() {
 
     tumor::params p;
 
-    tumor::tumor_3d sim { c, p };
+    tumor::tumor_3d sim { c, p, std::move(vasc) };
     sim.run();
+
 }

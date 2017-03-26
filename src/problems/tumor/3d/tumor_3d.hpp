@@ -23,11 +23,9 @@ namespace tumor {
         static constexpr std::size_t Dim = 3;
         using Base = ads::simulation_3d;
 
-        const int VASC_SIZE = 100;
-
         state<Dim> now, prev;
         params p;
-        vasculature vasc{ VASC_SIZE, VASC_SIZE, VASC_SIZE };
+        vasculature vasc;
 
         ads::bspline::eval_ctx xctx;
         ads::bspline::eval_ctx yctx;
@@ -42,11 +40,12 @@ namespace tumor {
         ads::galois_executor executor{8};
 
     public:
-        tumor_3d(const ads::config_3d& config, const params& params)
+        tumor_3d(const ads::config_3d& config, const params& params, vasculature vasc)
         : Base{config}
         , now{ shape() }
         , prev{ shape() }
         , p{ params }
+        , vasc{ std::move(vasc) }
         , xctx{ x.B.degree }
         , yctx{ y.B.degree }
         , zctx{ z.B.degree }
@@ -269,12 +268,12 @@ namespace tumor {
         void step(int iter, double /*t*/) override {
             compute_rhs();
             solve_all();
-            // update_vasculature(iter);
+            update_vasculature(iter);
         }
 
         void after_step(int iter, double /*t*/) override {
             std::cout << "Iter " << iter << " done" << std::endl;
-            if ((iter + 1) % 100 == 0) {
+            if ((iter + 1) % 10 == 0) {
                 save_to_file(iter + 1);
             }
         }
