@@ -38,10 +38,10 @@ namespace tumor {
 
         ads::output_manager<3> output;
 
-        ads::galois_executor executor{8};
+        ads::galois_executor executor;
 
     public:
-        tumor_3d(const ads::config_3d& config, const params& params, vasculature vasc)
+        tumor_3d(const ads::config_3d& config, const params& params, vasculature vasc, int threads)
         : Base{config}
         , now{ shape() }
         , prev{ shape() }
@@ -55,6 +55,7 @@ namespace tumor {
         , ydctx{ y.B.degree, 1 }
         , zdctx{ z.B.degree, 1}
         , output{ x.B, y.B, z.B, 50 }
+        , executor{ threads }
         { }
 
     private:
