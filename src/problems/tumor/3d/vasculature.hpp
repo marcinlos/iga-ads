@@ -59,33 +59,29 @@ private:
 
 public:
     vessels() {
-        // make_line({0.1, 0.5, 0.3}, {0.9, 0.5, 0.3}, 10);
-        // make_line({0.1, 0.3, 0.3}, {0.9, 0.3, 0.3}, 10);
-        // make_line({0.1, 0.7, 0.3}, {0.9, 0.7, 0.3}, 10);
+        auto xysize = 5000.0;
+        auto zsize = 3000.0;
+        auto dh = 200.0 / xysize;
+        auto zmin = 300 / zsize;
+        auto zmax = 2400 / zsize;
 
-        // auto xysize = 5000.0;
-        // auto zsize = 3000.0;
-        // auto dh = 200.0 / xysize;
-        // auto zmin = 300 / zsize;
-        // auto zmax = 2400 / zsize;
-
-        // for (auto x = dh/2; x < 1; x += dh) {
-        //     for (auto y = dh/2; y < 1; y += dh) {
-        //         make_line({x, y, zmin}, {x, y, zmax}, 5);
-        //     }
-        // }
+        for (auto x = dh/2; x < 1; x += dh) {
+            for (auto y = dh/2; y < 1; y += dh) {
+                make_line({x, y, zmin}, {x, y, zmax}, 5);
+            }
+        }
     }
 
-    // void make_line(point_type a, point_type b, int steps) {
-    //     auto na = make_node(a);
-    //     roots_.push_back(na);
-    //     for (int i = 0; i < steps; ++ i) {
-    //         double t = static_cast<double>(i) / (steps - 1);
-    //         auto nb = make_node(a + t * (b - a));
-    //         connect(na, nb, 1.0);
-    //         na = nb;
-    //     }
-    // }
+    void make_line(point_type a, point_type b, int steps) {
+        auto na = make_node(a);
+        roots_.push_back(na);
+        for (int i = 0; i < steps; ++ i) {
+            double t = static_cast<double>(i) / (steps - 1);
+            auto nb = make_node(a + t * (b - a));
+            connect(na, nb, vessel_type::arthery, 1.0);
+            na = nb;
+        }
+    }
 
     const std::set<edge_ptr>& edges() const {
         return edges_;
