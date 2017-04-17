@@ -1,7 +1,9 @@
 #include "ads/simulation.hpp"
 #include "ads/executor/sequential.hpp"
 #include "ads/executor/galois.hpp"
-#include "problems/elasticity/elasticity.hpp"
+// #include "problems/elasticity/elasticity.hpp"
+#include "problems/elasticity/implicit.hpp"
+
 
 
 using namespace ads;
@@ -13,6 +15,6 @@ int main() {
     timesteps_config steps { 40000, 1e-4 };
     config_3d c { dim, dim, dim, steps, ders };
 
-    problems::linear_elasticity sim{c};
+    problems::implicit_elasticity sim{c};
     sim.run();
 }

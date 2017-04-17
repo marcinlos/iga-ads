@@ -168,5 +168,4 @@ private:
 
 }
 
-#endif /* PROBLEMS_IMPLICIT_HPP_
- */
+#endif /* PROBLEMS_IMPLICIT_HPP_*/

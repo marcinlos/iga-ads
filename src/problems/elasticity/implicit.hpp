@@ -29,6 +29,13 @@ namespace problems {
 
         ads::galois_executor executor{8};
 
+        ads::lin::band_matrix Dx, Dy, Dz;
+        ads::lin::band_matrix Kx, Ky, Kz;
+
+        static constexpr double lambda = 1;
+        static constexpr double mi = 1;
+
+
         template <typename Fun>
         void for_all(state& s, Fun fun) {
             fun(s.ux);
@@ -45,12 +52,55 @@ namespace problems {
         , now{ shape() }, prev{ shape() }
         , energy{ shape() }
         , output{ x.B, y.B, z.B, 50 }
-        { }
+        , Dx{x.p, x.p, x.B.dofs()}
+        , Dy{y.p, y.p, y.B.dofs()}
+        , Dz{z.p, z.p, z.B.dofs()}
+        , Kx{x.p, x.p, x.B.dofs()}
+        , Ky{y.p, y.p, y.B.dofs()}
+        , Kz{z.p, z.p, z.B.dofs()}
+        {
+            double hh = steps.dt * steps.dt * 1.0 / 3 * mi;
+            matrix(Kx, x.basis, hh);
+            matrix(Ky, y.basis, hh);
+            matrix(Kz, z.basis, hh);
+
+            double h = steps.dt * steps.dt * 1.0 / 3 * (lambda + 2 * mi);
+            matrix(Dx, x.basis, h);
+            matrix(Dy, y.basis, h);
+            matrix(Dz, z.basis, h);
+        }
 
     private:
 
+        void matrix(ads::lin::band_matrix& K, const ads::basis_data& d, double h) {
+            for (ads::element_id e = 0; e < d.elements; ++ e) {
+                for (int q = 0; q < d.quad_order; ++ q) {
+                    int first = d.first_dof(e);
+                    int last = d.last_dof(e);
+                    for (int a = 0; a + first <= last; ++ a) {
+                        for (int b = 0; b + first <= last; ++ b) {
+                            int ia = a + first;
+                            int ib = b + first;
+                            auto va = d.b[e][q][0][a];
+                            auto vb = d.b[e][q][0][b];
+                            auto da = d.b[e][q][1][a];
+                            auto db = d.b[e][q][1][b];
+                            K(ia, ib) += (va * vb + h * da * db) * d.w[q] * d.J[e];
+                        }
+                    }
+                }
+            }
+        }
+
+
         void before() override {
             prepare_matrices();
+            ads::lin::factorize(Kx, x.ctx);
+            ads::lin::factorize(Ky, y.ctx);
+            ads::lin::factorize(Kz, z.ctx);
+            ads::lin::factorize(Dx, x.ctx);
+            ads::lin::factorize(Dy, y.ctx);
+            ads::lin::factorize(Dz, z.ctx);
         }
 
         void compute_rhs(double t) {
@@ -70,12 +120,17 @@ namespace problems {
             for (auto q : quad_points()) {
                 auto x = point(e, q);
                 double w = weigth(q);
-                value_type ux = eval_fun(prev.ux, e, q);
-                value_type uy = eval_fun(prev.uy, e, q);
-                value_type uz = eval_fun(prev.uz, e, q);
                 value_type vx = eval_fun(prev.vx, e, q);
                 value_type vy = eval_fun(prev.vy, e, q);
                 value_type vz = eval_fun(prev.vz, e, q);
+
+                value_type ux = eval_fun(prev.ux, e, q);
+                value_type uy = eval_fun(prev.uy, e, q);
+                value_type uz = eval_fun(prev.uz, e, q);
+
+                ux += steps.dt * vx;
+                uy += steps.dt * vy;
+                uz += steps.dt * vz;
 
                 tensor eps = {
                     {         ux.dx,         0.5 * (ux.dy + uy.dx), 0.5 * (ux.dz + uz.dx) },
@@ -97,9 +152,9 @@ namespace problems {
                     double dt = steps.dt;
                     double t2 = dt * dt / 2;
                     auto aa = dof_global_to_local(e, a);
-                    ref(local.ux, aa) += ((ux.val + dt * vx.val) * b.val + t2 * axb) * w * J;
-                    ref(local.uy, aa) += ((uy.val + dt * vy.val) * b.val + t2 * ayb) * w * J;
-                    ref(local.uz, aa) += ((uz.val + dt * vz.val) * b.val + t2 * azb) * w * J;
+                    ref(local.ux, aa) += ((ux.val /*+ dt * vx.val*/) * b.val /*+ t2 * axb*/) * w * J;
+                    ref(local.uy, aa) += ((uy.val /*+ dt * vy.val*/) * b.val /*+ t2 * ayb*/) * w * J;
+                    ref(local.uz, aa) += ((uz.val /*+ dt * vz.val*/) * b.val /*+ t2 * azb*/) * w * J;
 
                     ref(local.vx, aa) += (vx.val * b.val + dt * axb) * w * J;
                     ref(local.vy, aa) += (vy.val * b.val + dt * ayb) * w * J;
@@ -208,8 +263,6 @@ namespace problems {
         }
 
         void stress_tensor(tensor& s, const tensor& eps) const {
-            double lambda = 1;
-            double mi = 1;
             double tr = eps[0][0] + eps[1][1] + eps[2][2];
 
             for (int i = 0; i < 3; ++ i) {
@@ -236,8 +289,41 @@ namespace problems {
         }
 
         void step(int /*iter*/, double t) override {
+            using std::swap;
+
             compute_rhs(t);
-            for_all(now, [this](vector_type& a) { solve(a); });
+
+            ads_solve(now.ux, buffer, x.data(), y.data(), z.data());
+            ads_solve(now.uy, buffer, x.data(), y.data(), z.data());
+            ads_solve(now.uz, buffer, x.data(), y.data(), z.data());
+
+            ads_solve(now.vx, buffer, ads::dim_data{Kx, x.ctx}, y.data(), z.data());
+            ads_solve(now.vy, buffer, ads::dim_data{Kx, x.ctx}, y.data(), z.data());
+            ads_solve(now.vz, buffer, ads::dim_data{Kx, x.ctx}, y.data(), z.data());
+
+            swap(now, prev);
+
+            compute_rhs(t);
+
+            ads_solve(now.ux, buffer, x.data(), y.data(), z.data());
+            ads_solve(now.uy, buffer, x.data(), y.data(), z.data());
+            ads_solve(now.uz, buffer, x.data(), y.data(), z.data());
+
+            ads_solve(now.vx, buffer, x.data(), ads::dim_data{Ky, y.ctx}, z.data());
+            ads_solve(now.vy, buffer, x.data(), ads::dim_data{Ky, y.ctx}, z.data());
+            ads_solve(now.vz, buffer, x.data(), ads::dim_data{Ky, y.ctx}, z.data());
+
+            swap(now, prev);
+
+            compute_rhs(t);
+
+            ads_solve(now.ux, buffer, x.data(), y.data(), z.data());
+            ads_solve(now.uy, buffer, x.data(), y.data(), z.data());
+            ads_solve(now.uz, buffer, x.data(), y.data(), z.data());
+
+            ads_solve(now.vx, buffer, x.data(), y.data(), ads::dim_data{Kz, z.ctx});
+            ads_solve(now.vy, buffer, x.data(), y.data(), ads::dim_data{Kz, z.ctx});
+            ads_solve(now.vz, buffer, x.data(), y.data(), ads::dim_data{Kz, z.ctx});
         }
 
         void after_step(int iter, double t) override {
