@@ -300,7 +300,7 @@ namespace tumor {
 
         void after_step(int iter, double /*t*/) override {
             std::cout << "Iter " << iter << " done" << std::endl;
-            if ((iter + 1) % 10 == 0) {
+            if ((iter + 1) % 100 == 0) {
                 save_to_file(iter + 1);
             }
         }

@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
     // auto vessels = tumor::parse_vessels(std::cin);
     auto vessels = tumor::vessels{};
 
-    constexpr int vasc_size = 100;
+    int vasc_size = 16 * 3;
     auto vasc = tumor::vasculature{ vasc_size, vasc_size, vasc_size, std::move(vessels) };
 
     dim_config dim { 2, n, 0, 5000.0 };
