@@ -24,6 +24,7 @@ namespace tumor {
         using Base = ads::simulation_3d;
 
         state<Dim> now, prev;
+        state<Dim> k1, k2, k3, k4;
         params p;
         vasculature vasc;
 
@@ -44,6 +45,7 @@ namespace tumor {
         : Base{config}
         , now{ shape() }
         , prev{ shape() }
+        , k1{ shape() }, k2{ shape() }, k3{ shape() }, k4{ shape() }
         , p{ params }
         , vasc{ std::move(vasc) }
         , xctx{ x.B.degree }
@@ -238,7 +240,6 @@ namespace tumor {
         void before() override {
             prepare_matrices();
 
-            // projection(now.b, constant(0));
             projection(now.b, [](double x, double y, double z) {
                 double dx = (x - 2500) / 400;
                 double dy = (y - 2500) / 400;
@@ -253,7 +254,7 @@ namespace tumor {
             projection(now.A, constant(0));
             projection(now.M, [this](double x, double y, double z) { return p.skin.init_M(x, y, z); });
 
-            solve_all();
+            solve_all(now);
 
             save_to_file(0);
         }
@@ -266,9 +267,34 @@ namespace tumor {
         }
 
         void step(int iter, double /*t*/) override {
-            compute_rhs();
-            solve_all();
+            double h = steps.dt;
+            rk_step(prev, k1, h/2);
+            rk_step(k1, k2, h/2);
+            rk_step(k2, k3, h);
+            rk_step(k3, k4, -h/2);
+
+            for (int i = 0; i < x.dofs(); ++ i) {
+                for (int j = 0; j < y.dofs(); ++ j) {
+                    for (int k = 0; k < z.dofs(); ++ k) {
+                        now.b(i, j, k) = 1.0 / 3 * (k1.b(i, j, k) + 2 * k2.b(i, j, k) + k3.b(i, j, k) - k4.b(i, j, k));
+                        now.c(i, j, k) = 1.0 / 3 * (k1.c(i, j, k) + 2 * k2.c(i, j, k) + k3.c(i, j, k) - k4.c(i, j, k));
+                        now.o(i, j, k) = 1.0 / 3 * (k1.o(i, j, k) + 2 * k2.o(i, j, k) + k3.o(i, j, k) - k4.o(i, j, k));
+                        now.M(i, j, k) = 1.0 / 3 * (k1.M(i, j, k) + 2 * k2.M(i, j, k) + k3.M(i, j, k) - k4.M(i, j, k));
+                        now.A(i, j, k) = 1.0 / 3 * (k1.A(i, j, k) + 2 * k2.A(i, j, k) + k3.A(i, j, k) - k4.A(i, j, k));
+                    }
+                }
+            }
+
             update_vasculature(iter);
+        }
+
+        void rk_step(const state<Dim>& prev, state<Dim>& next, double h) {
+            next.clear();
+            executor.for_each(elements(), [&](index_type e) {
+                auto local = local_contribution(prev, e, h);
+                executor.synchronized([&] { apply_local_contribution(next, local, e); });
+            });
+            solve_all(next);
         }
 
         void after_step(int iter, double /*t*/) override {
@@ -279,34 +305,24 @@ namespace tumor {
         }
 
 
-        void solve_all() {
-            zero_bc(now.b);
-            solve(now.b);
+        void solve_all(state<Dim>& s) {
+            zero_bc(s.b);
+            solve(s.b);
 
-            zero_bc(now.c);
-            solve(now.c);
+            zero_bc(s.c);
+            solve(s.c);
 
-            zero_bc(now.o);
-            solve(now.o);
+            zero_bc(s.o);
+            solve(s.o);
 
-            apply_bc(now.M, [this](double x, double y, double z) { return p.skin.init_M(x, y, z); });
-            solve(now.M);
+            apply_bc(s.M, [this](double x, double y, double z) { return p.skin.init_M(x, y, z); });
+            solve(s.M);
 
-            zero_bc(now.A);
-            solve(now.A);
+            zero_bc(s.A);
+            solve(s.A);
         }
 
-        void compute_rhs() {
-            now.clear();
-            executor.for_each(elements(), [&](index_type e) {
-                auto local = local_contribution(e);
-                executor.synchronized([&] {
-                    apply_local_contribution(local, e);
-                });
-            });
-        }
-
-        state<Dim> local_contribution(index_type e) const {
+        state<Dim> local_contribution(const state<Dim>& s, index_type e, double h) const {
             auto local = state<Dim>{ local_shape() };
 
             double J = jacobian(e);
@@ -317,12 +333,12 @@ namespace tumor {
                     auto aa = dof_global_to_local(e, a);
                     value_type v = eval_basis(e, q, a);
 
-                    value_type b = ensure_positive(eval_fun(prev.b, e, q));
-                    value_type c = ensure_positive(eval_fun(prev.c, e, q));
-                    value_type o = ensure_positive(eval_fun(prev.o, e, q));
+                    value_type b = ensure_positive(eval_fun(s.b, e, q));
+                    value_type c = ensure_positive(eval_fun(s.c, e, q));
+                    value_type o = ensure_positive(eval_fun(s.o, e, q));
 
-                    value_type M = ensure_positive(eval_fun(prev.M, e, q));
-                    value_type A = ensure_positive(eval_fun(prev.A, e, q));
+                    value_type M = ensure_positive(eval_fun(s.M, e, q));
+                    value_type A = ensure_positive(eval_fun(s.A, e, q));
 
                     // tumor density
                     double b_src = 0;
@@ -345,26 +361,26 @@ namespace tumor {
                     double divJv = D_b * b.val * (grad_Pv + p.r_b * grad_Av);
 
                     double bv = - divJv + (b_src + b_sink) * v.val;
-                    ref(local.b, aa) += (b.val * v.val + bv * steps.dt) * w * J;
+                    ref(local.b, aa) += (b.val * v.val + bv * h) * w * J;
 
                     // ECM evolution
                     double Mv = - p.beta_m * M.val * b.val * v.val;
-                    ref(local.M, aa) += (M.val * v.val + Mv * steps.dt) * w * J;
+                    ref(local.M, aa) += (M.val * v.val + Mv * h) * w * J;
 
                     double Av = (p.gamma_a * M.val * b.val - p.gamma_oA * A.val) * v.val - p.chi_aA * grad_Av;
-                    ref(local.A, aa) += (A.val * v.val + Av * steps.dt) * w * J;
+                    ref(local.A, aa) += (A.val * v.val + Av * h) * w * J;
 
                     // TAF
                     double c_src = o.val < p.o_death_TC ? b.val * (1 - c.val) : 0;
                     double cv = - p.diff_c * grad_dot(c, v) + (c_src - p.cons_c * c.val * o.val) * v.val;
-                    ref(local.c, aa) += (c.val * v.val + cv * steps.dt) * w * J;
+                    ref(local.c, aa) += (c.val * v.val + cv * h) * w * J;
 
                     // oxygen
                     using std::max;
                     double o2src = oxygen(x);
                     double o_rhs = - p.gamma_T * b.val * o.val + p.alpha_1 * max(0.0, p.o_max - o.val) * o2src;
                     double ov = - p.alpha_0 * grad_dot(o, v) + o_rhs * v.val;
-                    ref(local.o, aa) += (o.val * v.val + ov * steps.dt) * w * J;
+                    ref(local.o, aa) += (o.val * v.val + ov * h) * w * J;
                 }
             }
             return local;
@@ -377,12 +393,12 @@ namespace tumor {
             return vasc.source(xx, yy, zz);
         }
 
-        void apply_local_contribution(const state<Dim>& loc, index_type e) {
-            update_global_rhs(now.b, loc.b, e);
-            update_global_rhs(now.c, loc.c, e);
-            update_global_rhs(now.o, loc.o, e);
-            update_global_rhs(now.A, loc.A, e);
-            update_global_rhs(now.M, loc.M, e);
+        void apply_local_contribution(state<Dim>& rhs, const state<Dim>& loc, index_type e) const {
+            update_global_rhs(rhs.b, loc.b, e);
+            update_global_rhs(rhs.c, loc.c, e);
+            update_global_rhs(rhs.o, loc.o, e);
+            update_global_rhs(rhs.A, loc.A, e);
+            update_global_rhs(rhs.M, loc.M, e);
         }
 
         double& ref(vector_type& v, index_type idx) const {
