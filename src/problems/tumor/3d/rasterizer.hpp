@@ -39,7 +39,7 @@ public:
 
 private:
     int coord(double t, int s) const {
-        return static_cast<int>(t * s);
+        return std::min(static_cast<int>(t * s), s - 1);
     }
 };
 
