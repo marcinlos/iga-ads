@@ -330,58 +330,65 @@ namespace tumor {
             for (auto q : quad_points()) {
                 double w = weigth(q);
                 auto x = point(e, q);
+
+                value_type b = ensure_positive(eval_fun(s.b, e, q));
+                value_type c = ensure_positive(eval_fun(s.c, e, q));
+                value_type o = ensure_positive(eval_fun(s.o, e, q));
+
+                value_type M = ensure_positive(eval_fun(s.M, e, q));
+                value_type A = ensure_positive(eval_fun(s.A, e, q));
+
+                // tumor density
+                double b_src = 0;
+                double b_sink = 0;
+
+                // tumor source/sink
+                if (o.val >= p.o_prol_TC) {
+                    double tbA = p.tau_b * A.val;
+                    double s = 1 + tbA / (1 + tbA) * p.P_b;
+                    b_src = b.val / p.t_prol_TC * s * (1 - b.val / p.c_b_max);
+                }
+                if (o.val < p.o_death_TC) {
+                    b_sink = -b.val / p.t_death_TC;
+                }
+                double D_b = p.skin.diffusion(x[0], x[1], x[2]);
+
+                // TAF
+                double c_src = o.val < p.o_death_TC ? b.val * (1 - c.val) : 0;
+
+                // oxygen
+                using std::max;
+                double o2src = oxygen(x);
+                double o_rhs = - p.gamma_T * b.val * o.val + p.alpha_1 * max(0.0, p.o_max - o.val) * o2src;
+
+                double wJ = w * J;
+
                 for (auto a : dofs_on_element(e)) {
                     auto aa = dof_global_to_local(e, a);
                     value_type v = eval_basis(e, q, a);
 
-                    value_type b = ensure_positive(eval_fun(s.b, e, q));
-                    value_type c = ensure_positive(eval_fun(s.c, e, q));
-                    value_type o = ensure_positive(eval_fun(s.o, e, q));
-
-                    value_type M = ensure_positive(eval_fun(s.M, e, q));
-                    value_type A = ensure_positive(eval_fun(s.A, e, q));
-
-                    // tumor density
-                    double b_src = 0;
-                    double b_sink = 0;
-
-                    // tumor source/sink
-                    if (o.val >= p.o_prol_TC) {
-                        double tbA = p.tau_b * A.val;
-                        double s = 1 + tbA / (1 + tbA) * p.P_b;
-                        b_src = b.val / p.t_prol_TC * s * (1 - b.val / p.c_b_max);
-                    }
-                    if (o.val < p.o_death_TC) {
-                        b_sink = -b.val / p.t_death_TC;
-                    }
-
-                    double D_b = p.skin.diffusion(x[0], x[1], x[2]);
                     double grad_Av = grad_dot(A, v);
                     double grad_Pv = b.val >= p.c_b_norm ? grad_dot(b, v) / (p.c_b_max - p.c_b_norm) : 0;
 
                     double divJv = D_b * b.val * (grad_Pv + p.r_b * grad_Av);
 
                     double bv = - divJv + (b_src + b_sink) * v.val;
-                    ref(local.b, aa) += (b.val * v.val + bv * h) * w * J;
+                    ref(local.b, aa) += (b.val * v.val + bv * h) * wJ;
 
                     // ECM evolution
                     double Mv = - p.beta_m * M.val * b.val * v.val;
-                    ref(local.M, aa) += (M.val * v.val + Mv * h) * w * J;
+                    ref(local.M, aa) += (M.val * v.val + Mv * h) * wJ;
 
                     double Av = (p.gamma_a * M.val * b.val - p.gamma_oA * A.val) * v.val - p.chi_aA * grad_Av;
-                    ref(local.A, aa) += (A.val * v.val + Av * h) * w * J;
+                    ref(local.A, aa) += (A.val * v.val + Av * h) * wJ;
 
                     // TAF
-                    double c_src = o.val < p.o_death_TC ? b.val * (1 - c.val) : 0;
                     double cv = - p.diff_c * grad_dot(c, v) + (c_src - p.cons_c * c.val * o.val) * v.val;
-                    ref(local.c, aa) += (c.val * v.val + cv * h) * w * J;
+                    ref(local.c, aa) += (c.val * v.val + cv * h) * wJ;
 
                     // oxygen
-                    using std::max;
-                    double o2src = oxygen(x);
-                    double o_rhs = - p.gamma_T * b.val * o.val + p.alpha_1 * max(0.0, p.o_max - o.val) * o2src;
                     double ov = - p.alpha_0 * grad_dot(o, v) + o_rhs * v.val;
-                    ref(local.o, aa) += (o.val * v.val + ov * h) * w * J;
+                    ref(local.o, aa) += (o.val * v.val + ov * h) * wJ;
                 }
             }
             return local;
