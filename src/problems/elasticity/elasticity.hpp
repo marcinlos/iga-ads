@@ -241,7 +241,7 @@ namespace problems {
         }
 
         void after_step(int iter, double t) override {
-            if (iter % 100 == 0) {
+            if (iter % 10 == 0) {
                 std::cout << "** Iteration " << iter << ", t = " << t << std::endl;
 
                 double Ek = kinetic_energy();
@@ -255,7 +255,7 @@ namespace problems {
                 std::cout << "Total disp:   : " << total() << std::endl;
                 std::cout << std::endl;
 
-                output.to_file("out_%d.vti", iter,
+                output.to_file("out_%d.vti", iter*10,
                                output.evaluate(now.ux),
                                output.evaluate(now.uy),
                                output.evaluate(now.uz),
