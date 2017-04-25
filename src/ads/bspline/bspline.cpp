@@ -23,6 +23,22 @@ basis create_basis(double a, double b, int p, int elements) {
     return {std::move(knot), p};
 }
 
+basis create_basis_C0(double a, double b, int p, int elements) {
+    int points = elements + 1;
+    int knot_size = p * points + 2; // clamped B-spline with C^0 separators
+    knot_vector knot(knot_size);
+
+    knot[0] = a;
+    knot[knot_size - 1] = b;
+
+    for (int i = 0; i < points; ++i) {
+        for (int j = 0; j < p; ++ j) {
+            knot[1 + i * p + j] = lerp(i, elements, a, b);
+        }
+    }
+    return {std::move(knot), p};
+}
+
 int find_span(double x, const basis& b) {
     int low = b.begin_idx();
     int high = b.end_idx();
@@ -137,4 +153,3 @@ std::vector<int> first_nonzero_dofs(const basis& b) {
 
 }
 }
-

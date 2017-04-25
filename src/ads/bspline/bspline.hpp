@@ -12,6 +12,16 @@ using knot_vector = std::vector<double>;
 struct basis {
     knot_vector knot;
     int degree;
+    std::vector<double> points;
+
+    basis(knot_vector kn, int degree): knot{ std::move(kn) }, degree{ degree } {
+        points.push_back(knot[0]);
+        for (auto i = 1u; i < knot.size(); ++ i) {
+            if (knot[i] != knot[i - 1]) {
+                points.push_back(knot[i]);
+            }
+        }
+    }
 
     std::size_t knot_size() const {
         return knot.size();
@@ -26,7 +36,7 @@ struct basis {
     }
 
     int elements() const {
-        return dofs() - degree;
+        return points.size() - 1;
     }
 
     int begin_idx() const {
@@ -160,6 +170,8 @@ public:
  * @param elements - number of elements (spans)
  */
 basis create_basis(double a, double b, int degree, int elements);
+
+basis create_basis_C0(double a, double b, int degree, int elements);
 
 int find_span(double x, const basis& b);
 

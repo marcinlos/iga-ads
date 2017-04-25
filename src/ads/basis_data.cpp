@@ -24,8 +24,8 @@ namespace ads {
 
         for (int e = 0; e < elements; ++ e) {
             x[e] = new double[q];
-            double x1 = this->basis.knot[p + e];
-            double x2 = this->basis.knot[p + e + 1];
+            double x1 = this->basis.points[e];
+            double x2 = this->basis.points[e + 1];
             J[e] = 0.5 * (x2 - x1);
 
             for (int k = 0; k < q; ++ k) {
@@ -40,9 +40,8 @@ namespace ads {
                 for (int d = 0; d <= derivatives; ++ d) {
                     b[e][k][d] = new double[p + 1];
                 }
-                for (int i = 0; i < this->basis.dofs_per_element(); ++ i) {
-                    eval_basis_with_derivatives(e + p, x[e][k], this->basis, b[e][k], derivatives, ctx);
-                }
+                int span = find_span(x[e][k], this->basis);
+                eval_basis_with_derivatives(span, x[e][k], this->basis, b[e][k], derivatives, ctx);
             }
         }
     }
