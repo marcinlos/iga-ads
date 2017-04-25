@@ -119,6 +119,9 @@ if (NOT SKIP_PROBLEMS)
       src/problems/validation/main.cpp)
   endif()
 
+  define_problem(heat_1d
+      src/problems/heat/heat_1d.cpp)
+
   define_problem(heat_3d
     src/problems/heat/heat_3d.cpp)
 
