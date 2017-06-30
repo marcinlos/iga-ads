@@ -126,4 +126,7 @@ if (NOT SKIP_PROBLEMS)
   define_problem(heat_3d
     src/problems/heat/heat_3d.cpp)
 
+  define_problem(pollution
+    src/problems/pollution/main.cpp)
+
 endif()
