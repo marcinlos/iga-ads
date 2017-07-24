@@ -65,7 +65,7 @@ public:
 
     solver() {
         id.job = -1;
-        id.par = 01;
+        id.par = 1;
         id.sym = 0;
         id.comm_fortran = 1;
         dmumps_c(&id);
@@ -83,7 +83,7 @@ public:
 
 
         //ordering metis (5), or pord (4), or AMD (0), AMF (2), QAMD (6)
-        id.icntl[6] = 5;
+        id.icntl[6] = 2;
     }
 
     void solve(problem& problem) {
@@ -94,13 +94,12 @@ public:
         id.jcn = problem.jcn();
         id.a = problem.a();
 
-        factorize_();
-        analyze_();
-
         id.rhs = problem.rhs();
         id.nrhs = 1;
         id.lrhs = id.n;
 
+        analyze_();
+        factorize_();
         solve_();
     }
 
@@ -111,12 +110,12 @@ public:
 
 private:
     void factorize_() {
-        id.job = 1;
+        id.job = 2;
         dmumps_c(&id);
     }
 
     void analyze_() {
-        id.job = 2;
+        id.job = 1;
         dmumps_c(&id);
     }
 
