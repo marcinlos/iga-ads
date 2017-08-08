@@ -10,7 +10,6 @@
 namespace ads {
 namespace lin {
 
-
 inline void factorize(band_matrix& a, solver_ctx& ctx) {
     dgbtrf_(&a.rows, &a.cols, &a.kl, &a.ku, a.full_buffer(), &ctx.lda, ctx.pivot(), &ctx.info);
 }
