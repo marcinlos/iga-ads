@@ -10,12 +10,17 @@ struct dim_config {
     int elements;
     double a;
     double b;
+    int quad_order;
 
-    dim_config(int p, int elements, double a = 0, double b = 1)
+    dim_config(int p, int elements, double a, double b, double quad_order)
     : p{p}
     , elements{elements}
     , a{a}
     , b{b}
+    , quad_order{quad_order}
+    { }
+
+    dim_config(int p, int elements, double a = 0, double b = 1): dim_config{ p, elements, a, b, p + 1 }
     { }
 };
 

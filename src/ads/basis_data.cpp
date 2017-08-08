@@ -5,11 +5,11 @@
 
 namespace ads {
 
-    basis_data::basis_data(bspline::basis basis, int derivatives)
+    basis_data::basis_data(bspline::basis basis, int derivatives, int quad_order)
     : first_dofs(bspline::first_nonzero_dofs(basis))
     , degree(basis.degree)
     , elements(basis.elements())
-    , quad_order(basis.degree + 1)
+    , quad_order(quad_order)
     , knot(basis.knot)
     , basis(std::move(basis))
     , w(quad::gauss::Ws[quad_order])
