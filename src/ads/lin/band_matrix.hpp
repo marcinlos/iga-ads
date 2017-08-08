@@ -7,6 +7,7 @@
 #include "ads/lin/lapack.hpp"
 #include "ads/lin/dense_matrix.hpp"
 
+
 namespace ads {
 namespace lin {
 
@@ -74,7 +75,9 @@ public:
         return row_offset + (ku + 1 + kl);
     }
 
-private:
+    int column_size_() const {
+        return row_offset + (ku + 1 + kl);
+    }
 
     static int array_size_(int kl, int ku, int cols, int offset) {
         int rows = offset + (ku + 1 + kl);
