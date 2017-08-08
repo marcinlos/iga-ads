@@ -9,7 +9,7 @@ namespace ads {
     , b{config.b}
     , B(bspline_basis(config))
     , M{p, p, B.dofs()}
-    , basis(B, derivatives)
+    , basis(B, derivatives, config.quad_order)
     , ctx{M}
     {
         gram_matrix_1d(M, basis);

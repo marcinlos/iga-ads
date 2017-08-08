@@ -24,7 +24,11 @@ struct basis_data {
     const double* w;
     double* J;
 
-    basis_data(bspline::basis basis, int derivatives);
+    basis_data(bspline::basis basis, int derivatives)
+    : basis_data{ std::move(basis), derivatives, basis.degree + 1 }
+    { }
+
+    basis_data(bspline::basis basis, int derivatives, int quad_order);
 
     int first_dof(element_id e) const {
         return first_dofs[e];
