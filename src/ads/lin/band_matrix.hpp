@@ -88,6 +88,22 @@ inline std::ostream& operator <<(std::ostream& os, const band_matrix& M) {
     return os;
 }
 
+template <typename Vec1, typename Vec2>
+inline void multiply(const band_matrix& M, const Vec1& x, Vec2& y, int count = 1, const char* transpose = "N")  {
+    double alpha = 1;
+    double beta = 0;
+    int incx = 1;
+    int incy = 1;
+    int lda = M.kl + M.ku + 1;
+
+    for (int i = 0; i < count; ++ i) {
+        auto in = x.data() + M.rows * i;
+        auto out = y.data() + M.cols * i;
+        dgbmv_(transpose, &M.rows, &M.cols, &M.kl, &M.ku, &alpha, M.data(), &lda, in, &incx, &beta, out, &incy);
+    }
+}
+
+
 
 }
 }
