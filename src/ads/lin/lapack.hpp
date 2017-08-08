@@ -42,10 +42,10 @@ int dgbmv_(
     in_double alpha,
     const double* a,
     in_int lda,
-    double* x,
+    const double* x,
     in_int incx,
     in_double beta,
-    const double* y,
+    double* y,
     in_int incy);
 
 }
