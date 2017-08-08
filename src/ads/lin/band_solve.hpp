@@ -4,38 +4,7 @@
 #include <iostream>
 #include "ads/lin/band_matrix.hpp"
 #include "ads/lin/tensor.hpp"
-
-// LAPACK routines
-extern "C" {
-
-using in_int = const int*;
-using in_int_array = const int*;
-using out_int = int*;
-using out_int_array = int*;
-
-int dgbtrf_(
-        in_int m,
-        in_int n,
-        in_int kl,
-        in_int ku,
-        double* ab,
-        in_int ldab,
-        out_int_array ipiv,
-        out_int info);
-
-int dgbtrs_(
-        const char* trans,
-        in_int n,
-        in_int kl,
-        in_int ku,
-        in_int nrhs,
-        const double* ab,
-        in_int ldab,
-        in_int_array ipiv,
-        double* b,
-        in_int ldb,
-        out_int info);
-}
+#include "ads/lin/lapack.hpp"
 
 namespace ads {
 namespace lin {
