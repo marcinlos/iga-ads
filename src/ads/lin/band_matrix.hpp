@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <vector>
 #include <iomanip>
+#include "ads/lin/lapack.hpp"
 
 namespace ads {
 namespace lin {
@@ -15,17 +16,23 @@ private:
 public:
     int kl;
     int ku;
-    int n;
+    int rows;
+    int cols;
+    int row_offset;
 
-    band_matrix(int kl, int ku, int n)
-    : data_(array_size_(kl, ku, n))
+    band_matrix(int kl, int ku, int n): band_matrix(kl, ku, n, n, kl) { }
+
+    band_matrix(int kl, int ku, int rows, int cols, int row_offset = 0)
+    : data_(array_size_(kl, ku, cols, row_offset))
     , kl(kl)
     , ku(ku)
-    , n(n)
+    , rows(rows)
+    , cols(cols)
+    , row_offset(row_offset)
     { }
 
     double& operator ()(int i, int j) {
-        int row = kl + ku + i - j;
+        int row = row_offset + ku + i - j;
         int col = j;
         return data_[col * column_size_() + row];
     }
@@ -42,39 +49,38 @@ public:
         return i - j <= kl && j - i <= ku;
     }
 
-    int cols() const {
-        return n;
+    double* full_buffer() {
+        return data_.data();
     }
 
-    int rows() const {
-        return n;
+    const double* full_buffer() const {
+        return data_.data();
     }
 
     double* data() {
-        return data_.data();
+        return full_buffer() + row_offset * cols;
     }
 
     const double* data() const {
-        return data_.data();
+        return full_buffer() + row_offset * cols;
     }
 
 private:
 
     int column_size_() const {
-        return kl + (ku + 1 + kl);
+        return row_offset + (ku + 1 + kl);
     }
 
-    static int array_size_(int kl, int ku, int n) {
-        int rows = kl + (ku + 1 + kl);
-        int cols = n;
+    static int array_size_(int kl, int ku, int cols, int offset) {
+        int rows = offset + (ku + 1 + kl);
         return rows * cols;
     }
 };
 
 
 inline std::ostream& operator <<(std::ostream& os, const band_matrix& M) {
-    for (int i = 0; i < M.rows(); ++ i) {
-        for (int j = 0; j < M.cols(); ++ j) {
+    for (int i = 0; i < M.rows; ++ i) {
+        for (int j = 0; j < M.cols; ++ j) {
             os << std::setw(12) << M(i, j) << ' ';
         }
         os << std::endl;

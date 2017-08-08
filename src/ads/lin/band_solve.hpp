@@ -20,7 +20,7 @@ struct solver_ctx {
     { }
 
     solver_ctx(const band_matrix& a)
-    : solver_ctx(a.n, a.kl, a.ku)
+    : solver_ctx(a.rows, a.kl, a.ku)
     { }
 
     int* pivot() {
@@ -29,7 +29,7 @@ struct solver_ctx {
 };
 
 inline void factorize(band_matrix& a, solver_ctx& ctx) {
-    dgbtrf_(&a.n, &a.n, &a.kl, &a.ku, a.data(), &ctx.ldab, ctx.pivot(), &ctx.info);
+    dgbtrf_(&a.rows, &a.cols, &a.kl, &a.ku, a.full_buffer(), &ctx.ldab, ctx.pivot(), &ctx.info);
 }
 
 template <typename Rhs>
@@ -37,7 +37,7 @@ inline void solve_with_factorized(const band_matrix& a, Rhs& b, solver_ctx& ctx)
     int nrhs = b.size() / b.size(0);
     const char* trans = "No transpose";
 
-    dgbtrs_(trans, &a.n, &a.kl, &a.ku, &nrhs, a.data(), &ctx.ldab, ctx.pivot(), b.data(), &a.n, &ctx.info);
+    dgbtrs_(trans, &a.cols, &a.kl, &a.ku, &nrhs, a.full_buffer(), &ctx.ldab, ctx.pivot(), b.data(), &a.cols, &ctx.info);
 }
 
 template <typename Rhs>
