@@ -88,6 +88,7 @@ if (COMPILE_TESTS)
     ${TSRC}/ads/bspline/eval_test.cpp)
   define_test(tensor ${TSRC}/ads/lin/tensor_test.cpp)
   define_test(solver ${TSRC}/ads/lin/banded_solver_test.cpp)
+  define_test(dense_solver ${TSRC}/ads/lin/dense_solver_test.cpp)
   define_test(array ${TSRC}/ads/util/multi_array_test.cpp)
 
 endif()
