@@ -48,6 +48,26 @@ int dgbmv_(
     double* y,
     in_int incy);
 
+
+int dgetrf_(
+    in_int m,
+    in_int n,
+    double* a,
+    in_int lda,
+    out_int_array ipiv,
+    out_int info);
+
+int dgetrs_(
+    const char* trans,
+    in_int n,
+    in_int nrhs,
+    const double* a,
+    in_int in_lda,
+    in_int_array ipiv,
+    double* b,
+    in_int ldb,
+    in_int info);
+
 }
 
 
