@@ -4,6 +4,8 @@
 #include "ads/simulation.hpp"
 #include "ads/output_manager.hpp"
 #include "ads/executor/galois.hpp"
+#include "ads/lin/dense_matrix.hpp"
+#include "ads/lin/dense_solve.hpp"
 
 
 namespace ads {
@@ -15,7 +17,7 @@ private:
     galois_executor executor{8};
 
     dimension Ux, Uy;
-    lin::band_matrix Kx_x, Kx_y, Ky_x, Ky_y;
+    lin::dense_matrix Kx_x, Kx_y, Ky_x, Ky_y;
     lin::solver_ctx Kxx_ctx, Kxy_ctx, Kyx_ctx, Kyy_ctx;
 
     lin::band_matrix Ax, Ay;
@@ -25,6 +27,7 @@ private:
 
     lin::band_matrix MUVx, MUVy;
     lin::band_matrix Bx, By;
+    lin::dense_matrix Tx, Ty;
 
     vector_type u, u_prev;
     vector_type u_buffer;
@@ -50,10 +53,10 @@ public:
     : Base{ higher_order(config, k) }
     , Ux{ config.x, config.derivatives }
     , Uy{ config.y, config.derivatives }
-    , Kx_x{Ux.p, Ux.p, Ux.B.dofs()}
-    , Kx_y{Uy.p, Uy.p, Uy.B.dofs()}
-    , Ky_x{Ux.p, Ux.p, Ux.B.dofs()}
-    , Ky_y{Uy.p, Uy.p, Uy.B.dofs()}
+    , Kx_x{Ux.B.dofs(), Ux.B.dofs()}
+    , Kx_y{Uy.B.dofs(), Uy.B.dofs()}
+    , Ky_x{Ux.B.dofs(), Ux.B.dofs()}
+    , Ky_y{Uy.B.dofs(), Uy.B.dofs()}
     , Kxx_ctx{ Kx_x }
     , Kxy_ctx{ Kx_y }
     , Kyx_ctx{ Ky_x }
@@ -70,6 +73,8 @@ public:
     , MUVy{ y.p, Uy.p, y.B.dofs(), Uy.B.dofs() }
     , Bx{ x.p, Ux.p, x.B.dofs(), Ux.B.dofs() }
     , By{ y.p, Uy.p, y.B.dofs(), Uy.B.dofs() }
+    , Tx{ x.B.dofs(), Ux.B.dofs() }
+    , Ty{ y.B.dofs(), Uy.B.dofs() }
     , u{{ Ux.B.dofs(), Uy.B.dofs() }}
     , u_prev{{ Ux.B.dofs(), Uy.B.dofs() }}
     , u_buffer{{ Ux.B.dofs(), Uy.B.dofs() }}
@@ -206,20 +211,32 @@ private:
         gram_matrix_1d(MVx, x.basis);
         gram_matrix_1d(MVy, y.basis);
 
-
-        // TODO: fill
-        // Kx_x = Bx' Ax^-1 Bx
-        // Kx_y = MUVy' MVy^-1 MUVy
-        // Ky_x = MUVx' MVx^-1 MUVx
-        // Ky_y = By' Ay^-1 By
-
-        mass_matrix(Kx_x, Ux.basis, Ux.basis);
-        mass_matrix(Kx_y, Uy.basis, Uy.basis);
-
         lin::factorize(Ax, Ax_ctx);
         lin::factorize(Ay, Ay_ctx);
         lin::factorize(MVx, MVx_ctx);
         lin::factorize(MVy, MVy_ctx);
+
+        // TODO: fill
+        // Kx_x = Bx' Ax^-1 Bx
+        to_dense(Bx, Tx);
+        solve_with_factorized(Ax, Tx, Ax_ctx);
+        multiply(Bx, Tx, Kx_x, "T");
+
+        // Kx_y = MUVy' MVy^-1 MUVy
+        to_dense(MUVy, Ty);
+        solve_with_factorized(MVy, Ty, MVy_ctx);
+        multiply(MUVy, Ty, Kx_y, "T");
+
+        // Ky_x = MUVx' MVx^-1 MUVx
+        to_dense(MUVx, Tx);
+        solve_with_factorized(MVx, Tx, MVx_ctx);
+        multiply(MUVx, Tx, Ky_x, "T");
+
+        // Ky_y = By' Ay^-1 By
+        to_dense(By, Ty);
+        solve_with_factorized(Ay, Ty, Ay_ctx);
+        multiply(By, Ty, Ky_y, "T");
+
         lin::factorize(Kx_x, Kxx_ctx);
         lin::factorize(Kx_y, Kxy_ctx);
         lin::factorize(Ky_x, Kyx_ctx);
@@ -263,12 +280,16 @@ private:
         // rhsx = MUVy' rhs
         // u = (Bx' rhsx')'
 
-        multiply(Bx, rhs, rhsx, 1, "T");
+        multiply(Bx, rhs, rhsx, y.dofs(), "T");
         lin::cyclic_transpose(rhsx, rhsx_t);
         multiply(MUVy, rhsx_t, u_t, Ux.dofs(), "T");
         lin::cyclic_transpose(u_t, u);
 
-        ads_solve(u, u_buffer, dim_data{Kx_x, Kxx_ctx}, dim_data{Kx_y, Kxy_ctx});
+        // ads_solve(u, u_buffer, dim_data{Kx_x, Kxx_ctx}, dim_data{Kx_y, Kxy_ctx});
+        lin::solve_with_factorized(Kx_x, u, Kxx_ctx);
+        auto F = lin::cyclic_transpose(u, u_buffer.data());
+        lin::solve_with_factorized(Kx_y, F, Kxy_ctx);
+        lin::cyclic_transpose(F, u);
 
         using std::swap;
         swap(u, u_prev);
@@ -283,14 +304,19 @@ private:
         multiply(By, rhsx_t, u_t, Ux.dofs(), "T");
         lin::cyclic_transpose(u_t, u);
 
-        ads_solve(u, u_buffer, dim_data{Ky_x, Kyx_ctx}, dim_data{Ky_y, Kyy_ctx});
+        // ads_solve(u, u_buffer, dim_data{Ky_x, Kyx_ctx}, dim_data{Ky_y, Kyy_ctx});
+        lin::solve_with_factorized(Ky_x, u, Kyx_ctx);
+        auto F2 = lin::cyclic_transpose(u, u_buffer.data());
+        lin::solve_with_factorized(Ky_y, F2, Kyy_ctx);
+        lin::cyclic_transpose(F2, u);
     }
 
     void after_step(int iter, double t) override {
-        // if ((iter + 1) % save_every == 0) {
-        //     output.to_file(u, "out_%d.data", (iter + 1) / save_every);
+        if ((iter + 1) % save_every == 0) {
+            std::cout << "Step " << iter << std::endl;
+            output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         //     analyze(iter, t + 0.5 * steps.dt);
-        // }
+        }
 
         auto s = t / 150;
         auto phase = sin(s) + 0.5 * sin(2.3*s);
@@ -305,6 +331,30 @@ private:
         return a[0] * u.dx + a[1] * u.dy;
     }
 
+    index_type dof_global_to_local_U(index_type e, index_type a) const {
+        const auto& bx = Ux.basis;
+        const auto& by = Uy.basis;
+        return {{ a[0] - bx.first_dof(e[0]), a[1] - by.first_dof(e[1]) }};
+    }
+
+    value_type eval_basis_U(index_type e, index_type q, index_type a) const  {
+        auto loc = dof_global_to_local_U(e, a);
+
+        const auto& bx = Ux.basis;
+        const auto& by = Uy.basis;
+
+        double B1  = bx.b[e[0]][q[0]][0][loc[0]];
+        double B2  = by.b[e[1]][q[1]][0][loc[1]];
+        double dB1 = bx.b[e[0]][q[0]][1][loc[0]];
+        double dB2 = by.b[e[1]][q[1]][1][loc[1]];
+
+        double v = B1 * B2;
+        double dxv = dB1 *  B2;
+        double dyv =  B1 * dB2;
+
+        return { v, dxv, dyv };
+    }
+
     value_type eval(const vector_type& v, index_type e, index_type q, const basis_data& bx, const basis_data& by) const {
         auto rx = bx.dof_range(e[0]);
         auto ry = by.dof_range(e[1]);
@@ -312,7 +362,7 @@ private:
         value_type u{};
         for (auto b : dofs) {
             double c = v(b[0], b[1]);
-            value_type B = eval_basis(e, q, b);
+            value_type B = eval_basis_U(e, q, b);
             u += c * B;
         }
         return u;
