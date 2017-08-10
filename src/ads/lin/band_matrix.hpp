@@ -5,6 +5,7 @@
 #include <vector>
 #include <iomanip>
 #include "ads/lin/lapack.hpp"
+#include "ads/lin/dense_matrix.hpp"
 
 namespace ads {
 namespace lin {
@@ -102,6 +103,19 @@ inline void multiply(const band_matrix& M, const Vec1& x, Vec2& y, int count = 1
         dgbmv_(transpose, &M.rows, &M.cols, &M.kl, &M.ku, &alpha, M.data(), &lda, in, &incx, &beta, out, &incy);
     }
 }
+
+inline void multiply(const band_matrix& A, const dense_matrix& B, dense_matrix& out, const char* transpose = "N") {
+    multiply(A, B, out, B.cols(), transpose);
+}
+
+inline void to_dense(const band_matrix& M, dense_matrix& out) {
+    for (int i = 0; i < M.rows; ++ i) {
+        for (int j = 0; j < M.cols; ++ j) {
+            out(i, j) = M(i, j);
+        }
+    }
+}
+
 
 
 
