@@ -24,8 +24,7 @@ private:
 
     lin::band_matrix Ax, Ay;
     lin::solver_ctx Ax_ctx, Ay_ctx;
-    lin::band_matrix MVx, MVy;
-    lin::solver_ctx MVx_ctx, MVy_ctx;
+    lin::band_matrix MUx, MUy;
 
     lin::band_matrix MUVx, MUVy;
     lin::band_matrix Bx, By;
@@ -33,7 +32,7 @@ private:
 
     vector_type u, u_prev;
     vector_type u_buffer;
-    vector_type rhs;
+    vector_type rhs1, rhs2;
 
     int save_every = 1;
 
@@ -69,10 +68,8 @@ public:
     , Ay{y.p, Vy.p, Vy.dofs()}
     , Ax_ctx{ Ax }
     , Ay_ctx{ Ay }
-    , MVx{x.p, x.p, x.dofs()}
-    , MVy{y.p, y.p, y.dofs()}
-    , MVx_ctx{ MVx }
-    , MVy_ctx{ MVy }
+    , MUx{Ux.p, Ux.p, Ux.dofs(), Ux.dofs(), 0}
+    , MUy{Uy.p, Uy.p, Uy.dofs(), Uy.dofs(), 0}
     , MUVx{ Vx.p, Ux.p, Vx.dofs(), Ux.dofs() }
     , MUVy{ Vy.p, Uy.p, Vy.dofs(), Uy.dofs() }
     , Bx{ Vx.p, Ux.p, Vx.dofs(), Ux.dofs() }
@@ -82,12 +79,9 @@ public:
     , u{{ Ux.dofs(), Uy.dofs() }}
     , u_prev{{ Ux.dofs(), Uy.dofs() }}
     , u_buffer{{ Ux.dofs(), Uy.dofs() }}
-    , rhs{ shape() }
+    , rhs1{{ Vx.dofs(), Uy.dofs() }}, rhs2{{ Ux.dofs(), Vy.dofs() }}
     , output{ Ux.B, Uy.B, 400 }
-    {
-        // matrix(Kx, x.basis, steps.dt / 2, c_diff[0], wind[0]);
-        // matrix(Ky, y.basis, steps.dt / 2, c_diff[1], wind[1]);
-    }
+    { }
 
 private:
 
@@ -191,34 +185,32 @@ private:
     };
 
     void prepare_implicit_matrices() {
-        MUVx.zero();
-        MUVy.zero();
+        // MUVx.zero();
+        // MUVy.zero();
         Bx.zero();
         By.zero();
         Ax.zero();
         Ay.zero();
-        MVx.zero();
-        MVy.zero();
+        MUx.zero();
+        MUy.zero();
         Kx_x.zero();
         Kx_y.zero();
         Ky_x.zero();
         Ky_y.zero();
 
-        mass_matrix(MUVx, Ux.basis, x.basis);
-        mass_matrix(MUVy, Uy.basis, y.basis);
+        // mass_matrix(MUVx, Ux.basis, x.basis);
+        // mass_matrix(MUVy, Uy.basis, y.basis);
 
         matrix(Bx, Ux.basis, x.basis, steps.dt / 2, c_diff[0], wind[0]);
         matrix(By, Uy.basis, y.basis, steps.dt / 2, c_diff[1], wind[1]);
 
         prod_V(Ax, x.basis);
         prod_V(Ay, y.basis);
-        gram_matrix_1d(MVx, x.basis);
-        gram_matrix_1d(MVy, y.basis);
+        gram_matrix_1d(MUx, Ux.basis);
+        gram_matrix_1d(MUy, Uy.basis);
 
         lin::factorize(Ax, Ax_ctx);
         lin::factorize(Ay, Ay_ctx);
-        lin::factorize(MVx, MVx_ctx);
-        lin::factorize(MVy, MVy_ctx);
 
         // TODO: fill
         // Kx_x = Bx' Ax^-1 Bx
@@ -227,27 +219,35 @@ private:
         multiply(Bx, Tx, Kx_x, "T");
 
         // Kx_y = MUVy' MVy^-1 MUVy
-        to_dense(MUVy, Ty);
-        solve_with_factorized(MVy, Ty, MVy_ctx);
-        multiply(MUVy, Ty, Kx_y, "T");
+        // to_dense(MUy, Ty);
+        // solve_with_factorized(Uy.M, Ty, Uy.ctx);
+        // multiply(MUy, Ty, Kx_y, "T");
+        to_dense(MUy, Kx_y);
 
         // Ky_x = MUVx' MVx^-1 MUVx
-        to_dense(MUVx, Tx);
-        solve_with_factorized(MVx, Tx, MVx_ctx);
-        multiply(MUVx, Tx, Ky_x, "T");
+        // to_dense(MUx, Tx);
+        // solve_with_factorized(Ux.M, Tx, Ux.ctx);
+        // multiply(MUx, Tx, Ky_x, "T");
+        to_dense(MUx, Ky_x);
 
         // Ky_y = By' Ay^-1 By
         to_dense(By, Ty);
         solve_with_factorized(Ay, Ty, Ay_ctx);
         multiply(By, Ty, Ky_y, "T");
 
+        // lin::factorize(MUx, MUx_ctx);
+        // lin::factorize(MUy, MUy_ctx);
+
         lin::factorize(Kx_x, Kxx_ctx);
         lin::factorize(Kx_y, Kxy_ctx);
         lin::factorize(Ky_x, Kyx_ctx);
         lin::factorize(Ky_y, Kyy_ctx);
+
     }
 
     void prepare_matrices() {
+        Ux.factorize_matrix();
+        Uy.factorize_matrix();
         // Base::prepare_matrices();
         prepare_implicit_matrices();
     }
@@ -271,11 +271,12 @@ private:
 
     void step(int /*iter*/, double /*t*/) override {
         compute_rhs_x();
-        ads_solve(rhs, buffer, dim_data{Ax, Ax_ctx}, dim_data{MVy, MVy_ctx});
+        ads_solve(rhs1, buffer, dim_data{Ax, Ax_ctx}, Uy.data());
 
-        vector_type rhsx   {{ Ux.dofs(), Vy.dofs() }};
-        vector_type rhsx_t {{ Vy.dofs(), Ux.dofs() }};
-        vector_type u_t    {{ Uy.dofs(), Ux.dofs() }};
+        vector_type rhsx1   {{ Ux.dofs(), Uy.dofs() }};
+        vector_type rhsx1_t {{ Uy.dofs(), Ux.dofs() }};
+
+        vector_type u_t     {{ Uy.dofs(), Ux.dofs() }};
 
         // u = (Bx * MUVy)' rhs
         // =>
@@ -284,9 +285,9 @@ private:
         // rhsx = MUVy' rhs
         // u = (Bx' rhsx')'
 
-        multiply(Bx, rhs, rhsx, Vy.dofs(), "T");
-        lin::cyclic_transpose(rhsx, rhsx_t);
-        multiply(MUVy, rhsx_t, u_t, Ux.dofs(), "T");
+        multiply(Bx, rhs1, rhsx1, Uy.dofs(), "T");
+        lin::cyclic_transpose(rhsx1, rhsx1_t);
+        multiply(MUy, rhsx1_t, u_t, Ux.dofs(), "T");
         lin::cyclic_transpose(u_t, u);
 
         // ads_solve(u, u_buffer, dim_data{Kx_x, Kxx_ctx}, dim_data{Kx_y, Kxy_ctx});
@@ -299,13 +300,15 @@ private:
         swap(u, u_prev);
 
         compute_rhs_y();
-        ads_solve(rhs, buffer, dim_data{MVx, MVx_ctx}, dim_data{Ay, Ay_ctx});
+        ads_solve(rhs2, buffer, Ux.data(), dim_data{Ay, Ay_ctx});
 
+        vector_type rhsx2   {{ Ux.dofs(), Vy.dofs() }};
+        vector_type rhsx2_t {{ Vy.dofs(), Ux.dofs() }};
         // u = (MUVx * By)' rhs
 
-        multiply(MUVx, rhs, rhsx, Vy.dofs(), "T");
-        lin::cyclic_transpose(rhsx, rhsx_t);
-        multiply(By, rhsx_t, u_t, Ux.dofs(), "T");
+        multiply(MUx, rhs2, rhsx2, Vy.dofs(), "T");
+        lin::cyclic_transpose(rhsx2, rhsx2_t);
+        multiply(By, rhsx2_t, u_t, Ux.dofs(), "T");
         lin::cyclic_transpose(u_t, u);
 
         // ads_solve(u, u_buffer, dim_data{Ky_x, Kyx_ctx}, dim_data{Ky_y, Kyy_ctx});
@@ -335,17 +338,11 @@ private:
         return a[0] * u.dx + a[1] * u.dy;
     }
 
-    index_type dof_global_to_local_U(index_type e, index_type a) const {
-        const auto& bx = Ux.basis;
-        const auto& by = Uy.basis;
-        return {{ a[0] - bx.first_dof(e[0]), a[1] - by.first_dof(e[1]) }};
-    }
+    value_type eval_basis(index_type e, index_type q, index_type a, const dimension& x, const dimension& y) const  {
+        auto loc = dof_global_to_local(e, a, x, y);
 
-    value_type eval_basis_U(index_type e, index_type q, index_type a) const  {
-        auto loc = dof_global_to_local_U(e, a);
-
-        const auto& bx = Ux.basis;
-        const auto& by = Uy.basis;
+        const auto& bx = x.basis;
+        const auto& by = y.basis;
 
         double B1  = bx.b[e[0]][q[0]][0][loc[0]];
         double B2  = by.b[e[1]][q[1]][0][loc[1]];
@@ -363,7 +360,7 @@ private:
         value_type u{};
         for (auto b : dofs_on_element(e, x, y)) {
             double c = v(b[0], b[1]);
-            value_type B = eval_basis_U(e, q, b);
+            value_type B = eval_basis(e, q, b, x, y);
             u += c * B;
         }
         return u;
@@ -385,22 +382,37 @@ private:
         return util::product_range<index_type>(rx, ry);
     }
 
-    void compute_rhs_x() {
-        zero(rhs);
+    index_type dof_global_to_local(index_type e, index_type a, const dimension& x, const dimension& y) const {
+        const auto& bx = x.basis;
+        const auto& by = y.basis;
+        return {{ a[0] - bx.first_dof(e[0]), a[1] - by.first_dof(e[1]) }};
+    }
 
-        executor.for_each(elements(Vx, Vy), [&](index_type e) {
-            auto U = element_rhs();
+    void update_global_rhs(vector_type& global, const vector_type& local, index_type e,
+                           const dimension& x, const dimension& y) const {
+        for (auto a : dofs_on_element(e, x, y)) {
+            auto loc = dof_global_to_local(e, a, x, y);
+            global(a[0], a[1]) += local(loc[0], loc[1]);
+        }
+    }
+
+
+    void compute_rhs_x() {
+        zero(rhs1);
+
+        executor.for_each(elements(Vx, Uy), [&](index_type e) {
+            auto U = vector_type{{ Vx.basis.dofs_per_element(), Uy.basis.dofs_per_element() }};
             auto h = 0.5 * steps.dt;
 
             double J = jacobian(e);
-            for (auto q : quad_points(Vx, Vy)) {
+            for (auto q : quad_points(Vx, Uy)) {
                 double w = weigth(q);
                 auto x = point(e, q);
                 value_type u = eval(u_prev, e, q, Ux, Uy);
 
-                for (auto a : dofs_on_element(e, Vx, Vy)) {
-                    auto aa = dof_global_to_local(e, a);
-                    value_type v = eval_basis(e, q, a);
+                for (auto a : dofs_on_element(e, Vx, Uy)) {
+                    auto aa = dof_global_to_local(e, a, Vx, Uy);
+                    value_type v = eval_basis(e, q, a, Vx, Uy);
 
                     double conv_term = wind[1] * u.dy * v.val;
 
@@ -412,27 +424,27 @@ private:
                 }
             }
             executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e);
+                update_global_rhs(rhs1, U, e, Vx, Uy);
             });
         });
     }
 
     void compute_rhs_y() {
-        zero(rhs);
+        zero(rhs2);
 
-        executor.for_each(elements(Vx, Vy), [&](index_type e) {
-            auto U = element_rhs();
+        executor.for_each(elements(Ux, Vy), [&](index_type e) {
+            auto U = vector_type{{ Ux.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
             auto h = 0.5 * steps.dt;
 
             double J = jacobian(e);
-            for (auto q : quad_points(Vx, Vy)) {
+            for (auto q : quad_points(Ux, Vy)) {
                 double w = weigth(q);
                 auto x = point(e, q);
                 value_type u = eval(u_prev, e, q, Ux, Uy);
 
-                for (auto a : dofs_on_element(e, Vx, Vy)) {
-                    auto aa = dof_global_to_local(e, a);
-                    value_type v = eval_basis(e, q, a);
+                for (auto a : dofs_on_element(e, Ux, Vy)) {
+                    auto aa = dof_global_to_local(e, a, Ux, Vy);
+                    value_type v = eval_basis(e, q, a, Ux, Vy);
 
                     double conv_term = wind[0] * u.dx * v.val;
 
@@ -443,7 +455,7 @@ private:
                 }
             }
             executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e);
+                update_global_rhs(rhs2, U, e, Ux, Vy);
             });
         });
     }
