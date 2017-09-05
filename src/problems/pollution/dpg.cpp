@@ -1,4 +1,6 @@
-#include "problems/pollution/pollution_dpg_2d.hpp"
+// #include "problems/pollution/pollution_dpg_2d.hpp"
+#include "problems/pollution/pollution_dpg_v2_2d.hpp"
+
 
 using namespace ads;
 
@@ -18,6 +20,8 @@ int main(int argc, char* argv[]) {
     int ders = 1;
 
     config_2d c{dim, dim, steps, ders};
-    pollution_dpg_2d sim{c, k};
+    pollution_dpg_v2_2d sim{c, k};
+    // pollution_dpg_2d sim{c, k};
+
     sim.run();
 }
