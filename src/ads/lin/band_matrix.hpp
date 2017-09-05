@@ -35,7 +35,7 @@ public:
     double& operator ()(int i, int j) {
         int row = row_offset + ku + i - j;
         int col = j;
-        return data_[col * column_size_() + row];
+        return data_[col * column_size() + row];
     }
 
     double operator ()(int i, int j) const {
@@ -66,11 +66,15 @@ public:
         return full_buffer() + row_offset * cols;
     }
 
-private:
+    void zero() {
+        std::fill(begin(data_), end(data_), 0);
+    }
 
-    int column_size_() const {
+    int column_size() const {
         return row_offset + (ku + 1 + kl);
     }
+
+private:
 
     static int array_size_(int kl, int ku, int cols, int offset) {
         int rows = offset + (ku + 1 + kl);
@@ -95,7 +99,7 @@ inline void multiply(const band_matrix& M, const Vec1& x, Vec2& y, int count = 1
     double beta = 0;
     int incx = 1;
     int incy = 1;
-    int lda = M.kl + M.ku + 1;
+    int lda = M.column_size();
 
     for (int i = 0; i < count; ++ i) {
         auto in = x.data() + M.rows * i;
