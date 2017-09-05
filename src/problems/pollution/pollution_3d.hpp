@@ -127,7 +127,7 @@ private:
         double r2 = std::min((dx * dx + dy * dy + dz * dz), 1.0);
         // return 0;
         return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1); // g/m^3
-    };
+    }
 
     void impose_bc(vector_type& v) const {
         // {
