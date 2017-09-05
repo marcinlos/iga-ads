@@ -75,9 +75,7 @@ public:
         return row_offset + (ku + 1 + kl);
     }
 
-    int column_size_() const {
-        return row_offset + (ku + 1 + kl);
-    }
+private:
 
     static int array_size_(int kl, int ku, int cols, int offset) {
         int rows = offset + (ku + 1 + kl);
