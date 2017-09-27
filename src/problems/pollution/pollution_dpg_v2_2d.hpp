@@ -27,7 +27,8 @@ private:
     lin::band_matrix MUx, MUy;
 
     lin::band_matrix MUVx, MUVy;
-    lin::band_matrix Bx, By;
+    // lin::band_matrix Bx, By;
+    lin::dense_matrix Bx, By;
     lin::dense_matrix Tx, Ty;
 
     vector_type u, u_prev;
@@ -51,7 +52,8 @@ private:
 
 public:
     pollution_dpg_v2_2d(const config_2d& config, int k)
-    : Base{ higher_order(config, k) }
+    // : Base{ higher_order(config, k) }
+    : Base{ repeat_nodes(config, k) }
     , Ux{ config.x, config.derivatives }
     , Uy{ config.y, config.derivatives }
     , Vx{ x }
@@ -72,8 +74,8 @@ public:
     , MUy{Uy.p, Uy.p, Uy.dofs(), Uy.dofs(), 0}
     , MUVx{ Vx.p, Ux.p, Vx.dofs(), Ux.dofs() }
     , MUVy{ Vy.p, Uy.p, Vy.dofs(), Uy.dofs() }
-    , Bx{ Vx.p, Ux.p, Vx.dofs(), Ux.dofs() }
-    , By{ Vy.p, Uy.p, Vy.dofs(), Uy.dofs() }
+    , Bx{ Vx.dofs(), Ux.dofs() }
+    , By{ Vy.dofs(), Uy.dofs() }
     , Tx{ Vx.dofs(), Ux.dofs() }
     , Ty{ Vy.dofs(), Uy.dofs() }
     , u{{ Ux.dofs(), Uy.dofs() }}
@@ -81,9 +83,21 @@ public:
     , u_buffer{{ Ux.dofs(), Uy.dofs() }}
     , rhs1{{ Vx.dofs(), Uy.dofs() }}, rhs2{{ Ux.dofs(), Vy.dofs() }}
     , output{ Ux.B, Uy.B, 400 }
-    { }
+    {
+    }
 
 private:
+
+    static config_2d repeat_nodes(config_2d cfg, int k) {
+        cfg.x = repeat_nodes(cfg.x, k);
+        cfg.y = repeat_nodes(cfg.y, k);
+        return cfg;
+    }
+
+    static dim_config repeat_nodes(dim_config cfg, int k) {
+        cfg.repeated_nodes = k;
+        return cfg;
+    }
 
     static dim_config higher_order(dim_config cfg, int k) {
         cfg.p += k;
@@ -117,7 +131,7 @@ private:
         }
     }
 
-    void mass_matrix(lin::band_matrix& M, const basis_data& bU, const basis_data& bV) {
+    void mass_matrix(lin::dense_matrix& M, const basis_data& bU, const basis_data& bV) {
         for (element_id e = 0; e < bV.elements; ++ e) {
             for (int q = 0; q < bV.quad_order; ++ q) {
                 for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++ a) {
@@ -134,7 +148,7 @@ private:
         }
     }
 
-    void diffusion_matrix(lin::band_matrix& M, const basis_data& bU, const basis_data& bV,
+    void diffusion_matrix(lin::dense_matrix& M, const basis_data& bU, const basis_data& bV,
                           double h, double diffusion) {
         for (element_id e = 0; e < bV.elements; ++ e) {
             for (int q = 0; q < bV.quad_order; ++ q) {
@@ -152,7 +166,7 @@ private:
         }
     }
 
-    void advection_matrix(lin::band_matrix& M, const basis_data& bU, const basis_data& bV,
+    void advection_matrix(lin::dense_matrix& M, const basis_data& bU, const basis_data& bV,
                           double h, double advection) {
         for (element_id e = 0; e < bV.elements; ++ e) {
             for (int q = 0; q < bV.quad_order; ++ q) {
@@ -170,7 +184,7 @@ private:
         }
     }
 
-    void matrix(lin::band_matrix& B, const basis_data& bU, const basis_data& bV,
+    void matrix(lin::dense_matrix& B, const basis_data& bU, const basis_data& bV,
                 double h, double diffusion, double advection) {
         mass_matrix(B, bU, bV);
         diffusion_matrix(B, bU, bV, h, diffusion);
@@ -214,7 +228,8 @@ private:
 
         // TODO: fill
         // Kx_x = Bx' Ax^-1 Bx
-        to_dense(Bx, Tx);
+        // to_dense(Bx, Tx);
+        Tx = Bx;
         solve_with_factorized(Ax, Tx, Ax_ctx);
         multiply(Bx, Tx, Kx_x, "T");
 
@@ -231,7 +246,8 @@ private:
         to_dense(MUx, Ky_x);
 
         // Ky_y = By' Ay^-1 By
-        to_dense(By, Ty);
+        // to_dense(By, Ty);
+        Ty = By;
         solve_with_factorized(Ay, Ty, Ay_ctx);
         multiply(By, Ty, Ky_y, "T");
 
