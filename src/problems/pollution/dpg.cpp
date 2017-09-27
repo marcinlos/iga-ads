@@ -14,7 +14,10 @@ int main(int argc, char* argv[]) {
     int p = std::atoi(argv[2]);
     int k = std::atoi(argv[3]);
 
-    dim_config dim{ p, n, 0, 5000, p + k + 1 };
+    // dim_config dim{ p, n, 0, 5000, p + k + 1 };
+    // dim_config dim{ p, n, 0, 5000, p + 1, k }; // obie przestrzenie z separatorami
+    dim_config dim{ p, n, 0, 5000 }; // enrichment separatorami
+
     timesteps_config steps{ 100, 10 };
 
     int ders = 1;
