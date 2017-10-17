@@ -20,6 +20,9 @@ private:
     dimension& Vx;
     dimension& Vy;
     lin::dense_matrix Kx_x, Kx_y, Ky_x, Ky_y;
+
+    lin::dense_matrix Kx_x_nf, Kx_y_nf, Ky_x_nf, Ky_y_nf; // non-factorized copies
+
     lin::solver_ctx Kxx_ctx, Kxy_ctx, Kyx_ctx, Kyy_ctx;
 
     lin::band_matrix Ax, Ay;
@@ -35,14 +38,14 @@ private:
     vector_type u_buffer;
     vector_type rhs1, rhs2;
 
-    int save_every = 1;
+    int save_every = 10;
 
     double ambient = 1e-6; // g/m^3
     // double Vd = 0.1;
-    point_type c_diff{{ 20, 20 }}; // m/s^2
+    point_type c_diff{{ .1, .1 }}; // m/s^2
 
-    double wind_angle = 2 * M_PI / 4;
-    double wind_speed = 5; // m/s
+    double wind_angle = M_PI / 6;
+    double wind_speed = 100; // m/s
 
     point_type wind{{ wind_speed * cos(wind_angle), wind_speed * sin(wind_angle) }};
 
@@ -53,7 +56,9 @@ private:
 public:
     pollution_dpg_v2_2d(const config_2d& config, int k)
     // : Base{ higher_order(config, k) }
-    : Base{ repeat_nodes(config, k) }
+    // : Base{ repeat_nodes(config, k) }
+    // : Base{ increase_elements(config, k) }
+    : Base{ higher_order(repeat_nodes(config, k), k) }
     , Ux{ config.x, config.derivatives }
     , Uy{ config.y, config.derivatives }
     , Vx{ x }
@@ -62,6 +67,10 @@ public:
     , Kx_y{Uy.dofs(), Uy.dofs()}
     , Ky_x{Ux.dofs(), Ux.dofs()}
     , Ky_y{Uy.dofs(), Uy.dofs()}
+    , Kx_x_nf{Ux.dofs(), Ux.dofs()}
+    , Kx_y_nf{Uy.dofs(), Uy.dofs()}
+    , Ky_x_nf{Ux.dofs(), Ux.dofs()}
+    , Ky_y_nf{Uy.dofs(), Uy.dofs()}
     , Kxx_ctx{ Kx_x }
     , Kxy_ctx{ Kx_y }
     , Kyx_ctx{ Ky_x }
@@ -87,6 +96,17 @@ public:
     }
 
 private:
+
+    static config_2d increase_elements(config_2d cfg, int k) {
+        cfg.x = increase_elements(cfg.x, k);
+        cfg.y = increase_elements(cfg.y, k);
+        return cfg;
+    }
+
+    static dim_config increase_elements(dim_config cfg, int k) {
+        cfg.elements = k;
+        return cfg;
+    }
 
     static config_2d repeat_nodes(config_2d cfg, int k) {
         cfg.x = repeat_nodes(cfg.x, k);
@@ -184,6 +204,14 @@ private:
         }
     }
 
+    void fix_dof(int k, const dimension& dim, lin::dense_matrix& K) {
+        int last = dim.dofs() - 1;
+        for (int i = clamp(k - dim.p, 0, last); i <= clamp(k + dim.p, 0, last); ++ i) {
+            K(k, i) = 0;
+        }
+        K(k, k) = 1;
+    }
+
     void matrix(lin::dense_matrix& B, const basis_data& bU, const basis_data& bV,
                 double h, double diffusion, double advection) {
         mass_matrix(B, bU, bV);
@@ -191,11 +219,12 @@ private:
         advection_matrix(B, bU, bV, h, advection);
     }
 
-    double emission(double x, double y) {
+    double emission(double x, double y, double u) {
         double dx = (x - 3000) / 25;
         double dy = (y - 400) / 25;
         double r2 = std::min((dx * dx + dy * dy), 1.0);
-        return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1); // g/m^3
+        // return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1); // g/m^3
+        return 0;
     };
 
     void prepare_implicit_matrices() {
@@ -254,6 +283,23 @@ private:
         // lin::factorize(MUx, MUx_ctx);
         // lin::factorize(MUy, MUy_ctx);
 
+        fix_dof(0, Uy, Kx_y);
+        fix_dof(0, Uy, Ky_y);
+        fix_dof(Uy.dofs() - 1, Uy, Kx_y);
+        fix_dof(Uy.dofs() - 1, Uy, Ky_y);
+
+
+        fix_dof(0, Ux, Ky_x);
+        fix_dof(0, Ux, Kx_x);
+        fix_dof(Ux.dofs() - 1, Ux, Ky_x);
+        fix_dof(Ux.dofs() - 1, Ux, Kx_x);
+
+
+        Kx_x_nf = Kx_x;
+        Kx_y_nf = Kx_y;
+        Ky_x_nf = Ky_x;
+        Ky_y_nf = Ky_y;
+
         lin::factorize(Kx_x, Kxx_ctx);
         lin::factorize(Kx_y, Kxy_ctx);
         lin::factorize(Ky_x, Kyx_ctx);
@@ -306,6 +352,85 @@ private:
         multiply(MUy, rhsx1_t, u_t, Ux.dofs(), "T");
         lin::cyclic_transpose(u_t, u);
 
+
+
+        lin::band_matrix MUx_loc{ Ux.p, Ux.p, Ux.dofs() };
+        gram_matrix_1d(MUx_loc, Ux.basis);
+        lin::solver_ctx ctx_x{ MUx_loc };
+        lin::factorize(MUx_loc, ctx_x);
+
+        lin::band_matrix MUy_loc{ Uy.p, Uy.p, Uy.dofs() };
+        gram_matrix_1d(MUy_loc, Uy.basis);
+        lin::solver_ctx ctx_y{ MUy_loc };
+        lin::factorize(MUy_loc, ctx_y);
+
+
+        lin::vector buf_y0{{ Ux.dofs() }};
+        compute_projection(buf_y0, Ux.basis, [&](double t) {
+            // return std::sin(t * M_PI);
+            // return 1 - t;
+            return 1;
+        });
+        lin::solve_with_factorized(MUx_loc, buf_y0, ctx_x);
+
+        lin::vector buf_y1{{ Ux.dofs() }};
+        compute_projection(buf_y1, Ux.basis, [&](double t) {
+            // auto a =  std::sin(t * 3 * M_PI);
+            // return a * a;
+            return 0;
+        });
+        lin::solve_with_factorized(MUx_loc, buf_y1, ctx_x);
+
+        lin::vector buf_x0{{ Uy.dofs() }};
+        compute_projection(buf_x0, Uy.basis, [&](double t) {
+            // auto a =  std::sin(t * 4 * M_PI);
+            // return a * a;
+            return t < 0.5 ? 1 : 0;
+            // return t < 0.5 ? 1 - 2*t : 0;
+        });
+        lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
+
+        lin::vector buf_x1{{ Uy.dofs() }};
+        compute_projection(buf_x1, Uy.basis, [&](double t) {
+            // auto a =  std::sin(t * 2 * M_PI);
+            // return a * a;
+            return 0;
+        });
+        lin::solve_with_factorized(MUy_loc, buf_x1, ctx_y);
+
+        for (int i = 0; i < Ux.dofs(); ++ i) {
+            double val = 0;
+            for (int j = 0; j < Ux.dofs(); ++ j) {
+                val += buf_y0(j) * Kx_x_nf(i, j);
+            }
+            u(i, 0) = val;
+        }
+
+        for (int i = 0; i < Ux.dofs(); ++ i) {
+            double val = 0;
+            for (int j = 0; j < Ux.dofs(); ++ j) {
+                val += buf_y1(j) * Kx_x_nf(i, j);
+            }
+            u(i, Uy.dofs() - 1) = val;
+        }
+
+        for (int i = 0; i < Uy.dofs(); ++ i) {
+            double val = 0;
+            for (int j = 0; j < Uy.dofs(); ++ j) {
+                val += buf_x0(j) * Kx_y_nf(i, j);
+            }
+            u(0, i) = val;
+        }
+
+        for (int i = 0; i < Uy.dofs(); ++ i) {
+            double val = 0;
+            for (int j = 0; j < Uy.dofs(); ++ j) {
+                val += buf_x1(j) * Kx_y_nf(i, j);
+            }
+            u(Ux.dofs() - 1, i) = val;
+        }
+
+
         // ads_solve(u, u_buffer, dim_data{Kx_x, Kxx_ctx}, dim_data{Kx_y, Kxy_ctx});
         lin::solve_with_factorized(Kx_x, u, Kxx_ctx);
         auto F = lin::cyclic_transpose(u, u_buffer.data());
@@ -327,6 +452,42 @@ private:
         multiply(By, rhsx2_t, u_t, Ux.dofs(), "T");
         lin::cyclic_transpose(u_t, u);
 
+
+
+
+        for (int i = 0; i < Ux.dofs(); ++ i) {
+            double val = 0;
+            for (int j = 0; j < Ux.dofs(); ++ j) {
+                val += buf_y0(j) * Ky_x_nf(i, j);
+            }
+            u(i, 0) = val;
+        }
+
+        for (int i = 0; i < Ux.dofs(); ++ i) {
+            double val = 0;
+            for (int j = 0; j < Ux.dofs(); ++ j) {
+                val += buf_y1(j) * Ky_x_nf(i, j);
+            }
+            u(i, Uy.dofs() - 1) = val;
+        }
+
+        for (int i = 0; i < Uy.dofs(); ++ i) {
+            double val = 0;
+            for (int j = 0; j < Uy.dofs(); ++ j) {
+                val += buf_x0(j) * Ky_y_nf(i, j);
+            }
+            u(0, i) = val;
+        }
+
+        for (int i = 0; i < Uy.dofs(); ++ i) {
+            double val = 0;
+            for (int j = 0; j < Uy.dofs(); ++ j) {
+                val += buf_x1(j) * Ky_y_nf(i, j);
+            }
+            u(Ux.dofs() - 1, i) = val;
+        }
+
+
         // ads_solve(u, u_buffer, dim_data{Ky_x, Kyx_ctx}, dim_data{Ky_y, Kyy_ctx});
         lin::solve_with_factorized(Ky_x, u, Kyx_ctx);
         auto F2 = lin::cyclic_transpose(u, u_buffer.data());
@@ -336,16 +497,16 @@ private:
 
     void after_step(int iter, double t) override {
         if ((iter + 1) % save_every == 0) {
-            std::cout << "Step " << iter << std::endl;
+            std::cout << "Step " << (iter + 1) << std::endl;
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         //     analyze(iter, t + 0.5 * steps.dt);
         }
 
-        auto s = t / 150;
-        auto phase = sin(s) + 0.5 * sin(2.3*s);
-        wind_angle = M_PI / 3 * phase + 1.5 * M_PI / 4;
+        // auto s = t / 150;
+        // auto phase = sin(s) + 0.5 * sin(2.3*s);
+        // wind_angle = M_PI / 3 * phase + 1.5 * M_PI / 4;
 
-        wind = { wind_speed * cos(wind_angle), wind_speed * sin(wind_angle) };
+        // wind = { wind_speed * cos(wind_angle), wind_speed * sin(wind_angle) };
         prepare_implicit_matrices();
 
     }
@@ -433,7 +594,7 @@ private:
                     double conv_term = wind[1] * u.dy * v.val;
 
                     double gradient_prod = u.dy * v.dy;
-                    double e = emission(x[0], x[1]) * v.val;
+                    double e = emission(x[0], x[1], u.val) * v.val;
                     double val = u.val * v.val + h * (- conv_term - c_diff[1] * gradient_prod + e);
 
                     U(aa[0], aa[1]) += val * w * J;
@@ -465,7 +626,7 @@ private:
                     double conv_term = wind[0] * u.dx * v.val;
 
                     double gradient_prod = u.dx * v.dx;
-                    double e = emission(x[0], x[1]) * v.val;
+                    double e = emission(x[0], x[1], u.val) * v.val;
                     double val = u.val * v.val + h * (- conv_term - c_diff[0] * gradient_prod + e);
                     U(aa[0], aa[1]) += val * w * J;
                 }
@@ -487,7 +648,7 @@ private:
                 value_type u = eval(u_prev, e, q, Ux, Uy);
 
                 total += u.val * w * J;
-                emission_rate += emission(x[0], x[1]) * w * J;
+                emission_rate += emission(x[0], x[1], u.val) * w * J;
             }
         }
 
