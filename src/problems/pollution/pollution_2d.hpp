@@ -123,27 +123,27 @@ private:
     };
 
     void impose_bc(vector_type& v) const {
-        {
-            // {0} x X
-            lin::vector buf{{ y.dofs() }};
-            compute_projection(buf, y.basis, [&](double t) {
-                return std::max(ambient, (200 - std::abs(t - 1500)) / 200.0);
-            });
-            for (int i = 0; i < y.dofs(); ++ i) {
-                v(0, i) = buf(i);
-            }
-        }
-        {
-            // X x {0}
-            lin::vector buf{{ x.dofs() }};
-            compute_projection(buf, x.basis, [&](double t) {
-                return std::max(ambient, (100 - std::abs(t - 1000)) / 100.0);
-            });
-            for (int i = 0; i < x.dofs(); ++ i) {
-                v(i, 0) = buf(i);
-            }
-        }
-        v(0, 0) = ambient;
+        // {
+        //     // {0} x X
+        //     lin::vector buf{{ y.dofs() }};
+        //     compute_projection(buf, y.basis, [&](double t) {
+        //         return std::max(ambient, (200 - std::abs(t - 1500)) / 200.0);
+        //     });
+        //     for (int i = 0; i < y.dofs(); ++ i) {
+        //         v(0, i) = buf(i);
+        //     }
+        // }
+        // {
+        //     // X x {0}
+        //     lin::vector buf{{ x.dofs() }};
+        //     compute_projection(buf, x.basis, [&](double t) {
+        //         return std::max(ambient, (100 - std::abs(t - 1000)) / 100.0);
+        //     });
+        //     for (int i = 0; i < x.dofs(); ++ i) {
+        //         v(i, 0) = buf(i);
+        //     }
+        // }
+        // v(0, 0) = ambient;
 
 
     }
@@ -151,9 +151,9 @@ private:
     void fix_dof(int k, const dimension& dim, lin::band_matrix& K) {
         int last = dim.dofs() - 1;
         for (int i = clamp(k - dim.p, 0, last); i <= clamp(k + dim.p, 0, last); ++ i) {
-            Kx(k, i) = 0;
+            K(k, i) = 0;
         }
-        Kx(k, k) = 1;
+        K(k, k) = 1;
     }
 
     void prepare_implicit_matrices() {
@@ -162,16 +162,16 @@ private:
         matrix(Kx, x.basis, steps.dt / 2, c_diff[0], wind[0]);
         matrix(Ky, y.basis, steps.dt / 2, c_diff[1], wind[1]);
 
-        fix_dof(0, x, Kx);
-        fix_dof(0, y, Ky);
+        // fix_dof(0, x, Kx);
+        // fix_dof(0, y, Ky);
 
         lin::factorize(Kx, Kx_ctx);
         lin::factorize(Ky, Ky_ctx);
     }
 
     void prepare_matrices() {
-        x.fix_left();
-        y.fix_left();
+        // x.fix_left();
+        // y.fix_left();
         Base::prepare_matrices();
 
         prepare_implicit_matrices();
@@ -295,7 +295,7 @@ private:
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
-            boundary_integral(e, U, h);
+            // boundary_integral(e, U, h);
 
             executor.synchronized([&]() {
                 update_global_rhs(rhs, U, e);
@@ -332,7 +332,7 @@ private:
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
-            boundary_integral(e, U, h);
+            // boundary_integral(e, U, h);
 
             executor.synchronized([&]() {
                 update_global_rhs(rhs, U, e);

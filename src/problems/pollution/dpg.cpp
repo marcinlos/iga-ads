@@ -16,9 +16,11 @@ int main(int argc, char* argv[]) {
 
     // dim_config dim{ p, n, 0, 5000, p + k + 1 };
     // dim_config dim{ p, n, 0, 5000, p + 1, k }; // obie przestrzenie z separatorami
-    dim_config dim{ p, n, 0, 5000 }; // enrichment separatorami
+    // dim_config dim{ p, n, 0, 1 }; // enrichment separatorami
+    dim_config dim{ p, n, 0, 1 }; // enrichment separatorami
 
-    timesteps_config steps{ 100, 10 };
+
+    timesteps_config steps{ 1000, 4*1e-5 };
 
     int ders = 1;
 
