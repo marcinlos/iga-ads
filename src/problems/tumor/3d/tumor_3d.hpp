@@ -40,6 +40,8 @@ namespace tumor {
 
         ads::galois_executor executor;
 
+        Galois::StatTimer timer{"total"};
+
     public:
         tumor_3d(const ads::config_3d& config, const params& params, vasculature vasc, int threads)
         : Base{config}
@@ -257,7 +259,7 @@ namespace tumor {
 
             solve_all(now);
 
-            save_to_file(0);
+            // save_to_file(0);
         }
 
         void before_step(int /*iter*/, double /*t*/) override {
@@ -268,6 +270,8 @@ namespace tumor {
         }
 
         void step(int iter, double /*t*/) override {
+            timer.start();
+
             double h = steps.dt;
             rk_step(prev, k1, h/2);
             rk_step(k1, k2, h/2);
@@ -286,7 +290,9 @@ namespace tumor {
                 }
             }
 
-            update_vasculature(iter);
+            // update_vasculature(iter);
+
+            timer.stop();
         }
 
         void rk_step(const state<Dim>& prev, state<Dim>& next, double h) {
@@ -299,10 +305,16 @@ namespace tumor {
         }
 
         void after_step(int iter, double /*t*/) override {
-            std::cout << "Iter " << iter << " done" << std::endl;
-            if ((iter + 1) % 100 == 0) {
-                save_to_file(iter + 1);
-            }
+            // std::cout << "Iter " << iter << " done" << std::endl;
+            // if ((iter + 1) % 100 == 0) {
+                // save_to_file(iter + 1);
+            // }
+        }
+
+        virtual void after() override {
+            auto total = static_cast<double>(timer.get());
+            auto avg = total / steps.step_count;
+            std::cout << "{ 'total' : " << avg  << "}" << std::endl;
         }
 
 

@@ -67,7 +67,7 @@ public:
 
         for (auto x = dh/2; x < 1; x += dh) {
             for (auto y = dh/2; y < 1; y += dh) {
-                make_line({x, y, zmin}, {x, y, zmax}, 5);
+                make_line({x, y, zmin}, {x, y, zmax}, 10);
             }
         }
     }
