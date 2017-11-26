@@ -495,25 +495,26 @@ namespace problems {
         }
 
         void after_step(int iter, double t) override {
-            if (iter % 10 == 0) {
-                std::cout << "** Iteration " << iter << ", t = " << t << std::endl;
+            if (iter % 1 == 0) {
+                // std::cout << "** Iteration " << iter << ", t = " << t << std::endl;
 
                 double Ek = kinetic_energy();
                 double Ep = potential_energy();
-                compute_potential_energy();
+                // compute_potential_energy();
 
-                std::cout << "Kinetic energy: " << Ek << std::endl;
-                std::cout << "Potential energy: " << Ep << std::endl;
-                std::cout << "Total energy: " << Ek + Ep << std::endl;
+                // std::cout << "Kinetic energy: " << Ek << std::endl;
+                // std::cout << "Potential energy: " << Ep << std::endl;
+                // std::cout << "Total energy: " << Ek + Ep << std::endl;
 
-                std::cout << "Total disp:   : " << total() << std::endl;
-                std::cout << std::endl;
+                // std::cout << "Total disp:   : " << total() << std::endl;
+                // std::cout << std::endl;
 
-                output.to_file("out_%d.vti", iter*10,
-                               output.evaluate(now.ux),
-                               output.evaluate(now.uy),
-                               output.evaluate(now.uz),
-                               output.evaluate(energy));
+                // output.to_file("out_%d.vti", iter*10,
+                //                output.evaluate(now.ux),
+                //                output.evaluate(now.uy),
+                //                output.evaluate(now.uz),
+                //                output.evaluate(energy));
+                std::cout << iter << " " << Ek << " " << Ep << " " << Ek + Ep << std::endl;
             }
         }
 

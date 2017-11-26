@@ -84,7 +84,10 @@ private:
         projection(u, init);
         solve(u);
 
-        output.to_file(u, "out_0.data");
+        // output.to_file(u, "out_0.data");
+        double E = energy();
+        double L2 = L2norm();
+        std::cout << 0 << " " << E << " " << L2 << std::endl;
     }
 
     void before_step(int /*iter*/, double /*t*/) override {
@@ -105,7 +108,10 @@ private:
 
     void after_step(int iter, double /*t*/) override {
         if ((iter + 1) % 1 == 0) {
-            output.to_file(u, "out_%d.data", (iter + 1) / 1);
+            double E = energy();
+            double L2 = L2norm();
+            std::cout << (iter + 1) * steps.dt << " " << E << " " << L2 << std::endl;
+            // output.to_file(u, "out_%d.data", (iter + 1) / 1);
         }
     }
 
@@ -163,6 +169,32 @@ private:
                 update_global_rhs(rhs, U, e);
             });
         });
+    }
+
+    double energy() const {
+        double E = 0;
+        for (auto e : elements()) {
+            double J = jacobian(e);
+            for (auto q : quad_points()) {
+                double w = weigth(q);
+                value_type vx = eval_fun(u, e, q);
+                E += vx.val * w * J;
+            }
+        }
+        return E;
+    }
+
+    double L2norm() const {
+        double E = 0;
+        for (auto e : elements()) {
+            double J = jacobian(e);
+            for (auto q : quad_points()) {
+                double w = weigth(q);
+                value_type vx = eval_fun(u, e, q);
+                E += vx.val * vx.val * w * J;
+            }
+        }
+        return E;
     }
 };
 
