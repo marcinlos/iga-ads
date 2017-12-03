@@ -16,7 +16,7 @@ struct dim_config {
     int quad_order;
     int repeated_nodes;
 
-    dim_config(int p, int elements, double a, double b, double quad_order, int repeated_nodes)
+    dim_config(int p, int elements, double a, double b, int quad_order, int repeated_nodes)
     : p{p}
     , elements{elements}
     , a{a}
