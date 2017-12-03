@@ -42,7 +42,8 @@ private:
 
     double ambient = 1e-6; // g/m^3
     // double Vd = 0.1;
-    point_type c_diff{{ .1, .1 }}; // m/s^2
+    double alpha = 1e-6; // 0.1
+    point_type c_diff{{ alpha, alpha }}; // m/s^2
 
     double wind_angle = M_PI / 6;
     double wind_speed = 100; // m/s
@@ -115,7 +116,7 @@ private:
     }
 
     static dim_config repeat_nodes(dim_config cfg, int k) {
-        cfg.repeated_nodes = k;
+        cfg.repeated_nodes += k;
         return cfg;
     }
 
