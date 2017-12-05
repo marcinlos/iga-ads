@@ -431,6 +431,11 @@ private:
             u(Ux.dofs() - 1, i) = val;
         }
 
+        u(0, 0) = 1;
+        u(Ux.dofs() - 1, 0) = 1;
+        u(Ux.dofs() - 1, Uy.dofs() - 1) = 0;
+        u(0, Uy.dofs() - 1) = 0;
+
 
         // ads_solve(u, u_buffer, dim_data{Kx_x, Kxx_ctx}, dim_data{Kx_y, Kxy_ctx});
         lin::solve_with_factorized(Kx_x, u, Kxx_ctx);
