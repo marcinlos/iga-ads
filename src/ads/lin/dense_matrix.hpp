@@ -4,6 +4,8 @@
 #include <vector>
 #include <iostream>
 #include <iomanip>
+#include "ads/lin/lapack.hpp"
+
 
 namespace ads {
 namespace lin {
@@ -53,6 +55,29 @@ inline std::ostream& operator <<(std::ostream& os, const dense_matrix& M) {
     }
     return os;
 }
+
+template <typename Vec1, typename Vec2>
+inline void multiply(const dense_matrix& M, const Vec1& x, Vec2& y, int count = 1, const char* transpose = "N")  {
+    double alpha = 1;
+    double beta = 0;
+    int incx = 1;
+    int incy = 1;
+    int lda = M.rows();
+    int rows = M.rows();
+    int cols = M.cols();
+
+    for (int i = 0; i < count; ++ i) {
+        auto in = x.data() + M.rows() * i;
+        auto out = y.data() + M.cols() * i;
+    //     dgbmv_(transpose, &M.rows, &M.cols, &M.kl, &M.ku, &alpha, M.data(), &lda, in, &incx, &beta, out, &incy);
+        dgemv_(transpose, &rows, &cols, &alpha, M.data(), &lda, in, &incx, &beta, out, &incy);
+    }
+}
+
+inline void multiply(const dense_matrix& A, const dense_matrix& B, dense_matrix& out, const char* transpose = "N") {
+    multiply(A, B, out, B.cols(), transpose);
+}
+
 
 
 }

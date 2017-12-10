@@ -60,7 +60,7 @@ public:
 private:
 
     static bspline::basis bspline_basis(const dim_config& config) {
-        return bspline::create_basis(config.a, config.b, config.p, config.elements);
+        return bspline::create_basis(config.a, config.b, config.p, config.elements, config.repeated_nodes);
     }
 };
 

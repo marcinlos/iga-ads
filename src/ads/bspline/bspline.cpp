@@ -23,6 +23,26 @@ basis create_basis(double a, double b, int p, int elements) {
     return {std::move(knot), p};
 }
 
+basis create_basis(double a, double b, int p, int elements, int repeated_nodes) {
+    int points = elements + 1;
+    int r = repeated_nodes + 1;
+    int knot_size = 2 * (p + 1) + (points - 2) * r;
+    knot_vector knot(knot_size);
+
+    for (int i = 0; i <= p; ++i) {
+        knot[i] = a;
+        knot[knot_size - i - 1] = b;
+    }
+
+    for (int i = 1; i < points - 1; ++i) {
+        for (int j = 0; j < r; ++ j) {
+            knot[p + 1 + (i - 1) * r + j] = lerp(i, elements, a, b);
+        }
+    }
+    return {std::move(knot), p};
+}
+
+
 basis create_basis_C0(double a, double b, int p, int elements) {
     int points = elements + 1;
     int knot_size = p * points + 2; // clamped B-spline with C^0 separators
