@@ -4,6 +4,9 @@
 
 namespace ads {
 
+enum basis_type {
+    Cp, C0
+};
 
 struct dim_config {
     int p;
@@ -11,16 +14,19 @@ struct dim_config {
     double a;
     double b;
     int quad_order;
+    int repeated_nodes;
 
-    dim_config(int p, int elements, double a, double b, double quad_order)
+    dim_config(int p, int elements, double a, double b, double quad_order, int repeated_nodes)
     : p{p}
     , elements{elements}
     , a{a}
     , b{b}
     , quad_order{quad_order}
+    , repeated_nodes{repeated_nodes}
     { }
 
-    dim_config(int p, int elements, double a = 0, double b = 1): dim_config{ p, elements, a, b, p + 1 }
+    dim_config(int p, int elements, double a = 0, double b = 1, int repeated_nodes = 0)
+    : dim_config{ p, elements, a, b, p + 1, repeated_nodes }
     { }
 };
 

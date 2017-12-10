@@ -48,6 +48,20 @@ int dgbmv_(
     double* y,
     in_int incy);
 
+// SUBROUTINE DGEMV(TRANS,M,N,ALPHA,A,LDA,X,INCX,BETA,Y,INCY)
+int dgemv_(
+    const char* trans,
+    in_int m,
+    in_int n,
+    in_double alpha,
+    const double* a,
+    in_int lda,
+    const double* x,
+    in_int incx,
+    in_double beta,
+    double* y,
+    in_int incy);
+
 
 int dgetrf_(
     in_int m,
