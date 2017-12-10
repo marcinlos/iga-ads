@@ -1,5 +1,5 @@
-#ifndef PROBLEMS_POLLUTION_DPG_V2_2D_HPP_
-#define PROBLEMS_POLLUTION_DPG_V2_2D_HPP_
+#ifndef PROBLEMS_POLLUTION_ERIKKSON_HPP_
+#define PROBLEMS_POLLUTION_ERIKKSON_HPP_
 
 #include "ads/simulation.hpp"
 #include "ads/output_manager.hpp"
@@ -10,7 +10,7 @@
 
 namespace ads {
 
-class pollution_dpg_v2_2d : public simulation_2d {
+class erikkson : public simulation_2d {
 private:
     using Base = simulation_2d;
 
@@ -30,7 +30,6 @@ private:
     lin::band_matrix MUx, MUy;
 
     lin::band_matrix MUVx, MUVy;
-    // lin::band_matrix Bx, By;
     lin::dense_matrix Bx, By;
     lin::dense_matrix Tx, Ty;
 
@@ -40,28 +39,23 @@ private:
 
     int save_every = 10;
 
-    double ambient = 1e-6; // g/m^3
-    // double Vd = 0.1;
-    double alpha = 1e-6; // 0.1
-    point_type c_diff{{ alpha, alpha }}; // m/s^2
+    double pecelet = 80;
+    double epsilon = 1 / pecelet;
 
-    double wind_angle = M_PI / 6;
-    double wind_speed = 1; // m/s
+    point_type c_diff{{ epsilon, epsilon }};
 
-    point_type wind{{ wind_speed * cos(wind_angle), wind_speed * sin(wind_angle) }};
+    double angle = 0;
+    double len = 1;
 
-    double absorbed = 0.0;
+    point_type beta{{ len * cos(angle), len * sin(angle) }};
 
     output_manager<2> output;
 
 public:
-    pollution_dpg_v2_2d(const config_2d& config, int k)
-    // : Base{ higher_order(config, k) }
-    // : Base{ repeat_nodes(config, k) }
-    // : Base{ increase_elements(config, k) }
-    : Base{ higher_order(repeat_nodes(config, k), k) }
-    , Ux{ config.x, config.derivatives }
-    , Uy{ config.y, config.derivatives }
+    erikkson(const dim_config& trial, const dim_config& test, const timesteps_config& steps)
+    : Base{{test, test, steps, 1}}
+    , Ux{ trial, 1 }
+    , Uy{ trial, 1 }
     , Vx{ x }
     , Vy{ y }
     , Kx_x{Ux.dofs(), Ux.dofs()}
@@ -93,43 +87,9 @@ public:
     , u_buffer{{ Ux.dofs(), Uy.dofs() }}
     , rhs1{{ Vx.dofs(), Uy.dofs() }}, rhs2{{ Ux.dofs(), Vy.dofs() }}
     , output{ Ux.B, Uy.B, 400 }
-    {
-    }
+    { }
 
 private:
-
-    static config_2d increase_elements(config_2d cfg, int k) {
-        cfg.x = increase_elements(cfg.x, k);
-        cfg.y = increase_elements(cfg.y, k);
-        return cfg;
-    }
-
-    static dim_config increase_elements(dim_config cfg, int k) {
-        cfg.elements = k;
-        return cfg;
-    }
-
-    static config_2d repeat_nodes(config_2d cfg, int k) {
-        cfg.x = repeat_nodes(cfg.x, k);
-        cfg.y = repeat_nodes(cfg.y, k);
-        return cfg;
-    }
-
-    static dim_config repeat_nodes(dim_config cfg, int k) {
-        cfg.repeated_nodes += k;
-        return cfg;
-    }
-
-    static dim_config higher_order(dim_config cfg, int k) {
-        cfg.p += k;
-        return cfg;
-    }
-
-    static config_2d higher_order(config_2d cfg, int k) {
-        cfg.x = higher_order(cfg.x, k);
-        cfg.y = higher_order(cfg.y, k);
-        return cfg;
-    }
 
     void prod_V(lin::band_matrix& M, const basis_data& bV) const {
         for (element_id e = 0; e < bV.elements; ++ e) {
@@ -220,14 +180,6 @@ private:
         advection_matrix(B, bU, bV, h, advection);
     }
 
-    double emission(double x, double y, double u) {
-        double dx = (x - 3000) / 25;
-        double dy = (y - 400) / 25;
-        double r2 = std::min((dx * dx + dy * dy), 1.0);
-        // return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1); // g/m^3
-        return 0;
-    };
-
     void prepare_implicit_matrices() {
         // MUVx.zero();
         // MUVy.zero();
@@ -245,8 +197,8 @@ private:
         // mass_matrix(MUVx, Ux.basis, x.basis);
         // mass_matrix(MUVy, Uy.basis, y.basis);
 
-        matrix(Bx, Ux.basis, x.basis, steps.dt / 2, c_diff[0], wind[0]);
-        matrix(By, Uy.basis, y.basis, steps.dt / 2, c_diff[1], wind[1]);
+        matrix(Bx, Ux.basis, x.basis, steps.dt / 2, c_diff[0], beta[0]);
+        matrix(By, Uy.basis, y.basis, steps.dt / 2, c_diff[1], beta[1]);
 
         prod_V(Ax, x.basis);
         prod_V(Ay, y.basis);
@@ -318,13 +270,11 @@ private:
     void before() override {
         prepare_matrices();
 
-        auto init = [this](double x, double y) { return ambient; };
-
         // projection(u, init);
         // solve(u);
         zero(u);
 
-        output.to_file(u, "out_0.data");
+        // output.to_file(u, "out_0.data");
     }
 
     void before_step(int /*iter*/, double /*t*/) override {
@@ -367,34 +317,26 @@ private:
 
 
         lin::vector buf_y0{{ Ux.dofs() }};
-        compute_projection(buf_y0, Ux.basis, [&](double t) {
-            // return std::sin(t * M_PI);
-            // return 1 - t;
-            return 1;
+        compute_projection(buf_y0, Ux.basis, [&](double /*t*/) {
+            return 0;
         });
         lin::solve_with_factorized(MUx_loc, buf_y0, ctx_x);
 
         lin::vector buf_y1{{ Ux.dofs() }};
-        compute_projection(buf_y1, Ux.basis, [&](double t) {
-            // auto a =  std::sin(t * 3 * M_PI);
-            // return a * a;
+        compute_projection(buf_y1, Ux.basis, [&](double /*t*/) {
             return 0;
         });
         lin::solve_with_factorized(MUx_loc, buf_y1, ctx_x);
 
         lin::vector buf_x0{{ Uy.dofs() }};
         compute_projection(buf_x0, Uy.basis, [&](double t) {
-            // auto a =  std::sin(t * 4 * M_PI);
-            // return a * a;
-            return t < 0.5 ? 1 : 0;
-            // return t < 0.5 ? 1 - 2*t : 0;
+            return std::sin(M_PI * t);
+
         });
         lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
 
         lin::vector buf_x1{{ Uy.dofs() }};
-        compute_projection(buf_x1, Uy.basis, [&](double t) {
-            // auto a =  std::sin(t * 2 * M_PI);
-            // return a * a;
+        compute_projection(buf_x1, Uy.basis, [&](double /*t*/) {
             return 0;
         });
         lin::solve_with_factorized(MUy_loc, buf_x1, ctx_y);
@@ -430,11 +372,6 @@ private:
             }
             u(Ux.dofs() - 1, i) = val;
         }
-
-        u(0, 0) = 1;
-        u(Ux.dofs() - 1, 0) = 1;
-        u(Ux.dofs() - 1, Uy.dofs() - 1) = 0;
-        u(0, Uy.dofs() - 1) = 0;
 
 
         // ads_solve(u, u_buffer, dim_data{Kx_x, Kxx_ctx}, dim_data{Kx_y, Kxy_ctx});
@@ -492,6 +429,10 @@ private:
             }
             u(Ux.dofs() - 1, i) = val;
         }
+        u(0, 0) = 0;
+        u(Ux.dofs() - 1, 0) = 0;
+        u(Ux.dofs() - 1, Uy.dofs() - 1) = 0;
+        u(0, Uy.dofs() - 1) = 0;
 
 
         // ads_solve(u, u_buffer, dim_data{Ky_x, Kyx_ctx}, dim_data{Ky_y, Kyy_ctx});
@@ -501,20 +442,17 @@ private:
         lin::cyclic_transpose(F2, u);
     }
 
-    void after_step(int iter, double t) override {
+    void after_step(int iter, double /*t*/) override {
         if ((iter + 1) % save_every == 0) {
-            std::cout << "Step " << (iter + 1) << std::endl;
+            std::cout << "Step " << (iter + 1) << " : " << errorL2() << " " << errorH1() << std::endl;
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
-        //     analyze(iter, t + 0.5 * steps.dt);
         }
-
-        // auto s = t / 150;
-        // auto phase = sin(s) + 0.5 * sin(2.3*s);
-        // wind_angle = M_PI / 3 * phase + 1.5 * M_PI / 4;
-
-        // wind = { wind_speed * cos(wind_angle), wind_speed * sin(wind_angle) };
         prepare_implicit_matrices();
 
+    }
+
+    void after() override {
+        std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
     }
 
     double grad_dot(point_type a, value_type u) const {
@@ -590,18 +528,16 @@ private:
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Uy)) {
                 double w = weigth(q);
-                auto x = point(e, q);
                 value_type u = eval(u_prev, e, q, Ux, Uy);
 
                 for (auto a : dofs_on_element(e, Vx, Uy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Uy);
                     value_type v = eval_basis(e, q, a, Vx, Uy);
 
-                    double conv_term = wind[1] * u.dy * v.val;
+                    double conv_term = beta[1] * u.dy * v.val;
 
                     double gradient_prod = u.dy * v.dy;
-                    double e = emission(x[0], x[1], u.val) * v.val;
-                    double val = u.val * v.val + h * (- conv_term - c_diff[1] * gradient_prod + e);
+                    double val = u.val * v.val + h * (- conv_term - c_diff[1] * gradient_prod);
 
                     U(aa[0], aa[1]) += val * w * J;
                 }
@@ -622,18 +558,16 @@ private:
             double J = jacobian(e);
             for (auto q : quad_points(Ux, Vy)) {
                 double w = weigth(q);
-                auto x = point(e, q);
                 value_type u = eval(u_prev, e, q, Ux, Uy);
 
                 for (auto a : dofs_on_element(e, Ux, Vy)) {
                     auto aa = dof_global_to_local(e, a, Ux, Vy);
                     value_type v = eval_basis(e, q, a, Ux, Vy);
 
-                    double conv_term = wind[0] * u.dx * v.val;
+                    double conv_term = beta[0] * u.dx * v.val;
 
                     double gradient_prod = u.dx * v.dx;
-                    double e = emission(x[0], x[1], u.val) * v.val;
-                    double val = u.val * v.val + h * (- conv_term - c_diff[0] * gradient_prod + e);
+                    double val = u.val * v.val + h * (- conv_term - c_diff[0] * gradient_prod);
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
@@ -643,9 +577,26 @@ private:
         });
     }
 
-    void analyze(int iter, double t) {
-        double total = 0.0;
-        double emission_rate = 0.0;
+    value_type exact(double x, double y, double eps) const {
+        using std::exp;
+        auto lambda = M_PI * eps;
+        auto del = std::sqrt(1 + 4 * lambda * lambda);
+        auto r1 = (1 + del) / (2 * eps);
+        auto r2 = (1 - del) / (2 * eps);
+
+        auto norm = exp(-r1) - exp(-r2);
+        auto alpha = (exp(r1 * (x - 1)) - exp(r2 * (x - 1))) / norm;
+        double val = alpha * std::sin(M_PI * y);
+
+        return {
+            val,
+            (r1 * exp(r1 * (x - 1)) - r2 * exp(r2 * (x - 1))) / norm * std::sin(M_PI * y),
+            alpha * M_PI * std::cos(M_PI * y)
+        };
+    }
+
+    double errorL2() const {
+        double error = 0;
         for (auto e : elements(Ux, Ux)) {
             double J = jacobian(e);
             for (auto q : quad_points(Ux, Ux)) {
@@ -653,30 +604,27 @@ private:
                 auto x = point(e, q);
                 value_type u = eval(u_prev, e, q, Ux, Uy);
 
-                total += u.val * w * J;
-                emission_rate += emission(x[0], x[1], u.val) * w * J;
+                auto d = u - exact(x[0], x[1], epsilon);
+                error += d.val * d.val * w * J;
             }
         }
+        return std::sqrt(error);
+    }
 
-        using namespace std;
+    double errorH1() const {
+        double error = 0;
+        for (auto e : elements(Ux, Ux)) {
+            double J = jacobian(e);
+            for (auto q : quad_points(Ux, Ux)) {
+                double w = weigth(q);
+                auto x = point(e, q);
+                value_type u = eval(u_prev, e, q, Ux, Uy);
 
-        total /= 1000; // g -> kg
-        emission_rate /= 1000; // g -> kg
-
-        auto emitted = t * emission_rate; // kg
-        auto area = 5000.0 * 5000.0; // m^2
-        auto initial = area * ambient / 1000; // kg
-        auto absorbed_kg = absorbed / 1000;
-        auto loss = initial + emitted - total - absorbed_kg;
-        auto loss_percent = 100 * loss / emitted;
-
-        std::cout << "Step " << (iter + 1) << ":"
-                  << "  total " << setw(8) << setprecision(5) << total << " kg "
-                  << "  absorbed " << setw(8) << setprecision(5) << absorbed_kg << " kg "
-                  << "  (loss "
-                  << setw(6) << loss << " kg,  "
-                  << setw(5) << loss_percent << "%"
-                  << ")" << std::endl;
+                auto d = u - exact(x[0], x[1], epsilon);
+                error += (d.val * d.val + d.dx * d.dx + d.dy * d.dy) * w * J;
+            }
+        }
+        return std::sqrt(error);
     }
 };
 
@@ -684,4 +632,4 @@ private:
 
 
 
-#endif /* PROBLEMS_POLLUTION_V2_DPG_2D_HPP_ */
+#endif /* PROBLEMS_POLLUTION_ERIKKSON_HPP_ */
