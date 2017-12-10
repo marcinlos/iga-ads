@@ -128,6 +128,9 @@ if (NOT SKIP_PROBLEMS)
     # define_problem(pollution_dpg_3d
     #   src/problems/pollution/dpg3d.cpp)
 
+    define_problem(erikkson
+      src/problems/pollution/erikkson.cpp)
+
   endif()
 
   define_problem(heat_1d
