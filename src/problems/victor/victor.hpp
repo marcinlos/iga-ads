@@ -92,39 +92,6 @@ public:
 
 private:
 
-    static config_2d increase_elements(config_2d cfg, int k) {
-        cfg.x = increase_elements(cfg.x, k);
-        cfg.y = increase_elements(cfg.y, k);
-        return cfg;
-    }
-
-    static dim_config increase_elements(dim_config cfg, int k) {
-        cfg.elements = k;
-        return cfg;
-    }
-
-    static config_2d repeat_nodes(config_2d cfg, int k) {
-        cfg.x = repeat_nodes(cfg.x, k);
-        cfg.y = repeat_nodes(cfg.y, k);
-        return cfg;
-    }
-
-    static dim_config repeat_nodes(dim_config cfg, int k) {
-        cfg.repeated_nodes += k;
-        return cfg;
-    }
-
-    static dim_config higher_order(dim_config cfg, int k) {
-        cfg.p += k;
-        return cfg;
-    }
-
-    static config_2d higher_order(config_2d cfg, int k) {
-        cfg.x = higher_order(cfg.x, k);
-        cfg.y = higher_order(cfg.y, k);
-        return cfg;
-    }
-
     void prod_V(lin::band_matrix& M, const basis_data& bV) const {
         for (element_id e = 0; e < bV.elements; ++ e) {
             for (int q = 0; q < bV.quad_order; ++ q) {
