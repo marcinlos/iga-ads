@@ -125,6 +125,9 @@ if (NOT SKIP_PROBLEMS)
     define_problem(pollution_dpg
       src/problems/pollution/dpg.cpp)
 
+    define_problem(victor
+      src/problems/victor/main.cpp)
+
     define_problem(erikkson
       src/problems/erikkson/main.cpp)
 
