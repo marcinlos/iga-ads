@@ -125,11 +125,8 @@ if (NOT SKIP_PROBLEMS)
     define_problem(pollution_dpg
       src/problems/pollution/dpg.cpp)
 
-    # define_problem(pollution_dpg_3d
-    #   src/problems/pollution/dpg3d.cpp)
-
     define_problem(erikkson
-      src/problems/pollution/erikkson.cpp)
+      src/problems/erikkson/main.cpp)
 
   endif()
 

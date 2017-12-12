@@ -1,6 +1,4 @@
-#include "problems/pollution/erikkson.hpp"
-
-
+#include "problems/erikkson/erikkson.hpp"
 
 using namespace ads;
 

@@ -1,5 +1,5 @@
-#ifndef PROBLEMS_POLLUTION_ERIKKSON_HPP_
-#define PROBLEMS_POLLUTION_ERIKKSON_HPP_
+#ifndef PROBLEMS_ERIKKSON_ERIKKSON_HPP_
+#define PROBLEMS_ERIKKSON_ERIKKSON_HPP_
 
 #include "ads/simulation.hpp"
 #include "ads/output_manager.hpp"
@@ -632,4 +632,4 @@ private:
 
 
 
-#endif /* PROBLEMS_POLLUTION_ERIKKSON_HPP_ */
+#endif /* PROBLEMS_ERIKKSON_ERIKKSON_HPP_ */
