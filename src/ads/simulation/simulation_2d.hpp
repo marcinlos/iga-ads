@@ -137,6 +137,8 @@ protected:
 
 public:
     simulation_2d(const config_2d& config);
+
+    simulation_2d(dimension x, dimension y, const timesteps_config& steps);
 };
 
 }

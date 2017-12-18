@@ -3,10 +3,18 @@
 namespace ads {
 
     simulation_3d::simulation_3d(const config_3d& config)
-    : simulation_base{config.steps}
-    , x{config.x, config.derivatives}
-    , y{config.y, config.derivatives}
-    , z{config.z, config.derivatives}
+    : simulation_3d{
+        dimension{config.x, config.derivatives},
+        dimension{config.y, config.derivatives},
+        dimension{config.z, config.derivatives},
+        config.steps}
+    { }
+
+    simulation_3d::simulation_3d(dimension x, dimension y, dimension z, const timesteps_config& steps)
+    : simulation_base{steps}
+    , x{std::move(x)}
+    , y{std::move(y)}
+    , z{std::move(z)}
     , buffer{shape()}
     { }
 

@@ -117,6 +117,9 @@ protected:
 
 public:
     simulation_1d(const config_1d& config);
+
+    simulation_1d(dimension x, const timesteps_config& steps);
+
 };
 
 
