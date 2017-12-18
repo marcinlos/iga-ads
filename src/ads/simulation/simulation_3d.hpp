@@ -146,6 +146,9 @@ protected:
 
 public:
     simulation_3d(const config_3d& config);
+
+    simulation_3d(dimension x, dimension y, dimension z, const timesteps_config& steps);
+
 };
 
 
