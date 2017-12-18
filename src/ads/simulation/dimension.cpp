@@ -2,18 +2,22 @@
 
 namespace ads {
 
-    dimension::dimension(const dim_config& config, int derivatives)
-    : p{config.p}
-    , elements{config.elements}
-    , a{config.a}
-    , b{config.b}
-    , B(bspline_basis(config))
+    dimension::dimension(bspline::basis b, int quad_order, int derivatives)
+    : p{b.degree}
+    , elements{b.elements()}
+    , a{b.begin()}
+    , b{b.end()}
+    , B{ std::move(b) }
     , M{p, p, B.dofs()}
-    , basis(B, derivatives, config.quad_order)
+    , basis(B, derivatives, quad_order)
     , ctx{M}
     {
         gram_matrix_1d(M, basis);
     }
+
+    dimension::dimension(const dim_config& config, int derivatives)
+    : dimension{ bspline_basis(config), config.quad_order, derivatives }
+    { }
 
     void dimension::fix_dof(int k) {
         int last = dofs() - 1;

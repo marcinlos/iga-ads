@@ -28,6 +28,8 @@ public:
     basis_data basis;
     lin::solver_ctx ctx;
 
+    dimension(bspline::basis basis, int quad_order, int derivatives);
+
     dimension(const dim_config& config, int derivatives);
 
     int dofs() const {
