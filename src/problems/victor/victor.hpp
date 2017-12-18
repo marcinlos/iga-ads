@@ -52,10 +52,10 @@ private:
     output_manager<2> output;
 
 public:
-    victor(const config_2d& config, const dim_config& test_x, const dim_config& test_y)
-    : Base{{test_x, test_y, config.steps, 1}}
-    , Ux{ config.x, config.derivatives }
-    , Uy{ config.y, config.derivatives }
+    victor(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, const timesteps_config& steps)
+    : Base{std::move(test_x), std::move(test_y), steps}
+    , Ux{ std::move(trial_x) }
+    , Uy{ std::move(trial_y) }
     , Vx{ x }
     , Vy{ y }
     , Kx_x{Ux.dofs(), Ux.dofs()}
