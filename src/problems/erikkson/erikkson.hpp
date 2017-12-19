@@ -52,10 +52,10 @@ private:
     output_manager<2> output;
 
 public:
-    erikkson(const dim_config& trial, const dim_config& test, const timesteps_config& steps)
-    : Base{{test, test, steps, 1}}
-    , Ux{ trial, 1 }
-    , Uy{ trial, 1 }
+    erikkson(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, const timesteps_config& steps)
+    : Base{std::move(test_x), std::move(test_y), steps}
+    , Ux{ std::move(trial_x) }
+    , Uy{ std::move(trial_y) }
     , Vx{ x }
     , Vy{ y }
     , Kx_x{Ux.dofs(), Ux.dofs()}
