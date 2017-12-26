@@ -39,7 +39,7 @@ private:
 
     int save_every = 10;
 
-    double pecelet = 80;
+    double pecelet = 1e6;
     double epsilon = 1 / pecelet;
 
     point_type c_diff{{ epsilon, epsilon }};
