@@ -86,7 +86,7 @@ public:
     , u_prev{{ Ux.dofs(), Uy.dofs() }}
     , u_buffer{{ Ux.dofs(), Uy.dofs() }}
     , rhs1{{ Vx.dofs(), Uy.dofs() }}, rhs2{{ Ux.dofs(), Vy.dofs() }}
-    , output{ Ux.B, Uy.B, 400 }
+    , output{ Ux.B, Uy.B, 1000 }
     { }
 
 private:
@@ -445,13 +445,14 @@ private:
     void after_step(int iter, double /*t*/) override {
         if ((iter + 1) % save_every == 0) {
             std::cout << "Step " << (iter + 1) << " : " << errorL2() << " " << errorH1() << std::endl;
-            output.to_file(u, "out_%d.data", (iter + 1) / save_every);
+            // output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
         prepare_implicit_matrices();
 
     }
 
     void after() override {
+        output.to_file(u, "final.data");
         std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
     }
 
