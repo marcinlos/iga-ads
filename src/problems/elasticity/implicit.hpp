@@ -320,22 +320,25 @@ namespace problems {
 
         double kinetic_energy() const {
             double E = 0;
-            for (auto e : elements()) {
+            executor.for_each(elements(), [&](index_type e) {
+                double Eloc = 0;
                 double J = jacobian(e);
                 for (auto q : quad_points()) {
                     double w = weigth(q);
                     value_type vx = eval_fun(now.vx, e, q);
                     value_type vy = eval_fun(now.vy, e, q);
                     value_type vz = eval_fun(now.vz, e, q);
-                    E += w * J * 0.5 * (vx.val * vx.val + vy.val * vy.val + vz.val * vz.val);
+                    Eloc += w * J * 0.5 * (vx.val * vx.val + vy.val * vy.val + vz.val * vz.val);
                 }
-            }
+                executor.synchronized([&] { E += Eloc;  });
+            });
             return E;
         }
 
         double potential_energy() const {
             double E = 0;
-            for (auto e : elements()) {
+            executor.for_each(elements(), [&](index_type e) {
+                double Eloc = 0;
                 double J = jacobian(e);
                 for (auto q : quad_points()) {
                     double w = weigth(q);
@@ -356,9 +359,10 @@ namespace problems {
                             U += 0.5 * s[i][j] * eps[i][j];
                         }
                     }
-                    E += w * J * U;
+                    Eloc += w * J * U;
                 }
-            }
+                executor.synchronized([&] { E += Eloc;  });
+            });
             return E;
         }
 
@@ -514,7 +518,7 @@ namespace problems {
                 //                output.evaluate(now.uy),
                 //                output.evaluate(now.uz),
                 //                output.evaluate(energy));
-                std::cout << iter << " " << Ek << " " << Ep << " " << Ek + Ep << std::endl;
+                std::cout << iter << " " << t << " " << Ek << " " << Ep << " " << Ek + Ep << std::endl;
             }
         }
 
