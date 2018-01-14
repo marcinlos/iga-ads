@@ -368,7 +368,8 @@ namespace problems {
 
         void compute_potential_energy() {
             zero(energy);
-            for (auto e : elements()) {
+            executor.for_each(elements(), [&](index_type e) {
+                auto Eloc = element_rhs();
                 double J = jacobian(e);
                 for (auto q : quad_points()) {
                     double w = weigth(q);
@@ -390,11 +391,15 @@ namespace problems {
                         }
                     }
                     for (auto a : dofs_on_element(e)) {
+                        auto aa = dof_global_to_local(e, a);
                         value_type v = eval_basis(e, q, a);
-                        energy(a[0], a[1], a[2]) += w * J * v.val * U;
+                        Eloc(aa[0], aa[1], aa[2]) += w * J * v.val * U;
                     }
                 }
-            }
+                executor.synchronized([&]() {
+                    update_global_rhs(energy, Eloc, e);
+                });
+            });
             solve(energy);
         }
 
