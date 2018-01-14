@@ -345,34 +345,6 @@ private:
                 update_global_rhs(energy, Eloc, e);
             });
         });
-
-        // for (auto e : elements()) {
-        //     double J = jacobian(e);
-        //     for (auto q : quad_points()) {
-        //         double w = weigth(q);
-        //         value_type ux = eval_fun(now.ux, e, q);
-        //         value_type uy = eval_fun(now.uy, e, q);
-        //         value_type uz = eval_fun(now.uz, e, q);
-
-        //         tensor eps = {
-        //             {         ux.dx,         0.5 * (ux.dy + uy.dx), 0.5 * (ux.dz + uz.dx) },
-        //             { 0.5 * (ux.dy + uy.dx),         uy.dy,         0.5 * (uy.dz + uz.dy) },
-        //             { 0.5 * (ux.dz + uz.dx), 0.5 * (uy.dz + uz.dy),         uz.dz         }
-        //         };
-        //         tensor s{};
-        //         stress_tensor(s, eps);
-        //         double U = 0;
-        //         for (int i = 0; i < 3; ++ i) {
-        //             for (int j = 0; j < 3; ++ j) {
-        //                 U += 0.5 * s[i][j] * eps[i][j];
-        //             }
-        //         }
-        //         for (auto a : dofs_on_element(e)) {
-        //             value_type v = eval_basis(e, q, a);
-        //             energy(a[0], a[1], a[2]) += w * J * v.val * U;
-        //         }
-        //     }
-        // }
         solve(energy);
     }
 
