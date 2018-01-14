@@ -12,7 +12,7 @@ int main() {
     dim_config dim { 2, 32 };
     int ders = 1;
 
-    timesteps_config steps { 40, 1e-3 };
+    timesteps_config steps { 400, 1e-3 };
     config_3d c { dim, dim, dim, steps, ders };
 
     problems::implicit_elasticity sim{c};

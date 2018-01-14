@@ -509,7 +509,7 @@ namespace problems {
 
                 double Ek = kinetic_energy();
                 double Ep = potential_energy();
-                // compute_potential_energy();
+                compute_potential_energy();
 
                 // std::cout << "Kinetic energy: " << Ek << std::endl;
                 // std::cout << "Potential energy: " << Ep << std::endl;
@@ -518,11 +518,11 @@ namespace problems {
                 // std::cout << "Total disp:   : " << total() << std::endl;
                 // std::cout << std::endl;
 
-                // output.to_file("out_%d.vti", iter*10,
-                //                output.evaluate(now.ux),
-                //                output.evaluate(now.uy),
-                //                output.evaluate(now.uz),
-                //                output.evaluate(energy));
+                output.to_file("out_%d.vti", iter*10,
+                               output.evaluate(now.ux),
+                               output.evaluate(now.uy),
+                               output.evaluate(now.uz),
+                               output.evaluate(energy));
                 std::cout << iter << " " << t << " " << Ek << " " << Ep << " " << Ek + Ep << std::endl;
             }
         }

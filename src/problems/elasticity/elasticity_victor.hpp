@@ -475,7 +475,7 @@ private:
             // std::cout << "Total disp:   : " << total() << std::endl;
             // std::cout << std::endl;
 
-            output.to_file("out_%d.vti", iter*10,
+            output.to_file("out_%d.vti", iter,
                            output.evaluate(now.ux),
                            output.evaluate(now.uy),
                            output.evaluate(now.uz),
