@@ -137,9 +137,16 @@ private:
                 auto day = - tt * (ay.dy * b.dy + ay.dz * b.dz) - mi * grad_dot(uy, b) - dt * grad_dot(vy, b) +  F[1] * b.val;
                 auto daz = - tt * (az.dy * b.dy + az.dz * b.dz) - mi * grad_dot(uz, b) - dt * grad_dot(vz, b) +  F[2] * b.val;
 
-                dax -= (mi + lambda) * (ux.dx * b.dx + uy.dx * b.dy + uz.dx * b.dz);
-                day -= (mi + lambda) * (ux.dy * b.dx + uy.dy * b.dy + uz.dy * b.dz);
-                daz -= (mi + lambda) * (ux.dz * b.dx + uy.dz * b.dy + uz.dz * b.dz);
+                // Version 1
+                // dax -= (mi + lambda) * (ux.dx * b.dx + uy.dx * b.dy + uz.dx * b.dz);
+                // day -= (mi + lambda) * (ux.dy * b.dx + uy.dy * b.dy + uz.dy * b.dz);
+                // daz -= (mi + lambda) * (ux.dz * b.dx + uy.dz * b.dy + uz.dz * b.dz);
+
+                // Version 2
+                // auto tr = ux.dx + uy.dy + uz.dz;
+                // dax -= (mi + lambda) * tr * b.dx;
+                // day -= (mi + lambda) * tr * b.dy;
+                // daz -= (mi + lambda) * tr * b.dz;
 
                 auto aa = dof_global_to_local(e, a);
                 ref(local.ax, aa) += dax / rho * w * J;
@@ -180,9 +187,16 @@ private:
                 auto day = - tt * (ay.dx * b.dx + ay.dz * b.dz) - mi * grad_dot(uy, b) - dt * grad_dot(vy, b) +  F[1] * b.val;
                 auto daz = - tt * (az.dx * b.dx + az.dz * b.dz) - mi * grad_dot(uz, b) - dt * grad_dot(vz, b) +  F[2] * b.val;
 
-                dax -= (mi + lambda) * (ux.dx * b.dx + uy.dx * b.dy + uz.dx * b.dz);
-                day -= (mi + lambda) * (ux.dy * b.dx + uy.dy * b.dy + uz.dy * b.dz);
-                daz -= (mi + lambda) * (ux.dz * b.dx + uy.dz * b.dy + uz.dz * b.dz);
+                // Version 1
+                // dax -= (mi + lambda) * (ux.dx * b.dx + uy.dx * b.dy + uz.dx * b.dz);
+                // day -= (mi + lambda) * (ux.dy * b.dx + uy.dy * b.dy + uz.dy * b.dz);
+                // daz -= (mi + lambda) * (ux.dz * b.dx + uy.dz * b.dy + uz.dz * b.dz);
+
+                // Version 2
+                // auto tr = ux.dx + uy.dy + uz.dz;
+                // dax -= (mi + lambda) * tr * b.dx;
+                // day -= (mi + lambda) * tr * b.dy;
+                // daz -= (mi + lambda) * tr * b.dz;
 
                 auto aa = dof_global_to_local(e, a);
                 ref(local.ax, aa) += dax / rho * w * J;
@@ -223,9 +237,16 @@ private:
                 auto day = - tt * (ay.dx * b.dx + ay.dy * b.dy) - mi * grad_dot(uy, b) - dt * grad_dot(vy, b) +  F[1] * b.val;
                 auto daz = - tt * (az.dx * b.dx + az.dy * b.dy) - mi * grad_dot(uz, b) - dt * grad_dot(vz, b) +  F[2] * b.val;
 
-                dax -= (mi + lambda) * (ux.dx * b.dx + uy.dx * b.dy + uz.dx * b.dz);
-                day -= (mi + lambda) * (ux.dy * b.dx + uy.dy * b.dy + uz.dy * b.dz);
-                daz -= (mi + lambda) * (ux.dz * b.dx + uy.dz * b.dy + uz.dz * b.dz);
+                // Version 1
+                // dax -= (mi + lambda) * (ux.dx * b.dx + uy.dx * b.dy + uz.dx * b.dz);
+                // day -= (mi + lambda) * (ux.dy * b.dx + uy.dy * b.dy + uz.dy * b.dz);
+                // daz -= (mi + lambda) * (ux.dz * b.dx + uy.dz * b.dy + uz.dz * b.dz);
+
+                // Version 2
+                // auto tr = ux.dx + uy.dy + uz.dz;
+                // dax -= (mi + lambda) * tr * b.dx;
+                // day -= (mi + lambda) * tr * b.dy;
+                // daz -= (mi + lambda) * tr * b.dz;
 
                 auto aa = dof_global_to_local(e, a);
                 ref(local.ax, aa) += dax / rho * w * J;
