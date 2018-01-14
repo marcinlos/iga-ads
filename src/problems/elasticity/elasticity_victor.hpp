@@ -436,9 +436,9 @@ private:
         add(now.uy, now.vy, dt);
         add(now.uz, now.vz, dt);
 
-        add(now.ux, now.ax, tt);
-        add(now.uy, now.ay, tt);
-        add(now.uz, now.az, tt);
+        add(now.ux, now.ax, -tt);
+        add(now.uy, now.ay, -tt);
+        add(now.uz, now.az, -tt);
     }
 
     void step(int /*iter*/, double t) {
