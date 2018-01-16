@@ -199,4 +199,7 @@ if (NOT SKIP_PROBLEMS)
   define_problem(implicit
     src/problems/implicit/main.cpp)
 
+  define_problem(coupled
+    src/problems/implicit/coupled.cpp)
+
 endif()
