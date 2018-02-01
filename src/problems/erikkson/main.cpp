@@ -14,7 +14,7 @@ bspline::basis create_basis(double a, double b, int p, int elements, int repeate
     }
 
     auto x0 = 0.5;
-    auto y0 = 0.9;
+    auto y0 = 0.99;
 
     for (int i = 1; i < points - 1; ++i) {
         auto t = lerp(i, elements, 0.0, 1.0);
@@ -24,6 +24,22 @@ bspline::basis create_basis(double a, double b, int p, int elements, int repeate
             knot[p + 1 + (i - 1) * r + j] = lerp(s, a, b);
         }
     }
+    // auto x0 = 1.0/3;
+    // auto x1 = 2.0/3;
+
+    // auto y0 = 0.9;
+    // auto y1 = 0.99;
+
+    // for (int i = 1; i < points - 1; ++i) {
+    //     auto t = lerp(i, elements, 0.0, 1.0);
+
+    //     auto s = adapt ? (t < x0 ? 0 + (t - 0) / (x0 - 0) * (y0 - 0) :
+    //                       t < x1 ? y0 + (t - x0) / (x1 - x0) * (y1 - y0) :
+    //                                y1 + (t - x1) / (1 - x1) * (1 - y1)) : t;
+    //     for (int j = 0; j < r; ++ j) {
+    //         knot[p + 1 + (i - 1) * r + j] = lerp(s, a, b);
+    //     }
+    // }
     return {std::move(knot), p};
 }
 
@@ -74,13 +90,13 @@ int main(int argc, char* argv[]) {
     timesteps_config steps{ nsteps, 0.5*1e-2 };
     int ders = 1;
 
-    auto trial_basis_x = create_open_basis(0, 1, p_trial, n, p_trial - 1 - C_trial, adapt);
+    auto trial_basis_x = create_basis(0, 1, p_trial, n, p_trial - 1 - C_trial, adapt);
     auto dtrial_x = dimension{ trial_basis_x, quad, ders };
 
     auto trial_basis_y = bspline::create_basis(0, 1, p_trial, n, p_trial - 1 - C_trial);
     auto dtrial_y = dimension{ trial_basis_y, quad, ders };
 
-    auto test_basis_x = create_open_basis(0, 1, p_test, n, p_test - 1 - C_test, adapt);
+    auto test_basis_x = create_basis(0, 1, p_test, n, p_test - 1 - C_test, adapt);
     auto dtest_x = dimension{ test_basis_x, quad, ders };
 
     auto test_basis_y = bspline::create_basis(0, 1, p_test, n, p_test - 1 - C_test);
