@@ -39,7 +39,7 @@ private:
 
     int save_every = 10;
 
-    double pecelet = 1e3;
+    double pecelet = 1e6;
     double epsilon = 1 / pecelet;
 
     point_type c_diff{{ epsilon, epsilon }};
@@ -86,7 +86,7 @@ public:
     , u_prev{{ Ux.dofs(), Uy.dofs() }}
     , u_buffer{{ Ux.dofs(), Uy.dofs() }}
     , rhs1{{ Vx.dofs(), Uy.dofs() }}, rhs2{{ Ux.dofs(), Vy.dofs() }}
-    , output{ Ux.B, Uy.B, 1000 }
+    , output{ Ux.B, Uy.B, 10000 }
     { }
 
 private:
@@ -454,6 +454,13 @@ private:
     void after() override {
         output.to_file(u, "final.data");
         std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
+
+        std::ofstream sol("solution.data");
+        for (int i = 0; i < Ux.dofs(); ++ i) {
+            for (int j = 0; j < Uy.dofs(); ++ j) {
+                sol << i << " " << j << " " << u(i, j) << std::endl;
+            }
+        }
     }
 
     double grad_dot(point_type a, value_type u) const {
@@ -598,6 +605,7 @@ private:
 
     double errorL2() const {
         double error = 0;
+
         for (auto e : elements(Ux, Ux)) {
             double J = jacobian(e);
             for (auto q : quad_points(Ux, Ux)) {
