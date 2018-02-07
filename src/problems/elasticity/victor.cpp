@@ -11,7 +11,7 @@ int main() {
     dim_config dim { 2, 20 };
     int ders = 1;
 
-    timesteps_config steps { 4000, 1e-2 };
+    timesteps_config steps { 4000, 2.7e-2 };
     config_3d c { dim, dim, dim, steps, ders };
 
     problems::elasticity_victor sim{c};
