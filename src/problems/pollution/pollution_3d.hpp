@@ -24,10 +24,10 @@ private:
     double ambient = 1e-6; // g/m^3
 
     double Vd = 0.1;
-    point_type c_diff{{ 50, 50, 0.5 }}; // m/s^2
+    point_type c_diff{{ 50, 50, 10 }}; // m/s^2
 
     double wind_angle = 2 * M_PI / 4;
-    double wind_speed = 5; // m/s
+    double wind_speed = 2; // m/s
 
     point_type wind{{ wind_speed * cos(wind_angle), wind_speed * sin(wind_angle), 0.0 }};
 
