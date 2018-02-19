@@ -29,36 +29,70 @@ private:
     lin::dense_matrix Ax, Ay;
     lin::solver_ctx Ax_ctx, Ay_ctx;
 
+    // NEW: Mass matrices for the periodic basis
+    lin::dense_matrix Mx, My;
+    lin::solver_ctx Mx_ctx, My_ctx;
+
+    double s = 40;
+
 public:
     coupled(const config_2d& config)
     : Base{ config }
-    , sol(2 * x.dofs() * y.dofs())
-    , buf(2 * x.dofs() * y.dofs())
+    , sol(2 * (x.dofs() - 1) * (y.dofs() - 1))
+    , buf(2 * (x.dofs() - 1) * (y.dofs() - 1))
     , u{ shape() }
     , u_prev{ shape() }
     , u2{ shape() }
     , u2_prev{ shape() }
     , output{ x.B, y.B, 200 }
-    , Ax{ 2 * x.dofs(), 2 * x.dofs() } // 2x2 matrix for x direction
-    , Ay{ 2 * y.dofs(), 2 * y.dofs() } // 2x2 matrix for y direction
+    , Ax{ 2 * (x.dofs() - 1), 2 * (x.dofs() - 1) } // 2x2 matrix for x direction
+    , Ay{ 2 * (y.dofs() - 1), 2 * (y.dofs() - 1) } // 2x2 matrix for y direction
     , Ax_ctx{ Ax }
     , Ay_ctx{ Ay }
+    , Mx{ x.dofs() - 1, x.dofs() - 1 } // NEW: initialization of mass matrices
+    , My{ y.dofs() - 1, y.dofs() - 1 }
+    , Mx_ctx{ Mx }
+    , My_ctx{ My }
     {
         // Fill the large matrices
         matrix(Ax, x.basis, steps.dt);
         matrix(Ay, y.basis, steps.dt);
+
+        // NEW: Fill the mass matrices
+        mass_matrix(Mx, x.basis, steps.dt);
+        mass_matrix(My, y.basis, steps.dt);
     }
 
     double init_state(double x, double y) {
         double dx = x - 0.5;
         double dy = y - 0.5;
-        double r2 = std::min(12 * (dx * dx + dy * dy), 1.0);
+        double r2 = std::min(20 * (dx * dx + dy * dy), 1.0);
         return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
     }
 
 private:
+    // NEW: Mass matrix no longer diagonal
+    void mass_matrix(lin::dense_matrix& M, const basis_data& d, double h) {
+        auto N = d.basis.dofs() - 1;
+        for (element_id e = 0; e < d.elements; ++ e) {
+            for (int q = 0; q < d.quad_order; ++ q) {
+                int first = d.first_dof(e);
+                int last = d.last_dof(e);
+                for (int a = 0; a + first <= last; ++ a) {
+                    for (int b = 0; b + first <= last; ++ b) {
+                        int ia = a + first;
+                        int ib = b + first;
+                        auto va = d.b[e][q][0][a];
+                        auto vb = d.b[e][q][0][b];
+                        M(ia % N, ib % N) += va * vb * d.w[q] * d.J[e]; // upper left
+                    }
+                }
+            }
+        }
+    }
+
     void matrix(lin::dense_matrix& K, const basis_data& d, double h) {
-        auto N = d.basis.dofs();
+        auto N = d.basis.dofs() - 1;
         for (element_id e = 0; e < d.elements; ++ e) {
             for (int q = 0; q < d.quad_order; ++ q) {
                 int first = d.first_dof(e);
@@ -71,8 +105,8 @@ private:
                         auto vb = d.b[e][q][0][b];
                         auto da = d.b[e][q][1][a];
                         auto db = d.b[e][q][1][b];
-                        K(ia, ib) += (va * vb + 0.5 * h * da * db) * d.w[q] * d.J[e]; // upper left
-                        K(N + ia, N + ib) += (va * vb + 0.5 * h * da * db) * d.w[q] * d.J[e]; // lower right
+                        K(ia % N, ib % N) += (va * vb + 0.5 * h * da * db - 0.5 * h * s * va * db) * d.w[q] * d.J[e]; // upper left
+                        K(N + ia % N, N + ib % N) += (va * vb + 0.5 * h * da * db - 0.5 * h * s * va * db) * d.w[q] * d.J[e]; // lower right
 
                         // Mass-Mass-Stiffness matrix (what you need if I recall correctly):
                         // K(ia, ib) += va * vb * d.w[q] * d.J[e]; // upper left
@@ -89,18 +123,21 @@ private:
         // Dense factorization (overloaded function)
         lin::factorize(Ax, Ax_ctx);
         lin::factorize(Ay, Ay_ctx);
+        // NEW: factorize mass matrices
+        lin::factorize(Mx, Mx_ctx);
+        lin::factorize(My, My_ctx);
     }
 
     void before() override {
         prepare_matrices();
 
-        auto init = [this](double x, double y) { return init_state(x, 2*y - 1); };
+        auto init = [this](double x, double y) { return init_state(2*x - 1, y); };
         projection(u, init);
         solve(u);
         output.to_file(u, "out1_0.data");
 
 
-        auto init2 = [this](double x, double y) { return init_state(2*x, y); };
+        auto init2 = [this](double x, double y) { return init_state(x, y - 0.3); };
         projection(u2, init2);
         solve(u2);
         output.to_file(u2, "out2_0.data");
@@ -116,12 +153,17 @@ private:
     void step(int /*iter*/, double /*t*/) override {
         compute_rhs_1();
 
+        // NEW: different size and indices are taken mod Nx, Ny to ensure periodic BC
+        int Nx = x.dofs() - 1;
+        int Ny = y.dofs() - 1;
         // Copy data from separate RHS vectors to the combined one
-        vector_view view_x{ sol.data(), {2*x.dofs(), y.dofs()}};
+        std::fill(begin(sol), end(sol), 0);
+        vector_view view_x{ sol.data(), {2*Nx, Ny}};
+
         for (auto i = 0; i < x.dofs(); ++ i) {
             for (auto j = 0; j < y.dofs(); ++ j) {
-                view_x(i, j) = u(i, j);
-                view_x(i + x.dofs(), j) = u2(i, j);
+                view_x(i % Nx, j % Ny) += u(i, j);
+                view_x(Nx + i % Nx, j % Ny) += u2(i, j);
             }
         }
 
@@ -130,14 +172,16 @@ private:
         // Expanded ADS call:
         lin::solve_with_factorized(Ax, view_x, Ax_ctx);
         auto F = lin::cyclic_transpose(view_x, buf.data());
-        lin::solve_with_factorized(y.data().M, F, y.data().ctx);
+        // NEW: periodic mass matrix instead of a standard one
+        // lin::solve_with_factorized(y.data().M, F, y.data().ctx);
+        lin::solve_with_factorized(My, F, My_ctx);
         lin::cyclic_transpose(F, view_x);
 
         // ... and copy the solutions back to the separate vectors
         for (auto i = 0; i < x.dofs(); ++ i) {
             for (auto j = 0; j < y.dofs(); ++ j) {
-                u(i, j) = view_x(i, j);
-                u2(i, j) = view_x(i + x.dofs(), j);
+                u(i, j) = view_x(i % Nx, j % Ny);
+                u2(i, j) = view_x(Nx + i % Nx, j % Ny);
             }
         }
 
@@ -148,18 +192,21 @@ private:
         compute_rhs_2();
 
         // Copy data from separate RHS vectors to the combined one
-        vector_view view_y{ sol.data(), {x.dofs(), 2*y.dofs()}};
+        std::fill(begin(sol), end(sol), 0);
+        vector_view view_y{ sol.data(), {Nx, 2*Ny}};
         for (auto i = 0; i < x.dofs(); ++ i) {
             for (auto j = 0; j < y.dofs(); ++ j) {
-                view_y(i, j) = u(i, j);
-                view_y(i, j + y.dofs()) = u2(i, j);
+                view_y(i % Nx, j % Ny) += u(i, j);
+                view_y(i % Nx, Ny + j % Ny) += u2(i, j);
             }
         }
 
         // ads_solve(u, buffer, x.data(), dim_data{Ky, y.ctx});
         // ads_solve(u2, buffer, x.data(), dim_data{Ky, y.ctx});
         // Expanded ADS call:
-        lin::solve_with_factorized(x.data().M, view_y, x.data().ctx);
+        // NEW: periodic mass matrix instead of a standard one
+        // lin::solve_with_factorized(x.data().M, view_y, x.data().ctx);
+        lin::solve_with_factorized(Mx, view_y, Mx_ctx);
         auto F2 = lin::cyclic_transpose(view_y, buf.data());
         lin::solve_with_factorized(Ay, F2, Ay_ctx);
         lin::cyclic_transpose(F2, view_y);
@@ -167,8 +214,8 @@ private:
         // ... and copy the solutions back to the separate vectors
         for (auto i = 0; i < x.dofs(); ++ i) {
             for (auto j = 0; j < y.dofs(); ++ j) {
-                u(i, j) = view_y(i, j);
-                u2(i, j) = view_y(i, j + y.dofs());
+                u(i, j) = view_y(i % Nx, j % Ny);
+                u2(i, j) = view_y(i % Nx, Ny + j % Ny);
             }
         }
 
@@ -203,11 +250,11 @@ private:
                     value_type u2 = eval_fun(u2_prev, e, q);
 
                     double gradient_prod = u.dy * v.dy;
-                    double val = u.val * v.val - 0.5 * steps.dt * gradient_prod;
+                    double val = u.val * v.val - 0.5 * steps.dt * gradient_prod + 0.5 * steps.dt * s * u.dy * v.val;
                     U(aa[0], aa[1]) += val * w * J;
 
                     gradient_prod = u2.dy * v.dy;
-                    val = u2.val * v.val - 0.5 * steps.dt * gradient_prod;
+                    val = u2.val * v.val - 0.5 * steps.dt * gradient_prod + 0.5 * steps.dt * s * u2.dy * v.val;
                     U2(aa[0], aa[1]) += val * w * J;
                 }
             }
@@ -240,11 +287,11 @@ private:
                     value_type u2 = eval_fun(u2_prev, e, q);
 
                     double gradient_prod = u.dx * v.dx;
-                    double val = u.val * v.val - 0.5 * steps.dt * gradient_prod;
+                    double val = u.val * v.val - 0.5 * steps.dt * gradient_prod + 0.5 * steps.dt * s * u.dx * v.val;
                     U(aa[0], aa[1]) += val * w * J;
 
                     gradient_prod = u2.dx * v.dx;
-                    val = u2.val * v.val - 0.5 * steps.dt * gradient_prod;
+                    val = u2.val * v.val - 0.5 * steps.dt * gradient_prod + 0.5 * steps.dt * s * u2.dx * v.val;
                     U2(aa[0], aa[1]) += val * w * J;
                 }
             }
