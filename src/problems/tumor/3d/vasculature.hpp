@@ -91,6 +91,14 @@ public:
     void update(Tumor&& tumor, TAF&& taf, int iter, double dt) {
         if (iter % 240 == 0) {
             create_sprouts(tumor, taf, dt);
+            for (edge_ptr s : edges_) {
+                // Vessel collapse
+                if (s->stability <= 0) {
+                    if (flip_coin(dt / cfg.t_ec_collapse)) {
+                        remove(s);
+                    }
+                }
+            }
         }
 
         for (edge_ptr s : edges_) {
@@ -100,12 +108,6 @@ public:
             if (b > 1) {
                 s->stability -= cfg.degeneration * dt;
                 s->inside_tumor += dt;
-            }
-            // Vessel collapse
-            if (s->stability <= 0) {
-                if (flip_coin(dt / cfg.t_ec_collapse)) {
-                    remove(s);
-                }
             }
             // Vessel dilatation
             if (s->inside_tumor > cfg.t_ec_switch && s->radius < cfg.r_max) {
