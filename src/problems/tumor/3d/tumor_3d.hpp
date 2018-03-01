@@ -259,7 +259,7 @@ namespace tumor {
 
             solve_all(now);
 
-            // save_to_file(0);
+            save_to_file(0);
         }
 
         void before_step(int /*iter*/, double /*t*/) override {
@@ -290,7 +290,7 @@ namespace tumor {
                 }
             }
 
-            // update_vasculature(iter);
+            update_vasculature(iter);
 
             timer.stop();
         }
@@ -306,9 +306,9 @@ namespace tumor {
 
         void after_step(int iter, double /*t*/) override {
             // std::cout << "Iter " << iter << " done" << std::endl;
-            // if ((iter + 1) % 100 == 0) {
-                // save_to_file(iter + 1);
-            // }
+            if ((iter + 1) % 100 == 0) {
+                save_to_file(iter + 1);
+            }
         }
 
         virtual void after() override {
