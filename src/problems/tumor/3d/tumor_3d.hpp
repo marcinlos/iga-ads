@@ -243,13 +243,14 @@ namespace tumor {
         void before() override {
             prepare_matrices();
 
-            projection(now.b, [](double x, double y, double z) {
-                double dx = (x - 2500) / 400;
-                double dy = (y - 2500) / 400;
-                double dz = (z - 2440) / 400;
-                double r2 = std::min(1.0, dx*dx + dy*dy + dz*dz);
-                return 1.2 * (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
-            });
+            // projection(now.b, [](double x, double y, double z) {
+            //     double dx = (x - 2500) / 400;
+            //     double dy = (y - 2500) / 400;
+            //     double dz = (z - 2440) / 400;
+            //     double r2 = std::min(1.0, dx*dx + dy*dy + dz*dz);
+            //     return 1.2 * (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
+            // });
+            projection(now.b, constant(20.0/1000000.0));
 
             projection(now.c, constant(0));
             projection(now.o, constant(0));
@@ -305,7 +306,7 @@ namespace tumor {
         }
 
         void after_step(int iter, double /*t*/) override {
-            // std::cout << "Iter " << iter << " done" << std::endl;
+            std::cout << "Iter " << iter << " done" << std::endl;
             if ((iter + 1) % 100 == 0) {
                 save_to_file(iter + 1);
             }
