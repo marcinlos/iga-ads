@@ -86,7 +86,7 @@ public:
     , u_prev{{ Ux.dofs(), Uy.dofs() }}
     , u_buffer{{ Ux.dofs(), Uy.dofs() }}
     , rhs1{{ Vx.dofs(), Uy.dofs() }}, rhs2{{ Ux.dofs(), Vy.dofs() }}
-    , output{ Ux.B, Uy.B, 10000 }
+    , output{ Ux.B, Uy.B, 500 }
     { }
 
 private:
@@ -274,7 +274,7 @@ private:
         // solve(u);
         zero(u);
 
-        // output.to_file(u, "out_0.data");
+        output.to_file(u, "out_0.data");
     }
 
     void before_step(int /*iter*/, double /*t*/) override {
@@ -445,14 +445,14 @@ private:
     void after_step(int iter, double /*t*/) override {
         if ((iter + 1) % save_every == 0) {
             std::cout << "Step " << (iter + 1) << " : " << errorL2() << " " << errorH1() << std::endl;
-            // output.to_file(u, "out_%d.data", (iter + 1) / save_every);
+            output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
         prepare_implicit_matrices();
 
     }
 
     void after() override {
-        output.to_file(u, "final.data");
+        plot_middle("final.data");
         std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
 
         std::ofstream sol("solution.data");
@@ -461,6 +461,27 @@ private:
                 sol << i << " " << j << " " << u(i, j) << std::endl;
             }
         }
+    }
+
+    void plot_middle(const char* filename) {
+        std::ofstream out{filename};
+        bspline::eval_ctx ctx_x{ Ux.B.degree }, ctx_y{ Uy.B.degree };
+
+        auto print = [&](double xx) {
+            auto val = bspline::eval(xx, 0.5, u, Ux.B, Uy.B, ctx_x, ctx_y);
+            out << std::setprecision(16) << xx << " " << val << std::endl;
+        };
+
+        print(0);
+        auto N = Ux.basis.quad_order;
+        for (auto e : Ux.element_indices()) {
+            std::vector<double> qs(Ux.basis.x[e], Ux.basis.x[e] + N);
+            std::sort(begin(qs), end(qs));
+            for (auto xx : qs) {
+                print(xx);
+            }
+        }
+        print(1);
     }
 
     double grad_dot(point_type a, value_type u) const {
