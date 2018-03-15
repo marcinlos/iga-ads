@@ -131,6 +131,9 @@ if (NOT SKIP_PROBLEMS)
     define_problem(erikkson
       src/problems/erikkson/main.cpp)
 
+    define_problem(demkowicz
+      src/problems/demkowicz/main.cpp)
+
   endif()
 
   define_problem(heat_1d
