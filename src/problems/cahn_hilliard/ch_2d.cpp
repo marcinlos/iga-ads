@@ -1,4 +1,4 @@
-#include "problems/ch/ch_2d.hpp"
+#include "ch_2d.hpp"
 
 using namespace ads;
 //using namespace ads::problems;
