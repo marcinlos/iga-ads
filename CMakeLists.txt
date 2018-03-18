@@ -115,6 +115,9 @@ if (NOT SKIP_PROBLEMS)
     define_problem(linear_elasticity
       src/problems/elasticity/main.cpp)
 
+    define_problem(cahn_hilliard
+    src/problems/cahn_hilliard/ch_2d.cpp)
+
     define_problem(validation
       src/problems/validation/main.cpp)
   endif()
