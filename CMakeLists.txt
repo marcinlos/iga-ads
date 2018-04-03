@@ -141,6 +141,9 @@ if (NOT SKIP_PROBLEMS)
     define_problem(erikkson
       src/problems/erikkson/main.cpp)
 
+    define_problem(erikkson_mumps
+      src/problems/erikkson/main_mumps.cpp)
+
     define_problem(demkowicz
       src/problems/demkowicz/main.cpp)
 
