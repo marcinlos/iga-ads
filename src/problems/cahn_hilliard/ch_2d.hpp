@@ -327,9 +327,9 @@ private:
     void after_step(int iter, double /*t*/) override {
         curt += steps.dt;
 
-        if ((iter+1) % 10 == 0)
+        if ((iter+1) % 1 == 0)
             std::cout << "Iter " << iter+1 << ":\tt = "<< curt << "\tdt = "<< steps.dt << "\t(" << GL_free_energy << ")" << std::endl;
-        if ((iter+1) % 100 == 0) {
+        if ((iter+1) % 10 == 0) {
             output.to_file(u, "OUT/out1_%d.data", iter+1);
             output.to_file(u2, "OUT/out2_%d.data", iter+1);
         }
@@ -391,7 +391,7 @@ private:
                 GL_free_energy += gltemp * w * J;
 
                 //double gltemp = compute_GL_free_energy(u.val, u.dx, u.dy) - grad_dot(u, v);
-                //GL_free_energy += gltemp * w * J; //* v.val 
+                //GL_free_energy += gltemp * w * J; //* v.val
             }
 
             executor.synchronized([&]() {

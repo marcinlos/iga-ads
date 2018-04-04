@@ -120,7 +120,7 @@ if (NOT SKIP_PROBLEMS)
 
     define_problem(validation
       src/problems/validation/main.cpp)
-  endif()
+ endif()
 
   define_problem(heat_1d
       src/problems/heat/heat_1d.cpp)
