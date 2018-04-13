@@ -1,14 +1,59 @@
 #ifndef ADS_PROBLEMS_CH_2D_HPP_
 #define ADS_PROBLEMS_CH_2D_HPP_
 
+#include <string>
 #include "ads/simulation.hpp"
 #include "ads/output_manager.hpp"
 #include "ads/executor/galois.hpp"
 #include "ads/lin/dense_matrix.hpp"
 #include "ads/lin/dense_solve.hpp"
-
+#include "../libs/exprtk.hpp"
 
 namespace ads {
+
+typedef exprtk::symbol_table<double> symbol_table_t;
+typedef exprtk::expression<double>     expression_t;
+typedef exprtk::parser<double>             parser_t;
+
+class MyParser {
+
+  symbol_table_t M_symbol_table;
+  expression_t M_expression;
+  parser_t M_parser;
+
+  double param;
+
+  public:
+
+  MyParser(std::string formula): param(0) {
+    printf("Parser constructor");
+    M_symbol_table.add_variable("c", param);
+    M_symbol_table.add_constants();
+    M_expression.register_symbol_table(M_symbol_table);
+
+    if(!M_parser.compile(formula, M_expression)) {
+      printf("Mobility (M) formula compilation error...\n");
+    }
+
+    param = 1;
+    printf("Test expression for 1 = %.5f\n", M_expression.value());
+
+    param = 2;
+    printf("Test expression for 2 = %.5f\n", M_expression.value());
+  }
+
+  ~MyParser() {
+    printf("Parser destructor");
+  }
+
+  double value(double c) {
+    param = c;
+    return M_expression.value();
+  }
+
+};
+
+thread_local double m_param = 0;
 
 class ch_2d : public simulation_2d {
 private:
@@ -33,7 +78,7 @@ private:
     double GL_free_energy = 0.0;	// current GL free energy
 
     output_manager<2> output;
-    galois_executor executor{4};
+    galois_executor executor{8};
 
     // Large matrices - dense matrices + data for solver
     lin::dense_matrix Ax, Ay;
@@ -43,8 +88,10 @@ private:
     lin::dense_matrix Mx, My;
     lin::solver_ctx Mx_ctx, My_ctx;
 
+    const MyParser m_parser;
+
 public:
-    ch_2d(const config_2d& config)
+    ch_2d(const config_2d& config, std::string M_formula)
     : Base{ config }
     , lambda(1.0/(9000.0))		// Gomez et al. 2008
 //    , lambda(1.0/(config.x.elements*config.y.elements))	// Some other papers
@@ -63,6 +110,7 @@ public:
     , My{ y.dofs() - 1, y.dofs() - 1 }
     , Mx_ctx{ Mx }
     , My_ctx{ My }
+    , m_parser {M_formula}
     {
         // Fill the large matrices
         matrix(Ax, x.basis, steps.dt);
@@ -74,7 +122,6 @@ public:
 
         // Init random
         srand(time(NULL));
-
 /*
 	// Check 1D matrices assembly
         std::cout << "Mx " << std::endl;
@@ -214,14 +261,14 @@ private:
         auto init = [this](double x, double y) { return init_c(x, y); };
         projection(u, init);
         solve(u);
-        output.to_file(u, "OUT/out1_0.data");
+        output.to_file(u, "OUT/out1_000000.data");
 
 
         //auto init2 = [this](double x, double y) { return init_eta(x, y); };
         //projection(u2, init2);
         compute_projection_with_laplacian();
         solve(u2);
-        output.to_file(u2, "OUT/out2_0.data");
+        output.to_file(u2, "OUT/out2_000000.data");
     }
 
     void before_step(int /*iter*/, double /*t*/) override {
@@ -330,15 +377,14 @@ private:
         if ((iter+1) % 1 == 0)
             std::cout << "Iter " << iter+1 << ":\tt = "<< curt << "\tdt = "<< steps.dt << "\t(" << GL_free_energy << ")" << std::endl;
         if ((iter+1) % 10 == 0) {
-            output.to_file(u, "OUT/out1_%d.data", iter+1);
-            output.to_file(u2, "OUT/out2_%d.data", iter+1);
+            output.to_file(u, "OUT/out1_%06d.data", iter+1);
+            output.to_file(u2, "OUT/out2_%06d.data", iter+1);
         }
     }
 
     // Mobility M(c)
-    double get_M(double c) {
-        return 1.0; // 200.0;
-//        return c*(1-c);
+    inline double get_M(double c) {
+        return m_parser.value(c);
     }
 
     // Chemical potential F(c)

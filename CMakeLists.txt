@@ -11,7 +11,10 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-include_directories("${PROJECT_SOURCE_DIR}/src")
+include_directories(
+  "${PROJECT_SOURCE_DIR}/src"
+  "${PROJECT_SOURCE_DIR}/libs"
+)
 
 set(SRC src/ads)
 set(ads_SRC
@@ -40,7 +43,7 @@ find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 # Galois
-set(USE_GALOIS OFF CACHE BOOL "Use Galois framework")
+set(USE_GALOIS ON CACHE BOOL "Use Galois framework")
 
 if (USE_GALOIS)
   find_package(Galois REQUIRED)
