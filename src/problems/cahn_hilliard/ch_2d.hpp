@@ -88,7 +88,7 @@ private:
     lin::dense_matrix Mx, My;
     lin::solver_ctx Mx_ctx, My_ctx;
 
-    const MyParser m_parser;
+    MyParser m_parser;
 
 public:
     ch_2d(const config_2d& config, std::string M_formula)
