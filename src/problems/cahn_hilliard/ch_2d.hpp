@@ -393,15 +393,6 @@ private:
 
     // Chemical potential F(c)
     double get_F(double c) {
-//        double gamma = 0.045;
-//        return gamma*(4.0*c*c*c-6.0*c*c+2.0*c);
-
-	double norm = 1.0*1.0/lambda;				// L0^2/lambda
-
-        return norm*(1./(2*theta)*log(c/(1-c)) + 1 - 2*c) /* * (2*theta)*/;	// Cortes1 also multiplies by 2*theta (mistake?)
-//        return norm*(c*log(c) + (1-c)*log(1-c) + 2*theta*c*(1-c));		// Gomez, Hughes 2011
-////        return 1./(2*theta) + 1 - 2*c;
-////
       return f_parser.value(c);
     }
 
