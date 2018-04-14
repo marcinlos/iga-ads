@@ -25,14 +25,16 @@ class MyParser {
 
   public:
 
-  MyParser(std::string formula): param(0) {
+  MyParser(std::string formula, const double lambda, const double theta): param(0) {
     printf("Parser constructor");
-    M_symbol_table.add_variable("c", param);
+    M_symbol_table.add_variable("x", param);
+    M_symbol_table.add_constant("lambda", lambda);
+    M_symbol_table.add_constant("theta", theta);
     M_symbol_table.add_constants();
     M_expression.register_symbol_table(M_symbol_table);
 
     if(!M_parser.compile(formula, M_expression)) {
-      printf("Mobility (M) formula compilation error...\n");
+      printf("Formula compilation error...\n");
     }
 
     param = 1;
@@ -89,9 +91,10 @@ private:
     lin::solver_ctx Mx_ctx, My_ctx;
 
     MyParser m_parser;
+    MyParser f_parser;
 
 public:
-    ch_2d(const config_2d& config, std::string M_formula)
+    ch_2d(const config_2d& config, std::string M_formula, std::string F_formula)
     : Base{ config }
     , lambda(1.0/(9000.0))		// Gomez et al. 2008
 //    , lambda(1.0/(config.x.elements*config.y.elements))	// Some other papers
@@ -110,7 +113,8 @@ public:
     , My{ y.dofs() - 1, y.dofs() - 1 }
     , Mx_ctx{ Mx }
     , My_ctx{ My }
-    , m_parser {M_formula}
+    , m_parser {M_formula, lambda, theta}
+    , f_parser {F_formula, lambda, theta}
     {
         // Fill the large matrices
         matrix(Ax, x.basis, steps.dt);
@@ -397,6 +401,8 @@ private:
         return norm*(1./(2*theta)*log(c/(1-c)) + 1 - 2*c) /* * (2*theta)*/;	// Cortes1 also multiplies by 2*theta (mistake?)
 //        return norm*(c*log(c) + (1-c)*log(1-c) + 2*theta*c*(1-c));		// Gomez, Hughes 2011
 ////        return 1./(2*theta) + 1 - 2*c;
+////
+      return f_parser.value(c);
     }
 
     void compute_rhs_1() {
