@@ -1,4 +1,6 @@
 #include "problems/erikkson/erikkson_mumps.hpp"
+#include "problems/erikkson/erikkson_mumps_split.hpp"
+
 
 using namespace ads;
 
@@ -30,53 +32,59 @@ bspline::basis create_basis(double a, double b, int p, int elements, int repeate
 
 
 int main(int argc, char* argv[]) {
-    if (argc != 8) {
-        std::cerr << "Usage: erikkson_mumps <N> <adaptations> <p_trial> <C_trial> <p_test> <C_test> <steps>" << std::endl;
+    if (argc != 9) {
+        std::cerr << "Usage: erikkson_mumps <N> <subdivision> <adapt> <p_trial> <C_trial> <p_test> <C_test> <steps>" << std::endl;
         std::exit(1);
     }
     int n = std::atoi(argv[1]);
-    bool adapt = std::atoi(argv[2]);
-    int p_trial = std::atoi(argv[3]);
-    int C_trial = std::atoi(argv[4]);
-    int p_test = std::atoi(argv[5]);
-    int C_test = std::atoi(argv[6]);
-    int nsteps = std::atoi(argv[7]);
+    int subdivision = std::atoi(argv[2]);
+    bool adapt = std::atoi(argv[3]);
+
+    int p_trial = std::atoi(argv[4]);
+    int C_trial = std::atoi(argv[5]);
+    int p_test = std::atoi(argv[6]);
+    int C_test = std::atoi(argv[7]);
+    int nsteps = std::atoi(argv[8]);
 
     int quad = std::max(p_trial, p_test) + 1;
-    dim_config trial{ p_trial, n, 0.0, 1.0, quad, p_trial - 1 - C_trial};
+    dim_config trial{ p_trial, n, 0.0, 1.0, quad, p_trial - 1 - C_trial };
     dim_config test { p_test,  n, 0.0, 1.0, quad, p_test  - 1 - C_test };
 
     std::cout << "adaptations: " << std::boolalpha << adapt << std::endl;
 
 
-    timesteps_config steps{ nsteps, 0.5*1e-2 };
+    timesteps_config steps{ nsteps, 1e-1 };
     int ders = 1;
+    // int subdivision = 2;
+    // int adapt = 0;
 
     auto trial_basis_x = create_basis(0, 1, p_trial, n, p_trial - 1 - C_trial, adapt);
     // auto trial_basis_x = create_adapted_basis(0, 1, p_trial, p_trial - 1 - C_trial);
 
-    auto dtrial_x = dimension{ trial_basis_x, quad, ders };
+    auto dtrial_x = dimension{ trial_basis_x, quad, ders, subdivision };
 
     auto trial_basis_y = bspline::create_basis(0, 1, p_trial, n, p_trial - 1 - C_trial);
-    auto dtrial_y = dimension{ trial_basis_y, quad, ders };
+    auto dtrial_y = dimension{ trial_basis_y, quad, ders, subdivision };
 
-    auto test_basis_x = create_basis(0, 1, p_test, n, p_test - 1 - C_test, adapt);
+    auto test_basis_x = create_basis(0, 1, p_test, subdivision*n, p_test - 1 - C_test, adapt);
     // auto test_basis_x = create_adapted_basis(0, 1, p_test, p_test - 1 - C_test);
 
-    auto dtest_x = dimension{ test_basis_x, quad, ders };
+    auto dtest_x = dimension{ test_basis_x, quad, ders, 1 };
 
-    auto test_basis_y = bspline::create_basis(0, 1, p_test, n, p_test - 1 - C_test);
-    auto dtest_y = dimension{ test_basis_y, quad, ders };
+    auto test_basis_y = bspline::create_basis(0, 1, p_test, subdivision*n, p_test - 1 - C_test);
+    auto dtest_y = dimension{ test_basis_y, quad, ders, 1 };
 
     auto trial_dim = dtrial_x.B.dofs();
     auto test_dim = dtest_x.B.dofs();
 
-    // if (trial_dim > test_dim) {
+    if (trial_dim > test_dim) {
         std::cerr << "Dimension of the trial space greater than that of test space ("
                   << trial_dim << " > " << test_dim << ")" << std::endl;
-        // std::exit(1);
-    // }
+        std::exit(1);
+    } else {
+        std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
+    }
 
-    erikkson_mumps sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
+    erikkson_mumps_split sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
     sim.run();
 }
