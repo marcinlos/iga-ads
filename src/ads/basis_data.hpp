@@ -17,25 +17,25 @@ struct basis_data {
     int degree;
     int elements;
     int quad_order;
-    bspline::knot_vector knot;
-    bspline::basis basis;
+    int elem_division;
+    std::vector<double> points;
     double**** b;
     double** x;
     const double* w;
     double* J;
 
-    basis_data(bspline::basis basis, int derivatives)
-    : basis_data{ std::move(basis), derivatives, basis.degree + 1 }
+    basis_data(const bspline::basis& basis, int derivatives)
+    : basis_data{ std::move(basis), derivatives, basis.degree + 1, 1 }
     { }
 
-    basis_data(bspline::basis basis, int derivatives, int quad_order);
+    basis_data(const bspline::basis& basis, int derivatives, int quad_order, int elem_division);
 
     int first_dof(element_id e) const {
-        return first_dofs[e];
+        return first_dofs[e / elem_division];
     }
 
     int last_dof(element_id e) const {
-        return first_dof(e) + degree;
+        return first_dof(e) + dofs_per_element() - 1;
     }
 
     int dofs_per_element() const {

@@ -5,16 +5,16 @@
 
 namespace ads {
 
-    basis_data::basis_data(bspline::basis basis, int derivatives, int quad_order)
+    basis_data::basis_data(const bspline::basis& basis, int derivatives, int quad_order, int elem_division)
     : first_dofs(bspline::first_nonzero_dofs(basis))
     , degree(basis.degree)
-    , elements(basis.elements())
+    , elements(basis.elements() * elem_division)
     , quad_order(quad_order)
-    , knot(basis.knot)
-    , basis(std::move(basis))
+    , elem_division(elem_division)
+    , points(elements + 1)
     , w(quad::gauss::Ws[quad_order])
     {
-        int p = this->basis.degree;
+        int p = basis.degree;
         int q = quad_order;
         x = new double*[elements];
         J = new double[elements];
@@ -22,10 +22,19 @@ namespace ads {
 
         bspline::eval_ctx ctx(p);
 
+        // compute points of the subdivided elements
+        for (int e = 0; e < basis.elements(); ++ e) {
+            double x1 = basis.points[e];
+            double x2 = basis.points[e + 1];
+            for (int k = 0; k <= elem_division; ++ k) {
+                points[e * elem_division + k] = ads::lerp(k, elem_division, x1, x2);
+            }
+        }
+
         for (int e = 0; e < elements; ++ e) {
             x[e] = new double[q];
-            double x1 = this->basis.points[e];
-            double x2 = this->basis.points[e + 1];
+            double x1 = points[e];
+            double x2 = points[e + 1];
             J[e] = 0.5 * (x2 - x1);
 
             for (int k = 0; k < q; ++ k) {
@@ -40,8 +49,8 @@ namespace ads {
                 for (int d = 0; d <= derivatives; ++ d) {
                     b[e][k][d] = new double[p + 1];
                 }
-                int span = find_span(x[e][k], this->basis);
-                eval_basis_with_derivatives(span, x[e][k], this->basis, b[e][k], derivatives, ctx);
+                int span = find_span(x[e][k], basis);
+                eval_basis_with_derivatives(span, x[e][k], basis, b[e][k], derivatives, ctx);
             }
         }
     }

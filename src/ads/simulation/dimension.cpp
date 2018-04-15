@@ -2,14 +2,14 @@
 
 namespace ads {
 
-    dimension::dimension(bspline::basis b, int quad_order, int derivatives)
+    dimension::dimension(bspline::basis b, int quad_order, int derivatives, int elem_division)
     : p{b.degree}
-    , elements{b.elements()}
+    , elements{b.elements() * elem_division}
     , a{b.begin()}
     , b{b.end()}
     , B{ std::move(b) }
     , M{p, p, B.dofs()}
-    , basis(B, derivatives, quad_order)
+    , basis(B, derivatives, quad_order, elem_division)
     , ctx{M}
     {
         gram_matrix_1d(M, basis);
