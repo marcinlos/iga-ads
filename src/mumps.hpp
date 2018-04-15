@@ -61,6 +61,9 @@ class solver {
 private:
     DMUMPS_STRUC_C id;
 
+    int& icntl(int idx) {
+        return id.icntl[idx - 1];
+    }
 public:
 
     solver() {
@@ -68,22 +71,20 @@ public:
         id.par = 1;
         id.sym = 0;
         id.comm_fortran = 1;
+
+
         dmumps_c(&id);
 
-        //streams
-        id.icntl[0] = 6;
-        id.icntl[1] = 6;
-        id.icntl[2] = 6;
-        id.icntl[3] = 3;
-
-        id.icntl[0] = 3;
-        id.icntl[1] = 3;
-        id.icntl[2] = 3;
-        id.icntl[3] = 3;
-
-
         //ordering metis (5), or pord (4), or AMD (0), AMF (2), QAMD (6)
-        id.icntl[6] = 2;
+        icntl(7) = 5;
+
+        icntl(14) = 100;
+
+        //streams
+        icntl(1) = 3;
+        icntl(2) = 3;
+        icntl(3) = 3;
+        icntl(4) = 3;
     }
 
     void solve(problem& problem) {
