@@ -37,7 +37,7 @@ private:
     vector_type u_buffer;
     vector_type rhs1, rhs2;
 
-    int save_every = 10;
+    int save_every = 1;
 
     double pecelet = 1e6;
     double epsilon = 1 / pecelet;
@@ -447,8 +447,10 @@ private:
             std::cout << "Step " << (iter + 1) << " : " << errorL2() << " " << errorH1() << std::endl;
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
+        // if (iter + 1 == 200) {
+        //     steps.dt /= 100;
+        // }
         prepare_implicit_matrices();
-
     }
 
     void after() override {
