@@ -28,7 +28,7 @@ public:
     basis_data basis;
     lin::solver_ctx ctx;
 
-    dimension(bspline::basis basis, int quad_order, int derivatives);
+    dimension(bspline::basis basis, int quad_order, int derivatives, int elem_division = 1);
 
     dimension(const dim_config& config, int derivatives);
 
