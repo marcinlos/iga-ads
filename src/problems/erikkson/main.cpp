@@ -14,7 +14,7 @@ bspline::basis create_basis(double a, double b, int p, int elements, int repeate
     }
 
     auto x0 = 0.5;
-    auto y0 = 1 - 1e-5;
+    auto y0 = 0.99;//1 - 1e-5;
 
     for (int i = 1; i < points - 1; ++i) {
         auto t = lerp(i, elements, 0.0, 1.0);
@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
     std::cout << "adaptations: " << std::boolalpha << adapt << std::endl;
 
 
-    timesteps_config steps{ nsteps, 1e-5 };
+    timesteps_config steps{ nsteps, 0.5*1e-2 };
     int ders = 1;
 
     auto trial_basis_x = create_basis(0, 1, p_trial, n, p_trial - 1 - C_trial, adapt);
