@@ -14,7 +14,7 @@ bspline::basis create_basis(double a, double b, int p, int elements, int repeate
     }
 
     auto x0 = 0.5;
-    auto y0 = 1 - 1e-5;
+    auto y0 = 0.99;//1 - 1e-5;
 
     for (int i = 1; i < points - 1; ++i) {
         auto t = lerp(i, elements, 0.0, 1.0);
@@ -30,7 +30,7 @@ bspline::basis create_basis(double a, double b, int p, int elements, int repeate
 
 int main(int argc, char* argv[]) {
     if (argc != 8) {
-        std::cerr << "Usage: erikkson <N> <adaptations> <p_trial> <C_trial> <p_test> <C_test> <steps>" << std::endl;
+        std::cerr << "Usage: demkowicz <N> <adaptations> <p_trial> <C_trial> <p_test> <C_test> <steps>" << std::endl;
         std::exit(1);
     }
     int n = std::atoi(argv[1]);
