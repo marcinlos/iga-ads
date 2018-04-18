@@ -205,7 +205,7 @@ private:
         // mass_matrix(MUVy, Uy.basis, y.basis);
 
         matrix(Bx, Ux.basis, x.basis, steps.dt / 2, c_diff[0], beta[0]);
-        matrix(By, Uy.basis, y.basis, steps.dt / 2, c_diff[1], beta[1]);
+        matrix(By, Uy.basis, y.basis, steps.dt, c_diff[1], beta[1]);
 
         prod_V(Ax, x.basis);
         prod_V(Ay, y.basis);
