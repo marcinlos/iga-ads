@@ -595,10 +595,11 @@ private:
                     auto aa = dof_global_to_local(e, a, Ux, Vy);
                     value_type v = eval_basis(e, q, a, Ux, Vy);
 
-                    double conv_term = beta[0] * u.dx * v.val;
+                    // double conv_term = beta[0] * u.dx * v.val;
 
-                    double gradient_prod = u.dx * v.dx;
-                    double val = u.val * v.val + h * (- conv_term - c_diff[0] * gradient_prod);
+                    // double gradient_prod = u.dx * v.dx;
+                    // double val = u.val * v.val + h * (- conv_term - c_diff[0] * gradient_prod);
+                    double val = u.val * v.val;
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
