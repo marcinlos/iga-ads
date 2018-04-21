@@ -204,8 +204,8 @@ private:
         // mass_matrix(MUVx, Ux.basis, x.basis);
         // mass_matrix(MUVy, Uy.basis, y.basis);
 
-        matrix(Bx, Ux.basis, x.basis, steps.dt / 2, c_diff[0], beta[0]);
-        matrix(By, Uy.basis, y.basis, steps.dt, c_diff[1], beta[1]);
+        matrix(Bx, Ux.basis, x.basis, steps.dt / 4, c_diff[0], beta[0]);
+        matrix(By, Uy.basis, y.basis, steps.dt / 2, c_diff[1], beta[1]);
 
         prod_V(Ax, x.basis);
         prod_V(Ay, y.basis);
@@ -536,7 +536,7 @@ private:
     }
 
 
-    void compute_rhs_x(double /*t*/, double /*h*/) {
+    void compute_rhs_x(double /*t*/, double h) {
         zero(rhs1);
 
         executor.for_each(elements(Vx, Uy), [&](index_type e) {
@@ -551,11 +551,11 @@ private:
                     auto aa = dof_global_to_local(e, a, Vx, Uy);
                     value_type v = eval_basis(e, q, a, Vx, Uy);
 
-                    // double conv_term = beta[1] * u.dy * v.val;
+                    double conv_term = beta[0] * u.dx * v.val;
 
-                    // double gradient_prod = u.dy * v.dy;
-                    // double val = u.val * v.val + h * (- conv_term - c_diff[1] * gradient_prod);
-                    double val = u.val * v.val;
+                    double gradient_prod = u.dx * v.dx;
+                    double val = u.val * v.val - h / 2 * (conv_term + c_diff[0] * gradient_prod);
+                    // double val = u.val * v.val;
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
@@ -565,7 +565,7 @@ private:
         });
     }
 
-    void compute_rhs_y(double /*t*/, double /*h*/) {
+    void compute_rhs_y(double /*t*/, double h) {
         zero(rhs2);
 
         executor.for_each(elements(Ux, Vy), [&](index_type e) {
@@ -580,11 +580,11 @@ private:
                     auto aa = dof_global_to_local(e, a, Ux, Vy);
                     value_type v = eval_basis(e, q, a, Ux, Vy);
 
-                    // double conv_term = beta[0] * u.dx * v.val;
+                    double conv_term = beta[1] * u.dy * v.val;
 
-                    // double gradient_prod = u.dx * v.dx;
-                    // double val = u.val * v.val + h * (- conv_term - c_diff[0] * gradient_prod);
-                    double val = u.val * v.val;
+                    double gradient_prod = u.dy * v.dy;
+                    double val = u.val * v.val - h / 2 * (conv_term + c_diff[1] * gradient_prod);
+                    // double val = u.val * v.val;
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
