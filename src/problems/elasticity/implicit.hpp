@@ -35,6 +35,7 @@ namespace problems {
         static constexpr double lambda = 1;
         static constexpr double mi = 1;
 
+        int save_every = 1;
 
         template <typename Fun>
         void for_all(state& s, Fun fun) {
@@ -47,7 +48,7 @@ namespace problems {
         }
 
     public:
-        implicit_elasticity(const ads::config_3d& config)
+        implicit_elasticity(const ads::config_3d& config, int save_every)
         : Base{ config }
         , now{ shape() }, prev{ shape() }
         , energy{ shape() }
@@ -58,6 +59,7 @@ namespace problems {
         , Kx{x.p, x.p, x.B.dofs()}
         , Ky{y.p, y.p, y.B.dofs()}
         , Kz{z.p, z.p, z.B.dofs()}
+        , save_every{save_every}
         {
             double hh = steps.dt * steps.dt * 1.0 / 3 * mi;
             matrix(Kx, x.basis, hh);
@@ -504,12 +506,12 @@ namespace problems {
         }
 
         void after_step(int iter, double t) override {
-            if (iter % 1 == 0) {
+            if ((iter + 1) % save_every == 0) {
                 // std::cout << "** Iteration " << iter << ", t = " << t << std::endl;
 
                 double Ek = kinetic_energy();
                 double Ep = potential_energy();
-                compute_potential_energy();
+                // compute_potential_energy();
 
                 // std::cout << "Kinetic energy: " << Ek << std::endl;
                 // std::cout << "Potential energy: " << Ep << std::endl;
@@ -518,12 +520,27 @@ namespace problems {
                 // std::cout << "Total disp:   : " << total() << std::endl;
                 // std::cout << std::endl;
 
-                output.to_file("out_%d.vti", iter*10,
-                               output.evaluate(now.ux),
-                               output.evaluate(now.uy),
-                               output.evaluate(now.uz),
-                               output.evaluate(energy));
+                // output.to_file("out_%d.vti", iter*10,
+                               // output.evaluate(now.ux),
+                               // output.evaluate(now.uy),
+                               // output.evaluate(now.uz),
+                               // output.evaluate(energy));
                 std::cout << iter << " " << t << " " << Ek << " " << Ep << " " << Ek + Ep << std::endl;
+                std::cout << "Step " << (iter + 1) << ", t = " << t << std::endl;
+
+                int num = (iter + 1) / save_every;
+                auto name = str(boost::format("out_%d.data") % num);
+                std::ofstream sol(name);
+                for (int i = 0; i < x.dofs(); ++ i) {
+                    for (int j = 0; j < y.dofs(); ++ j) {
+                        for (int k = 0; k < z.dofs(); ++ k) {
+                            sol << i << " " << j << " " << " " << k << " "
+                                << now.ux(i, j, k) << " "
+                                << now.uy(i, j, k) << " "
+                                << now.uz(i, j, k) << std::endl;
+                        }
+                    }
+                }
             }
         }
 

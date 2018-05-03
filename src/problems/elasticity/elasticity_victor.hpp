@@ -38,6 +38,8 @@ class elasticity_victor : public ads::simulation_3d {
     static constexpr double lambda = -1;
     static constexpr double mi = 1;
 
+    int save_every = 1;
+
     template <typename Fun>
     void for_all(state& s, Fun fun) {
         fun(s.ux);
@@ -52,7 +54,7 @@ class elasticity_victor : public ads::simulation_3d {
     }
 
 public:
-    elasticity_victor(const ads::config_3d& config)
+    elasticity_victor(const ads::config_3d& config, int save_every)
         : Base{ config }
         , now{ shape() }, prev{ shape() }
         , energy{ shape() }
@@ -60,6 +62,7 @@ public:
         , Kx{x.p, x.p, x.B.dofs()}
         , Ky{y.p, y.p, y.B.dofs()}
         , Kz{z.p, z.p, z.B.dofs()}
+        , save_every{save_every}
         {
             auto dt = steps.dt / 3;
             double hh = 0.5 * dt * dt;
@@ -413,7 +416,7 @@ private:
         add(now.uz, now.az, -tt);
     }
 
-    void step(int /*iter*/, double t) {
+    void step(int /*iter*/, double t) override {
         using std::swap;
 
         for_all(now, [](vector_type& a) { zero(a); });
@@ -461,12 +464,12 @@ private:
     }
 
     void after_step(int iter, double t) override {
-        if (iter % 1 == 0) {
+        if ((iter + 1) % save_every == 0) {
             // std::cout << "** Iteration " << iter << ", t = " << t << std::endl;
 
-            double Ek = kinetic_energy();
-            double Ep = potential_energy();
-            compute_potential_energy();
+            // double Ek = kinetic_energy();
+            // double Ep = potential_energy();
+            // compute_potential_energy();
 
             // std::cout << "Kinetic energy: " << Ek << std::endl;
             // std::cout << "Potential energy: " << Ep << std::endl;
@@ -475,12 +478,26 @@ private:
             // std::cout << "Total disp:   : " << total() << std::endl;
             // std::cout << std::endl;
 
-            output.to_file("out_%d.vti", iter,
-                           output.evaluate(now.ux),
-                           output.evaluate(now.uy),
-                           output.evaluate(now.uz),
-                           output.evaluate(energy));
-            std::cout << iter << " " << t << " " << Ek << " " << Ep << " " << Ek + Ep << std::endl;
+            // output.to_file("out_%d.vti", iter,
+                           // output.evaluate(now.ux),
+                           // output.evaluate(now.uy),
+                           // output.evaluate(now.uz),
+                           // output.evaluate(energy));
+            // std::cout << iter << " " << t << " " << Ek << " " << Ep << " " << Ek + Ep << std::endl;
+            std::cout << "Step " << (iter + 1) << ", t = " << t << std::endl;
+            int num = (iter + 1) / save_every;
+            auto name = str(boost::format("out_%d.data") % num);
+            std::ofstream sol(name);
+            for (int i = 0; i < x.dofs(); ++ i) {
+                for (int j = 0; j < y.dofs(); ++ j) {
+                    for (int k = 0; k < z.dofs(); ++ k) {
+                        sol << i << " " << j << " " << " " << k << " "
+                            << now.ux(i, j, k) << " "
+                            << now.uy(i, j, k) << " "
+                            << now.uz(i, j, k) << std::endl;
+                    }
+                }
+            }
         }
     }
 

@@ -18,14 +18,17 @@ private:
 
     lin::band_matrix Kx, Ky;
 
+    int save_every = 1;
+
 public:
-    implicit_2d(const config_2d& config)
+    implicit_2d(const config_2d& config, int save_every)
     : Base{ config }
     , u{ shape() }
     , u_prev{ shape() }
     , output{ x.B, y.B, 200 }
     , Kx{x.p, x.p, x.B.dofs()}
     , Ky{y.p, y.p, y.B.dofs()}
+    , save_every{save_every}
     {
         matrix(Kx, x.basis, steps.dt);
         matrix(Ky, y.basis, steps.dt);
@@ -106,12 +109,22 @@ private:
         ads_solve(u, buffer, x.data(), dim_data{Ky, y.ctx});
     }
 
-    void after_step(int iter, double /*t*/) override {
-        if ((iter + 1) % 1 == 0) {
-            double E = energy();
-            double L2 = L2norm();
-            std::cout << (iter + 1) * steps.dt << " " << E << " " << L2 << std::endl;
+    void after_step(int iter, double t) override {
+        if ((iter + 1) % save_every == 0) {
+            // double E = energy();
+            // double L2 = L2norm();
+            // std::cout << (iter + 1) * steps.dt << " " << E << " " << L2 << std::endl;
+            std::cout << "Step " << (iter + 1) << ", t = " << t << std::endl;
+
             // output.to_file(u, "out_%d.data", (iter + 1) / 1);
+            int num = (iter + 1) / save_every;
+            auto name = str(boost::format("out_%d.data") % num);
+            std::ofstream sol(name);
+            for (int i = 0; i < x.dofs(); ++ i) {
+                for (int j = 0; j < y.dofs(); ++ j) {
+                    sol << i << " " << j << " " << u(i, j) << std::endl;
+                }
+            }
         }
     }
 
