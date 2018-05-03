@@ -44,7 +44,10 @@ private:
 
     point_type c_diff{{ epsilon, epsilon }};
 
+    // CHANGE
     double angle = 0;
+    // double angle = M_PI / 6;
+
     double len = 1;
 
     point_type beta{{ len * cos(angle), len * sin(angle) }};
@@ -316,6 +319,7 @@ private:
         lin::factorize(MUy_loc, ctx_y);
 
 
+        // CHANGE
         lin::vector buf_y0{{ Ux.dofs() }};
         compute_projection(buf_y0, Ux.basis, [&](double /*t*/) {
             return 0;
@@ -340,6 +344,30 @@ private:
             return 0;
         });
         lin::solve_with_factorized(MUy_loc, buf_x1, ctx_y);
+
+        // lin::vector buf_y0{{ Ux.dofs() }};
+        // compute_projection(buf_y0, Ux.basis, [&](double /*t*/) {
+        //     return 1;
+        // });
+        // lin::solve_with_factorized(MUx_loc, buf_y0, ctx_x);
+
+        // lin::vector buf_y1{{ Ux.dofs() }};
+        // compute_projection(buf_y1, Ux.basis, [&](double /*t*/) {
+        //     return 0;
+        // });
+        // lin::solve_with_factorized(MUx_loc, buf_y1, ctx_x);
+
+        // lin::vector buf_x0{{ Uy.dofs() }};
+        // compute_projection(buf_x0, Uy.basis, [&](double t) {
+        //     return t < 0.5 ? 1 : 0;
+        // });
+        // lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
+
+        // lin::vector buf_x1{{ Uy.dofs() }};
+        // compute_projection(buf_x1, Uy.basis, [&](double /*t*/) {
+        //     return 0;
+        // });
+        // lin::solve_with_factorized(MUy_loc, buf_x1, ctx_y);
 
         for (int i = 0; i < Ux.dofs(); ++ i) {
             double val = 0;
