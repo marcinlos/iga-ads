@@ -576,6 +576,27 @@ private:
         }
     }
 
+    double eval_basis_mixed_deriv(index_type e, index_type q, index_type a, const dimension& x, const dimension& y) const  {
+        auto loc = dof_global_to_local(e, a, x, y);
+
+        const auto& bx = x.basis;
+        const auto& by = y.basis;
+        double dB1 = bx.b[e[0]][q[0]][1][loc[0]];
+        double dB2 = by.b[e[1]][q[1]][1][loc[1]];
+
+        return dB1 * dB2;
+    }
+
+    double eval_mixed_deriv(const vector_type& v, index_type e, index_type q, const dimension& x, const dimension& y) const {
+        double u = 0;
+        for (auto b : dofs_on_element(e, x, y)) {
+            double c = v(b[0], b[1]);
+            double B = eval_basis_mixed_deriv(e, q, b, x, y);
+            u += c * B;
+        }
+        return u;
+    }
+
 
     void compute_rhs_x() {
         zero(rhs1);
@@ -588,15 +609,24 @@ private:
             for (auto q : quad_points(Vx, Uy)) {
                 double w = weigth(q);
                 value_type u = eval(u_prev, e, q, Ux, Uy);
+                double Dxy_u = eval_mixed_deriv(u_prev, e, q, Ux, Uy);
 
                 for (auto a : dofs_on_element(e, Vx, Uy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Uy);
                     value_type v = eval_basis(e, q, a, Vx, Uy);
+                    double Dxy_v = eval_basis_mixed_deriv(e, q, a, Vx, Uy);
 
                     double conv_term = beta[1] * u.dy * v.val;
 
+                    double quad_term = c_diff[0] * c_diff[1] * Dxy_u * Dxy_v
+                        + beta[0] * beta[1] * Dxy_u * v.val
+                        + beta[0] * c_diff[1] * Dxy_u * v.dy
+                        + beta[1] * c_diff[0] * Dxy_u * v.dx;
+
                     double gradient_prod = u.dy * v.dy;
-                    double val = u.val * v.val + h * (- conv_term - c_diff[1] * gradient_prod);
+                    double val = u.val * v.val
+                        - h * (conv_term + c_diff[1] * gradient_prod)
+                        + h*h * quad_term;
 
                     U(aa[0], aa[1]) += val * w * J;
                 }
