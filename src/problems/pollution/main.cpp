@@ -13,7 +13,9 @@ int main(int argc, char* argv[]) {
     int p = std::atoi(argv[2]);
 
     dim_config dim{ p, n, 0, 5000};
-    timesteps_config steps{ 600, 10 };
+    // timesteps_config steps{ 600, 10 };
+    timesteps_config steps{ 60000, 0.05 };
+
 
     int ders = 1;
 

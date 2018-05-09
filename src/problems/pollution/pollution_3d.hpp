@@ -19,7 +19,7 @@ private:
     lin::band_matrix Kx, Ky, Kz;
     lin::solver_ctx Kx_ctx, Ky_ctx, Kz_ctx;
 
-    int save_every = 1;
+    int save_every = 10;
 
     double ambient = 1e-6; // g/m^3
 
@@ -152,24 +152,24 @@ private:
         // }
         // v(0, 0) = ambient;
 
-        for (int i = 0; i < x.dofs(); ++ i) {
-            for (int j = 0; j < y.dofs(); ++ j) {
-                v(i, j, 0) = 0;
-                v(i, j, z.dofs() - 1) = 0;
-            }
-        }
-        for (int i = 0; i < y.dofs(); ++ i) {
-            for (int j = 0; j < z.dofs(); ++ j) {
-                v(0, i, j) = 0;
-                v(x.dofs() - 1, i, j) = 0;
-            }
-        }
-        for (int i = 0; i < x.dofs(); ++ i) {
-            for (int j = 0; j < z.dofs(); ++ j) {
-                v(i, 0, j) = 0;
-                v(i, y.dofs() - 1, j) = 0;
-            }
-        }
+        // for (int i = 0; i < x.dofs(); ++ i) {
+        //     for (int j = 0; j < y.dofs(); ++ j) {
+        //         v(i, j, 0) = 0;
+        //         v(i, j, z.dofs() - 1) = 0;
+        //     }
+        // }
+        // for (int i = 0; i < y.dofs(); ++ i) {
+        //     for (int j = 0; j < z.dofs(); ++ j) {
+        //         v(0, i, j) = 0;
+        //         v(x.dofs() - 1, i, j) = 0;
+        //     }
+        // }
+        // for (int i = 0; i < x.dofs(); ++ i) {
+        //     for (int j = 0; j < z.dofs(); ++ j) {
+        //         v(i, 0, j) = 0;
+        //         v(i, y.dofs() - 1, j) = 0;
+        //     }
+        // }
     }
 
     void fix_dof(int k, const dimension& dim, lin::band_matrix& K) {
@@ -189,12 +189,12 @@ private:
         matrix(Ky, y.basis, h, c_diff[1], wind[1]);
         matrix(Kz, z.basis, h, c_diff[2], wind[2]);
 
-        fix_dof(0, x, Kx);
-        fix_dof(0, y, Ky);
-        fix_dof(0, z, Kz);
-        fix_dof(x.dofs() - 1, x, Kx);
-        fix_dof(y.dofs() - 1, y, Ky);
-        fix_dof(z.dofs() - 1, z, Kz);
+        // fix_dof(0, x, Kx);
+        // fix_dof(0, y, Ky);
+        // fix_dof(0, z, Kz);
+        // fix_dof(x.dofs() - 1, x, Kx);
+        // fix_dof(y.dofs() - 1, y, Ky);
+        // fix_dof(z.dofs() - 1, z, Kz);
 
         lin::factorize(Kx, Kx_ctx);
         lin::factorize(Ky, Ky_ctx);
@@ -202,12 +202,12 @@ private:
     }
 
     void prepare_matrices() {
-        x.fix_left();
-        x.fix_right();
-        y.fix_left();
-        y.fix_right();
-        z.fix_left();
-        z.fix_right();
+        // x.fix_left();
+        // x.fix_right();
+        // y.fix_left();
+        // y.fix_right();
+        // z.fix_left();
+        // z.fix_right();
 
         Base::prepare_matrices();
 
@@ -255,9 +255,9 @@ private:
     }
 
     void after_step(int iter, double t) override {
+        std::cout << "Step " << iter + 1 << std::endl;
         if ((iter + 1) % save_every == 0) {
             output.to_file(u, "out_%d.vti", (iter + 1) / save_every);
-            std::cout << "Step " << iter + 1 << std::endl;
             // analyze(iter, t + 0.5 * steps.dt);
         }
 
