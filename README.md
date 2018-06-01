@@ -1,11 +1,9 @@
-IGA-ADS
-=======
+# IGA-ADS
 
 IGA-ADS is a C++ framework designed to facilitate creating parallel numerical simulations for time-dependent PDEs using isogeometric finite element method.
 
 
-Requirements
-------------
+## Requirements
 
 1. Dependencies
 - LAPACK, BLAS
@@ -39,10 +37,10 @@ Options are specified as -Doption=value, e.g.
 $ cmake -DUSE_GALOIS=ON ..
 
 
-Contents
---------
+## Contents
 
-Top-level structure:
+```
+ Top-level structure:
   src/ads/      - framework code
   src/problems  - example problem implementations
   test/         - unit tests
@@ -164,4 +162,4 @@ Unit tests:
   test/ads/lin/banded_solver_test.cpp
   test/ads/lin/tensor_test.cpp
   test/ads/util/multi_array_test.cpp
-
+```
