@@ -4,6 +4,10 @@
 
 using namespace ads;
 
+double shishkin_const(int n, double eps) {
+    return std::log(n) * eps;
+}
+
 bspline::basis create_basis(double a, double b, int p, int elements, int repeated_nodes, bool adapt) {
     int points = elements + 1;
     int r = repeated_nodes + 1;
@@ -16,7 +20,12 @@ bspline::basis create_basis(double a, double b, int p, int elements, int repeate
     }
 
     auto x0 = 0.5;
-    auto y0 = 0.99;//1 - 1e-5;
+    // auto d = 0.0000046;
+    // auto d = 0.0368;
+
+    auto d = shishkin_const(elements, 1e-6);
+    std::cout << "Shishkin: " << d << std::endl;
+    auto y0 = 1 - d;
 
     for (int i = 1; i < points - 1; ++i) {
         auto t = lerp(i, elements, 0.0, 1.0);

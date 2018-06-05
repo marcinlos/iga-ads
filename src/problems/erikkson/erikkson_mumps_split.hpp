@@ -55,9 +55,13 @@ private:
 
     int save_every = 1;
 
-    double tau = 0.1;
+    // double tau = 0.1;
+    double tau = 1;
+    double rho = 1.0;
+    double alpha = 0.5;
 
-    double pecelet = 1e6;
+
+    double pecelet = 1e2;
     double epsilon = 1 / pecelet;
 
     point_type c_diff{{ epsilon, epsilon }};
@@ -125,7 +129,7 @@ private:
                 for (auto jx = max(1, ix - Vx.B.degree); jx < min(Vx.dofs() - 1, ix + Vx.B.degree + 1); ++ jx) {
                     for (auto jy = max(1, iy - Vy.B.degree); jy < min(Vy.dofs() - 1, iy + Vy.B.degree + 1); ++ jy) {
                         int j = &v(jx, jy) - &v(0, 0) + 1;
-                        double val = M.MVx(ix, jx) * M.MVy(iy, jy);
+                        double val = (rho + alpha) * M.MVx(ix, jx) * M.MVy(iy, jy);
                         if (with_x) val += M.KVx(ix, jx) * M.MVy(iy, jy);
                         if (with_y) val += M.MVx(ix, jx) * M.KVy(iy, jy);
                         problem.add(i, j, val);
@@ -153,23 +157,21 @@ private:
                     for (auto jy = 0; jy < Uy.dofs(); ++ jy) {
                         int i = &v(ix, iy) - &v(0, 0) + 1;
                         int j = &u(jx, jy) - &u(0, 0) + 1;
-                        double val = M.MUVx(ix, jx) * M.MUVy(iy, jy)
-                            + tau*beta[0] * M.AUVx(ix, jx) * M.MUVy(iy, jy)
-                            + tau*beta[1] * M.MUVx(ix, jx) * M.AUVy(iy, jy);
-                        if (with_x) {
+                        double val = 0;//M.MUVx(ix, jx) * M.MUVy(iy, jy);
+                        // if (with_x) {
                             val += tau*(c_diff[0] * M.KUVx(ix, jx) * M.MUVy(iy, jy) + beta[0] * M.AUVx(ix, jx) * M.MUVy(iy, jy));
-                        }
-                        if (with_y) {
+                        // }
+                        // if (with_y) {
                             val += tau*(c_diff[1] * M.MUVx(ix, jx) * M.KUVy(iy, jy) + beta[1] * M.MUVx(ix, jx) * M.AUVy(iy, jy));
-                        }
+                        // }
                         if (val != 0) {
                             if (ix != 0 && ix != Vx.dofs() - 1 && iy != 0 && iy != Vy.dofs() - 1) {
                                 problem.add(i, N + j, -val);
                             }
-                            if (jx != 0 && jx != Ux.dofs() - 1 && jy != 0 && jy != Uy.dofs() - 1 &&
-                                ix != 0 && ix != Vx.dofs() - 1 && iy != 0 && iy != Vy.dofs() - 1) {
-                                problem.add(N + j, i, val);
-                            }
+                            // if (jx != 0 && jx != Ux.dofs() - 1 && jy != 0 && jy != Uy.dofs() - 1 &&
+                            //     ix != 0 && ix != Vx.dofs() - 1 && iy != 0 && iy != Vy.dofs() - 1) {
+                            //     problem.add(N + j, i, val);
+                            // }
                         }
                     }
                 }
@@ -177,18 +179,19 @@ private:
         }
 
         // NEW!!!!
-        // for (auto ix = 1; ix < Ux.dofs() - 1; ++ ix) {
-        //     for (auto iy = 1; iy < Uy.dofs() - 1; ++ iy) {
-        //         int i = &u(ix, iy) - &u(0, 0) + 1;
-        //         for (auto jx = max(1, ix - Ux.B.degree); jx < min(Ux.dofs() - 1, ix + Ux.B.degree + 1); ++ jx) {
-        //             for (auto jy = max(1, iy - Uy.B.degree); jy < min(Uy.dofs() - 1, iy + Uy.B.degree + 1); ++ jy) {
-        //                 int j = &u(jx, jy) - &u(0, 0) + 1;
-        //                 double val = 0.1*M.MUx(ix, jx) * M.MUy(iy, jy);
-        //                 problem.add(N + i, N + j, val);
-        //             }
-        //         }
-        //     }
-        // }
+        for (auto ix = 1; ix < Ux.dofs() - 1; ++ ix) {
+            for (auto iy = 1; iy < Uy.dofs() - 1; ++ iy) {
+                int i = &u(ix, iy) - &u(0, 0) + 1;
+                for (auto jx = max(1, ix - Ux.B.degree); jx < min(Ux.dofs() - 1, ix + Ux.B.degree + 1); ++ jx) {
+                    for (auto jy = max(1, iy - Uy.B.degree); jy < min(Uy.dofs() - 1, iy + Uy.B.degree + 1); ++ jy) {
+                        int j = &u(jx, jy) - &u(0, 0) + 1;
+                        double val = rho * MUx(ix, jx) * MUy(iy, jy);
+                        problem.add(N + i, N + j, val);
+                    }
+                }
+            }
+        }
+
         for (auto jx = 0; jx < Ux.dofs(); ++ jx) {
             int j = &u(jx, 0) - &u(0, 0) + 1;
             problem.add(N + j, N + j, 1);
@@ -545,18 +548,24 @@ private:
                 for (auto a : dofs_on_element(e, Vx, Vy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
-                    double lv = uu.val * v.val;
+                    double lv = 0;//uu.val * v.val;
                     double val = -lv;
-                    if (with_x) val += /*- rr.dx * v.dx*/ + tau * (c_diff[0] * uu.dx * v.dx + beta[0] * uu.dx * v.val);
-                    if (with_y) val += /*- rr.dy * v.dy*/ + tau * (c_diff[1] * uu.dy * v.dy + beta[1] * uu.dy * v.val);
+                    // if (with_x) val += /*- rr.dx * v.dx*/ + tau * (c_diff[0] * uu.dx * v.dx + beta[0] * uu.dx * v.val);
+                    // if (with_y) val += /*- rr.dy * v.dy*/ + tau * (c_diff[1] * uu.dy * v.dy + beta[1] * uu.dy * v.val);
+                    val += (rho + alpha - 1) * rr.val * v.val;
+                    if (with_x) val -= tau * (rr.dx * v.dx);
+                    if (with_y) val -= tau * (rr.dy * v.dy);
+
                     R(aa[0], aa[1]) += val * w * J;
                 }
                 for (auto a : dofs_on_element(e, Ux, Uy)) {
                     auto aa = dof_global_to_local(e, a, Ux, Uy);
                     value_type v = eval_basis(e, q, a, Ux, Uy);
+                    value_type ww = eval_basis(e, q, a, Vx, Vy);
                     double val = 0;//0.1 * uu.val * v.val;
-                    if (with_x) val -= tau * (c_diff[0] * v.dx * rr.dx + beta[0] * v.dx * rr.val);
-                    if (with_y) val -= tau * (c_diff[1] * v.dy * rr.dy + beta[1] * v.dy * rr.val);
+                    /*if (with_x)*/ val += tau * (c_diff[0] * v.dx * rr.dx + beta[0] * v.dx * rr.val);
+                    /*if (with_y)*/ val += tau * (c_diff[1] * v.dy * rr.dy + beta[1] * v.dy * rr.val);
+                    val += rho * ww.val * uu.val;
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
