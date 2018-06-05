@@ -135,6 +135,9 @@ if (NOT SKIP_PROBLEMS)
     define_problem(pollution_dpg
       src/problems/pollution/dpg.cpp)
 
+    define_problem(pollution_dpg_3d
+      src/problems/pollution/dpg3d.cpp)
+
     define_problem(victor
       src/problems/victor/main.cpp)
 

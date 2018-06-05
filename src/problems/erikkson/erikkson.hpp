@@ -39,8 +39,9 @@ private:
 
     int save_every = 1;
 
-    double pecelet = 1e6;
-    double epsilon = 1 / pecelet;
+    double peclet = 1e6;
+    // double peclet = 10;
+    double epsilon = 1 / peclet;
 
     point_type c_diff{{ epsilon, epsilon }};
 
@@ -285,8 +286,8 @@ private:
         swap(u, u_prev);
     }
 
-    void step(int /*iter*/, double /*t*/) override {
-        compute_rhs_x();
+    void step(int /*iter*/, double t) override {
+        compute_rhs_x(t);
         ads_solve(rhs1, buffer, dim_data{Ax, Ax_ctx}, Uy.data());
 
         vector_type rhsx1   {{ Ux.dofs(), Uy.dofs() }};
@@ -334,8 +335,8 @@ private:
 
         lin::vector buf_x0{{ Uy.dofs() }};
         compute_projection(buf_x0, Uy.basis, [&](double t) {
-            return std::sin(M_PI * t);
-
+            // return std::sin(M_PI * t);
+            return 0;
         });
         lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
 
@@ -411,7 +412,7 @@ private:
         using std::swap;
         swap(u, u_prev);
 
-        compute_rhs_y();
+        compute_rhs_y(t);
         ads_solve(rhs2, buffer, Ux.data(), dim_data{Ay, Ay_ctx});
 
         vector_type rhsx2   {{ Ux.dofs(), Vy.dofs() }};
@@ -470,9 +471,11 @@ private:
         lin::cyclic_transpose(F2, u);
     }
 
-    void after_step(int iter, double /*t*/) override {
+    void after_step(int iter, double t) override {
         if ((iter + 1) % save_every == 0) {
-            std::cout << "Step " << (iter + 1) << " : " << errorL2() << " " << errorH1() << std::endl;
+            // std::cout << "Step " << (iter + 1) << " : " << errorL2(t) << " " << errorH1(t) << std::endl;
+            std::cout << t << " " << errorL2(t) << " " << errorH1(t) << std::endl;
+
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
         // if (iter + 1 == 200) {
@@ -483,7 +486,7 @@ private:
 
     void after() override {
         plot_middle("final.data");
-        std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
+        // std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
 
         std::ofstream sol("solution.data");
         for (int i = 0; i < Ux.dofs(); ++ i) {
@@ -597,8 +600,14 @@ private:
         return u;
     }
 
+    double forcing(double x, double y, double t) {
+        constexpr double pi = M_PI;
+        auto s = [](double a) { return std::sin(pi * a); };
+        auto c = [](double a) { return std::cos(pi * a); };
+        return pi*s(x)*s(y)*c(t) + 2*pi*pi*epsilon*s(x)*s(y)*s(t) + pi*c(x)*s(y)*s(t);
+    }
 
-    void compute_rhs_x() {
+    void compute_rhs_x(double t) {
         zero(rhs1);
 
         executor.for_each(elements(Vx, Uy), [&](index_type e) {
@@ -608,6 +617,7 @@ private:
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Uy)) {
                 double w = weigth(q);
+                auto x = point(e, q);
                 value_type u = eval(u_prev, e, q, Ux, Uy);
                 double Dxy_u = eval_mixed_deriv(u_prev, e, q, Ux, Uy);
 
@@ -626,7 +636,8 @@ private:
                     double gradient_prod = u.dy * v.dy;
                     double val = u.val * v.val
                         - h * (conv_term + c_diff[1] * gradient_prod)
-                        + h*h * quad_term;
+                        + h*h * quad_term
+                        + h * v.val * forcing(x[0], x[1], t);
 
                     U(aa[0], aa[1]) += val * w * J;
                 }
@@ -637,7 +648,7 @@ private:
         });
     }
 
-    void compute_rhs_y() {
+    void compute_rhs_y(double t) {
         zero(rhs2);
 
         executor.for_each(elements(Ux, Vy), [&](index_type e) {
@@ -647,6 +658,7 @@ private:
             double J = jacobian(e);
             for (auto q : quad_points(Ux, Vy)) {
                 double w = weigth(q);
+                auto x = point(e, q);
                 value_type u = eval(u_prev, e, q, Ux, Uy);
 
                 for (auto a : dofs_on_element(e, Ux, Vy)) {
@@ -656,9 +668,13 @@ private:
                     // double conv_term = beta[0] * u.dx * v.val;
 
                     // double gradient_prod = u.dx * v.dx;
-                    // double val = u.val * v.val + h * (- conv_term - c_diff[0] * gradient_prod);
-                    double val = u.val * v.val;
+                    // double val = u.val * v.val
+                    //     + h * (- conv_term - c_diff[0] * gradient_prod)
+                    //     + h * v.val * forcing(x[0], x[1], t);
+
+                    double val = u.val * v.val + h * v.val * forcing(x[0], x[1], t + h);
                     U(aa[0], aa[1]) += val * w * J;
+
                 }
             }
             executor.synchronized([&]() {
@@ -666,6 +682,16 @@ private:
             });
         });
     }
+
+    value_type exact2(double x, double y, double t) const {
+        constexpr double pi = M_PI;
+        auto s = [](double a) { return std::sin(pi * a); };
+        auto c = [](double a) { return std::cos(pi * a); };
+
+        return value_type{ s(t)*s(x)*s(y), pi*s(t)*c(x)*s(y), pi*s(t)*s(x)*c(y) };
+    }
+
+
 
     value_type exact(double x, double y, double eps) const {
         using std::exp;
@@ -685,7 +711,7 @@ private:
         };
     }
 
-    double errorL2() const {
+    double errorL2(double t) const {
         double error = 0;
 
         for (auto e : elements(Ux, Ux)) {
@@ -696,13 +722,15 @@ private:
                 value_type u = eval(u_prev, e, q, Ux, Uy);
 
                 auto d = u - exact(x[0], x[1], epsilon);
+                // auto d = u - exact2(x[0], x[1], t);
+
                 error += d.val * d.val * w * J;
             }
         }
         return std::sqrt(error);
     }
 
-    double errorH1() const {
+    double errorH1(double t) const {
         double error = 0;
         for (auto e : elements(Ux, Ux)) {
             double J = jacobian(e);
@@ -712,6 +740,7 @@ private:
                 value_type u = eval(u_prev, e, q, Ux, Uy);
 
                 auto d = u - exact(x[0], x[1], epsilon);
+                // auto d = u - exact2(x[0], x[1], t);
                 error += (d.val * d.val + d.dx * d.dx + d.dy * d.dy) * w * J;
             }
         }
