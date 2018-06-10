@@ -60,7 +60,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
   set(warnings "-Wall -Wextra -pedantic ${ignored_warnings}")
 
   set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} ${optimization} ${warnings} ${std_version}")
+    "${CMAKE_CXX_FLAGS} ${optimization} ${warnings} ${std_version} -static-libstdc++")
 endif()
 
 # Target library definition
