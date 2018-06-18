@@ -106,7 +106,7 @@ private:
                 for (auto jx = max(1, ix - Vx.B.degree); jx < min(Vx.dofs() - 1, ix + Vx.B.degree + 1); ++ jx) {
                     for (auto jy = max(1, iy - Vy.B.degree); jy < min(Vy.dofs() - 1, iy + Vy.B.degree + 1); ++ jy) {
                         int j = &v(jx, jy) - &v(0, 0) + 1;
-                        double val = MVx(ix, jx) * MVy(iy, jy)  + KVx(ix, jx) * MVy(iy, jy);// + MVx(ix, jx) * KVy(iy, jy);
+                        double val = MVx(ix, jx) * MVy(iy, jy)  + KVx(ix, jx) * MVy(iy, jy) + MVx(ix, jx) * KVy(iy, jy);
                         // std::cout << val << " ";
                         problem.add(i, j, val);
                     }
@@ -319,8 +319,8 @@ private:
     }
 
     void step(int /*iter*/, double /*t*/) override {
-        // compute_rhs();
-        zero(rhs);
+        compute_rhs();
+        // zero(rhs);
 
         std::fill(begin(full_rhs), end(full_rhs), 0);
         vector_view view_in{ full_rhs.data(), {Vx.dofs(), Vy.dofs()}};
@@ -346,7 +346,7 @@ private:
 
 
         for (auto j = 0; j < Uy.dofs(); ++ j) {
-            view_out(0, j) = buf_x0(j);
+            view_out(0, j) = 0;//buf_x0(j);
             view_out(Ux.dofs() - 1, j) = 0;
         }
         for (auto j = 1; j < Ux.dofs(); ++ j) {
@@ -488,7 +488,7 @@ private:
                 for (auto a : dofs_on_element(e, Vx, Vy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
-                    double val = uu.val * v.val;
+                    double val = 1 * v.val;
                     // double val = init_state(x[0], x[1]) * v.val;
                     U(aa[0], aa[1]) += val * w * J;
                 }
@@ -527,7 +527,7 @@ private:
                 auto x = point(e, q);
                 value_type uu = eval(u, e, q, Ux, Uy);
 
-                auto d = uu - exact(x[0], x[1], epsilon);
+                auto d = uu;// - exact(x[0], x[1], epsilon);
                 error += d.val * d.val * w * J;
             }
         }
@@ -543,7 +543,7 @@ private:
                 auto x = point(e, q);
                 value_type uu = eval(u, e, q, Ux, Uy);
 
-                auto d = uu - exact(x[0], x[1], epsilon);
+                auto d = uu;// - exact(x[0], x[1], epsilon);
                 error += (d.val * d.val + d.dx * d.dx + d.dy * d.dy) * w * J;
             }
         }

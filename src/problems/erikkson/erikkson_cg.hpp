@@ -56,7 +56,7 @@ private:
 
     int save_every = 1;
 
-    double minh = 1e-7;
+    double minh = 1e-3;//1e-7;
     double minh2 = minh * minh;
 
     // double tau = 0.1;
@@ -189,19 +189,19 @@ private:
             }
         }
 
-        // Mass matrix - lower right
-        for (auto ix = 1; ix < Ux.dofs() - 1; ++ ix) {
-            for (auto iy = 1; iy < Uy.dofs() - 1; ++ iy) {
-                int i = &u(ix, iy) - &u(0, 0) + 1;
-                for (auto jx = max(1, ix - Ux.B.degree); jx < min(Ux.dofs() - 1, ix + Ux.B.degree + 1); ++ jx) {
-                    for (auto jy = max(1, iy - Uy.B.degree); jy < min(Uy.dofs() - 1, iy + Uy.B.degree + 1); ++ jy) {
-                        int j = &u(jx, jy) - &u(0, 0) + 1;
-                        double val = gamma * MUx(ix, jx) * MUy(iy, jy);
-                        problem.add(N + i, N + j, val);
-                    }
-                }
-            }
-        }
+        // // Mass matrix - lower right
+        // for (auto ix = 1; ix < Ux.dofs() - 1; ++ ix) {
+        //     for (auto iy = 1; iy < Uy.dofs() - 1; ++ iy) {
+        //         int i = &u(ix, iy) - &u(0, 0) + 1;
+        //         for (auto jx = max(1, ix - Ux.B.degree); jx < min(Ux.dofs() - 1, ix + Ux.B.degree + 1); ++ jx) {
+        //             for (auto jy = max(1, iy - Uy.B.degree); jy < min(Uy.dofs() - 1, iy + Uy.B.degree + 1); ++ jy) {
+        //                 int j = &u(jx, jy) - &u(0, 0) + 1;
+        //                 double val = gamma * MUx(ix, jx) * MUy(iy, jy);
+        //                 problem.add(N + i, N + j, val);
+        //             }
+        //         }
+        //     }
+        // }
 
         // Dirichlet BC - lower right
         for (auto jx = 0; jx < Ux.dofs(); ++ jx) {
@@ -364,18 +364,19 @@ private:
         Ux.factorize_matrix();
         Uy.factorize_matrix();
 
-        auto init = [this](double x, double y) { return init_state(x, y); };
-        compute_projection(u, Ux.basis, Uy.basis, init);
-        ads_solve(u, u_buffer, Ux.data(), Uy.data());
+        // auto init = [this](double x, double y) { return init_state(x, y); };
+        // compute_projection(u, Ux.basis, Uy.basis, init);
+        // ads_solve(u, u_buffer, Ux.data(), Uy.data());
 
         zero(r.data);
-        // zero(u);
+        zero(u);
+        apply_bc(u);
         // u(5, 5) = 1;
 
         output.to_file(u, "out_0.data");
     }
 
-    void apply_bc(vector_view& r_rhs, vector_view& u_rhs) {
+    void apply_bc(vector_type& u_rhs) {
         lin::band_matrix MUy_loc{ Uy.p, Uy.p, Uy.dofs() };
         gram_matrix_1d(MUy_loc, Uy.basis);
         lin::solver_ctx ctx_y{ MUy_loc };
@@ -388,15 +389,24 @@ private:
         lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
 
         for (auto j = 0; j < Uy.dofs(); ++ j) {
-            u_rhs(0, j) = 0;//buf_x0(j);
+            u_rhs(0, j) = buf_x0(j);
             u_rhs(Ux.dofs() - 1, j) = 0;
         }
         for (auto j = 1; j < Ux.dofs(); ++ j) {
             u_rhs(j, 0) = 0;
             u_rhs(j, Uy.dofs() - 1) = 0;
         }
+    }
 
-
+    void zero_bc(vector_view& r_rhs, vector_view& u_rhs) {
+        for (auto j = 0; j < Uy.dofs(); ++ j) {
+            u_rhs(0, j) = 0;
+            u_rhs(Ux.dofs() - 1, j) = 0;
+        }
+        for (auto j = 1; j < Ux.dofs(); ++ j) {
+            u_rhs(j, 0) = 0;
+            u_rhs(j, Uy.dofs() - 1) = 0;
+        }
 
         for (auto j = 0; j < Vy.dofs(); ++ j) {
             r_rhs(0, j) = 0;
@@ -408,27 +418,13 @@ private:
         }
     }
 
-    void copy_solution(const vector_view& u_rhs, const vector_view& r_rhs, const dimension& Vx, const dimension& Vy) {
-        for (auto i = 0; i < Ux.dofs(); ++ i) {
-            for (auto j = 0; j < Uy.dofs(); ++ j) {
-                u(i, j) = u_rhs(i, j);
-            }
-        }
-        r = residuum{ {{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy };
-        for (auto i = 0; i < Vx.dofs(); ++ i) {
-            for (auto j = 0; j < Vy.dofs(); ++ j) {
-                r.data(i, j) = r_rhs(i, j);
-            }
-        }
-    }
-
     void add_solution(const vector_view& u_rhs, const vector_view& r_rhs, const dimension& Vx, const dimension& Vy) {
         for (auto i = 0; i < Ux.dofs(); ++ i) {
             for (auto j = 0; j < Uy.dofs(); ++ j) {
                 u(i, j) += u_rhs(i, j);
             }
         }
-        r = residuum{ {{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy };
+        // r = residuum{ {{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy };
         for (auto i = 0; i < Vx.dofs(); ++ i) {
             for (auto j = 0; j < Vy.dofs(); ++ j) {
                 r.data(i, j) += r_rhs(i, j);
@@ -446,14 +442,14 @@ private:
 
         std::fill(begin(full_rhs), end(full_rhs), 0);
         compute_rhs(Vx, Vy, r_rhs, u_rhs);
-        apply_bc(r_rhs, u_rhs);
+        zero_bc(r_rhs, u_rhs);
 
         int size = Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs();
         mumps::problem problem(full_rhs.data(), size);
         assemble_problem(problem, Vx, Vy, matrices(x_refined, y_refined));
         solver.solve(problem);
 
-        copy_solution(u_rhs, r_rhs, Vx, Vy);
+        add_solution(u_rhs, r_rhs, Vx, Vy);
     }
 
     void step(int iter, double /*t*/) override {
@@ -587,7 +583,7 @@ private:
                 for (auto a : dofs_on_element(e, Vx, Vy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
-                    double lv = v.val;
+                    double lv = 0;//* v.val;
                     double val = -lv;
                     // Bu
                     val += c_diff[0] * uu.dx * v.dx + beta[0] * uu.dx * v.val;
@@ -644,7 +640,7 @@ private:
                 auto x = point(e, q);
                 value_type uu = eval(u, e, q, Ux, Uy);
 
-                auto d = uu;// - exact(x[0], x[1], epsilon);
+                auto d = uu - exact(x[0], x[1], epsilon);
                 error += d.val * d.val * w * J;
             }
         }
@@ -660,7 +656,7 @@ private:
                 auto x = point(e, q);
                 value_type uu = eval(u, e, q, Ux, Uy);
 
-                auto d = uu;// - exact(x[0], x[1], epsilon);
+                auto d = uu - exact(x[0], x[1], epsilon);
                 error += (d.val * d.val + d.dx * d.dx + d.dy * d.dy) * w * J;
             }
         }
