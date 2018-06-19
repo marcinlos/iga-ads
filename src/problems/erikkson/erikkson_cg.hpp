@@ -56,7 +56,7 @@ private:
 
     int save_every = 1;
 
-    double minh = 1e-3;//1e-7;
+    double minh = 1 / 15.;//1e-7;
     double minh2 = minh * minh;
 
     // double tau = 0.1;

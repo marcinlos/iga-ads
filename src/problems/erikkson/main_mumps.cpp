@@ -1,6 +1,6 @@
 #include "problems/erikkson/erikkson_mumps.hpp"
 #include "problems/erikkson/erikkson_cg.hpp"
-// #include "problems/erikkson/erikkson_mumps_split.hpp"
+#include "problems/erikkson/erikkson_mumps_split.hpp"
 
 
 using namespace ads;
@@ -95,8 +95,8 @@ int main(int argc, char* argv[]) {
         std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
     }
 
-    // erikkson_mumps_split sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
-    erikkson_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
+    erikkson_mumps_split sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
+    // erikkson_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
     // erikkson_mumps sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
 
     sim.run();
