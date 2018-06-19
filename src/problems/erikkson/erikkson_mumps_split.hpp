@@ -56,13 +56,16 @@ private:
     int save_every = 1;
 
     // double tau = 0.1;
-    double tau = 1;
-    double rho = 0;
+    // double tau = 1;
+    // double rho = 0;
     double alpha = 1;
-    double gamma = 1;
+    // double gamma = 1;
+    double hh = 1;//(1. / 30 / 30);
+
+    double bbeta = 0;
 
 
-    double pecelet = 1e2;
+    double pecelet = 1e6;
     double epsilon = 1 / pecelet;
 
     point_type c_diff{{ epsilon, epsilon }};
@@ -121,11 +124,13 @@ private:
     };
 
     void assemble_problem(mumps::problem& problem, bool with_x, bool with_y, const dimension& Vx, const dimension& Vy,
-                          const matrix_set& M) {
+                          const matrix_set& M, int k) {
         using std::min;
         using std::max;
         auto N = Vx.dofs() * Vy.dofs();
         vector_type v{{ Vx.dofs(), Vy.dofs() }};
+
+        auto gamma = 1 - std::pow(bbeta, k);
 
         // Gram matrix - upper left
         for (auto ix = 1; ix < Vx.dofs() - 1; ++ ix) {
@@ -135,8 +140,8 @@ private:
                     for (auto jy = max(1, iy - Vy.B.degree); jy < min(Vy.dofs() - 1, iy + Vy.B.degree + 1); ++ jy) {
                         int j = &v(jx, jy) - &v(0, 0) + 1;
                         double val = alpha * M.MVx(ix, jx) * M.MVy(iy, jy);
-                        if (with_x) val += M.KVx(ix, jx) * M.MVy(iy, jy);
-                        if (with_y) val += M.MVx(ix, jx) * M.KVy(iy, jy);
+                        if (with_x) val += hh * M.KVx(ix, jx) * M.MVy(iy, jy);
+                        if (with_y) val += hh * M.MVx(ix, jx) * M.KVy(iy, jy);
                         problem.add(i, j, val);
                     }
                 }
@@ -368,7 +373,7 @@ private:
         ads_solve(u, u_buffer, Ux.data(), Uy.data());
 
         zero(r.data);
-        // zero(u);
+        zero(u);
         // u(5, 5) = 1;
 
         output.to_file(u, "out_0.data");
@@ -421,7 +426,7 @@ private:
         }
     }
 
-    void substep(bool x_on_rhs, bool y_on_rhs, bool x_refined, bool y_refined) {
+    void substep(bool x_on_rhs, bool y_on_rhs, bool x_refined, bool y_refined, int k) {
         dimension& Vx = x_refined ? this->Vx : Ux;
         dimension& Vy = y_refined ? this->Vy : Uy;
 
@@ -430,12 +435,12 @@ private:
 
 
         std::fill(begin(full_rhs), end(full_rhs), 0);
-        compute_rhs(x_on_rhs, y_on_rhs, Vx, Vy, r_rhs, u_rhs);
+        compute_rhs(x_on_rhs, y_on_rhs, Vx, Vy, r_rhs, u_rhs, k);
         apply_bc(r_rhs, u_rhs);
 
         int size = Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs();
         mumps::problem problem(full_rhs.data(), size);
-        assemble_problem(problem, !x_on_rhs, !y_on_rhs, Vx, Vy, matrices(x_refined, y_refined));
+        assemble_problem(problem, !x_on_rhs, !y_on_rhs, Vx, Vy, matrices(x_refined, y_refined), k + 1);
         solver.solve(problem);
 
         copy_solution(u_rhs, r_rhs, Vx, Vy);
@@ -447,7 +452,7 @@ private:
         bool x_rhs = xrhs[iter % sizeof(xrhs)];
         bool y_rhs = !x_rhs;
         std::cout << iter << ": x " << (x_rhs ? "rhs" : "lhs") << ", y " << (y_rhs ? "rhs" : "lhs") << std::endl;
-        substep(x_rhs, y_rhs, true, true);
+        substep(x_rhs, y_rhs, true, true, iter);
         // substep(x_rhs, y_rhs, !x_rhs, !y_rhs);
 
         // substep(false, false, true, true);
@@ -557,7 +562,9 @@ private:
 
 
     void compute_rhs(bool with_x, bool with_y, const dimension& Vx, const dimension& Vy,
-                     vector_view& r_rhs, vector_view& u_rhs) {
+                     vector_view& r_rhs, vector_view& u_rhs, int k) {
+        auto gamma = 1 - std::pow(bbeta, k);
+
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
             auto R = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
             auto U = vector_type{{ Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element() }};
@@ -573,15 +580,15 @@ private:
                 for (auto a : dofs_on_element(e, Vx, Vy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
-                    double lv = 0;
+                    double lv = 1 * v.val;
                     double val = -lv;
                     if (with_x) {
                         val += c_diff[0] * uu.dx * v.dx + beta[0] * uu.dx * v.val;
                         val += c_diff[1] * uu.dy * v.dy + beta[1] * uu.dy * v.val;
                     }
                     val += alpha * rr.val * v.val;
-                    if (with_x) val -= rr.dx * v.dx;
-                    if (with_y) val -= rr.dy * v.dy;
+                    if (with_x) val -= hh * rr.dx * v.dx;
+                    if (with_y) val -= hh * rr.dy * v.dy;
 
                     R(aa[0], aa[1]) += val * WJ;
                 }
