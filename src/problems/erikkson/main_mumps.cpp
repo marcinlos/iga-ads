@@ -1,7 +1,8 @@
-#include "problems/erikkson/erikkson_mumps.hpp"
-#include "problems/erikkson/erikkson_cg.hpp"
-#include "problems/erikkson/pollution_cg.hpp"
-#include "problems/erikkson/erikkson_mumps_split.hpp"
+// #include "problems/erikkson/erikkson_mumps.hpp"
+// #include "problems/erikkson/erikkson_cg.hpp"
+#include "problems/erikkson/erikkson_quanling.hpp"
+// #include "problems/erikkson/pollution_cg.hpp"
+// #include "problems/erikkson/erikkson_mumps_split.hpp"
 
 
 using namespace ads;
@@ -57,7 +58,9 @@ int main(int argc, char* argv[]) {
     int C_test = std::atoi(argv[7]);
     int nsteps = std::atoi(argv[8]);
 
-    double S = 5000.0;
+    // double S = 5000.0;
+    double S = 1.0;
+
     int quad = std::max(p_trial, p_test) + 1;
     dim_config trial{ p_trial, n, 0.0, S, quad, p_trial - 1 - C_trial };
     dim_config test { p_test,  n, 0.0, S, quad, p_test  - 1 - C_test };
@@ -99,7 +102,8 @@ int main(int argc, char* argv[]) {
 
     // erikkson_mumps_split sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
     // erikkson_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
-    pollution_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
+    // pollution_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
+    erikkson_quanling sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
     // erikkson_mumps sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
 
     sim.run();
