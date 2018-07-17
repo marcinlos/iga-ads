@@ -346,7 +346,7 @@ private:
 
 
         for (auto j = 0; j < Uy.dofs(); ++ j) {
-            view_out(0, j) = 0;//buf_x0(j);
+            view_out(0, j) = buf_x0(j);
             view_out(Ux.dofs() - 1, j) = 0;
         }
         for (auto j = 1; j < Ux.dofs(); ++ j) {
@@ -356,7 +356,7 @@ private:
 
         mumps::problem problem(full_rhs.data(), full_rhs.size());
         assemble_problem(problem, steps.dt);
-        solver.solve(problem);
+        solver.solve(problem, "igrm");
 
         for (auto i = 0; i < Ux.dofs(); ++ i) {
             for (auto j = 0; j < Uy.dofs(); ++ j) {
@@ -488,7 +488,7 @@ private:
                 for (auto a : dofs_on_element(e, Vx, Vy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
-                    double val = 1 * v.val;
+                    double val = 0*1 * v.val;
                     // double val = init_state(x[0], x[1]) * v.val;
                     U(aa[0], aa[1]) += val * w * J;
                 }
@@ -527,7 +527,7 @@ private:
                 auto x = point(e, q);
                 value_type uu = eval(u, e, q, Ux, Uy);
 
-                auto d = uu;// - exact(x[0], x[1], epsilon);
+                auto d = uu - exact(x[0], x[1], epsilon);
                 error += d.val * d.val * w * J;
             }
         }
@@ -543,7 +543,7 @@ private:
                 auto x = point(e, q);
                 value_type uu = eval(u, e, q, Ux, Uy);
 
-                auto d = uu;// - exact(x[0], x[1], epsilon);
+                auto d = uu - exact(x[0], x[1], epsilon);
                 error += (d.val * d.val + d.dx * d.dx + d.dy * d.dy) * w * J;
             }
         }

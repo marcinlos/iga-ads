@@ -1,6 +1,6 @@
-// #include "problems/erikkson/erikkson_mumps.hpp"
-// #include "problems/erikkson/erikkson_cg.hpp"
-#include "problems/erikkson/erikkson_quanling.hpp"
+#include "problems/erikkson/erikkson_mumps.hpp"
+#include "problems/erikkson/erikkson_cg.hpp"
+// #include "problems/erikkson/erikkson_quanling.hpp"
 // #include "problems/erikkson/pollution_cg.hpp"
 // #include "problems/erikkson/erikkson_mumps_split.hpp"
 
@@ -101,9 +101,9 @@ int main(int argc, char* argv[]) {
     }
 
     // erikkson_mumps_split sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
-    // erikkson_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
+    erikkson_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
     // pollution_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
-    erikkson_quanling sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
+    // erikkson_quanling sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
     // erikkson_mumps sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
 
     sim.run();
