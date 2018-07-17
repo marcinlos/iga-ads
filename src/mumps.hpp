@@ -3,6 +3,7 @@
 
 #include <dmumps_c.h>
 #include <vector>
+#include <cstring>
 
 
 namespace mumps {
@@ -87,7 +88,7 @@ public:
         icntl(4) = 3;
     }
 
-    void solve(problem& problem) {
+    void solve(problem& problem, const char* output_path = nullptr) {
         id.n = problem.dofs();
         id.nz = problem.nonzero_entries();
 
@@ -98,6 +99,10 @@ public:
         id.rhs = problem.rhs();
         id.nrhs = 1;
         id.lrhs = id.n;
+
+        if (output_path) {
+            strcpy(id.write_problem, output_path);
+        }
 
         analyze_();
         factorize_();
