@@ -432,7 +432,7 @@ private:
         }
     }
 
-    void substep(bool x_refined, bool y_refined) {
+    double substep(bool x_refined, bool y_refined) {
         dimension& Vx = x_refined ? this->Vx : Ux;
         dimension& Vy = y_refined ? this->Vy : Uy;
 
@@ -447,9 +447,18 @@ private:
         int size = Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs();
         mumps::problem problem(full_rhs.data(), size);
         assemble_problem(problem, Vx, Vy, matrices(x_refined, y_refined));
-        solver.solve(problem);
+        solver.solve(problem, "cg");
 
         add_solution(u_rhs, r_rhs, Vx, Vy);
+
+        double norm = 0;
+        for (int i = 0; i < Ux.dofs(); ++ i) {
+            for (int j = 0; j < Uy.dofs(); ++ j) {
+                norm += u_rhs(i, j) * u_rhs(i, j);
+            }
+        }
+        norm /= (Ux.dofs() * Uy.dofs());
+        return std::sqrt(norm);
     }
 
     void step(int iter, double /*t*/) override {
@@ -461,7 +470,15 @@ private:
         // substep(x_rhs, y_rhs, true, true);
         // substep(x_rhs, y_rhs, !x_rhs, !y_rhs);
 
-        substep(true, true);
+        std::cout << "Step " << (iter + 1) << std::endl;
+        for (int i = 0; ; ++ i) {
+            auto norm = substep(true, true);
+            std::cout << "  substep " << (i + 1) << ": |eta| = " << norm << std::endl;
+            // if (norm < 1e-7) {
+                break;
+            // }
+        }
+        // substep(true, true);
     }
 
     void after_step(int iter, double /*t*/) override {
