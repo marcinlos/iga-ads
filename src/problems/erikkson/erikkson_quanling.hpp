@@ -59,11 +59,8 @@ private:
     double minh = 1 / 15.;//1e-7;
     double minh2 = minh * minh;
 
-    // double tau = 0.1;
-    double tau = 1;
-    double rho = 0;
-    double alpha = 1;
-    double gamma = 1;
+    double rho = 0.9;
+    double gamma = 10;
 
 
     double pecelet = 1e6;
@@ -137,10 +134,10 @@ private:
                 for (auto jx = max(1, ix - Vx.B.degree); jx < min(Vx.dofs() - 1, ix + Vx.B.degree + 1); ++ jx) {
                     for (auto jy = max(1, iy - Vy.B.degree); jy < min(Vy.dofs() - 1, iy + Vy.B.degree + 1); ++ jy) {
                         int j = &v(jx, jy) - &v(0, 0) + 1;
-                        double val = alpha * M.MVx(ix, jx) * M.MVy(iy, jy);
+                        double val = M.MVx(ix, jx) * M.MVy(iy, jy);
                         val += minh2 * M.KVx(ix, jx) * M.MVy(iy, jy);
                         val += minh2 * M.MVx(ix, jx) * M.KVy(iy, jy);
-                        val += minh2 * minh2 * M.KVx(ix, jx) * M.KVy(iy, jy);
+                        // val += minh2 * minh2 * M.KVx(ix, jx) * M.KVy(iy, jy);
 
                         problem.add(i, j, val);
                     }
@@ -164,44 +161,49 @@ private:
         }
 
         // B, B^T
-        for (auto ix = 0; ix < Vx.dofs(); ++ ix) {
-            for (auto jx = 0; jx < Ux.dofs(); ++ jx) {
-                for (auto iy = 0; iy < Vy.dofs(); ++ iy) {
-                    for (auto jy = 0; jy < Uy.dofs(); ++ jy) {
-                        int i = &v(ix, iy) - &v(0, 0) + 1;
-                        int j = &u(jx, jy) - &u(0, 0) + 1;
-                        double val = 0;
-                        val += c_diff[0] * M.KUVx(ix, jx) * M.MUVy(iy, jy) + beta[0] * M.AUVx(ix, jx) * M.MUVy(iy, jy);
-                        val += c_diff[1] * M.MUVx(ix, jx) * M.KUVy(iy, jy) + beta[1] * M.MUVx(ix, jx) * M.AUVy(iy, jy);
-                        if (val != 0) {
-                            if (ix != 0 && ix != Vx.dofs() - 1 && iy != 0 && iy != Vy.dofs() - 1
-                                && jx != 0 && jx != Ux.dofs() - 1 && jy != 0 && jy != Uy.dofs() - 1
-                                ) {
-                                problem.add(i, N + j, -val);
-                            }
-                            if (jx != 0 && jx != Ux.dofs() - 1 && jy != 0 && jy != Uy.dofs() - 1 &&
-                                ix != 0 && ix != Vx.dofs() - 1 && iy != 0 && iy != Vy.dofs() - 1) {
-                                problem.add(N + j, i, val);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // // Mass matrix - lower right
-        // for (auto ix = 1; ix < Ux.dofs() - 1; ++ ix) {
-        //     for (auto iy = 1; iy < Uy.dofs() - 1; ++ iy) {
-        //         int i = &u(ix, iy) - &u(0, 0) + 1;
-        //         for (auto jx = max(1, ix - Ux.B.degree); jx < min(Ux.dofs() - 1, ix + Ux.B.degree + 1); ++ jx) {
-        //             for (auto jy = max(1, iy - Uy.B.degree); jy < min(Uy.dofs() - 1, iy + Uy.B.degree + 1); ++ jy) {
+        // for (auto ix = 0; ix < Vx.dofs(); ++ ix) {
+        //     for (auto jx = 0; jx < Ux.dofs(); ++ jx) {
+        //         for (auto iy = 0; iy < Vy.dofs(); ++ iy) {
+        //             for (auto jy = 0; jy < Uy.dofs(); ++ jy) {
+        //                 int i = &v(ix, iy) - &v(0, 0) + 1;
         //                 int j = &u(jx, jy) - &u(0, 0) + 1;
-        //                 double val = gamma * MUx(ix, jx) * MUy(iy, jy);
-        //                 problem.add(N + i, N + j, val);
+        //                 double val = 0;
+        //                 val += c_diff[0] * M.KUVx(ix, jx) * M.MUVy(iy, jy) + beta[0] * M.AUVx(ix, jx) * M.MUVy(iy, jy);
+        //                 val += c_diff[1] * M.MUVx(ix, jx) * M.KUVy(iy, jy) + beta[1] * M.MUVx(ix, jx) * M.AUVy(iy, jy);
+        //                 if (val != 0) {
+        //                     if (ix != 0 && ix != Vx.dofs() - 1 && iy != 0 && iy != Vy.dofs() - 1
+        //                         && jx != 0 && jx != Ux.dofs() - 1 && jy != 0 && jy != Uy.dofs() - 1
+        //                         ) {
+        //                         problem.add(i, N + j, val);
+        //                     }
+        //                     if (jx != 0 && jx != Ux.dofs() - 1 && jy != 0 && jy != Uy.dofs() - 1 &&
+        //                         ix != 0 && ix != Vx.dofs() - 1 && iy != 0 && iy != Vy.dofs() - 1) {
+        //                         problem.add(N + j, i, val);
+        //                     }
+        //                 }
         //             }
         //         }
         //     }
         // }
+
+        // G - lower right
+        double alpha = 1;
+        double c = gamma * std::pow(rho, alpha);
+
+        for (auto ix = 1; ix < Ux.dofs() - 1; ++ ix) {
+            for (auto iy = 1; iy < Uy.dofs() - 1; ++ iy) {
+                int i = &u(ix, iy) - &u(0, 0) + 1;
+                for (auto jx = max(1, ix - Ux.B.degree); jx < min(Ux.dofs() - 1, ix + Ux.B.degree + 1); ++ jx) {
+                    for (auto jy = max(1, iy - Uy.B.degree); jy < min(Uy.dofs() - 1, iy + Uy.B.degree + 1); ++ jy) {
+                        int j = &u(jx, jy) - &u(0, 0) + 1;
+                        double M = MUx(ix, jx) * MUy(iy, jy);
+                        double K = MUx(ix, jx) * KUy(iy, jy) + KUx(ix, jx) * MUy(iy, jy);
+                        double val = c * (M + minh2 * K);
+                        problem.add(N + i, N + j, val);
+                    }
+                }
+            }
+        }
 
         // Dirichlet BC - lower right
         for (auto jx = 0; jx < Ux.dofs(); ++ jx) {
@@ -350,15 +352,6 @@ private:
         advection_matrix(AUUy, Uy.basis, Uy.basis);
     }
 
-    double init_state(double x, double y) {
-        double dx = x - 0.5;
-        double dy = y - 0.5;
-        double r2 = std::min( (dx * dx + dy * dy), 1.0);
-        return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
-        // return 1;
-        // return 0;
-    };
-
     void before() override {
         prepare_matrices();
         Ux.factorize_matrix();
@@ -369,7 +362,7 @@ private:
         apply_bc(u);
         // u(5, 5) = 1;
 
-        output.to_file(u, "out_0.data");
+        // output.to_file(u, "out_0.data");
     }
 
     void apply_bc(vector_type& u_rhs) {
@@ -576,6 +569,8 @@ private:
 
 
     void compute_rhs(const dimension& Vx, const dimension& Vy, vector_view& r_rhs, vector_view& u_rhs) {
+        double c = gamma * std::pow(rho, 1);
+
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
             auto R = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
             auto U = vector_type{{ Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element() }};
@@ -592,7 +587,7 @@ private:
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
                     double lv = 0;//* v.val;
-                    double val = -lv;
+                    double val = lv;
                     // Bu
                     val += c_diff[0] * uu.dx * v.dx + beta[0] * uu.dx * v.val;
                     val += c_diff[1] * uu.dy * v.dy + beta[1] * uu.dy * v.val;
