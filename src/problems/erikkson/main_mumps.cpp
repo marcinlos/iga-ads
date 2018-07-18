@@ -1,5 +1,6 @@
-#include "problems/erikkson/erikkson_mumps.hpp"
-#include "problems/erikkson/erikkson_cg.hpp"
+// #include "problems/erikkson/erikkson_mumps.hpp"
+#include "problems/erikkson/erikkson_supg.hpp"
+// #include "problems/erikkson/erikkson_cg.hpp"
 // #include "problems/erikkson/erikkson_quanling.hpp"
 // #include "problems/erikkson/pollution_cg.hpp"
 // #include "problems/erikkson/erikkson_mumps_split.hpp"
@@ -69,7 +70,7 @@ int main(int argc, char* argv[]) {
 
 
     timesteps_config steps{ nsteps, 1e1 };
-    int ders = 1;
+    int ders = 2;
     // int subdivision = 2;
     // int adapt = 0;
 
@@ -101,10 +102,11 @@ int main(int argc, char* argv[]) {
     }
 
     // erikkson_mumps_split sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
-    erikkson_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
+    // erikkson_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
     // pollution_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
     // erikkson_quanling sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
     // erikkson_mumps sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
+    erikkson_supg sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
 
     sim.run();
 }
