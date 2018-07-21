@@ -63,6 +63,12 @@ protected:
         return util::product_range<index_type>(x.element_indices(), y.element_indices());
     }
 
+    index_range dofs() const {
+        auto rx = boost::counting_range(0, x.basis.basis.dofs());
+        auto ry = boost::counting_range(0, y.basis.basis.dofs());
+        return util::product_range<index_type>(rx, ry);
+    }
+
     index_range quad_points() const {
         auto rx = boost::counting_range(0, x.basis.quad_order);
         auto ry = boost::counting_range(0, y.basis.quad_order);
@@ -72,6 +78,12 @@ protected:
     index_range dofs_on_element(index_type e) const {
         auto rx = x.basis.dof_range(e[0]);
         auto ry = y.basis.dof_range(e[1]);
+        return util::product_range<index_type>(rx, ry);
+    }
+
+    index_range elements_supporting_dof(index_type dof) const {
+        auto rx = x.basis.element_range(dof[0]);
+        auto ry = y.basis.element_range(dof[1]);
         return util::product_range<index_type>(rx, ry);
     }
 

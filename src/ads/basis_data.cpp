@@ -7,6 +7,7 @@ namespace ads {
 
     basis_data::basis_data(const bspline::basis& basis, int derivatives, int quad_order, int elem_division)
     : first_dofs(bspline::first_nonzero_dofs(basis))
+    , element_ranges(bspline::elements_supporting_dofs(basis))
     , degree(basis.degree)
     , elements(basis.elements() * elem_division)
     , quad_order(quad_order)
