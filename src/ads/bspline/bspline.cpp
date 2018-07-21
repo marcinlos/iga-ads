@@ -171,5 +171,28 @@ std::vector<int> first_nonzero_dofs(const basis& b) {
     return dofs;
 }
 
+std::vector<std::pair<int, int>> elements_supporting_dofs(const basis& b) {
+    std::vector<std::pair<int, int>> ranges(b.dofs());
+    int p = b.degree;
+    int e = 0;
+
+    for (int i = 0; i < b.dofs(); ++ i) {
+        auto ee = e - 1;
+        for (int j = 0; j < p + 1; ++ j) {
+            if (b.knot[i + j] != b.knot[i + j + 1]) {
+                ++ ee;
+            }
+        }
+        ranges[i].first = e;
+        ranges[i].second = ee;
+        if (b.knot[i] != b.knot[i + 1]) {
+            ++ e;
+        }
+    }
+
+    return ranges;
+
+}
+
 }
 }

@@ -2,6 +2,7 @@
 #define ADS_BASIS_DATA_HPP_
 
 #include <vector>
+#include <utility>
 #include <boost/range/counting_range.hpp>
 
 #include "ads/bspline/bspline.hpp"
@@ -9,11 +10,15 @@
 namespace ads {
 
 typedef int element_id;
+typedef int dof_id;
+
 
 struct basis_data {
-    using dof_range_type = decltype(boost::counting_range(0, 0));
+    using range_type = decltype(boost::counting_range(0, 0));
 
     std::vector<int> first_dofs;
+    std::vector<std::pair<int, int>> element_ranges;
+
     int degree;
     int elements;
     int quad_order;
@@ -42,9 +47,14 @@ struct basis_data {
         return degree + 1;
     }
 
-    dof_range_type dof_range(element_id e) const {
+    range_type dof_range(element_id e) const {
         return boost::counting_range(first_dof(e), last_dof(e) + 1);
     }
+
+    range_type element_range(dof_id dof) const {
+        return boost::counting_range(element_ranges[dof].first, element_ranges[dof].second + 1);
+    }
+
 
 };
 

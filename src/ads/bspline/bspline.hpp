@@ -186,6 +186,9 @@ double eval(double x, const double* u, const basis& b, eval_ctx& ctx);
 
 std::vector<int> first_nonzero_dofs(const basis& b);
 
+std::vector<std::pair<int, int>> elements_supporting_dofs(const basis& b);
+
+
 }
 }
 
