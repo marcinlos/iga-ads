@@ -49,15 +49,17 @@ private:
         const dimension* Vy;
     };
 
-    vector_type u;
+    vector_type u, u_prev;
     residuum r;
     vector_type u_buffer;
     std::vector<double> full_rhs;
 
     int save_every = 1;
 
-    double minh = 1 / 15.;//1e-7;
-    double minh2 = minh * minh;
+    // double minh = 1 / 15.;//1e-7;
+    // double minh2 = minh * minh;
+    double minh;
+    double minh2;
 
     // double tau = 0.1;
     double tau = 1;
@@ -66,12 +68,14 @@ private:
     double gamma = 1;
 
 
-    double pecelet = 1e6;
-    double epsilon = 1 / pecelet;
+    double peclet = 1e1;
+    double epsilon = 1 / peclet;
 
     point_type c_diff{{ epsilon, epsilon }};
 
     double angle = 0;
+    // double angle = M_PI / 6;
+
     double len = 1;
 
     point_type beta{{ len * cos(angle), len * sin(angle) }};
@@ -108,13 +112,22 @@ public:
     , AUUx{ Ux.dofs(), Ux.dofs() }
     , AUUy{ Uy.dofs(), Uy.dofs() }
     , u{{ Ux.dofs(), Uy.dofs() }}
+    , u_prev{{ Ux.dofs(), Uy.dofs() }}
     , r{ {{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy}
     , u_buffer{{ Ux.dofs(), Uy.dofs() }}
     , full_rhs(Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs())
+    , minh{ element_size(Ux, Uy) }
+    , minh2{ minh * minh }
     , output{ Ux.B, Uy.B, 500 }
     { }
 
 private:
+
+    double element_size(const dimension& Ux, const dimension& Uy) const {
+        double hx = 2 * *std::max_element(Ux.basis.J, Ux.basis.J + Ux.elements);
+        double hy = 2 * *std::max_element(Uy.basis.J, Uy.basis.J + Uy.elements);
+        return std::sqrt(hx * hy);
+    }
 
     struct matrix_set {
         using band_matrix_ref = lin::band_matrix&;
@@ -140,7 +153,7 @@ private:
                         double val = alpha * M.MVx(ix, jx) * M.MVy(iy, jy);
                         val += minh2 * M.KVx(ix, jx) * M.MVy(iy, jy);
                         val += minh2 * M.MVx(ix, jx) * M.KVy(iy, jy);
-                        val += minh2 * minh2 * M.KVx(ix, jx) * M.KVy(iy, jy);
+                        // val += minh2 * minh2 * M.KVx(ix, jx) * M.KVy(iy, jy);
 
                         problem.add(i, j, val);
                     }
@@ -171,8 +184,9 @@ private:
                         int i = &v(ix, iy) - &v(0, 0) + 1;
                         int j = &u(jx, jy) - &u(0, 0) + 1;
                         double val = 0;
-                        val += c_diff[0] * M.KUVx(ix, jx) * M.MUVy(iy, jy) + beta[0] * M.AUVx(ix, jx) * M.MUVy(iy, jy);
-                        val += c_diff[1] * M.MUVx(ix, jx) * M.KUVy(iy, jy) + beta[1] * M.MUVx(ix, jx) * M.AUVy(iy, jy);
+                        val += M.MUVx(ix, jx) * M.MUVy(iy, jy);
+                        val += steps.dt * (c_diff[0] * M.KUVx(ix, jx) * M.MUVy(iy, jy) + beta[0] * M.AUVx(ix, jx) * M.MUVy(iy, jy));
+                        val += steps.dt * (c_diff[1] * M.MUVx(ix, jx) * M.KUVy(iy, jy) + beta[1] * M.MUVx(ix, jx) * M.AUVy(iy, jy));
                         if (val != 0) {
                             if (ix != 0 && ix != Vx.dofs() - 1 && iy != 0 && iy != Vy.dofs() - 1
                                 && jx != 0 && jx != Ux.dofs() - 1 && jy != 0 && jy != Uy.dofs() - 1
@@ -377,24 +391,62 @@ private:
     }
 
     void apply_bc(vector_type& u_rhs) {
+        // lin::band_matrix MUy_loc{ Uy.p, Uy.p, Uy.dofs() };
+        // gram_matrix_1d(MUy_loc, Uy.basis);
+        // lin::solver_ctx ctx_y{ MUy_loc };
+        // lin::factorize(MUy_loc, ctx_y);
+
+        // lin::vector buf_x0{{ Uy.dofs() }};
+        // compute_projection(buf_x0, Uy.basis, [&](double t) {
+        //     return std::sin(M_PI * t);
+        // });
+        // lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
+
+        lin::band_matrix MUx_loc{ Ux.p, Ux.p, Ux.dofs() };
+        gram_matrix_1d(MUx_loc, Ux.basis);
+        lin::solver_ctx ctx_x{ MUx_loc };
+        lin::factorize(MUx_loc, ctx_x);
+
         lin::band_matrix MUy_loc{ Uy.p, Uy.p, Uy.dofs() };
         gram_matrix_1d(MUy_loc, Uy.basis);
         lin::solver_ctx ctx_y{ MUy_loc };
         lin::factorize(MUy_loc, ctx_y);
 
+
+        lin::vector buf_y0{{ Ux.dofs() }};
+        compute_projection(buf_y0, Ux.basis, [&](double /*t*/) {
+            return 0;
+            // return 1;
+        });
+        lin::solve_with_factorized(MUx_loc, buf_y0, ctx_x);
+
+        lin::vector buf_y1{{ Ux.dofs() }};
+        compute_projection(buf_y1, Ux.basis, [&](double /*t*/) {
+            return 0;
+        });
+        lin::solve_with_factorized(MUx_loc, buf_y1, ctx_x);
+
         lin::vector buf_x0{{ Uy.dofs() }};
         compute_projection(buf_x0, Uy.basis, [&](double t) {
-            return std::sin(M_PI * t);
+            // return std::sin(M_PI * t);
+            // return t < 0.5 ? 1 : 0;
+            return 0;
         });
         lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
 
+        lin::vector buf_x1{{ Uy.dofs() }};
+        compute_projection(buf_x1, Uy.basis, [&](double /*t*/) {
+            return 0;
+        });
+        lin::solve_with_factorized(MUy_loc, buf_x1, ctx_y);
+
         for (auto j = 0; j < Uy.dofs(); ++ j) {
             u_rhs(0, j) = buf_x0(j);
-            u_rhs(Ux.dofs() - 1, j) = 0;
+            u_rhs(Ux.dofs() - 1, j) = buf_x1(j);
         }
         for (auto j = 1; j < Ux.dofs(); ++ j) {
-            u_rhs(j, 0) = 0;
-            u_rhs(j, Uy.dofs() - 1) = 0;
+            u_rhs(j, 0) = buf_y0(j);
+            u_rhs(j, Uy.dofs() - 1) = buf_y1(j);
         }
     }
 
@@ -432,7 +484,7 @@ private:
         }
     }
 
-    double substep(bool x_refined, bool y_refined) {
+    double substep(bool x_refined, bool y_refined, double t) {
         dimension& Vx = x_refined ? this->Vx : Ux;
         dimension& Vy = y_refined ? this->Vy : Uy;
 
@@ -441,13 +493,13 @@ private:
 
 
         std::fill(begin(full_rhs), end(full_rhs), 0);
-        compute_rhs(Vx, Vy, r_rhs, u_rhs);
+        compute_rhs_nonstationary(Vx, Vy, r_rhs, u_rhs, t);
         zero_bc(r_rhs, u_rhs);
 
         int size = Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs();
         mumps::problem problem(full_rhs.data(), size);
         assemble_problem(problem, Vx, Vy, matrices(x_refined, y_refined));
-        solver.solve(problem, "cg");
+        solver.solve(problem);
 
         add_solution(u_rhs, r_rhs, Vx, Vy);
 
@@ -461,7 +513,7 @@ private:
         return std::sqrt(norm);
     }
 
-    void step(int iter, double /*t*/) override {
+    void step(int iter, double t) override {
         // bool xrhs[] = { false, true };
 
         // bool x_rhs = xrhs[iter % sizeof(xrhs)];
@@ -470,27 +522,32 @@ private:
         // substep(x_rhs, y_rhs, true, true);
         // substep(x_rhs, y_rhs, !x_rhs, !y_rhs);
 
+        using std::swap;
+        swap(u, u_prev);
+        zero(u);
+
         std::cout << "Step " << (iter + 1) << std::endl;
-        for (int i = 0; ; ++ i) {
-            auto norm = substep(true, true);
-            std::cout << "  substep " << (i + 1) << ": |eta| = " << norm << std::endl;
-            // if (norm < 1e-7) {
+        constexpr auto max_iters = 50;
+        for (int i = 1; ; ++ i) {
+            auto norm = substep(true, true, t);
+            std::cout << "  substep " << i << ": |eta| = " << norm << std::endl;
+            if (norm < 1e-7 || i >= max_iters) {
                 break;
-            // }
+            }
         }
-        // substep(true, true);
     }
 
-    void after_step(int iter, double /*t*/) override {
+    void after_step(int iter, double t) override {
         if ((iter + 1) % save_every == 0) {
-            std::cout << "Step " << (iter + 1) << " : " << errorL2() << " " << errorH1() << std::endl;
+            std::cout << "Step " << (iter + 1) << " : " << errorL2(t) << " " << errorH1(t) << std::endl;
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
     }
 
     void after() override {
         plot_middle("final.data");
-        std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
+        double T = steps.dt * steps.step_count;
+        std::cout << "{ 'L2': '" << errorL2(T) << "', 'H1': '" << errorH1(T) << "'}" << std::endl;
 
         std::ofstream sol("solution.data");
         for (int i = 0; i < Ux.dofs(); ++ i) {
@@ -600,8 +657,15 @@ private:
                 for (auto a : dofs_on_element(e, Vx, Vy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
-                    double lv = 0;//* v.val;
+
+                    // 1) Stationary
+                    // double lv = 0;//* v.val;
+
+                    // 2) Non-Stationary
+                    double lv = 0;
+
                     double val = -lv;
+
                     // Bu
                     val += c_diff[0] * uu.dx * v.dx + beta[0] * uu.dx * v.val;
                     val += c_diff[1] * uu.dy * v.dy + beta[1] * uu.dy * v.val;
@@ -629,6 +693,76 @@ private:
         });
     }
 
+    void compute_rhs_nonstationary(const dimension& Vx, const dimension& Vy, vector_view& r_rhs, vector_view& u_rhs,
+                                   double t) {
+        executor.for_each(elements(Vx, Vy), [&](index_type e) {
+            auto R = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
+            auto U = vector_type{{ Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element() }};
+
+            double J = jacobian(e);
+            for (auto q : quad_points(Vx, Vy)) {
+                double W = weigth(q);
+                double WJ = W * J;
+
+                auto x = point(e, q);
+
+                value_type uu = eval(u, e, q, Ux, Uy);
+                value_type uu_prev = eval(u_prev, e, q, Ux, Uy);
+                value_type rr = eval(r.data, e, q, *r.Vx, *r.Vy);
+
+                for (auto a : dofs_on_element(e, Vx, Vy)) {
+                    auto aa = dof_global_to_local(e, a, Vx, Vy);
+                    value_type v = eval_basis(e, q, a, Vx, Vy);
+
+                    double F = forcing(x[0], x[1], t + steps.dt);
+                    double lv = (uu_prev.val + steps.dt * F) * v.val;
+
+                    double val = -lv;
+
+                    // Bu
+                    val += uu.val * v.val;
+                    val += steps.dt * (c_diff[0] * uu.dx * v.dx + beta[0] * uu.dx * v.val);
+                    val += steps.dt * (c_diff[1] * uu.dy * v.dy + beta[1] * uu.dy * v.val);
+                    // -Aw
+                    val -= (rr.val * v.val + minh2 * (rr.dx * v.dx + rr.dy * v.dy));
+
+                    R(aa[0], aa[1]) += val * WJ;
+                }
+                for (auto a : dofs_on_element(e, Ux, Uy)) {
+                    auto aa = dof_global_to_local(e, a, Ux, Uy);
+                    value_type w = eval_basis(e, q, a, Ux, Uy);
+                    double val = 0;
+
+                    // -B'w
+                    val -= w.val * rr.val;
+                    val -= steps.dt * (c_diff[0] * w.dx * rr.dx + beta[0] * w.dx * rr.val);
+                    val -= steps.dt * (c_diff[1] * w.dy * rr.dy + beta[1] * w.dy * rr.val);
+
+                    U(aa[0], aa[1]) += val * WJ;
+                }
+            }
+            executor.synchronized([&]() {
+                update_global_rhs(r_rhs, R, e, Vx, Vy);
+                update_global_rhs(u_rhs, U, e, Ux, Uy);
+            });
+        });
+    }
+
+    double forcing(double x, double y, double t) {
+        constexpr double pi = M_PI;
+        auto s = [](double a) { return std::sin(pi * a); };
+        auto c = [](double a) { return std::cos(pi * a); };
+        return pi*s(x)*s(y)*c(t) + 2*pi*pi*epsilon*s(x)*s(y)*s(t) + pi*c(x)*s(y)*s(t);
+    }
+
+    value_type exact_nonstationary(double x, double y, double t) const {
+        constexpr double pi = M_PI;
+        auto s = [](double a) { return std::sin(pi * a); };
+        auto c = [](double a) { return std::cos(pi * a); };
+
+        return value_type{ s(t)*s(x)*s(y), pi*s(t)*c(x)*s(y), pi*s(t)*s(x)*c(y) };
+    }
+
     value_type exact(double x, double y, double eps) const {
         using std::exp;
         auto lambda = M_PI * eps;
@@ -647,7 +781,7 @@ private:
         };
     }
 
-    double errorL2() const {
+    double errorL2(double t) const {
         double error = 0;
 
         for (auto e : elements(Ux, Ux)) {
@@ -657,14 +791,15 @@ private:
                 auto x = point(e, q);
                 value_type uu = eval(u, e, q, Ux, Uy);
 
-                auto d = uu - exact(x[0], x[1], epsilon);
+                // auto d = uu - exact(x[0], x[1], epsilon);
+                auto d = uu - exact_nonstationary(x[0], x[1], t);
                 error += d.val * d.val * w * J;
             }
         }
         return std::sqrt(error);
     }
 
-    double errorH1() const {
+    double errorH1(double t) const {
         double error = 0;
         for (auto e : elements(Ux, Ux)) {
             double J = jacobian(e);
@@ -673,7 +808,8 @@ private:
                 auto x = point(e, q);
                 value_type uu = eval(u, e, q, Ux, Uy);
 
-                auto d = uu - exact(x[0], x[1], epsilon);
+                // auto d = uu - exact(x[0], x[1], epsilon);
+                auto d = uu - exact_nonstationary(x[0], x[1], t);
                 error += (d.val * d.val + d.dx * d.dx + d.dy * d.dy) * w * J;
             }
         }

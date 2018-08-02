@@ -50,13 +50,13 @@ private:
     double peclet = 1e6;
     double epsilon = 1 / peclet;
 
-    double h = 1 / 50.0;
-    double C1 = 1, C2 = 1;
-    double tau = 1 / (C1 * epsilon / (h * h) + C2 / h);
+    double C1 = 4, C2 = 2;
 
     point_type c_diff{{ epsilon, epsilon }};
 
-    double angle = 0;
+    // double angle = 0;
+    double angle = M_PI / 6;
+
     double len = 1;
 
     point_type beta{{ len * cos(angle), len * sin(angle) }};
@@ -100,7 +100,6 @@ private:
         using std::max;
         auto N = Vx.dofs() * Vy.dofs();
         vector_type v{{ Vx.dofs(), Vy.dofs() }};
-        std::cout << "Tau = " << tau << std::endl;
 
 
         // Identity matrix in the upper left
@@ -111,10 +110,12 @@ private:
             }
         }
 
-        for (auto ix = 0; ix < Ux.dofs(); ++ ix) {
-            for (auto iy = 0; iy < Uy.dofs(); ++ iy) {
+        for (auto ix = 1; ix < Ux.dofs() - 1; ++ ix) {
+            for (auto iy = 1; iy < Uy.dofs() - 1; ++ iy) {
                 for (auto jx = max(0, ix - Ux.B.degree); jx < min(Ux.dofs(), ix + Ux.B.degree + 1); ++ jx) {
                     for (auto jy = max(0, iy - Uy.B.degree); jy < min(Uy.dofs(), iy + Uy.B.degree + 1); ++ jy) {
+                        index_type a{ix, iy}, b{jx, jy};
+
                         int i = &u(ix, iy) - &u(0, 0) + 1;
                         int j = &u(jx, jy) - &u(0, 0) + 1;
 
@@ -122,18 +123,49 @@ private:
                             + (c_diff[0] * KUVx(ix, jx) * MUVy(iy, jy) + c_diff[1] * MUVx(ix, jx) * KUVy(iy, jy))
                             + (beta[0] * AUVx(ix, jx) * MUVy(iy, jy) + beta[1] * MUVx(ix, jx) * AUVy(iy, jy));
 
-                        double weight =
-                            - epsilon * beta[0] * (Rx(ix, jx) * MUVy(iy, jy) + AUVx(jx, ix) * Ty(iy, jy))
-                            - epsilon * beta[1] * (Tx(ix, jx) * AUVy(jy, iy) + MUVx(ix, jx) * Ry(iy, jy))
+                        // double weight =
+                        //     - epsilon * beta[0] * (Rx(ix, jx) * MUVy(iy, jy) + AUVx(jx, ix) * Ty(iy, jy))
+                        //     - epsilon * beta[1] * (Tx(ix, jx) * AUVy(jy, iy) + MUVx(ix, jx) * Ry(iy, jy))
 
-                            + beta[0] * beta[0] * KUVx(ix ,jx) * MUVy(iy, jy)
-                            + beta[1] * beta[1] * MUVx(ix, jx) * KUVy(iy, jy)
+                        //     + beta[0] * beta[0] * KUVx(ix ,jx) * MUVy(iy, jy)
+                        //     + beta[1] * beta[1] * MUVx(ix, jx) * KUVy(iy, jy)
 
-                            + beta[1] * beta[0] * AUVx(jx, ix) * AUVy(iy, jy)
-                            + beta[1] * beta[0] * AUVx(ix, jx) * AUVy(jy, iy)
-                            ;
+                        //     + beta[1] * beta[0] * AUVx(jx, ix) * AUVy(iy, jy)
+                        //     + beta[1] * beta[0] * AUVx(ix, jx) * AUVy(jy, iy)
+                        //     ;
+                        // double supg0 = tau * weight;
 
-                        double val = bwu + tau * weight;
+                        double supg = 0;
+                        for (auto e : elements_supporting_dof(a, Ux, Uy)) {
+                            auto xrange = Ux.basis.element_ranges[b[0]];
+                            auto yrange = Uy.basis.element_ranges[b[1]];
+
+                            if (e[0] < xrange.first || e[0] > xrange.second || e[1] < yrange.first || e[1] > yrange.second) {
+                                continue;
+                            }
+                            double J = jacobian(e);
+                            for (auto q : quad_points(Ux, Uy)) {
+                                double w = weigth(q);
+                                value_type ww = eval_basis(e, q, a, Ux, Uy);
+                                value_type uu = eval_basis(e, q, b, Ux, Uy);
+
+                                double hx = 2 * Ux.basis.J[e[0]];
+                                double hy = 2 * Uy.basis.J[e[1]];
+                                // double h = hx;
+                                double h = std::sqrt(hx * hy);
+
+                                double tau = 1 / (C1 * epsilon / (h * h) + C2 / h);
+
+                                double bDw = beta[0] * ww.dx + beta[1] * ww.dy;
+
+                                double lap = laplacian(e, q, b, Ux, Uy);
+                                double res = - epsilon * lap + beta[0] * uu.dx + beta[1] * uu.dy;
+                                double v = bDw * res;
+                                supg += tau * v * w * J;
+                            }
+                        }
+
+                        double val = bwu + supg;
 
                         if (val != 0) {
                             if (ix != 0 && ix != Vx.dofs() - 1 && iy != 0 && iy != Vy.dofs() - 1) {
@@ -330,29 +362,91 @@ private:
         // zero(u);
         // u(Ux.dofs() / 2, Uy.dofs() / 2) = 1;
 
+        // lin::band_matrix MUy_loc{ Uy.p, Uy.p, Uy.dofs() };
+        // gram_matrix_1d(MUy_loc, Uy.basis);
+        // lin::solver_ctx ctx_y{ MUy_loc };
+        // lin::factorize(MUy_loc, ctx_y);
+
+        // lin::vector buf_x0{{ Uy.dofs() }};
+        // compute_projection(buf_x0, Uy.basis, [&](double t) {
+        //     return std::sin(M_PI * t);
+        // });
+        // lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
+
+
+        // for (auto j = 0; j < Uy.dofs(); ++ j) {
+        //     u(0, j) = buf_x0(j);
+        //     u(Ux.dofs() - 1, j) = 0;
+        // }
+        // for (auto j = 1; j < Ux.dofs(); ++ j) {
+        //     u(j, 0) = 0;
+        //     u(j, Uy.dofs() - 1) = 0;
+        // }
+
+        apply_bc(u);
+        output.to_file(u, "out_0.data");
+    }
+
+    template <typename RHS>
+    void apply_bc(RHS& u_rhs) {
+        // lin::band_matrix MUy_loc{ Uy.p, Uy.p, Uy.dofs() };
+        // gram_matrix_1d(MUy_loc, Uy.basis);
+        // lin::solver_ctx ctx_y{ MUy_loc };
+        // lin::factorize(MUy_loc, ctx_y);
+
+        // lin::vector buf_x0{{ Uy.dofs() }};
+        // compute_projection(buf_x0, Uy.basis, [&](double t) {
+        //     return std::sin(M_PI * t);
+        // });
+        // lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
+
+        lin::band_matrix MUx_loc{ Ux.p, Ux.p, Ux.dofs() };
+        gram_matrix_1d(MUx_loc, Ux.basis);
+        lin::solver_ctx ctx_x{ MUx_loc };
+        lin::factorize(MUx_loc, ctx_x);
+
         lin::band_matrix MUy_loc{ Uy.p, Uy.p, Uy.dofs() };
         gram_matrix_1d(MUy_loc, Uy.basis);
         lin::solver_ctx ctx_y{ MUy_loc };
         lin::factorize(MUy_loc, ctx_y);
 
+
+        lin::vector buf_y0{{ Ux.dofs() }};
+        compute_projection(buf_y0, Ux.basis, [&](double /*t*/) {
+            // return 0;
+            return 1;
+        });
+        lin::solve_with_factorized(MUx_loc, buf_y0, ctx_x);
+
+        lin::vector buf_y1{{ Ux.dofs() }};
+        compute_projection(buf_y1, Ux.basis, [&](double /*t*/) {
+            return 0;
+        });
+        lin::solve_with_factorized(MUx_loc, buf_y1, ctx_x);
+
         lin::vector buf_x0{{ Uy.dofs() }};
         compute_projection(buf_x0, Uy.basis, [&](double t) {
-            return std::sin(M_PI * t);
+            // return std::sin(M_PI * t);
+            return t < 0.5 ? 1 : 0;
         });
         lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
 
+        lin::vector buf_x1{{ Uy.dofs() }};
+        compute_projection(buf_x1, Uy.basis, [&](double /*t*/) {
+            return 0;
+        });
+        lin::solve_with_factorized(MUy_loc, buf_x1, ctx_y);
 
         for (auto j = 0; j < Uy.dofs(); ++ j) {
-            u(0, j) = buf_x0(j);
-            u(Ux.dofs() - 1, j) = 0;
+            u_rhs(0, j) = buf_x0(j);
+            u_rhs(Ux.dofs() - 1, j) = buf_x1(j);
         }
         for (auto j = 1; j < Ux.dofs(); ++ j) {
-            u(j, 0) = 0;
-            u(j, Uy.dofs() - 1) = 0;
+            u_rhs(j, 0) = buf_y0(j);
+            u_rhs(j, Uy.dofs() - 1) = buf_y1(j);
         }
-
-        output.to_file(u, "out_0.data");
     }
+
 
     void step(int /*iter*/, double /*t*/) override {
         compute_rhs();
@@ -369,26 +463,27 @@ private:
             }
         }
 
-        lin::band_matrix MUy_loc{ Uy.p, Uy.p, Uy.dofs() };
-        gram_matrix_1d(MUy_loc, Uy.basis);
-        lin::solver_ctx ctx_y{ MUy_loc };
-        lin::factorize(MUy_loc, ctx_y);
+        // lin::band_matrix MUy_loc{ Uy.p, Uy.p, Uy.dofs() };
+        // gram_matrix_1d(MUy_loc, Uy.basis);
+        // lin::solver_ctx ctx_y{ MUy_loc };
+        // lin::factorize(MUy_loc, ctx_y);
 
-        lin::vector buf_x0{{ Uy.dofs() }};
-        compute_projection(buf_x0, Uy.basis, [&](double t) {
-            return std::sin(M_PI * t);
-        });
-        lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
+        // lin::vector buf_x0{{ Uy.dofs() }};
+        // compute_projection(buf_x0, Uy.basis, [&](double t) {
+        //     return std::sin(M_PI * t);
+        // });
+        // lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
 
 
-        for (auto j = 0; j < Uy.dofs(); ++ j) {
-            view_out(0, j) = buf_x0(j);
-            view_out(Ux.dofs() - 1, j) = 0;
-        }
-        for (auto j = 1; j < Ux.dofs(); ++ j) {
-            view_out(j, 0) = 0;
-            view_out(j, Uy.dofs() - 1) = 0;
-        }
+        // for (auto j = 0; j < Uy.dofs(); ++ j) {
+        //     view_out(0, j) = buf_x0(j);
+        //     view_out(Ux.dofs() - 1, j) = 0;
+        // }
+        // for (auto j = 1; j < Ux.dofs(); ++ j) {
+        //     view_out(j, 0) = 0;
+        //     view_out(j, Uy.dofs() - 1) = 0;
+        // }
+        apply_bc(view_out);
 
         mumps::problem problem(full_rhs.data(), full_rhs.size());
         assemble_problem(problem, steps.dt);
@@ -469,6 +564,20 @@ private:
         return { v, dxv, dyv };
     }
 
+    double laplacian(index_type e, index_type q, index_type a, const dimension& x, const dimension& y) const {
+        auto loc = dof_global_to_local(e, a, x, y);
+
+        const auto& bx = x.basis;
+        const auto& by = y.basis;
+
+        double B1  = bx.b[e[0]][q[0]][0][loc[0]];
+        double B2  = by.b[e[1]][q[1]][0][loc[1]];
+        double ddB1 = bx.b[e[0]][q[0]][2][loc[0]];
+        double ddB2 = by.b[e[1]][q[1]][2][loc[1]];
+
+        return B1 * ddB2 + ddB1 * B2;
+    }
+
     value_type eval(const vector_type& v, index_type e, index_type q, const dimension& x, const dimension& y) const {
         value_type u{};
         for (auto b : dofs_on_element(e, x, y)) {
@@ -481,6 +590,12 @@ private:
 
     index_range elements(const dimension& x, const dimension& y) const {
         return util::product_range<index_type>(x.element_indices(), y.element_indices());
+    }
+
+    index_range elements_supporting_dof(index_type dof, const dimension& x, const dimension& y) const {
+        auto rx = x.basis.element_range(dof[0]);
+        auto ry = y.basis.element_range(dof[1]);
+        return util::product_range<index_type>(rx, ry);
     }
 
     index_range quad_points(const dimension& x, const dimension& y) const {

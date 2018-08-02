@@ -1,6 +1,6 @@
-// #include "problems/erikkson/erikkson_mumps.hpp"
-#include "problems/erikkson/erikkson_supg.hpp"
-// #include "problems/erikkson/erikkson_cg.hpp"
+#include "problems/erikkson/erikkson_mumps.hpp"
+// #include "problems/erikkson/erikkson_supg.hpp"
+#include "problems/erikkson/erikkson_cg.hpp"
 // #include "problems/erikkson/erikkson_quanling.hpp"
 // #include "problems/erikkson/pollution_cg.hpp"
 // #include "problems/erikkson/erikkson_mumps_split.hpp"
@@ -27,7 +27,9 @@ bspline::basis create_basis(double a, double b, int p, int elements, int repeate
     // auto d = 0.0000046;
     // auto d = 0.0368;
 
-    auto d = shishkin_const(elements, 1e-6);
+    // auto d = shishkin_const(elements, 1e-6);
+    auto d = 0.01;
+
     std::cout << "Shishkin: " << d << std::endl;
     auto y0 = 1 - d;
 
@@ -69,7 +71,7 @@ int main(int argc, char* argv[]) {
     std::cout << "adaptations: " << std::boolalpha << adapt << std::endl;
 
 
-    timesteps_config steps{ nsteps, 1e1 };
+    timesteps_config steps{ nsteps, 1e-2 };
     int ders = 2;
     // int subdivision = 2;
     // int adapt = 0;
@@ -79,7 +81,9 @@ int main(int argc, char* argv[]) {
 
     auto dtrial_x = dimension{ trial_basis_x, quad, ders, subdivision };
 
-    auto trial_basis_y = bspline::create_basis(0, S, p_trial, n, p_trial - 1 - C_trial);
+    // auto trial_basis_y = bspline::create_basis(0, S, p_trial, n, p_trial - 1 - C_trial);
+    auto trial_basis_y = create_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt);
+
     auto dtrial_y = dimension{ trial_basis_y, quad, ders, subdivision };
 
     auto test_basis_x = create_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test, adapt);
@@ -87,7 +91,9 @@ int main(int argc, char* argv[]) {
 
     auto dtest_x = dimension{ test_basis_x, quad, ders, 1 };
 
-    auto test_basis_y = bspline::create_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test);
+    // auto test_basis_y = bspline::create_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test);
+    auto test_basis_y = create_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test, adapt);
+
     auto dtest_y = dimension{ test_basis_y, quad, ders, 1 };
 
     auto trial_dim = dtrial_x.B.dofs();
@@ -102,11 +108,11 @@ int main(int argc, char* argv[]) {
     }
 
     // erikkson_mumps_split sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
-    // erikkson_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
+    erikkson_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
     // pollution_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
     // erikkson_quanling sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
     // erikkson_mumps sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
-    erikkson_supg sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
+    // erikkson_supg sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
 
     sim.run();
 }
