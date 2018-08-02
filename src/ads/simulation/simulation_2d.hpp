@@ -13,22 +13,23 @@
 #include "ads/solver.hpp"
 #include "ads/projection.hpp"
 #include "ads/simulation/simulation_base.hpp"
+#include "ads/simulation/basic_simulation_2d.hpp"
 
 
 namespace ads {
 
 
-class simulation_2d : public simulation_base {
+class simulation_2d : public basic_simulation_2d, public simulation_base {
 protected:
-    using vector_type = lin::tensor<double, 2>;
-    using value_type = function_value_2d;
-
-    using index_type = std::array<int, 2>;
-    using index_1d_iter_type = boost::counting_iterator<int>;
-    using index_iter_type = util::iter_product2<index_1d_iter_type, index_type>;
-    using index_range = boost::iterator_range<index_iter_type>;
-
-    using point_type = std::array<double, 2>;
+    using basic_simulation_2d::eval;
+    using basic_simulation_2d::eval_basis;
+    using basic_simulation_2d::elements;
+    using basic_simulation_2d::quad_points;
+    using basic_simulation_2d::dofs_on_element;
+    using basic_simulation_2d::elements_supporting_dof;
+    using basic_simulation_2d::dof_global_to_local;
+    using basic_simulation_2d::update_global_rhs;
+    using basic_simulation_2d::dofs;
 
     dimension x, y;
     vector_type buffer;

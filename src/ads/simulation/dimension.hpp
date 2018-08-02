@@ -6,7 +6,7 @@
 #include "ads/lin/band_matrix.hpp"
 #include "ads/lin/band_solve.hpp"
 #include "ads/solver.hpp"
-#include "ads/mass_matrix.hpp"
+#include "ads/form_matrix.hpp"
 #include "ads/bspline/bspline.hpp"
 #include "ads/basis_data.hpp"
 #include "ads/util.hpp"
