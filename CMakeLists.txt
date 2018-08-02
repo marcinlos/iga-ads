@@ -15,7 +15,7 @@ include_directories("${PROJECT_SOURCE_DIR}/src")
 
 set(SRC src/ads)
 set(ads_SRC
-  ${SRC}/mass_matrix.cpp
+  ${SRC}/form_matrix.cpp
   ${SRC}/bspline/bspline.cpp
   ${SRC}/quad/gauss_data.cpp
   ${SRC}/basis_data.cpp
