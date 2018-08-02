@@ -64,8 +64,8 @@ protected:
     }
 
     index_range dofs() const {
-        auto rx = boost::counting_range(0, x.basis.basis.dofs());
-        auto ry = boost::counting_range(0, y.basis.basis.dofs());
+        auto rx = boost::counting_range(0, x.basis.dofs);
+        auto ry = boost::counting_range(0, y.basis.dofs);
         return util::product_range<index_type>(rx, ry);
     }
 

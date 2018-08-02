@@ -10,6 +10,7 @@ namespace ads {
     , element_ranges(bspline::elements_supporting_dofs(basis))
     , degree(basis.degree)
     , elements(basis.elements() * elem_division)
+    , dofs(basis.dofs())
     , quad_order(quad_order)
     , elem_division(elem_division)
     , points(elements + 1)
