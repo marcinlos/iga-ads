@@ -4,6 +4,7 @@
 #include <dmumps_c.h>
 #include <vector>
 #include <cstring>
+#include <iostream>
 
 
 namespace mumps {
@@ -79,13 +80,21 @@ public:
         //ordering metis (5), or pord (4), or AMD (0), AMF (2), QAMD (6)
         icntl(7) = 5;
 
-        icntl(14) = 1000;
+        icntl(14) = 200;
 
         //streams
         icntl(1) = 3;
         icntl(2) = 3;
         icntl(3) = 3;
         icntl(4) = 3;
+    }
+
+    void print_state(const char* text) const {
+        if (id.info[0] != 0) {
+            std::cout << text << ":" << std::endl;
+            std::cout << "  INFO(1) = " << id.info[0] << std::endl;
+            std::cout << "  INFO(2) = " << id.info[1] << std::endl;
+        }
     }
 
     void solve(problem& problem, const char* output_path = nullptr) {
@@ -118,16 +127,19 @@ private:
     void factorize_() {
         id.job = 2;
         dmumps_c(&id);
+        print_state("After factorize_()");
     }
 
     void analyze_() {
         id.job = 1;
         dmumps_c(&id);
+        print_state("After analyze_()");
     }
 
     void solve_() {
         id.job = 3;
         dmumps_c(&id);
+        print_state("After solve_()");
     }
 };
 
