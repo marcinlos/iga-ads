@@ -42,6 +42,10 @@ private:
 
     int save_every = 1;
 
+    double minh;
+    double minh2;
+
+
     double peclet = 1e6;
     double epsilon = 1 / peclet;
 
@@ -77,10 +81,19 @@ public:
     , rhs{{ Vx.dofs(), Vy.dofs() }}
     , u_buffer{{ Ux.dofs(), Uy.dofs() }}
     , full_rhs(Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs())
+    , minh{ element_size(Ux, Uy) }
+    , minh2{ minh * minh }
     , output{ Ux.B, Uy.B, 500 }
     { }
 
+
 private:
+
+    double element_size(const dimension& Ux, const dimension& Uy) const {
+        double hx = 2 * *std::max_element(Ux.basis.J, Ux.basis.J + Ux.elements);
+        double hy = 2 * *std::max_element(Uy.basis.J, Uy.basis.J + Uy.elements);
+        return std::sqrt(hx * hy);
+    }
 
     void assemble_problem(mumps::problem& problem, double dt) {
         using std::min;
@@ -106,12 +119,13 @@ private:
                 for (auto jx = max(1, ix - Vx.B.degree); jx < min(Vx.dofs() - 1, ix + Vx.B.degree + 1); ++ jx) {
                     for (auto jy = max(1, iy - Vy.B.degree); jy < min(Vy.dofs() - 1, iy + Vy.B.degree + 1); ++ jy) {
                         int j = &v(jx, jy) - &v(0, 0) + 1;
-                        double val = MVx(ix, jx) * MVy(iy, jy)  + KVx(ix, jx) * MVy(iy, jy) + MVx(ix, jx) * KVy(iy, jy);
-                        // std::cout << val << " ";
+                        double val = MVx(ix, jx) * MVy(iy, jy);
+                        val += minh2 * KVx(ix, jx) * MVy(iy, jy);
+                        val += minh2 * MVx(ix, jx) * KVy(iy, jy);
+
                         problem.add(i, j, val);
                     }
                 }
-                // std::cout << std::endl;
             }
         }
 
@@ -245,9 +259,9 @@ private:
                     for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++ b) {
                         int ia = a + bV.first_dof(e);
                         int ib = b + bU.first_dof(e);
-                        auto da = bV.b[e][q][1][a];
-                        auto vb = bU.b[e][q][0][b];
-                        auto val = da * vb;
+                        auto va = bV.b[e][q][1][a];
+                        auto db = bU.b[e][q][0][b];
+                        auto val = va * db;
                         M(ia, ib) += val * bV.w[q] * bV.J[e];
                     }
                 }
@@ -319,8 +333,8 @@ private:
     }
 
     void step(int /*iter*/, double /*t*/) override {
-        compute_rhs();
-        // zero(rhs);
+        // compute_rhs();
+        zero(rhs);
 
         std::fill(begin(full_rhs), end(full_rhs), 0);
         vector_view view_in{ full_rhs.data(), {Vx.dofs(), Vy.dofs()}};
