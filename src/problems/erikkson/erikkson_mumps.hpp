@@ -1,7 +1,7 @@
 #ifndef PROBLEMS_ERIKKSON_ERIKKSON_MUMPS_HPP_
 #define PROBLEMS_ERIKKSON_ERIKKSON_MUMPS_HPP_
 
-#include "ads/simulation.hpp"
+#include "problems/erikkson/erikkson_base.hpp"
 #include "ads/simulation/utils.hpp"
 #include "ads/output_manager.hpp"
 #include "ads/executor/galois.hpp"
@@ -15,10 +15,9 @@
 
 namespace ads {
 
-class erikkson_mumps : public simulation_2d {
+class erikkson_mumps : public erikkson_base {
 private:
-    using Base = simulation_2d;
-    using vector_view = lin::tensor_view<double, 2>;
+    using Base = erikkson_base;
 
     galois_executor executor{8};
 
@@ -89,11 +88,6 @@ private:
 
     double element_diam(const dimension& Ux, const dimension& Uy) const {
         return std::sqrt(max_element_size(Ux) * max_element_size(Uy));
-    }
-
-    template <typename MT1, typename MT2>
-    double kron(const MT1& A, const MT2& B, index_type i, index_type j) {
-        return A(i[0], j[0]) * B(i[1], j[1]);
     }
 
     void assemble_problem(mumps::problem& problem, double dt) {
@@ -167,44 +161,18 @@ private:
         double dy = y - 0.5;
         double r2 = std::min( (dx * dx + dy * dy), 1.0);
         return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
-        // return 0;
-    };
+    }
 
     void before() override {
         prepare_matrices();
         Ux.factorize_matrix();
         Uy.factorize_matrix();
 
-
         // auto init = [this](double x, double y) { return init_state(x, y); };
-
         // compute_projection(u, Ux.basis, Uy.basis, init);
         // ads_solve(u, u_buffer, Ux.data(), Uy.data());
 
-        // zero(u);
-        // u(Ux.dofs() / 2, Uy.dofs() / 2) = 1;
-
-        lin::band_matrix MUy_loc{ Uy.p, Uy.p, Uy.dofs() };
-        gram_matrix_1d(MUy_loc, Uy.basis);
-        lin::solver_ctx ctx_y{ MUy_loc };
-        lin::factorize(MUy_loc, ctx_y);
-
-        lin::vector buf_x0{{ Uy.dofs() }};
-        compute_projection(buf_x0, Uy.basis, [&](double t) {
-            return std::sin(M_PI * t);
-        });
-        lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
-
-
-        for (auto j = 0; j < Uy.dofs(); ++ j) {
-            u(0, j) = buf_x0(j);
-            u(Ux.dofs() - 1, j) = 0;
-        }
-        for (auto j = 1; j < Ux.dofs(); ++ j) {
-            u(j, 0) = 0;
-            u(j, Uy.dofs() - 1) = 0;
-        }
-
+        stationary_bc(u, Ux, Uy);
         output.to_file(u, "out_0.data");
     }
 
@@ -216,49 +184,19 @@ private:
         vector_view view_in{ full_rhs.data(), {Vx.dofs(), Vy.dofs()}};
         vector_view view_out{ full_rhs.data() + view_in.size(), {Ux.dofs(), Uy.dofs()}};
 
-
-        for (auto i = 0; i < Vx.dofs(); ++ i) {
-            for (auto j = 0; j < Vy.dofs(); ++ j) {
-                view_in(i, j) = - rhs(i, j);
-            }
+        for (auto i : dofs(Vx, Vy)) {
+            view_in(i[0], i[1]) = -rhs(i[0], i[1]);
         }
+        stationary_bc(view_out, Ux, Uy);
 
-        lin::band_matrix MUy_loc{ Uy.p, Uy.p, Uy.dofs() };
-        gram_matrix_1d(MUy_loc, Uy.basis);
-        lin::solver_ctx ctx_y{ MUy_loc };
-        lin::factorize(MUy_loc, ctx_y);
-
-        lin::vector buf_x0{{ Uy.dofs() }};
-        compute_projection(buf_x0, Uy.basis, [&](double t) {
-            return std::sin(M_PI * t);
-        });
-        lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
-
-
-        for (auto j = 0; j < Uy.dofs(); ++ j) {
-            view_out(0, j) = buf_x0(j);
-            view_out(Ux.dofs() - 1, j) = 0;
-        }
-        for (auto j = 1; j < Ux.dofs(); ++ j) {
-            view_out(j, 0) = 0;
-            view_out(j, Uy.dofs() - 1) = 0;
-        }
 
         mumps::problem problem(full_rhs.data(), full_rhs.size());
         assemble_problem(problem, steps.dt);
         solver.solve(problem);
 
-        for (auto i = 0; i < Ux.dofs(); ++ i) {
-            for (auto j = 0; j < Uy.dofs(); ++ j) {
-                u(i, j) = view_out(i, j);
-            }
+        for (auto i : dofs(Ux, Uy)) {
+            u(i[0], i[1]) = view_out(i[0], i[1]);
         }
-        // for (auto i = 0; i < Vx.dofs(); ++ i) {
-        //     for (auto j = 0; j < Vy.dofs(); ++ j) {
-        //         std::cout << "res(" << i << ", " << j << ") = " << view_in(i, j) << std::endl;
-        //     }
-        // }
-
     }
 
     void after_step(int iter, double /*t*/) override {
@@ -269,36 +207,9 @@ private:
     }
 
     void after() override {
-        plot_middle("final.data");
+        plot_middle("final.data", u, Ux, Uy);
         std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
-
-        std::ofstream sol("solution.data");
-        for (int i = 0; i < Ux.dofs(); ++ i) {
-            for (int j = 0; j < Uy.dofs(); ++ j) {
-                sol << i << " " << j << " " << u(i, j) << std::endl;
-            }
-        }
-    }
-
-    void plot_middle(const char* filename) {
-        std::ofstream out{filename};
-        bspline::eval_ctx ctx_x{ Ux.B.degree }, ctx_y{ Uy.B.degree };
-
-        auto print = [&](double xx) {
-            auto val = bspline::eval(xx, 0.5, u, Ux.B, Uy.B, ctx_x, ctx_y);
-            out << std::setprecision(16) << xx << " " << val << std::endl;
-        };
-
-        print(0);
-        auto N = Ux.basis.quad_order;
-        for (auto e : Ux.element_indices()) {
-            std::vector<double> qs(Ux.basis.x[e], Ux.basis.x[e] + N);
-            std::sort(begin(qs), end(qs));
-            for (auto xx : qs) {
-                print(xx);
-            }
-        }
-        print(1);
+        print_solution("solution.data", u, Ux, Uy);
     }
 
     void compute_rhs() {
@@ -326,56 +237,14 @@ private:
         });
     }
 
-    value_type exact(double x, double y, double eps) const {
-        using std::exp;
-        auto lambda = M_PI * eps;
-        auto del = std::sqrt(1 + 4 * lambda * lambda);
-        auto r1 = (1 + del) / (2 * eps);
-        auto r2 = (1 - del) / (2 * eps);
-
-        auto norm = exp(-r1) - exp(-r2);
-        auto alpha = (exp(r1 * (x - 1)) - exp(r2 * (x - 1))) / norm;
-        double val = alpha * std::sin(M_PI * y);
-
-        return {
-            val,
-            (r1 * exp(r1 * (x - 1)) - r2 * exp(r2 * (x - 1))) / norm * std::sin(M_PI * y),
-            alpha * M_PI * std::cos(M_PI * y)
-        };
-    }
-
     double errorL2() const {
-        double error = 0;
-
-        for (auto e : elements(Ux, Ux)) {
-            double J = jacobian(e);
-            for (auto q : quad_points(Ux, Ux)) {
-                double w = weigth(q);
-                auto x = point(e, q);
-                value_type uu = eval(u, e, q, Ux, Uy);
-
-                auto d = uu - exact(x[0], x[1], epsilon);
-                error += d.val * d.val * w * J;
-            }
-        }
-        return std::sqrt(error);
+        return Base::errorL2(u, Ux, Uy, exact(epsilon));
     }
 
     double errorH1() const {
-        double error = 0;
-        for (auto e : elements(Ux, Ux)) {
-            double J = jacobian(e);
-            for (auto q : quad_points(Ux, Ux)) {
-                double w = weigth(q);
-                auto x = point(e, q);
-                value_type uu = eval(u, e, q, Ux, Uy);
-
-                auto d = uu - exact(x[0], x[1], epsilon);
-                error += (d.val * d.val + d.dx * d.dx + d.dy * d.dy) * w * J;
-            }
-        }
-        return std::sqrt(error);
+        return Base::errorH1(u, Ux, Uy, exact(epsilon));
     }
+
 };
 
 }

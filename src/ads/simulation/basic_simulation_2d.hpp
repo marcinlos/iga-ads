@@ -122,6 +122,20 @@ protected:
         return util::product_range<index_type>(rx, ry);
     }
 
+    double jacobian(index_type e, const dimension& x, const dimension& y) const {
+        return x.basis.J[e[0]] * y.basis.J[e[1]];
+    }
+
+    double weigth(index_type q, const dimension& x, const dimension& y) const {
+        return x.basis.w[q[0]] * y.basis.w[q[1]];
+    }
+
+    point_type point(index_type e, index_type q, const dimension& x, const dimension& y) const {
+        double px = x.basis.x[e[0]][q[0]];
+        double py = y.basis.x[e[1]][q[1]];
+        return { px, py };
+    }
+
 private:
     auto overlapping_dofs(int dof, int begin, int end, const dimension& x) const {
         using std::min;
@@ -201,6 +215,36 @@ protected:
     template <typename RHS>
     void dirichlet_bc(RHS& u, boundary side, dimension& x, dimension& y, double value) const {
         dirichlet_bc(u, side, x, y, [value](double) { return value; });
+    }
+
+    template <typename Fun, typename Norm>
+    double error(const vector_type& u, const dimension& Ux, const dimension& Uy, Norm&& norm, Fun&& fun) const {
+        double error = 0;
+
+        for (auto e : elements(Ux, Ux)) {
+            double J = jacobian(e, Ux, Uy);
+            for (auto q : quad_points(Ux, Uy)) {
+                double w = weigth(q, Ux, Uy);
+                auto x = point(e, q, Ux, Uy);
+                value_type uu = eval(u, e, q, Ux, Uy);
+
+                auto d = uu - fun(x);
+                error += norm(d) * w * J;
+            }
+        }
+        return std::sqrt(error);
+    }
+
+    template <typename Fun>
+    double errorL2(const vector_type& u, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+        auto H1 = [](value_type a) { return a.val * a.val; };
+        return error(u, Ux, Uy, H1, fun);
+    }
+
+    template <typename Fun>
+    double errorH1(const vector_type& u, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+        auto H1 = [](value_type a) { return a.val * a.val + a.dx * a.dx + a.dy * a.dy; };
+        return error(u, Ux, Uy, H1, fun);
     }
 
 };

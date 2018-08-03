@@ -2,12 +2,12 @@
 #define PROBLEMS_ERIKKSON_ERIKKSON_CG_HPP_
 
 
-#include "ads/simulation.hpp"
-#include "ads/simulation/utils.hpp"
+#include "problems/erikkson/erikkson_base.hpp"
 #include "ads/output_manager.hpp"
 #include "ads/executor/galois.hpp"
 #include "ads/lin/tensor/view.hpp"
 #include "mumps.hpp"
+#include "problems/erikkson/solution.hpp"
 
 
 #include "ads/lin/dense_matrix.hpp"
@@ -16,9 +16,9 @@
 
 namespace ads {
 
-class erikkson_CG : public simulation_2d {
+class erikkson_CG : public erikkson_base {
 private:
-    using Base = simulation_2d;
+    using Base = erikkson_base;
 
     galois_executor executor{8};
 
@@ -230,16 +230,9 @@ private:
 
         zero(r.data);
         zero(u);
-        apply_bc(u);
+        stationary_bc(u, Ux, Uy);
 
         output.to_file(u, "out_0.data");
-    }
-
-    void apply_bc(vector_type& u_rhs) {
-        dirichlet_bc(u_rhs, boundary::left, Ux, Uy, [](double t) { return std::sin(M_PI * t); });
-        dirichlet_bc(u_rhs, boundary::right, Ux, Uy, 0);
-        dirichlet_bc(u_rhs, boundary::bottom, Ux, Uy, 0);
-        dirichlet_bc(u_rhs, boundary::top, Ux, Uy, 0);
     }
 
     void zero_bc(vector_view& r_rhs, vector_view& u_rhs) {
@@ -321,37 +314,10 @@ private:
     }
 
     void after() override {
-        plot_middle("final.data");
+        plot_middle("final.data", u, Ux, Uy);
         double T = steps.dt * steps.step_count;
         std::cout << "{ 'L2': '" << errorL2(T) << "', 'H1': '" << errorH1(T) << "'}" << std::endl;
-
-        std::ofstream sol("solution.data");
-        for (int i = 0; i < Ux.dofs(); ++ i) {
-            for (int j = 0; j < Uy.dofs(); ++ j) {
-                sol << i << " " << j << " " << u(i, j) << std::endl;
-            }
-        }
-    }
-
-    void plot_middle(const char* filename) {
-        std::ofstream out{filename};
-        bspline::eval_ctx ctx_x{ Ux.B.degree }, ctx_y{ Uy.B.degree };
-
-        auto print = [&](double xx) {
-            auto val = bspline::eval(xx, 0.5, u, Ux.B, Uy.B, ctx_x, ctx_y);
-            out << std::setprecision(16) << xx << " " << val << std::endl;
-        };
-
-        print(0);
-        auto N = Ux.basis.quad_order;
-        for (auto e : Ux.element_indices()) {
-            std::vector<double> qs(Ux.basis.x[e], Ux.basis.x[e] + N);
-            std::sort(begin(qs), end(qs));
-            for (auto xx : qs) {
-                print(xx);
-            }
-        }
-        print(1);
+        print_solution("solution.data", u, Ux, Uy);
     }
 
     void compute_rhs(const dimension& Vx, const dimension& Vy, vector_view& r_rhs, vector_view& u_rhs) {
@@ -423,7 +389,7 @@ private:
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
 
-                    double F = forcing(x[0], x[1], t + steps.dt);
+                    double F = erikkson_forcing(x[0], x[1], epsilon, t + steps.dt);
                     double lv = (uu_prev.val + steps.dt * F) * v.val;
 
                     double val = -lv;
@@ -457,72 +423,12 @@ private:
         });
     }
 
-    double forcing(double x, double y, double t) {
-        constexpr double pi = M_PI;
-        auto s = [](double a) { return std::sin(pi * a); };
-        auto c = [](double a) { return std::cos(pi * a); };
-        return pi*s(x)*s(y)*c(t) + 2*pi*pi*epsilon*s(x)*s(y)*s(t) + pi*c(x)*s(y)*s(t);
-    }
-
-    value_type exact_nonstationary(double x, double y, double t) const {
-        constexpr double pi = M_PI;
-        auto s = [](double a) { return std::sin(pi * a); };
-        auto c = [](double a) { return std::cos(pi * a); };
-
-        return value_type{ s(t)*s(x)*s(y), pi*s(t)*c(x)*s(y), pi*s(t)*s(x)*c(y) };
-    }
-
-    value_type exact(double x, double y, double eps) const {
-        using std::exp;
-        auto lambda = M_PI * eps;
-        auto del = std::sqrt(1 + 4 * lambda * lambda);
-        auto r1 = (1 + del) / (2 * eps);
-        auto r2 = (1 - del) / (2 * eps);
-
-        auto norm = exp(-r1) - exp(-r2);
-        auto alpha = (exp(r1 * (x - 1)) - exp(r2 * (x - 1))) / norm;
-        double val = alpha * std::sin(M_PI * y);
-
-        return {
-            val,
-            (r1 * exp(r1 * (x - 1)) - r2 * exp(r2 * (x - 1))) / norm * std::sin(M_PI * y),
-            alpha * M_PI * std::cos(M_PI * y)
-        };
-    }
-
     double errorL2(double t) const {
-        double error = 0;
-
-        for (auto e : elements(Ux, Ux)) {
-            double J = jacobian(e);
-            for (auto q : quad_points(Ux, Ux)) {
-                double w = weigth(q);
-                auto x = point(e, q);
-                value_type uu = eval(u, e, q, Ux, Uy);
-
-                auto d = uu - exact(x[0], x[1], epsilon);
-                // auto d = uu - exact_nonstationary(x[0], x[1], t);
-                error += d.val * d.val * w * J;
-            }
-        }
-        return std::sqrt(error);
+        return Base::errorL2(u, Ux, Uy, exact(epsilon));
     }
 
     double errorH1(double t) const {
-        double error = 0;
-        for (auto e : elements(Ux, Ux)) {
-            double J = jacobian(e);
-            for (auto q : quad_points(Ux, Ux)) {
-                double w = weigth(q);
-                auto x = point(e, q);
-                value_type uu = eval(u, e, q, Ux, Uy);
-
-                auto d = uu - exact(x[0], x[1], epsilon);
-                // auto d = uu - exact_nonstationary(x[0], x[1], t);
-                error += (d.val * d.val + d.dx * d.dx + d.dy * d.dy) * w * J;
-            }
-        }
-        return std::sqrt(error);
+        return Base::errorH1(u, Ux, Uy, exact(epsilon));
     }
 };
 
