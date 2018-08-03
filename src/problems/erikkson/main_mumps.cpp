@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
     // pollution_CG sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
     // erikkson_quanling sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
     // erikkson_mumps sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
-    erikkson_supg sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
+    erikkson_supg sim{dtrial_x, dtrial_y, steps};
 
     sim.run();
 }

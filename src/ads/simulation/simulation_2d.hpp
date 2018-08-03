@@ -30,6 +30,10 @@ protected:
     using basic_simulation_2d::dof_global_to_local;
     using basic_simulation_2d::update_global_rhs;
     using basic_simulation_2d::dofs;
+    using basic_simulation_2d::jacobian;
+    using basic_simulation_2d::weigth;
+    using basic_simulation_2d::point;
+
 
     dimension x, y;
     vector_type buffer;
