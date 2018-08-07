@@ -32,6 +32,11 @@ protected:
         dirichlet_bc(u, boundary::top, Ux, Uy, 0);
     }
 
+    template <typename RHS>
+    void zero_bc(RHS& u, dimension& Ux, dimension& Uy) {
+        for_boundary_dofs(Ux, Uy, [&](index_type i) { u(i[0], i[1]) = 0; });
+    }
+
     void plot_middle(const char* filename, const vector_type& u, const dimension& Ux, const dimension& Uy) const {
         std::ofstream out{filename};
         bspline::eval_ctx ctx_x{ Ux.B.degree }, ctx_y{ Uy.B.degree };

@@ -95,6 +95,13 @@ protected:
         return util::product_range<index_type>(rx, ry);
     }
 
+    bool supported_in(index_type dof, index_type e, const dimension& x, const dimension& y) const {
+        auto xrange = x.basis.element_ranges[dof[0]];
+        auto yrange = y.basis.element_ranges[dof[1]];
+        return e[0] >= xrange.first && e[0] <= xrange.second && e[1] >= yrange.first && e[1] <= yrange.second;
+    }
+
+
     index_type dof_global_to_local(index_type e, index_type a, const dimension& x, const dimension& y) const {
         const auto& bx = x.basis;
         const auto& by = y.basis;
