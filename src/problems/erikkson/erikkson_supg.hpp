@@ -61,33 +61,45 @@ public:
 
 private:
 
+    double elem_diam(index_type e) const {
+        double hx = 2 * x.basis.J[e[0]];
+        double hy = 2 * y.basis.J[e[1]];
+        // double h = hx;
+        return std::sqrt(hx * hy);
+    }
+
+    double diffusion(double x, double y) const {
+        constexpr double eta = 1e6;
+
+        bool left = x < 0.5, right = !left;
+        bool bottom = y < 0.5, top = !bottom;
+
+        if ((bottom && left) || (top && right)) {
+            return eta;
+        } else {
+            return 1;
+        }
+    }
+
     void assemble_problem(mumps::problem& problem, double dt) {
         for (auto a : internal_dofs(x, y)) {
             for (auto b : overlapping_dofs(a, x, y)) {
 
-                double bwu =
-                    + c_diff[0] * kron(Kx, My, a, b) + c_diff[1] * kron(Mx, Ky, a, b)
-                    + beta[0] * kron(Ax, My, a, b) + beta[1] * kron(Mx, Ay, a, b);
-
-                double supg = 0;
+                double val = 0;
                 for (auto e : elements_supporting_dof(a, x, y)) {
-                    auto xrange = x.basis.element_ranges[b[0]];
-                    auto yrange = y.basis.element_ranges[b[1]];
+                    if (! supported_in(b, e, x, y)) continue;
 
-                    if (e[0] < xrange.first || e[0] > xrange.second || e[1] < yrange.first || e[1] > yrange.second) {
-                        continue;
-                    }
                     double J = jacobian(e, x, y);
                     for (auto q : quad_points(x, y)) {
                         double w = weigth(q, x, y);
+                        auto pt = point(e, q, x, y);
                         value_type ww = eval_basis(e, q, a, x, y);
                         value_type uu = eval_basis(e, q, b, x, y);
 
-                        double hx = 2 * x.basis.J[e[0]];
-                        double hy = 2 * y.basis.J[e[1]];
-                        // double h = hx;
-                        double h = std::sqrt(hx * hy);
+                        auto diff = diffusion(pt[0], pt[1]);
+                        double bwu = diff * grad_dot(uu, ww) + beta[0] * uu.dx * ww.val + beta[1] * uu.dy * ww.val;
 
+                        double h = elem_diam(e);
                         double tau = 1 / (C1 * epsilon / (h * h) + C2 / h);
 
                         double bDw = beta[0] * ww.dx + beta[1] * ww.dy;
@@ -95,11 +107,9 @@ private:
                         double lap = laplacian(e, q, b, x, y);
                         double res = - epsilon * lap + beta[0] * uu.dx + beta[1] * uu.dy;
                         double v = bDw * res;
-                        supg += tau * v * w * J;
+                        val += (bwu + tau * v) * w * J;
                     }
                 }
-
-                double val = bwu + supg;
 
                 if (val != 0 && ! is_boundary(a, x, y)) {
                     int i = linear_index(a, x, y) + 1;
@@ -147,7 +157,10 @@ private:
     void step(int /*iter*/, double /*t*/) override {
         zero(rhs);
         compute_rhs();
-        skew_bc(rhs, x, y);
+
+        // stationary_bc(rhs, x, y);
+        // skew_bc(rhs, x, y);
+        zero_bc(rhs, x, y);
 
         mumps::problem problem(rhs.data(), rhs.size());
         assemble_problem(problem, steps.dt);
@@ -182,8 +195,9 @@ private:
                 for (auto a : dofs_on_element(e, x, y)) {
                     auto aa = dof_global_to_local(e, a, x, y);
                     value_type v = eval_basis(e, q, a, x, y);
-                    double val = 0*1 * v.val;
-                    // double val = init_state(x[0], x[1]) * v.val;
+
+                    double F = 1;
+                    double val = F * v.val;
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }

@@ -68,8 +68,8 @@ int main(int argc, char* argv[]) {
     bool adapt_x = true && adapt;
     bool adapt_y = true && adapt;
 
-    auto d = 0.01;
-    // auto d = shishkin_const(n, 1e-6);
+    // auto d = 0.01;
+    auto d = shishkin_const(n, 1e-6);
 
     auto trial_basis_x = create_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_x, d);
     auto dtrial_x = dimension{ trial_basis_x, quad, ders, subdivision };

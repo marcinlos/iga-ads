@@ -63,8 +63,8 @@ private:
 
     point_type c_diff{{ epsilon, epsilon }};
 
-    double angle = 0;
-    // double angle = M_PI / 6;
+    // double angle = 0;
+    double angle = M_PI / 6;
 
     double len = 1;
 
@@ -173,6 +173,81 @@ private:
         });
     }
 
+    double diffusion(double x, double y) const {
+        constexpr double eta = 1e6;
+
+        bool left = x < 0.5, right = !left;
+        bool bottom = y < 0.5, top = !bottom;
+
+        if ((bottom && left) || (top && right)) {
+            return eta;
+        } else {
+            return 1;
+        }
+    }
+
+    void assemble_problem2(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& M) {
+        auto N = Vx.dofs() * Vy.dofs();
+        auto hh = h * h;
+
+        // Gram matrix - upper left
+        for (auto i : internal_dofs(Vx, Vy)) {
+            for (auto j : overlapping_internal_dofs(i, Vx, Vy)) {
+                int ii = linear_index(i, Vx, Vy) + 1;
+                int jj = linear_index(j, Vx, Vy) + 1;
+
+                double val = kron(MVx, MVy, i, j) + hh * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
+                // val += hh * hh * kron(M.KVx, M.KVy, i, j);
+                problem.add(ii, jj, val);
+            }
+        }
+
+        // B, B^T
+        for (auto i : internal_dofs(Vx, Vy)) {
+            for (auto j : internal_dofs(Ux, Uy)) {
+
+                double val = 0;
+                for (auto e : elements_supporting_dof(i, Vx, Vy)) {
+                    if (! supported_in(j, e, Ux, Uy)) continue;
+
+                    double J = jacobian(e, x, y);
+                    for (auto q : quad_points(Vx, Vy)) {
+                        double w = weigth(q);
+                        auto x = point(e, q);
+                        value_type ww = eval_basis(e, q, i, Vx, Vy);
+                        value_type uu = eval_basis(e, q, j, Ux, Uy);
+
+                        auto diff = diffusion(x[0], x[1]);
+                        double bwu = diff * grad_dot(uu, ww) + beta[0] * uu.dx * ww.val + beta[1] * uu.dy * ww.val;
+
+                        val += bwu * w * J;
+                    }
+                }
+
+                if (val != 0) {
+                    int ii = linear_index(i, Vx, Vy) + 1;
+                    int jj = linear_index(j, Ux, Uy) + 1;
+
+                    problem.add(ii, N + jj, -val);
+                    problem.add(N + jj, ii, val);
+                }
+            }
+        }
+
+        // Dirichlet BC - upper left
+        for_boundary_dofs(Vx, Vy, [&](index_type dof) {
+            int i = linear_index(dof, Vx, Vy) + 1;
+            problem.add(i, i, 1);
+        });
+
+        // Dirichlet BC - lower right
+        for_boundary_dofs(Ux, Uy, [&](index_type dof) {
+            int i = linear_index(dof, Ux, Uy) + 1;
+            problem.add(N + i, N + i, 1);
+        });
+    }
+
+
     matrix_set matrices(bool x_refined, bool y_refined) {
         if (x_refined && y_refined) {
             return { MVx, MVy, KVx, KVy, MUVx, MUVy, KUVx, KUVy, AUVx, AUVy };
@@ -230,14 +305,12 @@ private:
 
         zero(r.data);
         zero(u);
-        stationary_bc(u, Ux, Uy);
+
+        // stationary_bc(u, Ux, Uy);
+        // skew_bc(u, Ux, Uy);
+        zero_bc(u, Ux, Uy);
 
         output.to_file(u, "out_0.data");
-    }
-
-    void zero_bc(vector_view& r_rhs, vector_view& u_rhs) {
-        for_boundary_dofs(Ux, Uy, [&](index_type i) { u_rhs(i[0], i[1]) = 0; });
-        for_boundary_dofs(Vx, Vy, [&](index_type i) { r_rhs(i[0], i[1]) = 0; });
     }
 
     void add_solution(const vector_view& u_rhs, const vector_view& r_rhs, const dimension& Vx, const dimension& Vy) {
@@ -271,11 +344,12 @@ private:
         // compute_rhs_nonstationary(Vx, Vy, r_rhs, u_rhs, t);
         compute_rhs(Vx, Vy, r_rhs, u_rhs);
 
-        zero_bc(r_rhs, u_rhs);
+        zero_bc(r_rhs, Vx, Vy);
+        zero_bc(u_rhs, Ux, Uy);
 
         int size = Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs();
         mumps::problem problem(full_rhs.data(), size);
-        assemble_problem(problem, Vx, Vy, matrices(x_refined, y_refined));
+        assemble_problem2(problem, Vx, Vy, matrices(x_refined, y_refined));
         solver.solve(problem);
 
         add_solution(u_rhs, r_rhs, Vx, Vy);
@@ -329,21 +403,23 @@ private:
             for (auto q : quad_points(Vx, Vy)) {
                 double W = weigth(q);
                 double WJ = W * J;
-                // auto x = point(e, q);
+                auto x = point(e, q);
                 value_type uu = eval(u, e, q, Ux, Uy);
                 value_type rr = eval(r.data, e, q, *r.Vx, *r.Vy);
+                auto diff = diffusion(x[0], x[1]);
 
                 for (auto a : dofs_on_element(e, Vx, Vy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
 
-                    double lv = 0;//* v.val;
+                    double F = 1;
+                    double lv = F * v.val;
 
                     double val = -lv;
 
                     // Bu
-                    val += c_diff[0] * uu.dx * v.dx + beta[0] * uu.dx * v.val;
-                    val += c_diff[1] * uu.dy * v.dy + beta[1] * uu.dy * v.val;
+                    val += diff* uu.dx * v.dx + beta[0] * uu.dx * v.val;
+                    val += diff * uu.dy * v.dy + beta[1] * uu.dy * v.val;
                     // -Aw
                     val -= (rr.val * v.val + h * h * (rr.dx * v.dx + rr.dy * v.dy));
 
@@ -355,8 +431,8 @@ private:
                     double val = 0;
 
                     // -B'w
-                    val -= (c_diff[0] * w.dx * rr.dx + beta[0] * w.dx * rr.val);
-                    val -= (c_diff[1] * w.dy * rr.dy + beta[1] * w.dy * rr.val);
+                    val -= (diff * w.dx * rr.dx + beta[0] * w.dx * rr.val);
+                    val -= (diff * w.dy * rr.dy + beta[1] * w.dy * rr.val);
 
                     U(aa[0], aa[1]) += val * WJ;
                 }
