@@ -220,8 +220,8 @@ private:
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Vy)) {
                 double w = weigth(q);
-                auto x = point(e, q);
-                value_type uu = eval(u, e, q, Ux, Uy);
+                // auto x = point(e, q);
+                // value_type uu = eval(u, e, q, Ux, Uy);
 
                 for (auto a : dofs_on_element(e, Vx, Vy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
