@@ -80,7 +80,7 @@ public:
         //ordering metis (5), or pord (4), or AMD (0), AMF (2), QAMD (6)
         icntl(7) = 5;
 
-        icntl(14) = 1000;
+        icntl(14) = 200;
 
         //streams
         icntl(1) = 3;
@@ -94,6 +94,9 @@ public:
             std::cout << text << ":" << std::endl;
             std::cout << "  INFO(1) = " << id.info[0] << std::endl;
             std::cout << "  INFO(2) = " << id.info[1] << std::endl;
+            std::cout << "Error: ";
+            report_error(std::cout, id.info[0], id.info[1]);
+            std::cout << std::endl;
         }
     }
 
@@ -140,6 +143,29 @@ private:
         id.job = 3;
         dmumps_c(&id);
         print_state("After solve_()");
+    }
+
+    void report_error(std::ostream& os, int info1, int info2) const {
+        switch (info1) {
+        case -6:
+            os << "Matrix singular in structure (rank = " << info2 << ")";
+            break;
+        case -7:
+            os << "Problem of integer workspace allocation (size = " << info2 << ")";
+            break;
+        case -8:
+            os << "Main internal integer workarray is too small";
+            break;
+        case -9:
+            os << "Main internal real/complex workarray is too small (missing = " << info2 << ")";
+            break;
+        case -10:
+            os << "Numerically singular matrix";
+            break;
+        case -13:
+            os << "Problem of workspace allocation (size = " << info2 << ")";
+            break;
+        }
     }
 };
 
