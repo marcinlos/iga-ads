@@ -63,7 +63,8 @@ protected:
         return B1 * ddB2 + ddB1 * B2;
     }
 
-    value_type eval(const vector_type& v, index_type e, index_type q, const dimension& x, const dimension& y) const {
+    template <typename Sol>
+    value_type eval(const Sol& v, index_type e, index_type q, const dimension& x, const dimension& y) const {
         value_type u{};
         for (auto b : dofs_on_element(e, x, y)) {
             double c = v(b[0], b[1]);
@@ -224,8 +225,36 @@ protected:
         dirichlet_bc(u, side, x, y, [value](double) { return value; });
     }
 
-    template <typename Fun, typename Norm>
-    double error(const vector_type& u, const dimension& Ux, const dimension& Uy, Norm&& norm, Fun&& fun) const {
+    template <typename Norm, typename Fun>
+    double norm(const dimension& Ux, const dimension& Uy, Norm&& norm, Fun&& fun) const {
+        double val = 0;
+
+        for (auto e : elements(Ux, Ux)) {
+            double J = jacobian(e, Ux, Uy);
+            for (auto q : quad_points(Ux, Uy)) {
+                double w = weigth(q, Ux, Uy);
+                auto x = point(e, q, Ux, Uy);
+                auto d = fun(x);
+                val += norm(d) * w * J;
+            }
+        }
+        return std::sqrt(val);
+    }
+
+    template <typename Fun>
+    double normL2(const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+        auto L2 = [](value_type a) { return a.val * a.val; };
+        return norm(Ux, Uy, L2, fun);
+    }
+
+    template <typename Fun>
+    double normH1(const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+        auto H1 = [](value_type a) { return a.val * a.val + a.dx * a.dx + a.dy * a.dy; };
+        return norm(Ux, Uy, H1, fun);
+    }
+
+    template <typename Sol, typename Fun, typename Norm>
+    double error(const Sol& u, const dimension& Ux, const dimension& Uy, Norm&& norm, Fun&& fun) const {
         double error = 0;
 
         for (auto e : elements(Ux, Ux)) {
@@ -242,14 +271,14 @@ protected:
         return std::sqrt(error);
     }
 
-    template <typename Fun>
-    double errorL2(const vector_type& u, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
-        auto H1 = [](value_type a) { return a.val * a.val; };
-        return error(u, Ux, Uy, H1, fun);
+    template <typename Sol, typename Fun>
+    double errorL2(const Sol& u, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+        auto L2 = [](value_type a) { return a.val * a.val; };
+        return error(u, Ux, Uy, L2, fun);
     }
 
-    template <typename Fun>
-    double errorH1(const vector_type& u, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+    template <typename Sol, typename Fun>
+    double errorH1(const Sol& u, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
         auto H1 = [](value_type a) { return a.val * a.val + a.dx * a.dx + a.dy * a.dy; };
         return error(u, Ux, Uy, H1, fun);
     }

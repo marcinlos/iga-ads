@@ -28,6 +28,9 @@ private:
     lin::dense_matrix KUVx, KUVy;
     lin::dense_matrix AUVx, AUVy;
 
+    lin::dense_matrix AVUx, AVUy;
+
+
     double h;
     vector_type buffer;
 
@@ -53,6 +56,8 @@ public:
     , KUVy{ Vy.dofs(), Uy.dofs() }
     , AUVx{ Vx.dofs(), Ux.dofs() }
     , AUVy{ Vy.dofs(), Uy.dofs() }
+    , AVUx{ Ux.dofs(), Vx.dofs() }
+    , AVUy{ Uy.dofs(), Vy.dofs() }
     , h{ element_diam(Ux, Uy) }
     , buffer{{ Ux.dofs(), Uy.dofs() }}
     , output{ Ux.B, Uy.B, 500 }
@@ -77,6 +82,8 @@ public:
         advection_matrix_1d(AVy, Vy.basis);
         advection_matrix_1d(AUVx, Ux.basis, Vx.basis);
         advection_matrix_1d(AUVy, Uy.basis, Vy.basis);
+        advection_matrix_1d(AVUx, Vx.basis, Ux.basis);
+        advection_matrix_1d(AVUy, Vy.basis, Uy.basis);
     }
 
     void before() override {
@@ -88,24 +95,54 @@ public:
         output_exact();
     }
 
-    double exact_p(point_type p) const {
+    value_type exact_p(point_type p) const {
         auto x = p[0];
-        return x * (1 - x);
+        return {x * (1 - x), 1 - 2 * x, 0.0};
     }
 
-    point_type exact_v(point_type p) const {
+    std::array<value_type, 2> exact_v(point_type p) const {
         auto f = [](double x, double y) {
-            return x * x * (1 - x) * (1 - x) * (2 * y - 6 * y * y + 4 * y * y * y);
+            return x*x * (1 - x) * (1 - x) * (2 * y - 6 * y*y + 4 * y*y*y);
         };
-        auto vx = f(p[0], p[1]);
-        auto vy = -f(p[1], p[0]);
-        return { vx, vy };
+
+        auto dfx = [](double x, double y) {
+            return (4 * x*x*x - 6 * x*x + 2 * x) * (2 * y - 6 * y*y + 4 * y*y*y);
+        };
+
+        auto dfy = [](double x, double y) {
+            return x*x * (1 - x) * (1 - x) * (2 - 12 * y + 12 * y*y);
+        };
+
+        double x = p[0], y = p[1];
+        value_type vx = {f(x, y), dfx(x, y), dfy(x, y)};
+        value_type vy = {-f(y, x), -dfy(y, x), -dfx(y, x)};
+
+        return { vx ,vy };
+    }
+
+    value_type exact_div(point_type p) const {
+        auto v = exact_v(p);
+        auto div = v[0].dx + v[1].dy;
+
+        auto dfxy = [](double x, double y) {
+            return (4 * x*x*x - 6 * x*x + 2 * x) * (2 - 12 * y + 12 * y*y);
+        };
+
+        auto dfxx = [](double x, double y) {
+            return (12 * x*x - 12 * x + 2) * (2 * y - 6 * y*y + 4 * y*y*y);
+        };
+
+        double x = p[0], y = p[1];
+        double dx = dfxx(x, y) - dfxy(y, x);
+        double dy = dfxy(x, y) - dfxx(y, x);
+
+        return { div, dx, dy };
     }
 
     void output_exact() {
-        auto p = [this](point_type x) { return exact_p(x); };
-        auto vx = [this](point_type x) { return exact_v(x)[0]; };
-        auto vy = [this](point_type x) { return exact_v(x)[1]; };
+        auto p = [this](point_type x) { return exact_p(x).val; };
+        auto vx = [this](point_type x) { return exact_v(x)[0].val; };
+        auto vy = [this](point_type x) { return exact_v(x)[1].val; };
 
         auto project = [&](auto fun) {
             vector_type rhs{{ Ux.dofs(), Uy.dofs() }};
@@ -119,6 +156,30 @@ public:
         output.to_file(project(vy), "vy_ref.data");
     }
 
+    void print_error(const vector_view& vx, const vector_view& vy, const vector_view& p) const {
+        auto e_vx = [this](point_type x) { return exact_v(x)[0]; };
+        auto e_vy = [this](point_type x) { return exact_v(x)[1]; };
+        auto e_p = [this](point_type x) { return exact_p(x); };
+        auto div = [this](point_type x) { return exact_div(x); };
+
+        double vxL2 = errorL2(vx, Ux, Uy, e_vx) / normL2(Ux, Uy, e_vx) * 100;
+        double vxH1 = errorH1(vx, Ux, Uy, e_vx) / normH1(Ux, Uy, e_vx) * 100;
+
+        double vyL2 = errorL2(vy, Ux, Uy, e_vy) / normL2(Ux, Uy, e_vy) * 100;
+        double vyH1 = errorH1(vy, Ux, Uy, e_vy) / normH1(Ux, Uy, e_vy) * 100;
+
+        double pL2 = errorL2(p, Ux, Uy, e_p) / normL2(Ux, Uy, e_p) * 100;
+        double pH1 = errorH1(p, Ux, Uy, e_p) / normH1(Ux, Uy, e_p) * 100;
+
+        double divL2 = div_errorL2(vx, vy, Ux, Uy, div) * 100;
+        double divH1 = div_errorH1(vx, vy, Ux, Uy, div) * 100;
+
+        std::cout.precision(3);
+        std::cout << "vx  : L2 = " << vxL2   << "%, H1 = " << vxH1   << "%" << std::endl;
+        std::cout << "vy  : L2 = " << vyL2   << "%, H1 = " << vyH1   << "%" << std::endl;
+        std::cout << "p   : L2 = " << pL2    << "%, H1 = " << pH1    << "%" << std::endl;
+        std::cout << "div : L2 = " << divL2  << ", H1 = " << divH1  << std::endl;
+    }
 
     point_type forcing(point_type p) const {
         double x = p[0], y = p[1];
@@ -156,6 +217,10 @@ public:
         return overlap(a[0], Ux, b[0], Vx) && overlap(a[1], Uy, b[1], Vy);
     }
 
+    bool is_pressure_fixed(index_type dof) const {
+        return dof[0] == 0 && dof[1] == 0;
+    }
+
     void assemble_matrix(mumps::problem& problem) const {
         auto DV = Vx.dofs() * Vy.dofs();
         auto DU = Ux.dofs() * Uy.dofs();
@@ -183,41 +248,50 @@ public:
                 double Kx = kron(KVx, MVy, i, j);
                 double Ky = kron(MVx, KVy, i, j);
                 double Ax = AVx(j[0], i[0]) * AVy(i[1], j[1]);
-                double Ay = AVx(i[0], j[0]) * AVy(j[1], j[0]);
+                double Ay = AVx(i[0], j[0]) * AVy(j[1], i[1]);
 
-                // test_p(ii, jj, M + hh * (Kx + Ky));
+                // G(w, u)
+                // w = (tx, ty, w)
+                // u = (vx, vy, p)
+
+                if (! is_pressure_fixed(i) && ! is_pressure_fixed(j)) {
+                    // w, p -> (w, p) + hh (\/w, \/p)
+                    test_p(ii, jj, M + hh * (Kx + Ky));
+                }
+
                 if (! is_boundary(i, Vx, Vy) && ! is_boundary(j, Vx, Vy)) {
-                    test_p(ii, jj, M + hh * (Kx + Ky)); // !!!!!!!!!!!
-
-                    // test_vx(ii, jj, M + hh * (Kx + Ky));
-                    // test_vy(ii, jj, M + hh * (Kx + Ky));
+                    // tx, vx -> (tx, vx) + hh (tx,x, vx,x)
                     test_vx(ii, jj, M + hh * Kx);
+
+                    // ty, vy -> (ty, vy) + hh (ty,y, vy,y)
                     test_vy(ii, jj, M + hh * Ky);
+
+                    // tx, vy -> hh (tx,x, vy,y)
                     test_vxy(ii, jj, hh * Ax);
+
+                    // ty, vx -> hh (ty,y, vx,x)
                     test_vyx(ii, jj, hh * Ay);
                 }
             }
         }
 
-        // Dirichlet BC - upper left
+        // Dirichlet BC - test space
         for_boundary_dofs(Vx, Vy, [&](index_type dof) {
             int i = linear_index(dof, Vx, Vy) + 1;
-            test_p(i, i, 1); // !!!!!!!!
-
             test_vx(i, i, 1);
             test_vy(i, i, 1);
         });
+        test_p(1, 1, 1.0);
 
         // B, B^t
-        auto put = [&](index_type i, index_type j, int sx, int sy, double val, bool bc = false) {
-            bc = true; // !!!!!!!!!!!!
-            int ii = linear_index(i, Vx, Vy) + 1 + sx;
-            int jj = linear_index(j, Ux, Uy) + 1 + sy;
+        auto put = [&](index_type i, index_type j, int si, int sj, double val, bool fixed_i, bool fixed_j) {
+            int ii = linear_index(i, Vx, Vy) + 1 + si;
+            int jj = linear_index(j, Ux, Uy) + 1 + sj;
 
-            if (! bc || ! is_boundary(i, Vx, Vy)) {
+            if (!fixed_i) {
                 problem.add(ii, 3*DV + jj, -val);
             }
-            if (! bc || (! is_boundary(i, Vx, Vy) && ! is_boundary(j, Ux, Uy))) {
+            if (!fixed_i && !fixed_j) {
                 problem.add(3*DV + jj, ii, val);
             }
         };
@@ -229,49 +303,56 @@ public:
                 double Ky = kron(MUVx, KUVy, i, j);
                 double Ax = kron(AUVx, MUVy, i, j);
                 double Ay = kron(MUVx, AUVy, i, j);
+                double AxT = AVUx(j[0], i[0]) * MUVy(i[1], j[1]);
+                double AyT = MUVx(i[0], j[0]) * AVUy(j[1], i[1]);
+
+                bool bd_i = is_boundary(i, Vx, Vy);
+                bool bd_j = is_boundary(j, Ux, Uy);
+                bool fixed_i = is_pressure_fixed(i);
+                bool fixed_j = is_pressure_fixed(j);
 
                 // B(w, u)
                 // w = (tx, ty, w)
                 // u = (vx, vy, p)
 
                 // tx, vx -> (\/tx, \/vx)
-                put(i, j, 0, 0, Kx + Ky, true);
+                put(i, j, 0, 0, Kx + Ky, bd_i, bd_j);
 
                 // ty, vy -> (\/ty, \/vy)
-                put(i, j, DV, DU, Kx + Ky, true);
+                put(i, j, DV, DU, Kx + Ky, bd_i, bd_j);
 
                 // w, vx -> (w, vx,x)
-                put(i, j, 2*DV, 0, Ax);
+                put(i, j, 2*DV, 0, Ax, fixed_i, bd_j);
 
                 // w, vy -> (w, vy,y)
-                put(i, j, 2*DV, DU, Ay);
+                put(i, j, 2*DV, DU, Ay, fixed_i, bd_j);
 
-                // tx, p -> (tx, p,x)
-                put(i, j, 0, 2*DU, Ax, true);
+                // tx, p -> (tx, p,x) = - (tx,x, p)
+                // put(i, j, 0, 2*DU, Ax, bd_i, fixed_j);
+                put(i, j, 0, 2*DU, -AxT, bd_i, fixed_j);
 
-                // ty, p -> (ty, p,y)
-                put(i, j, DV, 2*DU, Ay, true);
+                // ty, p -> (ty, p,y) = - (ty,y, p)
+                // put(i, j, DV, 2*DU, Ay, bd_i, fixed_j);
+                put(i, j, DV, 2*DU, -AyT, bd_i, fixed_j);
             }
         }
 
-        // Dirichlet BC - lower right
+        // Dirichlet BC - trial space
         for_boundary_dofs(Ux, Uy, [&](index_type dof) {
             int i = linear_index(dof, Ux, Uy) + 1;
-            trial_p(i, i, 1); // !!!!!!!!!!!
-
             trial_vx(i, i, 1);
             trial_vy(i, i, 1);
         });
+        trial_p(1, 1, 1.0);
     }
 
-    void compute_rhs(vector_view& vx, vector_view& vy, vector_view& p) const {
+    void compute_rhs(vector_view& vx, vector_view& vy, vector_view& /*p*/) const {
         using shape = std::array<std::size_t, 2>;
         auto local_shape = shape{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() };
 
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
             auto vx_loc = vector_type{ local_shape };
             auto vy_loc = vector_type{ local_shape };
-            // auto Lp = vector_type{ local_shape };
 
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Vy)) {
@@ -287,13 +368,11 @@ public:
 
                     vx_loc(aa[0], aa[1]) -= Lvx * W * J;
                     vy_loc(aa[0], aa[1]) -= Lvy * W * J;
-                    // Lp(aa[0], aa[1]) += val * W * J;
                 }
             }
             executor.synchronized([&]() {
                 update_global_rhs(vx, vx_loc, e, Vx, Vy);
                 update_global_rhs(vy, vy_loc, e, Vx, Vy);
-                // update_global_rhs(p, Lp, e, Vx, Vy);
             });
         });
     }
@@ -333,9 +412,13 @@ public:
         std::cout << "Computing RHS" << std::endl;
         compute_rhs(Rvx, Rvy, Rp);
         apply_bc(Rvx, Rvy, Rp);
+        p(0, 0) = 0; // fix pressure at a point
 
         std::cout << "Solving" << std::endl;
         solver.solve(problem);
+
+        std::cout << "Error:" << std::endl;
+        print_error(vx, vy, p);
 
         std::cout << "Outputting" << std::endl;
         output.to_file(p, "pressure.data");
@@ -346,6 +429,69 @@ public:
     template <typename RHS>
     void zero_bc(RHS& u, dimension& Ux, dimension& Uy) const {
         for_boundary_dofs(Ux, Uy, [&](index_type i) { u(i[0], i[1]) = 0; });
+    }
+
+    template <typename Sol, typename Fun>
+    double div_errorL2(const Sol& u, const Sol& v, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+        auto L2 = [](value_type a) { return a.val * a.val; };
+        return div_error(u, v, Ux, Uy, L2, fun);
+    }
+
+    template <typename Sol, typename Fun>
+    double div_errorH1(const Sol& u, const Sol& v, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+        auto H1 = [](value_type a) { return a.val * a.val + a.dx * a.dx + a.dy * a.dy; };
+        return div_error(u, v, Ux, Uy, H1, fun);
+    }
+
+    template <typename Sol, typename Fun, typename Norm>
+    double div_error(const Sol& u, const Sol& v, const dimension& Ux, const dimension& Uy, Norm&& norm, Fun&& fun) const {
+        double error = 0;
+
+        for (auto e : elements(Ux, Ux)) {
+            double J = jacobian(e, Ux, Uy);
+            for (auto q : quad_points(Ux, Uy)) {
+                double w = weigth(q, Ux, Uy);
+                auto x = point(e, q, Ux, Uy);
+                value_type div = divergence(u, v, e, q, Ux, Uy);
+
+                auto d = div - fun(x);
+                error += norm(d) * w * J;
+            }
+        }
+        return std::sqrt(error);
+    }
+
+    template <typename Sol>
+    value_type divergence(const Sol& u, const Sol& v, index_type e, index_type q,
+                          const dimension& x, const dimension& y) const {
+        value_type div{};
+        for (auto b : dofs_on_element(e, x, y)) {
+            double c = u(b[0], b[1]);
+            double d = v(b[0], b[1]);
+
+            auto loc = dof_global_to_local(e, b, x, y);
+
+            const auto& bx = x.basis;
+            const auto& by = y.basis;
+
+            double B1  = bx.b[e[0]][q[0]][0][loc[0]];
+            double B2  = by.b[e[1]][q[1]][0][loc[1]];
+            double dB1 = bx.b[e[0]][q[0]][1][loc[0]];
+            double dB2 = by.b[e[1]][q[1]][1][loc[1]];
+            double ddB1 = bx.b[e[0]][q[0]][2][loc[0]];
+            double ddB2 = by.b[e[1]][q[1]][2][loc[1]];
+
+            double dx = dB1 *  B2;
+            double dy =  B1 * dB2;
+            double dxx = ddB1 * B2;
+            double dyy = B1 * ddB2;
+            double dxy = dB1 * dB2;
+
+            div.val += c * dx + d * dy;
+            div.dx += c * dxx + d * dxy;
+            div.dy += c * dxy + d * dyy;
+        }
+        return div;
     }
 
 };
