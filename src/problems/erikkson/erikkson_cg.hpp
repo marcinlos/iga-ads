@@ -135,7 +135,7 @@ private:
                 int jj = linear_index(j, Vx, Vy) + 1;
 
                 double val = kron(MVx, MVy, i, j) + hh * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
-                // val += hh * hh * kron(M.KVx, M.KVy, i, j);
+                val += hh * hh * kron(M.KVx, M.KVy, i, j);
                 problem.add(ii, jj, val);
             }
         }
@@ -174,16 +174,17 @@ private:
     }
 
     double diffusion(double x, double y) const {
-        constexpr double eta = 1e6;
+        return epsilon;
+        // constexpr double eta = 1e6;
 
-        bool left = x < 0.5, right = !left;
-        bool bottom = y < 0.5, top = !bottom;
+        // bool left = x < 0.5, right = !left;
+        // bool bottom = y < 0.5, top = !bottom;
 
-        if ((bottom && left) || (top && right)) {
-            return eta;
-        } else {
-            return 1;
-        }
+        // if ((bottom && left) || (top && right)) {
+        //     return eta;
+        // } else {
+        //     return 1;
+        // }
     }
 
     void assemble_problem2(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& M) {
@@ -197,7 +198,7 @@ private:
                 int jj = linear_index(j, Vx, Vy) + 1;
 
                 double val = kron(MVx, MVy, i, j) + hh * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
-                // val += hh * hh * kron(M.KVx, M.KVy, i, j);
+                val += hh * hh * kron(M.KVx, M.KVy, i, j);
                 problem.add(ii, jj, val);
             }
         }
@@ -307,8 +308,8 @@ private:
         zero(u);
 
         // stationary_bc(u, Ux, Uy);
-        // skew_bc(u, Ux, Uy);
-        zero_bc(u, Ux, Uy);
+        skew_bc(u, Ux, Uy);
+        // zero_bc(u, Ux, Uy);
 
         output.to_file(u, "out_0.data");
     }
@@ -412,7 +413,8 @@ private:
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
 
-                    double F = 1;
+                    // double F = 1;
+                    double F = 0;
                     double lv = F * v.val;
 
                     double val = -lv;
@@ -500,11 +502,11 @@ private:
     }
 
     double errorL2(double t) const {
-        return Base::errorL2(u, Ux, Uy, exact(epsilon));
+        return Base::errorL2(u, Ux, Uy, exact(epsilon)) / normL2(Ux, Uy, exact(epsilon)) * 100;
     }
 
     double errorH1(double t) const {
-        return Base::errorH1(u, Ux, Uy, exact(epsilon));
+        return Base::errorH1(u, Ux, Uy, exact(epsilon)) / normH1(Ux, Uy, exact(epsilon)) * 100;
     }
 };
 
