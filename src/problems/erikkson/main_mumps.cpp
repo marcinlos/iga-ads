@@ -38,6 +38,44 @@ bspline::basis create_basis(double a, double b, int p, int elements, int repeate
     return {std::move(knot), p};
 }
 
+bspline::basis create_checkboard_basis(double a, double b, int p, int elements, int repeated_nodes, bool adapt) {
+    int total_elements = 2 * elements + 2;
+    int points = total_elements + 1;
+    int r = repeated_nodes + 1;
+    int knot_size = 2 * (p + 1) + (points - 2) * r;
+    bspline::knot_vector knot(knot_size);
+
+    for (int i = 0; i <= p; ++i) {
+        knot[i] = a;
+        knot[knot_size - i - 1] = b;
+    }
+
+    double eps = 1e-2;
+    double x0 = 0;
+    double x1 = 0.5 - eps;
+    double x2 = 0.5;
+    double x3 = 1 - eps;
+
+    for (int i = 1; i < points - 1; ++i) {
+
+        double s;
+        if (i <= elements) {
+            auto t = lerp(i, elements, 0.0, 1.0);
+            s = lerp(t, x0, x1);
+        } else {
+            auto t = lerp(i - elements - 1, elements, 0.0, 1.0);
+            s = lerp(t, x2, x3);
+        }
+        std::cout << s << std::endl;
+
+        for (int j = 0; j < r; ++ j) {
+            knot[p + 1 + (i - 1) * r + j] = lerp(s, a, b);
+        }
+    }
+
+    return {std::move(knot), p};
+}
+
 
 int main(int argc, char* argv[]) {
     if (argc != 10) {
@@ -55,6 +93,9 @@ int main(int argc, char* argv[]) {
     int C_test = std::atoi(argv[8]);
     int nsteps = std::atoi(argv[9]);
 
+    std::cout << "trial (" << p_trial << ", " << C_trial << "), "
+              << "test (" << p_test << ", " << C_test << ")" << std::endl;
+
     // double S = 5000.0;
     double S = 1.0;
 
@@ -68,19 +109,23 @@ int main(int argc, char* argv[]) {
     bool adapt_x = true && adapt;
     bool adapt_y = true && adapt;
 
-    // auto d = 0.01;
-    auto d = shishkin_const(n, 1e-6);
+    // auto d = 1e-2;
+    auto d = shishkin_const(n, 1e-2);
 
     auto trial_basis_x = create_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_x, d);
+    // auto trial_basis_x = create_checkboard_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_x);
     auto dtrial_x = dimension{ trial_basis_x, quad, ders, subdivision };
 
     auto trial_basis_y = create_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_y, d);
+    // auto trial_basis_y = create_checkboard_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_y);
     auto dtrial_y = dimension{ trial_basis_y, quad, ders, subdivision };
 
     auto test_basis_x = create_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test, adapt_x, d);
+    // auto test_basis_x = create_checkboard_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test, adapt_x);
     auto dtest_x = dimension{ test_basis_x, quad, ders, 1 };
 
     auto test_basis_y = create_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test, adapt_y, d);
+    // auto test_basis_y = create_checkboard_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test, adapt_y);
     auto dtest_y = dimension{ test_basis_y, quad, ders, 1 };
 
     auto trial_dim = dtrial_x.B.dofs();

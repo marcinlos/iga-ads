@@ -58,7 +58,7 @@ private:
 
     double h;
 
-    double peclet = 1e6;
+    double peclet = 1e2;
     double epsilon = 1 / peclet;
 
     point_type c_diff{{ epsilon, epsilon }};
@@ -68,7 +68,9 @@ private:
 
     double len = 1;
 
-    point_type beta{{ len * cos(angle), len * sin(angle) }};
+    // point_type beta{{ len * cos(angle), len * sin(angle) }};
+    point_type beta{{ 1, 1 }};
+
 
     mumps::solver solver;
 
@@ -175,15 +177,16 @@ private:
 
     double diffusion(double x, double y) const {
         return epsilon;
-        // constexpr double eta = 1e6;
+        // const double eta = epsilon;
+        // return 1 / eta;
 
         // bool left = x < 0.5, right = !left;
         // bool bottom = y < 0.5, top = !bottom;
 
         // if ((bottom && left) || (top && right)) {
-        //     return eta;
+            // return 1 / eta;
         // } else {
-        //     return 1;
+            // return eta;
         // }
     }
 
@@ -308,8 +311,8 @@ private:
         zero(u);
 
         // stationary_bc(u, Ux, Uy);
-        skew_bc(u, Ux, Uy);
-        // zero_bc(u, Ux, Uy);
+        // skew_bc(u, Ux, Uy);
+        zero_bc(u, Ux, Uy);
 
         output.to_file(u, "out_0.data");
     }
@@ -371,7 +374,7 @@ private:
         // zero(u);
 
         std::cout << "Step " << (iter + 1) << std::endl;
-        constexpr auto max_iters = 50;
+        constexpr auto max_iters = 30;
         for (int i = 1; ; ++ i) {
             auto norm = substep(true, true, t);
             std::cout << "  substep " << i << ": |eta| = " << norm << std::endl;
@@ -414,7 +417,8 @@ private:
                     value_type v = eval_basis(e, q, a, Vx, Vy);
 
                     // double F = 1;
-                    double F = 0;
+                    // double F = 0;
+                    double F = erikkson2_forcing(x[0], x[1], epsilon);
                     double lv = F * v.val;
 
                     double val = -lv;
@@ -502,11 +506,15 @@ private:
     }
 
     double errorL2(double t) const {
-        return Base::errorL2(u, Ux, Uy, exact(epsilon)) / normL2(Ux, Uy, exact(epsilon)) * 100;
+        // auto sol = exact(epsilon);
+        auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        return Base::errorL2(u, Ux, Uy, sol) / normL2(Ux, Uy, sol) * 100;
     }
 
     double errorH1(double t) const {
-        return Base::errorH1(u, Ux, Uy, exact(epsilon)) / normH1(Ux, Uy, exact(epsilon)) * 100;
+        // auto sol = exact(epsilon);
+        auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        return Base::errorH1(u, Ux, Uy, sol) / normH1(Ux, Uy, sol) * 100;
     }
 };
 
