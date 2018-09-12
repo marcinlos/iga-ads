@@ -19,10 +19,6 @@ private:
 
     space_set trial, test;
 
-    dimension Ux, Uy;
-    dimension& Vx;
-    dimension& Vy;
-
     double h;
 
     mumps::solver solver;
@@ -33,10 +29,6 @@ public:
     : Base{ test_.Px, test_.Py, steps }
     , trial{ std::move(trial_) }
     , test{ std::move(test_) }
-    , Ux{ trial.Px }
-    , Uy{ trial.Py }
-    , Vx{ x }
-    , Vy{ y }
     , h{ element_diam(trial.Px, trial.Py) }
     , outputU1{ trial.U1x.B, trial.U1y.B, 500 }
     , outputU2{ trial.U2x.B, trial.U2y.B, 500 }
