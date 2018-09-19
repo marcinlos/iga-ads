@@ -76,11 +76,13 @@ class InitialStateFnParser {
       printf("Formula compilation error...\n");
     }
 
-    param = 1;
-    printf("Test expression for 1 = %.5f\n", M_expression.value());
+    param_x = 1;
+    param_y = 2;
+    printf("Test expression for x = 1, y = 2 => %.5f\n", M_expression.value());
 
-    param = 2;
-    printf("Test expression for 2 = %.5f\n", M_expression.value());
+    param_x = 2;
+    param_y = 1;
+    printf("Test expression for x = 2, y = 1 => %.5f\n", M_expression.value());
   }
 
   ~InitialStateFnParser() {
