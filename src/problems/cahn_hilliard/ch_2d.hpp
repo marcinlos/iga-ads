@@ -61,14 +61,15 @@ class InitialStateFnParser {
   expression_t M_expression;
   parser_t M_parser;
 
-  double param;
+  double param_x;
+  double param_y;
 
   public:
 
-  MyParser(std::string formula, const double lambda, const double theta): param(0) {
+  InitialStateFnParser(std::string formula, const double lambda, const double theta): param_x(0), param_y(0) {
     printf("Parser constructor");
-    M_symbol_table.add_variable("x", param);
-    M_symbol_table.add_variable("y", param);
+    M_symbol_table.add_variable("x", param_x);
+    M_symbol_table.add_variable("y", param_y);
     M_expression.register_symbol_table(M_symbol_table);
 
     if(!M_parser.compile(formula, M_expression)) {
@@ -82,12 +83,13 @@ class InitialStateFnParser {
     printf("Test expression for 2 = %.5f\n", M_expression.value());
   }
 
-  ~MyParser() {
+  ~InitialStateFnParser() {
     printf("Parser destructor");
   }
 
-  double value(double c) {
-    param = c;
+  double value(double x, double y) {
+    param_x = x;
+    param_y = y;
     return M_expression.value();
   }
 
