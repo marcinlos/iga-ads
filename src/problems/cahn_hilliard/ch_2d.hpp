@@ -66,7 +66,7 @@ class InitialStateFnParser {
 
   public:
 
-  InitialStateFnParser(std::string formula, const double lambda, const double theta): param_x(0), param_y(0) {
+  InitialStateFnParser(std::string formula): param_x(0), param_y(0) {
     printf("Parser constructor");
     M_symbol_table.add_variable("x", param_x);
     M_symbol_table.add_variable("y", param_y);
