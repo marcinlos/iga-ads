@@ -133,7 +133,7 @@ private:
     InitialStateFnParser i_parser;
 
 public:
-    ch_2d(const config_2d& config, std::string M_formula, std::string F_formula, , std::string I_formula)
+    ch_2d(const config_2d& config, std::string M_formula, std::string F_formula, std::string I_formula)
     : Base{ config }
     , lambda(1.0/(9000.0))		// Gomez et al. 2008
 //    , lambda(1.0/(config.x.elements*config.y.elements))	// Some other papers
