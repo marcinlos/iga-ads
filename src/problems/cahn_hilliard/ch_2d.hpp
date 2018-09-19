@@ -55,6 +55,44 @@ class MyParser {
 
 };
 
+class InitialStateFnParser {
+
+  symbol_table_t M_symbol_table;
+  expression_t M_expression;
+  parser_t M_parser;
+
+  double param;
+
+  public:
+
+  MyParser(std::string formula, const double lambda, const double theta): param(0) {
+    printf("Parser constructor");
+    M_symbol_table.add_variable("x", param);
+    M_symbol_table.add_variable("y", param);
+    M_expression.register_symbol_table(M_symbol_table);
+
+    if(!M_parser.compile(formula, M_expression)) {
+      printf("Formula compilation error...\n");
+    }
+
+    param = 1;
+    printf("Test expression for 1 = %.5f\n", M_expression.value());
+
+    param = 2;
+    printf("Test expression for 2 = %.5f\n", M_expression.value());
+  }
+
+  ~MyParser() {
+    printf("Parser destructor");
+  }
+
+  double value(double c) {
+    param = c;
+    return M_expression.value();
+  }
+
+};
+
 thread_local double m_param = 0;
 
 class ch_2d : public simulation_2d {
@@ -92,9 +130,10 @@ private:
 
     MyParser m_parser;
     MyParser f_parser;
+    InitialStateFnParser i_parser;
 
 public:
-    ch_2d(const config_2d& config, std::string M_formula, std::string F_formula)
+    ch_2d(const config_2d& config, std::string M_formula, std::string F_formula, , std::string I_formula)
     : Base{ config }
     , lambda(1.0/(9000.0))		// Gomez et al. 2008
 //    , lambda(1.0/(config.x.elements*config.y.elements))	// Some other papers
@@ -115,6 +154,7 @@ public:
     , My_ctx{ My }
     , m_parser {M_formula, lambda, theta}
     , f_parser {F_formula, lambda, theta}
+    , i_parser {I_formula}
     {
         // Fill the large matrices
         matrix(Ax, x.basis, steps.dt);
@@ -145,16 +185,7 @@ public:
     }
 
     double init_c(double x, double y) {
-	// Circle in the center
-        if (sqrt((x-0.5)*(x-0.5)+(y-0.5)*(y-0.5))<=0.1)
-            return 0.88;
-        else
-            return 0.12;
-
-        // Here we use a random distribution following Gomez et al. (2008)
-        double cbar = 0.63; // 0.26;  // 0.7;
-        double r = ((rand() % 101) - 50)/1000.;	// random number in [-0.05; 0.05]
-        return cbar-r;
+	    return i_parser.value(x, y);
     }
 
 /*
