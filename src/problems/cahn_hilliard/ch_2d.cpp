@@ -18,7 +18,6 @@ int main(int argc, char* argv[]) {
     double dt = std::atof(argv[4]);
     std::string m = std::string(argv[5]);
     std::string f = std::string(argv[6]);
-    std::string i = std::string(argv[7]);
 
     // dim_config dim{ 2, 80 };
     dim_config dim{ p, n };
@@ -29,6 +28,6 @@ int main(int argc, char* argv[]) {
     int ders = 1;
 
     config_2d c{dim, dim, steps, ders};
-    ch_2d sim{c, m, f, i};
+    ch_2d sim{c, m, f};
     sim.run();
 }

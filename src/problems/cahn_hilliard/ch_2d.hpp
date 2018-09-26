@@ -55,48 +55,6 @@ class MyParser {
 
 };
 
-class InitialStateFnParser {
-
-  symbol_table_t M_symbol_table;
-  expression_t M_expression;
-  parser_t M_parser;
-
-  double param_x;
-  double param_y;
-
-  public:
-
-  InitialStateFnParser(std::string formula): param_x(0), param_y(0) {
-    printf("Parser constructor");
-    M_symbol_table.add_variable("x", param_x);
-    M_symbol_table.add_variable("y", param_y);
-    M_expression.register_symbol_table(M_symbol_table);
-
-    if(!M_parser.compile(formula, M_expression)) {
-      printf("Formula compilation error...\n");
-    }
-
-    param_x = 1;
-    param_y = 2;
-    printf("Test expression for x = 1, y = 2 => %.5f\n", M_expression.value());
-
-    param_x = 2;
-    param_y = 1;
-    printf("Test expression for x = 2, y = 1 => %.5f\n", M_expression.value());
-  }
-
-  ~InitialStateFnParser() {
-    printf("Parser destructor");
-  }
-
-  double value(double x, double y) {
-    param_x = x;
-    param_y = y;
-    return M_expression.value();
-  }
-
-};
-
 thread_local double m_param = 0;
 
 class ch_2d : public simulation_2d {
@@ -134,10 +92,9 @@ private:
 
     MyParser m_parser;
     MyParser f_parser;
-    InitialStateFnParser i_parser;
 
 public:
-    ch_2d(const config_2d& config, std::string M_formula, std::string F_formula, std::string I_formula)
+    ch_2d(const config_2d& config, std::string M_formula, std::string F_formula)
     : Base{ config }
     , lambda(1.0/(9000.0))		// Gomez et al. 2008
 //    , lambda(1.0/(config.x.elements*config.y.elements))	// Some other papers
@@ -158,7 +115,6 @@ public:
     , My_ctx{ My }
     , m_parser {M_formula, lambda, theta}
     , f_parser {F_formula, lambda, theta}
-    , i_parser {I_formula}
     {
         // Fill the large matrices
         matrix(Ax, x.basis, steps.dt);
@@ -189,7 +145,7 @@ public:
     }
 
     double init_c(double x, double y) {
-	    return i_parser.value(x, y);
+	    ##INITIAL_SURFACE_SNIPPET##
     }
 
 /*
