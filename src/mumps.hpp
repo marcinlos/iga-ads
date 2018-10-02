@@ -80,7 +80,7 @@ public:
         //ordering metis (5), or pord (4), or AMD (0), AMF (2), QAMD (6)
         icntl(7) = 5;
 
-        icntl(14) = 10;
+        icntl(14) = 100;
 
         //streams
         icntl(1) = 3;
