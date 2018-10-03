@@ -21,8 +21,8 @@ private:
 
     double h;
 
-    double Cpen = 1;
-    double hF = 1;
+    double Cpen = 5 * (3 + 1);
+    double hF = 1 / 40.;
 
     mumps::solver solver;
     output_manager<2> outputU1, outputU2, outputP;
