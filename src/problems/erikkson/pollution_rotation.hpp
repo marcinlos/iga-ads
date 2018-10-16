@@ -58,19 +58,8 @@ private:
 
     double h;
 
-    double peclet = 1e3;
+    double peclet = 1e6;
     double epsilon = 1 / peclet;
-
-    point_type c_diff{{ epsilon, epsilon }};
-
-    // double angle = 0;
-    double angle = M_PI / 6;
-
-    double len = 1;
-
-    // point_type beta{{ len * cos(angle), len * sin(angle) }};
-    // point_type beta{{ 1, 1 }};
-
 
     mumps::solver solver;
 
@@ -258,12 +247,15 @@ private:
         Ux.factorize_matrix();
         Uy.factorize_matrix();
 
-        // auto init = [this](double x, double y) { return init_state(x, y); };
+        // double F = 0;//source(x[0], x[1]);
+
+        // auto init = [this](double x, double y) { return source(x, y); };
         // compute_projection(u, Ux.basis, Uy.basis, init);
         // ads_solve(u, u_buffer, Ux.data(), Uy.data());
+        u(Ux.dofs() / 2 + Ux.dofs() / 4, Uy.dofs() / 2) = 1;
 
         zero(r.data);
-        zero(u);
+        // zero(u);
 
         // stationary_bc(u, Ux, Uy);
         // skew_bc(u, Ux, Uy);
@@ -378,7 +370,7 @@ private:
                     value_type v = eval_basis(e, q, a, Vx, Vy);
 
                     // double F = erikkson_forcing(x[0], x[1], epsilon, t + steps.dt);
-                    double F = source(x[0], x[1]);
+                    double F = 0;//source(x[0], x[1]);
                     double lv = (uu_prev.val + steps.dt * F) * v.val;
 
                     double val = -lv;
@@ -409,13 +401,15 @@ private:
     }
 
     double errorL2(double t) const {
-        auto sol = exact(epsilon);
-        return Base::errorL2(u, Ux, Uy, sol) / normL2(Ux, Uy, sol) * 100;
+        auto sol = [](auto) { return value_type{0, 0, 0}; };
+        return Base::errorL2(u, Ux, Uy, sol);
+
     }
 
     double errorH1(double t) const {
-        auto sol = exact(epsilon);
-        return Base::errorH1(u, Ux, Uy, sol) / normH1(Ux, Uy, sol) * 100;
+        auto sol = [](auto) { return value_type{0, 0, 0}; };
+        return Base::errorH1(u, Ux, Uy, sol);
+
     }
 };
 
