@@ -22,7 +22,7 @@ private:
     double h;
 
     double Cpen = 5 * (3 + 1);
-    double hF = 1 / 40.;
+    double hF = 1 / 20.;
 
     mumps::solver solver;
     output_manager<2> outputU1, outputU2, outputP;
@@ -208,29 +208,34 @@ public:
         bool horizontal = side == boundary::top || side == boundary::bottom;
 
         if (horizontal) {
-            for (auto e : Ux.basis.dof_range(i[0])) {
+            int ey = side == boundary::bottom ? 0 : Uy.elements - 1;
+            for (auto e : Ux.basis.element_range(i[0])) {
                 auto jrange = Vx.basis.element_ranges[j[0]];
                 if (e < jrange.first || e > jrange.second) continue;
 
                 double J = Ux.basis.J[e];
+                // int dq = side == boundary::bottom ? 2 : 1;
+                int qy = Uy.basis.quad_order - (side == boundary::bottom ? 2 : 1);
                 for (int q = 0; q < Ux.basis.quad_order; ++ q) {
                     double w = Ux.basis.w[q];
-                    value_type ww = eval_basis({e, 0}, {q, 0}, i, Ux, Uy);
-                    value_type uu = eval_basis({e, 0}, {q, 0}, j, Vx, Vy);
+                    value_type ww = eval_basis({e, ey}, {q, qy}, i, Ux, Uy);
+                    value_type uu = eval_basis({e, ey}, {q, qy}, j, Vx, Vy);
                     double fuw = form(ww, uu);
                     val += fuw * w * J;
                 }
             }
         } else {
-            for (auto e : Uy.basis.dof_range(i[1])) {
+            int ex = side == boundary::left ? 0 : Ux.elements - 1;
+            for (auto e : Uy.basis.element_range(i[1])) {
                 auto jrange = Vy.basis.element_ranges[j[1]];
                 if (e < jrange.first || e > jrange.second) continue;
 
                 double J = Uy.basis.J[e];
+                int qx = Ux.basis.quad_order - (side == boundary::left ? 2 : 1);
                 for (int q = 0; q < Uy.basis.quad_order; ++ q) {
                     double w = Uy.basis.w[q];
-                    value_type ww = eval_basis({0, e}, {0, q}, i, Ux, Uy);
-                    value_type uu = eval_basis({0, e}, {0, q}, j, Vx, Vy);
+                    value_type ww = eval_basis({ex, e}, {qx, q}, i, Ux, Uy);
+                    value_type uu = eval_basis({ex, e}, {qx, q}, j, Vx, Vy);
                     double fuw = form(ww, uu);
                     val += fuw * w * J;
                 }
@@ -276,9 +281,8 @@ public:
                 auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, test.Px, test.Py, form); };
 
                 if (! is_pressure_fixed(i) && ! is_pressure_fixed(j)) {
-
                     test_p(ii, jj, eval([hh](auto w, auto u) {
-                        return w.val * u.val + hh * (w.dx * u.dx + w.dy * u.dy);
+                        return w.val * u.val;// + hh * (w.dx * u.dx + w.dy * u.dy);
                     }));
                 }
             }
@@ -293,7 +297,7 @@ public:
 
                 if (! is_boundary(i[0], test.U1x) && ! is_boundary(j[0], test.U1x)) {
                     test_vx(ii, jj, eval([hh](auto w, auto u) {
-                        return w.val * u.val + hh * w.dx * u.dx;
+                        return w.val * u.val + /*hh **/ w.dx * u.dx        + w.dy * u.dy;
                     }));
                 }
             }
@@ -308,12 +312,13 @@ public:
 
                 if (! is_boundary(i[1], test.U2y) && ! is_boundary(j[1], test.U2y)) {
                     test_vy(ii, jj, eval([hh](auto w, auto u) {
-                        return w.val * u.val + hh * w.dy * u.dy;
+                        return w.val * u.val + /*hh **/ w.dy * u.dy       + w.dx + u.dx;
                     }));
                 }
             }
         }
 
+        /*
         // tx, vy -> hh (tx,x, vy,y)
         // ty, vx -> hh (ty,y, vx,x)
         for (auto i : dofs(test.U1x, test.U1y)) {
@@ -330,6 +335,7 @@ public:
                 }
             }
         }
+        */
 
         // Dirichlet BC - test space
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -345,7 +351,10 @@ public:
             int i1 = linear_index({ix, test.U2y.dofs() - 1}, test.U2x, test.U2y) + 1;
             test_vy(i1, i1, 1);
         }
-        test_p(1, 1, 1.0);
+        // test_p(1, 1, 1.0);
+        int i = linear_index({0, 0}, test.Px, test.Py) + 1;
+        test_p(i, i, 1.0);
+
 
         // B, B^t
         auto put = [&](int i, int j, int si, int sj, double val, bool fixed_i, bool fixed_j) {
@@ -409,10 +418,10 @@ public:
 
                 // boundary terms
                 // left/right
-                if (is_boundary(i[0], test.U1x) || is_boundary(j[0], trial.U1x)) {
+                if (is_boundary(i[0], test.U2x) || is_boundary(j[0], trial.U2x)) {
                     auto side = i[0] == 0 ? boundary::left : boundary::right;
                     int n = side == boundary::right ? 1 : -1;
-                    value -= integrate_boundary(side, i, j, test.U1x, test.U1y, trial.U1x, trial.U1y, [&](auto w, auto u) {
+                    value -= integrate_boundary(side, i, j, test.U2x, test.U2y, trial.U2x, trial.U2y, [&](auto w, auto u) {
                         return n * w.dx * u.val + pen_term(w, u);
                     });
                 }
@@ -506,7 +515,8 @@ public:
         //     int i = linear_index(dof, trial.U2x, trial.U2y) + 1;
         //     trial_vy(i, i, 1);
         // });
-        trial_p(1, 1, 1.0);
+        int ii = linear_index({0, 0}, trial.Px, trial.Py) + 1;
+        trial_p(ii, ii, 1.0);
     }
 
     void compute_rhs(vector_view& vx, vector_view& vy, vector_view& /*p*/) const {
@@ -564,7 +574,8 @@ public:
         }
 
         // zero_bc(Rp, test.Px, test.Py);
-        Rp(0, 0) = 0; // ???
+        int i = linear_index({0, 0}, test.Px, test.Py);
+        // Rp(i, i) = 0; // ???
     }
 
     void step(int /*iter*/, double /*t*/) override {
@@ -597,7 +608,8 @@ public:
         std::cout << "Computing RHS" << std::endl;
         compute_rhs(Rvx, Rvy, Rp);
         apply_bc(Rvx, Rvy, Rp);
-        p(0, 0) = 0; // fix pressure at a point
+        int i = linear_index({0, 0}, trial.Px, trial.Py);
+        // p(i, i) = 0; // fix pressure at a point
 
         std::cout << "Solving" << std::endl;
         solver.solve(problem);
@@ -673,10 +685,10 @@ public:
         for (auto b : dofs_on_element(e, space.U2x, space.U2y)) {
             double d = v(b[0], b[1]);
 
-            auto loc = dof_global_to_local(e, b, space.U1x, space.U1y);
+            auto loc = dof_global_to_local(e, b, space.U2x, space.U2y);
 
-            const auto& bx = space.U1x.basis;
-            const auto& by = space.U1y.basis;
+            const auto& bx = space.U2x.basis;
+            const auto& by = space.U2y.basis;
 
             double B1  = bx.b[e[0]][q[0]][0][loc[0]];
             double dB1 = bx.b[e[0]][q[0]][1][loc[0]];
