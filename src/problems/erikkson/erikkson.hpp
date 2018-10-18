@@ -6,13 +6,15 @@
 #include "ads/executor/galois.hpp"
 #include "ads/lin/dense_matrix.hpp"
 #include "ads/lin/dense_solve.hpp"
+#include "problems/erikkson/solution.hpp"
+#include "problems/erikkson/erikkson_base.hpp"
 
 
 namespace ads {
 
-class erikkson : public simulation_2d {
+class erikkson : public erikkson_base {
 private:
-    using Base = simulation_2d;
+    using Base = erikkson_base;
 
     galois_executor executor{8};
 
@@ -39,19 +41,20 @@ private:
 
     int save_every = 1;
 
-    double peclet = 1e6;
+    double peclet = 1e2;
     // double peclet = 10;
     double epsilon = 1 / peclet;
 
     point_type c_diff{{ epsilon, epsilon }};
 
     // CHANGE
-    double angle = 0;
+    // double angle = 0;
     // double angle = M_PI / 6;
 
-    double len = 1;
+    // double len = 1;
 
-    point_type beta{{ len * cos(angle), len * sin(angle) }};
+    // point_type beta{{ len * cos(angle), len * sin(angle) }};
+    point_type beta{{ 1, 1 }};
 
     output_manager<2> output;
 
@@ -474,7 +477,7 @@ private:
     void after_step(int iter, double t) override {
         if ((iter + 1) % save_every == 0) {
             // std::cout << "Step " << (iter + 1) << " : " << errorL2(t) << " " << errorH1(t) << std::endl;
-            std::cout << t << " " << errorL2(t) << " " << errorH1(t) << std::endl;
+            std::cout << iter << " " << errorL2(t) << " " << errorH1(t) << std::endl;
 
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
@@ -601,10 +604,11 @@ private:
     }
 
     double forcing(double x, double y, double t) {
-        constexpr double pi = M_PI;
-        auto s = [](double a) { return std::sin(pi * a); };
-        auto c = [](double a) { return std::cos(pi * a); };
-        return pi*s(x)*s(y)*c(t) + 2*pi*pi*epsilon*s(x)*s(y)*s(t) + pi*c(x)*s(y)*s(t);
+        // constexpr double pi = M_PI;
+        // auto s = [](double a) { return std::sin(pi * a); };
+        // auto c = [](double a) { return std::cos(pi * a); };
+        // return pi*s(x)*s(y)*c(t) + 2*pi*pi*epsilon*s(x)*s(y)*s(t) + pi*c(x)*s(y)*s(t);
+        return erikkson2_forcing(x, y, epsilon);
     }
 
     void compute_rhs_x(double t) {
@@ -619,24 +623,24 @@ private:
                 double w = weigth(q);
                 auto x = point(e, q);
                 value_type u = eval(u_prev, e, q, Ux, Uy);
-                double Dxy_u = eval_mixed_deriv(u_prev, e, q, Ux, Uy);
+                // double Dxy_u = eval_mixed_deriv(u_prev, e, q, Ux, Uy);
 
                 for (auto a : dofs_on_element(e, Vx, Uy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Uy);
                     value_type v = eval_basis(e, q, a, Vx, Uy);
-                    double Dxy_v = eval_basis_mixed_deriv(e, q, a, Vx, Uy);
+                    // double Dxy_v = eval_basis_mixed_deriv(e, q, a, Vx, Uy);
 
                     double conv_term = beta[1] * u.dy * v.val;
 
-                    double quad_term = c_diff[0] * c_diff[1] * Dxy_u * Dxy_v
-                        + beta[0] * beta[1] * Dxy_u * v.val
-                        + beta[0] * c_diff[1] * Dxy_u * v.dy
-                        + beta[1] * c_diff[0] * Dxy_u * v.dx;
+                    // double quad_term = c_diff[0] * c_diff[1] * Dxy_u * Dxy_v
+                    //     + beta[0] * beta[1] * Dxy_u * v.val
+                    //     + beta[0] * c_diff[1] * Dxy_u * v.dy
+                    //     + beta[1] * c_diff[0] * Dxy_u * v.dx;
 
                     double gradient_prod = u.dy * v.dy;
                     double val = u.val * v.val
                         - h * (conv_term + c_diff[1] * gradient_prod)
-                        + h*h * quad_term
+                        // + h*h * quad_term
                         + h * v.val * forcing(x[0], x[1], t);
 
                     U(aa[0], aa[1]) += val * w * J;
@@ -665,14 +669,17 @@ private:
                     auto aa = dof_global_to_local(e, a, Ux, Vy);
                     value_type v = eval_basis(e, q, a, Ux, Vy);
 
-                    // double conv_term = beta[0] * u.dx * v.val;
+                    double conv_term = beta[0] * u.dx * v.val;
 
-                    // double gradient_prod = u.dx * v.dx;
+                    double gradient_prod = u.dx * v.dx;
                     // double val = u.val * v.val
                     //     + h * (- conv_term - c_diff[0] * gradient_prod)
                     //     + h * v.val * forcing(x[0], x[1], t);
 
-                    double val = u.val * v.val + h * v.val * forcing(x[0], x[1], t + h);
+                    double val = u.val * v.val
+                        - h * (conv_term + c_diff[0] * gradient_prod)
+                        + h * v.val * forcing(x[0], x[1], t + h);
+
                     U(aa[0], aa[1]) += val * w * J;
 
                 }
@@ -683,69 +690,81 @@ private:
         });
     }
 
-    value_type exact2(double x, double y, double t) const {
-        constexpr double pi = M_PI;
-        auto s = [](double a) { return std::sin(pi * a); };
-        auto c = [](double a) { return std::cos(pi * a); };
+    // value_type exact2(double x, double y, double t) const {
+    //     constexpr double pi = M_PI;
+    //     auto s = [](double a) { return std::sin(pi * a); };
+    //     auto c = [](double a) { return std::cos(pi * a); };
 
-        return value_type{ s(t)*s(x)*s(y), pi*s(t)*c(x)*s(y), pi*s(t)*s(x)*c(y) };
-    }
+    //     return value_type{ s(t)*s(x)*s(y), pi*s(t)*c(x)*s(y), pi*s(t)*s(x)*c(y) };
+    // }
 
 
 
-    value_type exact(double x, double y, double eps) const {
-        using std::exp;
-        auto lambda = M_PI * eps;
-        auto del = std::sqrt(1 + 4 * lambda * lambda);
-        auto r1 = (1 + del) / (2 * eps);
-        auto r2 = (1 - del) / (2 * eps);
+    // value_type exact(double x, double y, double eps) const {
+    //     using std::exp;
+    //     auto lambda = M_PI * eps;
+    //     auto del = std::sqrt(1 + 4 * lambda * lambda);
+    //     auto r1 = (1 + del) / (2 * eps);
+    //     auto r2 = (1 - del) / (2 * eps);
 
-        auto norm = exp(-r1) - exp(-r2);
-        auto alpha = (exp(r1 * (x - 1)) - exp(r2 * (x - 1))) / norm;
-        double val = alpha * std::sin(M_PI * y);
+    //     auto norm = exp(-r1) - exp(-r2);
+    //     auto alpha = (exp(r1 * (x - 1)) - exp(r2 * (x - 1))) / norm;
+    //     double val = alpha * std::sin(M_PI * y);
 
-        return {
-            val,
-            (r1 * exp(r1 * (x - 1)) - r2 * exp(r2 * (x - 1))) / norm * std::sin(M_PI * y),
-            alpha * M_PI * std::cos(M_PI * y)
-        };
-    }
+    //     return {
+    //         val,
+    //         (r1 * exp(r1 * (x - 1)) - r2 * exp(r2 * (x - 1))) / norm * std::sin(M_PI * y),
+    //         alpha * M_PI * std::cos(M_PI * y)
+    //     };
+    // }
 
     double errorL2(double t) const {
-        double error = 0;
-
-        for (auto e : elements(Ux, Ux)) {
-            double J = jacobian(e);
-            for (auto q : quad_points(Ux, Ux)) {
-                double w = weigth(q);
-                auto x = point(e, q);
-                value_type u = eval(u_prev, e, q, Ux, Uy);
-
-                auto d = u - exact(x[0], x[1], epsilon);
-                // auto d = u - exact2(x[0], x[1], t);
-
-                error += d.val * d.val * w * J;
-            }
-        }
-        return std::sqrt(error);
+        // auto sol = exact(epsilon);
+        auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        return Base::errorL2(u, Ux, Uy, sol) / normL2(Ux, Uy, sol) * 100;
     }
 
     double errorH1(double t) const {
-        double error = 0;
-        for (auto e : elements(Ux, Ux)) {
-            double J = jacobian(e);
-            for (auto q : quad_points(Ux, Ux)) {
-                double w = weigth(q);
-                auto x = point(e, q);
-                value_type u = eval(u_prev, e, q, Ux, Uy);
-
-                auto d = u - exact(x[0], x[1], epsilon);
-                // auto d = u - exact2(x[0], x[1], t);
-                error += (d.val * d.val + d.dx * d.dx + d.dy * d.dy) * w * J;
-            }
-        }
-        return std::sqrt(error);
+        // auto sol = exact(epsilon);
+        auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        return Base::errorH1(u, Ux, Uy, sol) / normH1(Ux, Uy, sol) * 100;
     }
+
+    // double errorL2(double t) const {
+    //     double error = 0;
+
+    //     for (auto e : elements(Ux, Ux)) {
+    //         double J = jacobian(e);
+    //         for (auto q : quad_points(Ux, Ux)) {
+    //             double w = weigth(q);
+    //             auto x = point(e, q);
+    //             value_type u = eval(u_prev, e, q, Ux, Uy);
+
+    //             auto d = u - erikkson2_exact(x[0], x[1], epsilon);
+    //             // auto d = u - exact2(x[0], x[1], t);
+
+    //             error += d.val * d.val * w * J;
+    //         }
+    //     }
+    //     return std::sqrt(error);
+    // }
+
+    // double errorH1(double t) const {
+    //     double error = 0;
+    //     for (auto e : elements(Ux, Ux)) {
+    //         double J = jacobian(e);
+    //         for (auto q : quad_points(Ux, Ux)) {
+    //             double w = weigth(q);
+    //             auto x = point(e, q);
+    //             value_type u = eval(u_prev, e, q, Ux, Uy);
+
+    //             auto d = u - erikkson2_exact(x[0], x[1], epsilon);
+    //             // auto d = u - exact2(x[0], x[1], t);
+    //             error += (d.val * d.val + d.dx * d.dx + d.dy * d.dy) * w * J;
+    //         }
+    //     }
+    //     return std::sqrt(error);
+    // }
 };
 
 }
