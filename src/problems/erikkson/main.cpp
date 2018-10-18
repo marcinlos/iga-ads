@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
     std::cout << "adaptations: " << std::boolalpha << adapt << std::endl;
 
 
-    timesteps_config steps{ nsteps, 0.2*1e-2 };
+    timesteps_config steps{ nsteps, 0.2*1e-1 };
     int ders = 1;
 
     auto trial_basis_x = create_basis(0, 1, p_trial, n, p_trial - 1 - C_trial, adapt);
