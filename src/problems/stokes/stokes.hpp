@@ -197,7 +197,9 @@ public:
             (4 - 24 * y + 48 * y*y - 48 * y*y*y + 24 * y*y*y*y) * x -
             12 * y*y + 24 * y*y*y - 12 * y*y*y*y;
 
-        return { fx, fy };
+        // return { fx, fy };
+        return { 0, 0 };
+
     }
 
     auto shifted(int n, int k, mumps::problem& problem) const {
@@ -378,10 +380,20 @@ public:
     }
 
 
-    void apply_bc(vector_view& Rvx, vector_view& Rvy, vector_view& Rp) const {
-        zero_bc(Rvx, Vx, Vy);
-        zero_bc(Rvy, Vx, Vy);
-        zero_bc(Rp, Vx, Vy);
+    void apply_bc(vector_view& Rvx, vector_view& Rvy, vector_view& Rp) {
+        // zero_bc(Rvx, Ux, Uy);
+
+        constexpr double eps = 1e-4;
+        auto drop = [](double t) { return t < 1 - eps ? 0 : 1 - (1 - t) / eps; };
+        dirichlet_bc(Rvx, boundary::left, Ux, Uy, drop);
+        dirichlet_bc(Rvx, boundary::right, Ux, Uy, drop);
+        // dirichlet_bc(Rvx, boundary::left,   Ux, Uy, 0);
+        // dirichlet_bc(Rvx, boundary::right,  Ux, Uy, 0);
+        dirichlet_bc(Rvx, boundary::top,    Ux, Uy, 1);
+        dirichlet_bc(Rvx, boundary::bottom, Ux, Uy, 0);
+
+        zero_bc(Rvy, Ux, Uy);
+        Rp(0, 0) = 0; // fix pressure at a point
     }
 
     void step(int /*iter*/, double /*t*/) override {
@@ -411,8 +423,8 @@ public:
 
         std::cout << "Computing RHS" << std::endl;
         compute_rhs(Rvx, Rvy, Rp);
-        apply_bc(Rvx, Rvy, Rp);
-        p(0, 0) = 0; // fix pressure at a point
+        apply_bc(vx, vy, p);
+
 
         std::cout << "Solving" << std::endl;
         solver.solve(problem);
