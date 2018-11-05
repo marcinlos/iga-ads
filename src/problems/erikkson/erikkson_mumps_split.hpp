@@ -77,7 +77,7 @@ private:
     // double len = 1;
 
     // point_type beta{{ len * cos(angle), len * sin(angle) }};
-    point_type beta{{ 1, 1 }};
+    point_type beta{{ 1, 0 }};
 
 
     mumps::solver solver;
@@ -286,7 +286,7 @@ private:
         // }
     }
 
-    void substep(vector_type& u, bool x_on_rhs, bool y_on_rhs, bool x_refined, bool y_refined, int k) {
+    void substep(vector_type& u, bool x_on_rhs, bool y_on_rhs, bool x_refined, bool y_refined, int k, double t) {
         dimension& Vx = x_refined ? this->Vx : Ux;
         dimension& Vy = y_refined ? this->Vy : Uy;
 
@@ -295,7 +295,7 @@ private:
 
 
         std::fill(begin(full_rhs), end(full_rhs), 0);
-        compute_rhs(x_on_rhs, y_on_rhs, Vx, Vy, r_rhs, u_rhs, k);
+        compute_rhs(x_on_rhs, y_on_rhs, Vx, Vy, r_rhs, u_rhs, k, t);
 
         zero_bc(r_rhs, Vx, Vy);
         zero_bc(u_rhs, Ux, Uy);
@@ -308,16 +308,16 @@ private:
         copy_solution(u_rhs, u, Vx, Vy);
     }
 
-    void step(int iter, double /*t*/) override {
+    void step(int iter, double t) override {
         bool xrhs[] = {  true, false };
 
         bool x_rhs = xrhs[iter % sizeof(xrhs)];
         bool y_rhs = !x_rhs;
         std::cout << iter << ": x " << (x_rhs ? "rhs" : "lhs") << ", y " << (y_rhs ? "rhs" : "lhs") << std::endl;
 
-        bool x_on_rhs = x_rhs;
-        bool y_on_rhs = y_rhs;
-        bool x_refine = false;//!x_rhs;//true;
+        bool x_on_rhs = false;//x_rhs;
+        bool y_on_rhs = false;//y_rhs;
+        bool x_refine = true;//!x_rhs;//true;
         bool y_refine = true;//!y_rhs;//true;
 
         // substep(u, x_on_rhs, y_on_rhs, x_refine, y_refine, iter);
@@ -353,19 +353,19 @@ private:
         // std::cout << "dt: " << e1 << ", 2dt: " << e2 << ", dt/2: " << e3 << std::endl;
         // std::cout << "dt = " << steps.dt << std::endl;
 
-        substep(u, x_on_rhs, y_on_rhs, x_refine, y_refine, iter);
+        substep(u, x_on_rhs, y_on_rhs, x_refine, y_refine, iter, t);
     }
 
-    void after_step(int iter, double /*t*/) override {
+    void after_step(int iter, double t) override {
         if ((iter + 1) % save_every == 0) {
-            std::cout << "Step " << (iter + 1) << " : " << errorL2(u) << " " << errorH1(u) << std::endl;
+            std::cout << "Step " << (iter + 1) << " : " << errorL2(u, t) << " " << errorH1(u, t) << std::endl;
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
     }
 
     void after() override {
         plot_middle("final.data", u, Ux, Uy);
-        std::cout << "{ 'L2': '" << errorL2(u) << "', 'H1': '" << errorH1(u) << "'}" << std::endl;
+        // std::cout << "{ 'L2': '" << errorL2(u) << "', 'H1': '" << errorH1(u) << "'}" << std::endl;
 
         std::ofstream sol("solution.data");
         for (int i = 0; i < Ux.dofs(); ++ i) {
@@ -378,7 +378,7 @@ private:
 
 
     void compute_rhs(bool with_x, bool with_y, const dimension& Vx, const dimension& Vy,
-                     vector_view& r_rhs, vector_view& u_rhs, int k) {
+                     vector_view& r_rhs, vector_view& u_rhs, int k, double t) {
         // auto gamma = 1 - std::pow(bbeta, k);
 
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
@@ -396,15 +396,18 @@ private:
                 for (auto a : dofs_on_element(e, Vx, Vy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
-                    double F = erikkson2_forcing(x[0], x[1], epsilon);
-                    double lv = (steps.dt * F + uu.val) * v.val;
-                    double val = -lv;
+                    // double F = erikkson2_forcing(x[0], x[1], epsilon);
+                    double F = erikkson_forcing(x[0], x[1], epsilon, t);
+
+                    double lv = uu.val * v.val;
                     if (with_x) {
-                        val += steps.dt * (c_diff[0] * uu.dx * v.dx + beta[0] * uu.dx * v.val);
+                        // lv -= steps.dt * (c_diff[0] * uu.dx * v.dx + beta[0] * uu.dx * v.val);
                     }
                     if (with_y) {
-                        val += steps.dt * (c_diff[1] * uu.dy * v.dy + beta[1] * uu.dy * v.val);
+                        // lv -= steps.dt * (c_diff[1] * uu.dy * v.dy + beta[1] * uu.dy * v.val);
                     }
+                    lv += steps.dt * F * v.val;
+                    double val = -lv;
                     // val += alpha * rr.val * v.val;
                     // if (with_x) val -= hh * rr.dx * v.dx;
                     // if (with_y) val -= hh * rr.dy * v.dy;
@@ -430,15 +433,19 @@ private:
         });
     }
 
-    double errorL2(const vector_type& u) const {
+    double errorL2(const vector_type& u, double t) const {
         // auto sol = exact(epsilon);
-        auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
+
         return Base::errorL2(u, Ux, Uy, sol) / normL2(Ux, Uy, sol) * 100;
     }
 
-    double errorH1(const vector_type& u) const {
+    double errorH1(const vector_type& u, double t) const {
         // auto sol = exact(epsilon);
-        auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
+
         return Base::errorH1(u, Ux, Uy, sol) / normH1(Ux, Uy, sol) * 100;
     }
 };

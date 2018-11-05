@@ -27,7 +27,7 @@ private:
 
     int save_every = 1;
 
-    double peclet = 1e6;
+    double peclet = 1e4;
     double epsilon = 1 / peclet;
 
     double C1 = 4, C2 = 2;
@@ -39,7 +39,8 @@ private:
 
     double len = 1;
 
-    point_type beta{{ len * cos(angle), len * sin(angle) }};
+    // point_type beta{{ len * cos(angle), len * sin(angle) }};
+    point_type beta{{ 1, 0 }};
 
     mumps::solver solver;
 
@@ -69,16 +70,16 @@ private:
     }
 
     double diffusion(double x, double y) const {
-        constexpr double eta = 1e6;
+        return 1/peclet;
+        // constexpr double eta = 1e6;
+        // bool left = x < 0.5, right = !left;
+        // bool bottom = y < 0.5, top = !bottom;
 
-        bool left = x < 0.5, right = !left;
-        bool bottom = y < 0.5, top = !bottom;
-
-        if ((bottom && left) || (top && right)) {
-            return eta;
-        } else {
-            return 1;
-        }
+        // if ((bottom && left) || (top && right)) {
+        //     return eta;
+        // } else {
+        //     return 1;
+        // }
     }
 
     void assemble_problem(mumps::problem& problem, double dt) {
@@ -158,13 +159,13 @@ private:
         zero(rhs);
         compute_rhs();
 
-        // stationary_bc(rhs, x, y);
+        stationary_bc(rhs, x, y);
         // skew_bc(rhs, x, y);
-        zero_bc(rhs, x, y);
+        // zero_bc(rhs, x, y);
 
         mumps::problem problem(rhs.data(), rhs.size());
         assemble_problem(problem, steps.dt);
-        solver.solve(problem);
+        solver.solve(problem, "matrix");
 
         u = rhs;
     }
@@ -196,7 +197,8 @@ private:
                     auto aa = dof_global_to_local(e, a, x, y);
                     value_type v = eval_basis(e, q, a, x, y);
 
-                    double F = 1;
+                    // double F = 1;
+                    double F = 0;
                     double val = F * v.val;
                     U(aa[0], aa[1]) += val * w * J;
                 }
@@ -208,11 +210,13 @@ private:
     }
 
     double errorL2() const {
-        return Base::errorL2(u, x, y, exact(epsilon));
+        auto sol = exact(epsilon);
+        return Base::errorL2(u, x, y, sol) / normL2(x, y, sol) * 100;
     }
 
     double errorH1() const {
-        return Base::errorH1(u, x, y, exact(epsilon));
+        auto sol = exact(epsilon);
+        return Base::errorH1(u, x, y, sol) / normH1(x, y, sol) * 100;
     }
 
 };

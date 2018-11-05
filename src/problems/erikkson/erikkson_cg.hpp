@@ -58,7 +58,7 @@ private:
 
     double h;
 
-    double peclet = 1e2;
+    double peclet = 1e4;
     double epsilon = 1 / peclet;
 
     point_type c_diff{{ epsilon, epsilon }};
@@ -69,8 +69,8 @@ private:
     double len = 1;
 
     // point_type beta{{ len * cos(angle), len * sin(angle) }};
-    point_type beta{{ 1, 1 }};
-
+    // point_type beta{{ 1, 1 }};
+    point_type beta{{ 1, 0 }};
 
     mumps::solver solver;
 
@@ -137,7 +137,8 @@ private:
                 int jj = linear_index(j, Vx, Vy) + 1;
 
                 double val = kron(MVx, MVy, i, j) + hh * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
-                val += hh * hh * kron(M.KVx, M.KVy, i, j);
+                // val += hh * hh * kron(M.KVx, M.KVy, i, j);
+
                 problem.add(ii, jj, val);
             }
         }
@@ -202,6 +203,7 @@ private:
 
                 double val = kron(MVx, MVy, i, j) + hh * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
                 // val += hh * hh * kron(M.KVx, M.KVy, i, j);
+
                 problem.add(ii, jj, val);
             }
         }
@@ -222,7 +224,8 @@ private:
                         value_type uu = eval_basis(e, q, j, Ux, Uy);
 
                         auto diff = diffusion(x[0], x[1]);
-                        double bwu = diff * grad_dot(uu, ww) + beta[0] * uu.dx * ww.val + beta[1] * uu.dy * ww.val;
+                        double bwu = uu.val * ww.val;
+                        bwu += steps.dt * (diff * grad_dot(uu, ww) + beta[0] * uu.dx * ww.val + beta[1] * uu.dy * ww.val);
 
                         val += bwu * w * J;
                     }
@@ -345,8 +348,8 @@ private:
 
         std::fill(begin(full_rhs), end(full_rhs), 0);
 
-        // compute_rhs_nonstationary(Vx, Vy, r_rhs, u_rhs, t);
-        compute_rhs(Vx, Vy, r_rhs, u_rhs);
+        compute_rhs_nonstationary(Vx, Vy, r_rhs, u_rhs, t);
+        // compute_rhs(Vx, Vy, r_rhs, u_rhs);
 
         zero_bc(r_rhs, Vx, Vy);
         zero_bc(u_rhs, Ux, Uy);
@@ -354,7 +357,7 @@ private:
         int size = Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs();
         mumps::problem problem(full_rhs.data(), size);
         assemble_problem2(problem, Vx, Vy, matrices(x_refined, y_refined));
-        solver.solve(problem);
+        solver.solve(problem, "matrix");
 
         add_solution(u_rhs, r_rhs, Vx, Vy);
         return norm(u_rhs);
@@ -369,9 +372,9 @@ private:
         // substep(x_rhs, y_rhs, true, true);
         // substep(x_rhs, y_rhs, !x_rhs, !y_rhs);
 
-        // using std::swap;
-        // swap(u, u_prev);
-        // zero(u);
+        using std::swap;
+        swap(u, u_prev);
+        zero(u);
 
         std::cout << "Step " << (iter + 1) << std::endl;
         constexpr auto max_iters = 30;
@@ -417,8 +420,8 @@ private:
                     value_type v = eval_basis(e, q, a, Vx, Vy);
 
                     // double F = 1;
-                    // double F = 0;
-                    double F = erikkson2_forcing(x[0], x[1], epsilon);
+                    double F = 0;
+                    // double F = erikkson2_forcing(x[0], x[1], epsilon);
                     double lv = F * v.val;
 
                     double val = -lv;
@@ -507,13 +510,17 @@ private:
 
     double errorL2(double t) const {
         // auto sol = exact(epsilon);
-        auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
+
         return Base::errorL2(u, Ux, Uy, sol) / normL2(Ux, Uy, sol) * 100;
     }
 
     double errorH1(double t) const {
         // auto sol = exact(epsilon);
-        auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
+
         return Base::errorH1(u, Ux, Uy, sol) / normH1(Ux, Uy, sol) * 100;
     }
 };

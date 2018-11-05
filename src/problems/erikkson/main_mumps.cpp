@@ -80,53 +80,56 @@ bspline::basis create_checkboard_basis(double a, double b, int p, int elements, 
 
 
 int main(int argc, char* argv[]) {
-    if (argc != 10) {
-        std::cerr << "Usage: erikkson_mumps <type> <N> <subdivision> <adapt> <p_trial> <C_trial> <p_test> <C_test> <steps>" << std::endl;
+    if (argc != 12) {
+        std::cerr << "Usage: erikkson_mumps <type> <Nx> <Ny> <subdivision> <adapt> <p_trial> <C_trial> <p_test> <C_test> <dt> <steps>" << std::endl;
         std::exit(1);
     }
     const std::string type{ argv[1] };
-    int n = std::atoi(argv[2]);
-    int subdivision = std::atoi(argv[3]);
-    bool adapt = std::atoi(argv[4]);
+    int nx = std::atoi(argv[2]);
+    int ny = std::atoi(argv[3]);
 
-    int p_trial = std::atoi(argv[5]);
-    int C_trial = std::atoi(argv[6]);
-    int p_test = std::atoi(argv[7]);
-    int C_test = std::atoi(argv[8]);
-    int nsteps = std::atoi(argv[9]);
+    int subdivision = std::atoi(argv[4]);
+    bool adapt = std::atoi(argv[5]);
 
-    std::cout << "trial (" << p_trial << ", " << C_trial << "), "
-              << "test (" << p_test << ", " << C_test << ")" << std::endl;
+    int p_trial = std::atoi(argv[6]);
+    int C_trial = std::atoi(argv[7]);
+    int p_test = std::atoi(argv[8]);
+    int C_test = std::atoi(argv[9]);
+    auto dt = std::atof(argv[10]);
+    int nsteps = std::atoi(argv[11]);
+
+    // std::cout << "trial (" << p_trial << ", " << C_trial << "), "
+              // << "test (" << p_test << ", " << C_test << ")" << std::endl;
 
     // double S = 5000.0;
     double S = 1.0;
 
     int quad = std::max(p_trial, p_test) + 1;
 
-    std::cout << "adaptations: " << std::boolalpha << adapt << std::endl;
+    // std::cout << "adaptations: " << std::boolalpha << adapt << std::endl;
 
-    timesteps_config steps{ nsteps, 0.2*1e-1 };
+    timesteps_config steps{ nsteps, dt };
     int ders = 2;
 
     bool adapt_x = true && adapt;
     bool adapt_y = true && adapt;
 
     // auto d = 1e-2;
-    auto d = shishkin_const(n, 1e-2);
+    auto d = shishkin_const(nx, 1e-2);
 
-    auto trial_basis_x = create_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_x, d);
+    auto trial_basis_x = create_basis(0, S, p_trial, nx, p_trial - 1 - C_trial, adapt_x, d);
     // auto trial_basis_x = create_checkboard_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_x);
     auto dtrial_x = dimension{ trial_basis_x, quad, ders, subdivision };
 
-    auto trial_basis_y = create_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_y, d);
+    auto trial_basis_y = create_basis(0, S, p_trial, ny, p_trial - 1 - C_trial, adapt_y, d);
     // auto trial_basis_y = create_checkboard_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_y);
     auto dtrial_y = dimension{ trial_basis_y, quad, ders, subdivision };
 
-    auto test_basis_x = create_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test, adapt_x, d);
+    auto test_basis_x = create_basis(0, S, p_test, subdivision*nx, p_test - 1 - C_test, adapt_x, d);
     // auto test_basis_x = create_checkboard_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test, adapt_x);
     auto dtest_x = dimension{ test_basis_x, quad, ders, 1 };
 
-    auto test_basis_y = create_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test, adapt_y, d);
+    auto test_basis_y = create_basis(0, S, p_test, subdivision*ny, p_test - 1 - C_test, adapt_y, d);
     // auto test_basis_y = create_checkboard_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test, adapt_y);
     auto dtest_y = dimension{ test_basis_y, quad, ders, 1 };
 
@@ -138,7 +141,7 @@ int main(int argc, char* argv[]) {
                   << trial_dim << " > " << test_dim << ")" << std::endl;
         std::exit(1);
     } else {
-        std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
+        // std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
     }
 
     if (type == "igrm-mumps") erikkson_mumps{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
