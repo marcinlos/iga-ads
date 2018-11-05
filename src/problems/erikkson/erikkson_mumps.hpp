@@ -109,8 +109,11 @@ private:
         for (auto i : dofs(Vx, Vy)) {
             for (auto j : dofs(Ux, Uy)) {
                 double val = 0;
-                val += c_diff[0] * kron(KUVx, MUVy, i, j) + beta[0] * kron(AUVx, MUVy, i, j);
-                val += c_diff[1] * kron(MUVx, KUVy, i, j) + beta[1] * kron(MUVx, AUVy, i, j);
+                val += kron(MUVx, MUVy, i, j);
+                val += steps.dt * (c_diff[0] * kron(KUVx, MUVy, i, j) + beta[0] * kron(AUVx, MUVy, i, j));
+                val += steps.dt * (c_diff[1] * kron(MUVx, KUVy, i, j) + beta[1] * kron(MUVx, AUVy, i, j));
+                // val += c_diff[0] * kron(KUVx, MUVy, i, j) + beta[0] * kron(AUVx, MUVy, i, j);
+                // val += c_diff[1] * kron(MUVx, KUVy, i, j) + beta[1] * kron(MUVx, AUVy, i, j);
 
                 if (val != 0) {
                     int ii = linear_index(i, Vx, Vy) + 1;
@@ -172,13 +175,15 @@ private:
         // compute_projection(u, Ux.basis, Uy.basis, init);
         // ads_solve(u, u_buffer, Ux.data(), Uy.data());
 
-        stationary_bc(u, Ux, Uy);
+        // stationary_bc(u, Ux, Uy);
+        zero_bc(u, Ux, Uy);
+
         output.to_file(u, "out_0.data");
     }
 
-    void step(int /*iter*/, double /*t*/) override {
-        // compute_rhs();
-        zero(rhs);
+    void step(int /*iter*/, double t) override {
+        compute_rhs(t);
+        // zero(rhs);
 
         std::fill(begin(full_rhs), end(full_rhs), 0);
         vector_view view_in{ full_rhs.data(), {Vx.dofs(), Vy.dofs()}};
@@ -187,8 +192,8 @@ private:
         for (auto i : dofs(Vx, Vy)) {
             view_in(i[0], i[1]) = -rhs(i[0], i[1]);
         }
-        stationary_bc(view_out, Ux, Uy);
-
+        // stationary_bc(view_out, Ux, Uy);
+        zero_bc(view_out, Ux, Uy);
 
         mumps::problem problem(full_rhs.data(), full_rhs.size());
         assemble_problem(problem, steps.dt);
@@ -199,20 +204,22 @@ private:
         }
     }
 
-    void after_step(int iter, double /*t*/) override {
+    void after_step(int iter, double t) override {
         if ((iter + 1) % save_every == 0) {
-            std::cout << "Step " << (iter + 1) << " : " << errorL2() << " " << errorH1() << std::endl;
+            // std::cout << "Step " << (iter + 1) << " : " << errorL2(t) << "% " << errorH1(t) << "%" << std::endl;
+            std::cout << iter << " " << t << " " << errorL2(t) << " " << errorH1(t) << std::endl;
+
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
     }
 
     void after() override {
         plot_middle("final.data", u, Ux, Uy);
-        std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
+        // std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
         print_solution("solution.data", u, Ux, Uy);
     }
 
-    void compute_rhs() {
+    void compute_rhs(double t) {
         zero(rhs);
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
             auto U = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
@@ -220,14 +227,15 @@ private:
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Vy)) {
                 double w = weigth(q);
-                // auto x = point(e, q);
-                // value_type uu = eval(u, e, q, Ux, Uy);
+                auto x = point(e, q);
+                value_type uu = eval(u, e, q, Ux, Uy);
 
                 for (auto a : dofs_on_element(e, Vx, Vy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
-                    double val = 0*1 * v.val;
-                    // double val = init_state(x[0], x[1]) * v.val;
+
+                    double F = erikkson_forcing(x[0], x[1], epsilon, t + steps.dt);
+                    double val = (uu.val + steps.dt * F) * v.val;
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
@@ -237,12 +245,28 @@ private:
         });
     }
 
-    double errorL2() const {
-        return Base::errorL2(u, Ux, Uy, exact(epsilon));
+    // double errorL2() const {
+    //     return Base::errorL2(u, Ux, Uy, exact(epsilon));
+    // }
+
+    // double errorH1() const {
+    //     return Base::errorH1(u, Ux, Uy, exact(epsilon));
+    // }
+
+    double errorL2(double t) const {
+        // auto sol = exact(epsilon);
+        // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
+
+        return Base::errorL2(u, Ux, Uy, sol) / normL2(Ux, Uy, sol) * 100;
     }
 
-    double errorH1() const {
-        return Base::errorH1(u, Ux, Uy, exact(epsilon));
+    double errorH1(double t) const {
+        // auto sol = exact(epsilon);
+        // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
+
+        return Base::errorH1(u, Ux, Uy, sol) / normH1(Ux, Uy, sol) * 100;
     }
 
 };
