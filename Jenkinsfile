@@ -3,6 +3,8 @@ enum SimulationType {
     CUSTOM
 }
 
+def simulationTypeNames = SimulationType.values()*.name()
+
 def problemScriptFor(SimulationType type) {
     def simulationDir = 'jenkins/simulations'
     switch(type) {
@@ -30,7 +32,7 @@ pipeline {
     }
 
     environment {
-        GIT_URL = scm.userRemoteConfigs[0].url
+        GIT_URL = "${scm.userRemoteConfigs[0].url}"
         GIT_BRANCH = "cahn-hilliard"
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
     }
@@ -39,7 +41,7 @@ pipeline {
         choice(
             name: 'SIMULATION_TYPE',
             description: 'The type of the simulation to run. Predefined simulations contain sensible defaults.',
-            defaultValue: SimulationType.PHASE_SEPARATION
+            choices: simulationTypeNames
         )
     }
 
@@ -111,7 +113,7 @@ pipeline {
 
         stage('Run') {
             steps {
-                bash ./cahn_hilliard solverConfig.ORDER solverConfig.ELEMENTS solverConfig.STEPS $DELTA solverConfig.MOBILITY_FORMULA solverConfig.CHEMICAL_POTENTIAL_FORMULA
+                bash "./cahn_hilliard ${solverConfig.ORDER} ${solverConfig.ELEMENTS} ${solverConfig.STEPS} ${solverConfig.DELTA} ${solverConfig.MOBILITY_FORMULA} ${solverConfig.CHEMICAL_POTENTIAL_FORMULA}"
             }
         }
 
