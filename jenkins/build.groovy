@@ -35,3 +35,5 @@ def call(solverConfig) {
         && make
     """
 }
+
+return this

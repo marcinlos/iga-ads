@@ -1,19 +1,9 @@
-enum SimulationType {
-    PHASE_SEPARATION,
-    CUSTOM
-}
-
-def simulationTypeNames = SimulationType.values().collect { it.name() }
-
-def problemScriptFor(SimulationType type) {
-    def simulationDir = 'jenkins/simulations'
-    switch(type) {
-        case PHASE_SEPARATION:
-            return "${simulationDir}/phaseSeparation.groovy"
-        default:
-            return "${simulationDir}/custom.groovy"
-    }
-}
+static final def PHASE_SEPARATION_SIMULATION = "PHASE_SEPARATION"
+static final def CUSTOM_SIMULATION = "PHASE_SEPARATION"
+static final def PREDEFINED_SIMULATION_TYPES = [
+    PHASE_SEPARATION_SIMULATION,
+    CUSTOM_SIMULATION
+]
 
 def problem
 def solverConfig
@@ -28,7 +18,7 @@ pipeline {
 
     options {
         retry(2)
-        timeout time: 20, unit:'MINUTES'
+        timeout time: 24, unit:'HOURS'
     }
 
     environment {
@@ -41,67 +31,80 @@ pipeline {
         choice(
             name: 'SIMULATION_TYPE',
             description: 'The type of the simulation to run. Predefined simulations contain sensible defaults.',
-            choices: simulationTypeNames
+            choices: PREDEFINED_SIMULATION_TYPES
         )
     }
 
     stages {
-        stage("Define problem") {
+
+        stage("Configure") {
             steps {
+                echo "Loading defaults for ${params.SIMULATION_TYPE}"
                 script {
                     problem = load(problemScriptFor(params.SIMULATION_TYPE))
                 }
+            }
+        }
 
+        stage("Define problem") {
+            options {
+                timeout(time:15, unit:'MINUTES')
+            }
+
+            steps {
                 script {
-                    timeout(time:1, unit:'HOURS') {
-                        solverConfig = input(
-                            message: 'Customize defaults',
-                            parameters: [
-                                string(
-                                    name: 'ORDER',
-                                    defaultValue: problem.defaultOrder()
-                                ),
-                                string(
-                                    name: 'ELEMENTS',
-                                    defaultValue: problem.defaultElements()
-                                ),
-                                string(
-                                    name: 'STEPS',
-                                    defaultValue: problem.defaultSteps()
-                                ),
-                                string(
-                                    name: 'DELTA',
-                                    defaultValue: problem.defaultDelta()
-                                ),
-                                string(
-                                    name: 'MOBILITY_FORMULA',
-                                    defaultValue: problem.defaultMobilityFormula()
-                                ),
-                                string(
-                                    name: 'CHEMICAL_POTENTIAL_FORMULA',
-                                    defaultValue: problem.defaultChemicalPotentialFormula()
-                                ),
-                                text(
-                                    name: 'INITIAL_SURFACE_SNIPPET',
-                                    description: 'CPP code snippet which should return a value in x,y (x,y are double inputs)',
-                                    defaultValue: problem.defaultInitialSurfaceSnippet()
-                                )
-                            ]
-                        )
-                    }
+                    SOLVER_ENV = input(
+                        message: 'Customize defaults',
+                        parameters: [
+                            string(
+                                name: 'ORDER',
+                                defaultValue: "${problem.defaultOrder()}"
+                            ),
+                            string(
+                                name: 'ELEMENTS',
+                                defaultValue: "${problem.defaultElements()}"
+                            ),
+                            string(
+                                name: 'STEPS',
+                                defaultValue: "${problem.defaultSteps()}"
+                            ),
+                            string(
+                                name: 'DELTA',
+                                defaultValue: "${problem.defaultDelta()}"
+                            ),
+                            string(
+                                name: 'MOBILITY_FORMULA',
+                                defaultValue: "${problem.defaultMobilityFormula()}"
+                            ),
+                            string(
+                                name: 'CHEMICAL_POTENTIAL_FORMULA',
+                                defaultValue: "${problem.defaultChemicalPotentialFormula()}"
+                            ),
+                            text(
+                                name: 'INITIAL_SURFACE_SNIPPET',
+                                description: 'CPP code snippet which should return a value in x,y (x,y are double inputs)',
+                                defaultValue: "${problem.defaultInitialSurfaceSnippet()}"
+                            ),
+                        ]
+                    )
                 }
+                echo "Your parameters ${SOLVER_ENV}"
             }
         }
 
         stage('Checkout') {
             steps {
-                git branch: "${params.GIT_BRANCH}", url: "${GIT_URL}"
+                echo "Checking out ${GIT_URL} on branch ${GIT_BRANCH}"
+                git branch: "${GIT_BRANCH}", url: "${GIT_URL}"
             }
         }
 
         stage('Install dependencies') {
             steps {
-                bash load('jenkins/installDependencies.groovy')()
+                script {
+                    def installDependenciesScript = load('jenkins/installDependencies.groovy')()
+                }
+                bash installDependenciesScript
             }
         }
 
@@ -119,4 +122,15 @@ pipeline {
 
     }
     
+}
+
+@NonCPS
+def problemScriptFor(String type) {
+    def simulationDir = 'jenkins/simulations'
+    switch(type) {
+        case { it == env.PHASE_SEPARATION_SIMULATION}:
+            return "${simulationDir}/phaseSeparation.groovy"
+        default:
+            return "${simulationDir}/custom.groovy"
+    }
 }

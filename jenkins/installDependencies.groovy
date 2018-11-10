@@ -31,3 +31,5 @@ def call() {
         && rm lb.zip
     '''
 }
+
+return this
