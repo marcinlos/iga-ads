@@ -18,8 +18,12 @@ def solverConfig
 
 pipeline {
 
-    agent any
-    
+    agent { 
+        node { 
+            abel 'node2'
+        }
+    }
+
     options {
         retry(2)
         timeout time: 20, unit:'MINUTES'
