@@ -1,7 +1,7 @@
 enum SimulationType {
     PHASE_SEPARATION,
     CUSTOM
-]
+}
 
 def problemScriptFor(SimulationType type) {
     def simulationDir = 'jenkins/simulations'
