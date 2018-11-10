@@ -3,7 +3,7 @@ enum SimulationType {
     CUSTOM
 }
 
-def simulationTypeNames = SimulationType.values()*.name()
+def simulationTypeNames = SimulationType.values().collect { it.name() }
 
 def problemScriptFor(SimulationType type) {
     def simulationDir = 'jenkins/simulations'
