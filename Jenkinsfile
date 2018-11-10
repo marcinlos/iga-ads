@@ -20,7 +20,7 @@ pipeline {
 
     agent { 
         node { 
-            abel 'node2'
+            label 'node2'
         }
     }
 
