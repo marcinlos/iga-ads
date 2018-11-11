@@ -7,7 +7,7 @@ def defaultElements() {
 }
 
 def defaultSteps() {
-    "2000000"
+    "250000"
 }
 
 def defaultDelta() {
@@ -15,16 +15,16 @@ def defaultDelta() {
 }
 
 def defaultChemicalPotentialFormula() {
-    "(1/(2*theta))*log(x/(1-x))+1-2x"
+    "4*(x^3 - 6 * x^2 + 2*x)"
 }
 
 def defaultMobilityFormula() {
-    "x * (1 - x)"
+    "800 * x * (1 - x)"
 }
 
 def defaultInitialSurfaceSnippet() {
     """
-    if ( (x-0.2)*(x-0.2)+(y-0.2)*(y-0.2)<=0.1*0.1 || (x-0.8)*(x-0.8)+(y-0.8)*(y-0.8)<=0.1*0.1 ) {
+    if ( (x-0.65)*(x-0.65)+(y-0.65)*(y-0.65)<=0.15*0.15 || (x-0.38)*(x-0.38)+(y-0.38)*(y-0.38)<=0.2*0.2 ) {
         return 0.8;
     } else {
         return 0.1;
