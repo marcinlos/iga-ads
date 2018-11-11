@@ -77,10 +77,12 @@ pipeline {
                             ),
                             string(
                                 name: 'MOBILITY_FORMULA',
+                                description: 'Formulae for mobility. Variable is x, constants are theta and lambda. Do not use spaces.',
                                 defaultValue: "${problem.defaultMobilityFormula()}"
                             ),
                             string(
                                 name: 'CHEMICAL_POTENTIAL_FORMULA',
+                                description: 'Formulae for chemical potential. Variable is x, constants are theta and lambda. Do not use spaces.',
                                 defaultValue: "${problem.defaultChemicalPotentialFormula()}"
                             ),
                             text(
