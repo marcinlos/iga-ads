@@ -19,7 +19,7 @@ def defaultChemicalPotentialFormula() {
 }
 
 def defaultMobilityFormula() {
-    "x * (1 - x)"
+    "x*(1-x)"
 }
 
 def defaultInitialSurfaceSnippet() {

@@ -15,11 +15,11 @@ def defaultDelta() {
 }
 
 def defaultChemicalPotentialFormula() {
-    "4*(x^3 - 6 * x^2 + 2*x)"
+    "4*(x^3-6*x^2+2*x)"
 }
 
 def defaultMobilityFormula() {
-    "800 * x * (1 - x)"
+    "800*x*(1-x)"
 }
 
 def defaultInitialSurfaceSnippet() {
