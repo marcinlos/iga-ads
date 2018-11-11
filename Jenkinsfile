@@ -42,6 +42,11 @@ pipeline {
             description: 'The type of the simulation to run. Predefined simulations contain sensible defaults.',
             choices: PREDEFINED_SIMULATION_TYPES
         )
+        booleanParam(
+            name: 'CUSTOMIZE',
+            description: 'If the selected choice should be customized. If so, you will be prompeted for input during job execution.',
+            defaultValue: false
+        )
     }
 
     stages {
@@ -52,49 +57,64 @@ pipeline {
                 script {
                     problem = load(problemScriptFor(params.SIMULATION_TYPE))
                 }
+                script {
+                    env.ORDER = problem.defaultOrder()
+                    env.ELEMENTS = problem.defaultElements()
+                    env.STEPS = problem.defaultSteps()
+                    env.DELTA = problem.defaultDelta()
+                    env.MOBILITY_FORMULA = problem.defaultMobilityFormula()
+                    env.CHEMICAL_POTENTIAL_FORMULA = problem.defaultChemicalPotentialFormula()
+                    env.INITIAL_SURFACE_SNIPPET = problem.defaultInitialSurfaceSnippet()
+                }
             }
         }
 
         stage("Define problem") {
+            
+            when {
+                expression { params.CUSTOMIZE }
+            }
+
             options {
                 timeout(time:15, unit:'MINUTES')
             }
 
             steps {
                 script {
+
                     input(
                         message: 'Customize defaults',
                         parameters: [
                             string(
                                 name: 'ORDER',
-                                defaultValue: "${problem.defaultOrder()}"
+                                defaultValue: "${ORDER}"
                             ),
                             string(
                                 name: 'ELEMENTS',
-                                defaultValue: "${problem.defaultElements()}"
+                                defaultValue: "${ELEMENTS}"
                             ),
                             string(
                                 name: 'STEPS',
-                                defaultValue: "${problem.defaultSteps()}"
+                                defaultValue: "${STEPS}"
                             ),
                             string(
                                 name: 'DELTA',
-                                defaultValue: "${problem.defaultDelta()}"
+                                defaultValue: "${DELTA}"
                             ),
                             string(
                                 name: 'MOBILITY_FORMULA',
                                 description: 'Formulae for mobility. Variable is x, constants are theta and lambda. Do not use spaces.',
-                                defaultValue: "${problem.defaultMobilityFormula()}"
+                                defaultValue: "${MOBILITY_FORMULA}"
                             ),
                             string(
                                 name: 'CHEMICAL_POTENTIAL_FORMULA',
                                 description: 'Formulae for chemical potential. Variable is x, constants are theta and lambda. Do not use spaces.',
-                                defaultValue: "${problem.defaultChemicalPotentialFormula()}"
+                                defaultValue: "${CHEMICAL_POTENTIAL_FORMULA}"
                             ),
                             text(
                                 name: 'INITIAL_SURFACE_SNIPPET',
                                 description: 'CPP code snippet which should return a value in x,y (x,y are double inputs)',
-                                defaultValue: "${problem.defaultInitialSurfaceSnippet()}"
+                                defaultValue: "${INITIAL_SURFACE_SNIPPET}"
                             ),
                         ]
                     ).each { name, value ->
