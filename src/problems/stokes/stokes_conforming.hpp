@@ -214,7 +214,6 @@ public:
                 if (e < jrange.first || e > jrange.second) continue;
 
                 double J = Ux.basis.J[e];
-                // int dq = side == boundary::bottom ? 2 : 1;
                 int qy = Uy.basis.quad_order - (side == boundary::bottom ? 2 : 1);
                 for (int q = 0; q < Ux.basis.quad_order; ++ q) {
                     double w = Ux.basis.w[q];
