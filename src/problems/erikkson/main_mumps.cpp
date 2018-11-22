@@ -1,6 +1,7 @@
 #include "problems/erikkson/erikkson_mumps.hpp"
 #include "problems/erikkson/erikkson_supg.hpp"
 #include "problems/erikkson/erikkson_cg.hpp"
+#include "problems/erikkson/erikkson_cg_weak.hpp"
 #include "problems/erikkson/pollution_rotation.hpp"
 
 // #include "problems/erikkson/erikkson_quanling.hpp"
@@ -11,7 +12,7 @@
 using namespace ads;
 
 double shishkin_const(int n, double eps) {
-    return std::log(n) * eps;
+    return std::log(n) / std::log(2) * eps;
 }
 
 bspline::basis create_basis(double a, double b, int p, int elements, int repeated_nodes, bool adapt, double d) {
@@ -98,15 +99,15 @@ int main(int argc, char* argv[]) {
     auto dt = std::atof(argv[10]);
     int nsteps = std::atoi(argv[11]);
 
-    // std::cout << "trial (" << p_trial << ", " << C_trial << "), "
-              // << "test (" << p_test << ", " << C_test << ")" << std::endl;
+    std::cout << "trial (" << p_trial << ", " << C_trial << "), "
+              << "test (" << p_test << ", " << C_test << ")" << std::endl;
 
     // double S = 5000.0;
     double S = 1.0;
 
     int quad = std::max(p_trial, p_test) + 1;
 
-    // std::cout << "adaptations: " << std::boolalpha << adapt << std::endl;
+    std::cout << "adaptations: " << std::boolalpha << adapt << std::endl;
 
     timesteps_config steps{ nsteps, dt };
     int ders = 2;
@@ -114,8 +115,8 @@ int main(int argc, char* argv[]) {
     bool adapt_x = true && adapt;
     bool adapt_y = true && adapt;
 
-    // auto d = 1e-2;
-    auto d = shishkin_const(nx, 1e-2);
+    // auto d = 1e-4;
+    auto d = shishkin_const(nx, 1e-6);
 
     auto trial_basis_x = create_basis(0, S, p_trial, nx, p_trial - 1 - C_trial, adapt_x, d);
     // auto trial_basis_x = create_checkboard_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_x);
@@ -141,15 +142,15 @@ int main(int argc, char* argv[]) {
                   << trial_dim << " > " << test_dim << ")" << std::endl;
         std::exit(1);
     } else {
-        // std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
+        std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
     }
 
     if (type == "igrm-mumps") erikkson_mumps{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
     if (type == "igrm-cg") erikkson_CG{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
+    if (type == "igrm-cg-weak") erikkson_CG_weak{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
     if (type == "supg") erikkson_supg {dtrial_x, dtrial_y, steps}.run();
     if (type == "pollution") pollution_rotation{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
     if (type == "split") erikkson_mumps_split{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
-
 
 
     // erikkson_mumps_split sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};

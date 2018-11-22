@@ -1,5 +1,5 @@
-#ifndef PROBLEMS_ERIKKSON_ERIKKSON_CG_HPP_
-#define PROBLEMS_ERIKKSON_ERIKKSON_CG_HPP_
+#ifndef PROBLEMS_ERIKKSON_ERIKKSON_CG_WEAK_HPP_
+#define PROBLEMS_ERIKKSON_ERIKKSON_CG_WEAK_HPP_
 
 
 #include "problems/erikkson/erikkson_base.hpp"
@@ -16,7 +16,7 @@
 
 namespace ads {
 
-class erikkson_CG : public erikkson_base {
+class erikkson_CG_weak : public erikkson_base {
 private:
     using Base = erikkson_base;
 
@@ -58,7 +58,7 @@ private:
 
     double h;
 
-    double peclet = 1e2;
+    double peclet = 1e6;
     double epsilon = 1 / peclet;
 
     point_type c_diff{{ epsilon, epsilon }};
@@ -69,15 +69,15 @@ private:
     double len = 1;
 
     // point_type beta{{ len * cos(angle), len * sin(angle) }};
-    point_type beta{{ 1, 1 }};
-    // point_type beta{{ 1, 0 }};
+    // point_type beta{{ 1, 1 }};
+    point_type beta{{ 1, 0 }};
 
     mumps::solver solver;
 
     output_manager<2> output;
 
 public:
-    erikkson_CG(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, const timesteps_config& steps)
+    erikkson_CG_weak(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, const timesteps_config& steps)
     : Base{std::move(test_x), std::move(test_y), steps}
     , Ux{ std::move(trial_x) }
     , Uy{ std::move(trial_y) }
@@ -126,19 +126,29 @@ private:
         dense_matrix_ref MUVx, MUVy, KUVx, KUVy, AUVx, AUVy;
     };
 
+    bool is_inflow(index_type dof, const dimension& x, const dimension& y) const {
+        // return dof[0] == 0 || dof[1] == 0;
+        return dof[0] == 0;
+    }
+
+    bool is_outflow(index_type dof, const dimension& x, const dimension& y) const {
+        return dof[0] == x.dofs() - 1 || dof[1] == y.dofs() - 1 || dof[1] == 0;
+    }
+
     void assemble_problem(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& M) {
         auto N = Vx.dofs() * Vy.dofs();
         auto hh = h * h;
 
         // Gram matrix - upper left
-        for (auto i : internal_dofs(Vx, Vy)) {
-            for (auto j : overlapping_internal_dofs(i, Vx, Vy)) {
+        for (auto i : dofs(Vx, Vy)) {
+            for (auto j : overlapping_dofs(i, Vx, Vy)) {
+                if (is_outflow(i, Vx, Vy) || is_outflow(j, Vx, Vy)) continue;
+
                 int ii = linear_index(i, Vx, Vy) + 1;
                 int jj = linear_index(j, Vx, Vy) + 1;
 
                 double val = kron(MVx, MVy, i, j) + hh * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
                 // val += hh * hh * kron(M.KVx, M.KVy, i, j);
-
                 problem.add(ii, jj, val);
             }
         }
@@ -147,12 +157,12 @@ private:
         for (auto i : dofs(Vx, Vy)) {
             for (auto j : dofs(Ux, Uy)) {
                 double val = 0;
-                // val += kron(M.MUVx, M.MUVy, i, j);
-                val += /*steps.dt */ (c_diff[0] * kron(M.KUVx, M.MUVy, i, j) + beta[0] * kron(M.AUVx, M.MUVy, i, j));
-                val += /*steps.dt */ (c_diff[1] * kron(M.MUVx, M.KUVy, i, j) + beta[1] * kron(M.MUVx, M.AUVy, i, j));
+                val += c_diff[0] * kron(M.KUVx, M.MUVy, i, j) + beta[0] * kron(M.AUVx, M.MUVy, i, j);
+                val += c_diff[1] * kron(M.MUVx, M.KUVy, i, j) + beta[1] * kron(M.MUVx, M.AUVy, i, j);
 
                 if (val != 0) {
-                    if (! is_boundary(i, Vx, Vy) && ! is_boundary(j, Ux, Uy)) {
+                    if (! is_outflow(i, Vx, Vy) && ! is_outflow(j, Ux, Uy)) {
+                    // if (! is_boundary(i, Vx, Vy) && ! is_boundary(j, Ux, Uy)) {
                         int ii = linear_index(i, Vx, Vy) + 1;
                         int jj = linear_index(j, Ux, Uy) + 1;
 
@@ -178,39 +188,154 @@ private:
 
     double diffusion(double x, double y) const {
         return epsilon;
-        // const double eta = epsilon;
-        // return 1 / eta;
 
-        // bool left = x < 0.5, right = !left;
-        // bool bottom = y < 0.5, top = !bottom;
+        // bool left = x < 1 - 1/peclet, right = !left;
+        // bool bottom = y < 1 - 1/peclet, top = !bottom;
 
         // if ((bottom && left) || (top && right)) {
-            // return 1 / eta;
+            // return peclet;
         // } else {
-            // return eta;
+            // return 1 / peclet;
         // }
     }
+
+    value_type eval_basis_at(point_type p, index_type e, index_type dof, const dimension& x, const dimension& y) const {
+        int spanx = bspline::find_span(p[0], x.B);
+        int spany = bspline::find_span(p[1], y.B);
+
+        bspline::eval_ders_ctx cx{x.p, 1};
+        bspline::eval_ders_ctx cy{y.p, 1};
+
+        double** bvx = cx.basis_vals();
+        double** bvy = cy.basis_vals();
+
+        eval_basis_with_derivatives(spanx, p[0], x.B, bvx, 1, cx);
+        eval_basis_with_derivatives(spany, p[1], y.B, bvy, 1, cy);
+
+        int offsetx = spanx - x.p;
+        int offsety = spany - y.p;
+
+        int ix = dof[0] - offsetx;
+        int iy = dof[1] - offsety;
+
+        if (ix < 0 || ix > x.p || iy < 0 || iy > y.p) {
+            std::cout << "dof = (" << dof[0] << ", " << dof[1] << ") "
+                      << "e = (" << e[0] << ", " << e[1] << ") "
+                      << "(x, y) = (" << p[0] << ", " << p[1] << ") "
+                      << "span = (" << spanx << ", " << spany << ") "
+                      << "offset = (" << offsetx << ", " << offsety << ") "
+                      << "i = (" << ix << ", " << iy << ")" << std::endl;
+        }//return {0, 0, 0};
+
+        auto value = bvx[0][ix] * bvy[0][iy];
+        auto dx    = bvx[1][ix] * bvy[0][iy];
+        auto dy    = bvx[0][ix] * bvy[1][iy];
+
+        return { value, dx, dy };
+    }
+
+    bool supported_in_1d(int dof, int e, const dimension& x) const {
+        auto xrange = x.basis.element_ranges[dof];
+        return e >= xrange.first && e <= xrange.second;
+    }
+
+    template <typename Form>
+    double integrate_boundary(boundary side, index_type i, index_type j, const dimension& Ux, const dimension& Uy,
+                              const dimension& Vx, const dimension& Vy, Form&& form) const {
+        double val = 0;
+        bool horizontal = side == boundary::top || side == boundary::bottom;
+
+        if (horizontal) {
+            int ey = side == boundary::bottom ? 0 : Uy.elements - 1;
+            if (! supported_in_1d(j[1], ey, Vy) || ! supported_in_1d(i[1], ey, Uy)) return 0;
+
+            auto y0 = side == boundary::bottom ? Uy.a : Uy.b;
+            // int qy = Uy.basis.quad_order - (side == boundary::bottom ? 2 : 1);
+            // auto y0 = Uy.basis.x[ey][qy];
+
+            for (auto e : Ux.basis.element_range(i[0])) {
+                if (! supported_in_1d(j[0], e, Vx)) continue;
+
+                double J = Ux.basis.J[e];
+
+                for (int q = 0; q < Ux.basis.quad_order; ++ q) {
+                    double w = Ux.basis.w[q];
+                    point_type x{Ux.basis.x[e][q], y0};
+                    value_type ww = eval_basis_at(x, {e, ey}, i, Ux, Uy);
+                    value_type uu = eval_basis_at(x, {e, ey}, j, Vx, Vy);
+
+                    // value_type ww = eval_basis({e, ey}, {q, qy}, i, Ux, Uy);
+                    // value_type uu = eval_basis({e, ey}, {q, qy}, j, Vx, Vy);
+                    double fuw = form(ww, uu);
+                    val += fuw * w * J;
+                }
+            }
+        } else {
+            int ex = side == boundary::left ? 0 : Ux.elements - 1;
+            if (! supported_in_1d(j[0], ex, Vx) || ! supported_in_1d(i[0], ex, Ux)) return 0;
+
+            auto x0 = side == boundary::left ? Ux.a : Ux.b;
+            // int qx = Ux.basis.quad_order - (side == boundary::left ? 2 : 1);
+            // auto x0 = Ux.basis.x[ex][qx];
+
+            for (auto e : Uy.basis.element_range(i[1])) {
+                if (! supported_in_1d(j[1], e, Vy)) continue;
+
+                double J = Uy.basis.J[e];
+
+                for (int q = 0; q < Uy.basis.quad_order; ++ q) {
+                    double w = Uy.basis.w[q];
+                    point_type x{x0, Uy.basis.x[e][q]};
+                    value_type ww = eval_basis_at(x, {ex, e}, i, Ux, Uy);
+                    value_type uu = eval_basis_at(x, {ex, e}, j, Vx, Vy);
+
+                    // value_type ww = eval_basis({ex, e}, {qx, q}, i, Ux, Uy);
+                    // value_type uu = eval_basis({ex, e}, {qx, q}, j, Vx, Vy);
+                    double fuw = form(ww, uu);
+                    val += fuw * w * J;
+                }
+            }
+
+            // if (! supported_in_1d(j[0], ex, Vx) || ! supported_in_1d(i[0], ex, Ux)) {
+            //     auto jr = Vx.basis.element_ranges[j[0]];
+            //     auto ir = Ux.basis.element_ranges[i[0]];
+
+            //     std::cout << "j = (" << j[0] << ", " << j[1] << ") "
+            //               << "jr = [" << jr.first << ", " << jr.second << "] "
+            //               << "i = (" << i[0] << ", " << i[1] << ") "
+            //               << "ir = [" << ir.first << ", " << ir.second << "] "
+            //               << "ex = " << ex << " " << (horizontal ? "horizontal" : "vertical")
+            //               << " val = " << val
+            //               << std::endl;
+            // }
+
+        }
+        return val;
+    }
+
 
     void assemble_problem2(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& M) {
         auto N = Vx.dofs() * Vy.dofs();
         auto hh = h * h;
 
         // Gram matrix - upper left
-        for (auto i : internal_dofs(Vx, Vy)) {
-            for (auto j : overlapping_internal_dofs(i, Vx, Vy)) {
+        for (auto i : dofs(Vx, Vy)) {
+            for (auto j : overlapping_dofs(i, Vx, Vy)) {
+                if (is_inflow(i, Vx, Vy) || is_inflow(j, Ux, Uy)) continue;
+
                 int ii = linear_index(i, Vx, Vy) + 1;
                 int jj = linear_index(j, Vx, Vy) + 1;
 
                 double val = kron(MVx, MVy, i, j) + hh * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
                 // val += hh * hh * kron(M.KVx, M.KVy, i, j);
-
                 problem.add(ii, jj, val);
             }
         }
 
         // B, B^T
-        for (auto i : internal_dofs(Vx, Vy)) {
-            for (auto j : internal_dofs(Ux, Uy)) {
+        for (auto i : dofs(Vx, Vy)) {
+            for (auto j : dofs(Ux, Uy)) {
+                if (is_inflow(i, Vx, Vy) || is_inflow(j, Ux, Uy)) continue;
 
                 double val = 0;
                 for (auto e : elements_supporting_dof(i, Vx, Vy)) {
@@ -224,12 +349,59 @@ private:
                         value_type uu = eval_basis(e, q, j, Ux, Uy);
 
                         auto diff = diffusion(x[0], x[1]);
-                        double bwu = 0;//uu.val * ww.val;
-                        bwu += /*steps.dt */ (diff * grad_dot(uu, ww) + beta[0] * uu.dx * ww.val + beta[1] * uu.dy * ww.val);
-
+                        double bwu = diff * grad_dot(uu, ww) + (beta[0] * uu.dx + beta[1] * uu.dy) * ww.val;
                         val += bwu * w * J;
                     }
                 }
+
+                if (i[0] == Vx.dofs() - 1) {
+                    val -= integrate_boundary(boundary::right, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
+                        return epsilon * w.val * u.dx;
+                    });
+                }
+
+                // if (i[1] == 0) {
+                //     val -= integrate_boundary(boundary::top, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
+                //         return - epsilon * w.val * u.dy;
+                //     });
+                // }
+
+                // if (i[1] == Vy.dofs() - 1) {
+                //     val -= integrate_boundary(boundary::top, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
+                //         return epsilon * w.val * u.dy;
+                //     });
+                // }
+
+                if (j[0] == Ux.dofs() - 1) {
+                    val -= integrate_boundary(boundary::right, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
+                        return w.dx * u.val;
+                    });
+                }
+
+                // if (j[1] == 0) {
+                //     val -= integrate_boundary(boundary::top, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
+                //         return - w.dy * u.val;
+                //     });
+                // }
+
+                // if (j[1] == Uy.dofs() - 1) {
+                //     val -= integrate_boundary(boundary::top, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
+                //         return w.dy * u.val;
+                //     });
+                // }
+
+                // if (is_outflow(i, Vx, Vy)) {
+                //     auto side = i[0] == Vx.dofs() - 1 ? boundary::right : boundary::top;
+                //     val -= integrate_boundary(side, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
+                //         return epsilon * w.val * (side == boundary::right ? u.dx : u.dy);
+                //     });
+                // }
+                // if (is_outflow(j, Ux, Uy)) {
+                //     auto side = j[0] == Ux.dofs() - 1 ? boundary::right : boundary::top;
+                //     val -= integrate_boundary(side, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
+                //         return u.val * (side == boundary::right ? w.dx : w.dy);
+                //     });
+                // }
 
                 if (val != 0) {
                     int ii = linear_index(i, Vx, Vy) + 1;
@@ -243,14 +415,18 @@ private:
 
         // Dirichlet BC - upper left
         for_boundary_dofs(Vx, Vy, [&](index_type dof) {
-            int i = linear_index(dof, Vx, Vy) + 1;
-            problem.add(i, i, 1);
+            if (is_inflow(dof, Vx, Vy)) {
+                int i = linear_index(dof, Vx, Vy) + 1;
+                problem.add(i, i, 1);
+            }
         });
 
         // Dirichlet BC - lower right
         for_boundary_dofs(Ux, Uy, [&](index_type dof) {
-            int i = linear_index(dof, Ux, Uy) + 1;
-            problem.add(N + i, N + i, 1);
+            if (is_inflow(dof, Ux, Uy)) {
+                int i = linear_index(dof, Ux, Uy) + 1;
+                problem.add(N + i, N + i, 1);
+            }
         });
     }
 
@@ -305,6 +481,8 @@ private:
         prepare_matrices();
         Ux.factorize_matrix();
         Uy.factorize_matrix();
+        Vx.factorize_matrix();
+        Vy.factorize_matrix();
 
         // auto init = [this](double x, double y) { return init_state(x, y); };
         // compute_projection(u, Ux.basis, Uy.basis, init);
@@ -313,9 +491,9 @@ private:
         zero(r.data);
         zero(u);
 
-        // stationary_bc(u, Ux, Uy);
+        stationary_bc(u, Ux, Uy);
         // skew_bc(u, Ux, Uy);
-        zero_bc(u, Ux, Uy);
+        // zero_bc(u, Ux, Uy);
 
         output.to_file(u, "out_0.data");
     }
@@ -351,8 +529,17 @@ private:
         // compute_rhs_nonstationary(Vx, Vy, r_rhs, u_rhs, t);
         compute_rhs(Vx, Vy, r_rhs, u_rhs);
 
-        zero_bc(r_rhs, Vx, Vy);
-        zero_bc(u_rhs, Ux, Uy);
+        // BC
+        dirichlet_bc(u_rhs, boundary::left, Ux, Uy, 0);
+        // dirichlet_bc(u_rhs, boundary::bottom, Ux, Uy, 0);
+        // dirichlet_bc(u, boundary::left, Ux, Uy, [](double t) { return std::sin(M_PI * t); });
+
+
+        dirichlet_bc(r_rhs, boundary::left, Vx, Vy, 0);
+        // dirichlet_bc(r_rhs, boundary::bottom, Vx, Vy, 0);
+
+        // zero_bc(r_rhs, Vx, Vy);
+        // zero_bc(u_rhs, Ux, Uy);
 
         int size = Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs();
         mumps::problem problem(full_rhs.data(), size);
@@ -372,9 +559,9 @@ private:
         // substep(x_rhs, y_rhs, true, true);
         // substep(x_rhs, y_rhs, !x_rhs, !y_rhs);
 
-        using std::swap;
-        swap(u, u_prev);
-        zero(u);
+        // using std::swap;
+        // swap(u, u_prev);
+        // zero(u);
 
         std::cout << "Step " << (iter + 1) << std::endl;
         constexpr auto max_iters = 1;
@@ -420,8 +607,8 @@ private:
                     value_type v = eval_basis(e, q, a, Vx, Vy);
 
                     // double F = 1;
-                    // double F = 0;
-                    double F = erikkson2_forcing(x[0], x[1], epsilon);
+                    double F = 0;
+                    // double F = erikkson2_forcing(x[0], x[1], epsilon);
                     double lv = F * v.val;
 
                     double val = -lv;
@@ -509,16 +696,16 @@ private:
     }
 
     double errorL2(double t) const {
-        // auto sol = exact(epsilon);
-        auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        auto sol = exact(epsilon);
+        // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         // auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
 
         return Base::errorL2(u, Ux, Uy, sol) / normL2(Ux, Uy, sol) * 100;
     }
 
     double errorH1(double t) const {
-        // auto sol = exact(epsilon);
-        auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        auto sol = exact(epsilon);
+        // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         // auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
 
         return Base::errorH1(u, Ux, Uy, sol) / normH1(Ux, Uy, sol) * 100;
@@ -529,4 +716,4 @@ private:
 
 
 
-#endif /* ADS_PROBLEMS_ERIKKSON_ERIKKSON_CG_HPP */
+#endif /* ADS_PROBLEMS_ERIKKSON_ERIKKSON_CG_WEAK_HPP */

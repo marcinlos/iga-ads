@@ -27,7 +27,7 @@ private:
 
     int save_every = 1;
 
-    double peclet = 1e4;
+    double peclet = 1e6;
     double epsilon = 1 / peclet;
 
     double C1 = 4, C2 = 2;
