@@ -57,6 +57,7 @@ private:
     int save_every = 1;
 
     double h;
+    double gamma;
 
     double peclet = 1e6;
     double epsilon = 1 / peclet;
@@ -110,7 +111,10 @@ public:
     , full_rhs(Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs())
     , h{ element_diam(Ux, Uy) }
     , output{ Ux.B, Uy.B, 500 }
-    { }
+    {
+        int p = Vx.basis.degree;
+        gamma = 3 * epsilon * p * p / h;
+    }
 
 private:
 
@@ -126,64 +130,9 @@ private:
         dense_matrix_ref MUVx, MUVy, KUVx, KUVy, AUVx, AUVy;
     };
 
-    bool is_inflow(index_type dof, const dimension& x, const dimension& y) const {
-        // return dof[0] == 0 || dof[1] == 0;
+    bool is_fixed(index_type dof, const dimension& x, const dimension& y) const {
         return dof[0] == 0;
-    }
-
-    bool is_outflow(index_type dof, const dimension& x, const dimension& y) const {
-        return dof[0] == x.dofs() - 1 || dof[1] == y.dofs() - 1 || dof[1] == 0;
-    }
-
-    void assemble_problem(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& M) {
-        auto N = Vx.dofs() * Vy.dofs();
-        auto hh = h * h;
-
-        // Gram matrix - upper left
-        for (auto i : dofs(Vx, Vy)) {
-            for (auto j : overlapping_dofs(i, Vx, Vy)) {
-                if (is_outflow(i, Vx, Vy) || is_outflow(j, Vx, Vy)) continue;
-
-                int ii = linear_index(i, Vx, Vy) + 1;
-                int jj = linear_index(j, Vx, Vy) + 1;
-
-                double val = kron(MVx, MVy, i, j) + hh * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
-                // val += hh * hh * kron(M.KVx, M.KVy, i, j);
-                problem.add(ii, jj, val);
-            }
-        }
-
-        // B, B^T
-        for (auto i : dofs(Vx, Vy)) {
-            for (auto j : dofs(Ux, Uy)) {
-                double val = 0;
-                val += c_diff[0] * kron(M.KUVx, M.MUVy, i, j) + beta[0] * kron(M.AUVx, M.MUVy, i, j);
-                val += c_diff[1] * kron(M.MUVx, M.KUVy, i, j) + beta[1] * kron(M.MUVx, M.AUVy, i, j);
-
-                if (val != 0) {
-                    if (! is_outflow(i, Vx, Vy) && ! is_outflow(j, Ux, Uy)) {
-                    // if (! is_boundary(i, Vx, Vy) && ! is_boundary(j, Ux, Uy)) {
-                        int ii = linear_index(i, Vx, Vy) + 1;
-                        int jj = linear_index(j, Ux, Uy) + 1;
-
-                        problem.add(ii, N + jj, -val);
-                        problem.add(N + jj, ii, val);
-                    }
-                }
-            }
-        }
-
-        // Dirichlet BC - upper left
-        for_boundary_dofs(Vx, Vy, [&](index_type dof) {
-            int i = linear_index(dof, Vx, Vy) + 1;
-            problem.add(i, i, 1);
-        });
-
-        // Dirichlet BC - lower right
-        for_boundary_dofs(Ux, Uy, [&](index_type dof) {
-            int i = linear_index(dof, Ux, Uy) + 1;
-            problem.add(N + i, N + i, 1);
-        });
+        // return false;
     }
 
     double diffusion(double x, double y) const {
@@ -225,7 +174,7 @@ private:
                       << "span = (" << spanx << ", " << spany << ") "
                       << "offset = (" << offsetx << ", " << offsety << ") "
                       << "i = (" << ix << ", " << iy << ")" << std::endl;
-        }//return {0, 0, 0};
+        }
 
         auto value = bvx[0][ix] * bvy[0][iy];
         auto dx    = bvx[1][ix] * bvy[0][iy];
@@ -250,8 +199,6 @@ private:
             if (! supported_in_1d(j[1], ey, Vy) || ! supported_in_1d(i[1], ey, Uy)) return 0;
 
             auto y0 = side == boundary::bottom ? Uy.a : Uy.b;
-            // int qy = Uy.basis.quad_order - (side == boundary::bottom ? 2 : 1);
-            // auto y0 = Uy.basis.x[ey][qy];
 
             for (auto e : Ux.basis.element_range(i[0])) {
                 if (! supported_in_1d(j[0], e, Vx)) continue;
@@ -263,9 +210,6 @@ private:
                     point_type x{Ux.basis.x[e][q], y0};
                     value_type ww = eval_basis_at(x, {e, ey}, i, Ux, Uy);
                     value_type uu = eval_basis_at(x, {e, ey}, j, Vx, Vy);
-
-                    // value_type ww = eval_basis({e, ey}, {q, qy}, i, Ux, Uy);
-                    // value_type uu = eval_basis({e, ey}, {q, qy}, j, Vx, Vy);
                     double fuw = form(ww, uu);
                     val += fuw * w * J;
                 }
@@ -275,8 +219,6 @@ private:
             if (! supported_in_1d(j[0], ex, Vx) || ! supported_in_1d(i[0], ex, Ux)) return 0;
 
             auto x0 = side == boundary::left ? Ux.a : Ux.b;
-            // int qx = Ux.basis.quad_order - (side == boundary::left ? 2 : 1);
-            // auto x0 = Ux.basis.x[ex][qx];
 
             for (auto e : Uy.basis.element_range(i[1])) {
                 if (! supported_in_1d(j[1], e, Vy)) continue;
@@ -288,40 +230,100 @@ private:
                     point_type x{x0, Uy.basis.x[e][q]};
                     value_type ww = eval_basis_at(x, {ex, e}, i, Ux, Uy);
                     value_type uu = eval_basis_at(x, {ex, e}, j, Vx, Vy);
-
-                    // value_type ww = eval_basis({ex, e}, {qx, q}, i, Ux, Uy);
-                    // value_type uu = eval_basis({ex, e}, {qx, q}, j, Vx, Vy);
                     double fuw = form(ww, uu);
                     val += fuw * w * J;
                 }
             }
-
-            // if (! supported_in_1d(j[0], ex, Vx) || ! supported_in_1d(i[0], ex, Ux)) {
-            //     auto jr = Vx.basis.element_ranges[j[0]];
-            //     auto ir = Ux.basis.element_ranges[i[0]];
-
-            //     std::cout << "j = (" << j[0] << ", " << j[1] << ") "
-            //               << "jr = [" << jr.first << ", " << jr.second << "] "
-            //               << "i = (" << i[0] << ", " << i[1] << ") "
-            //               << "ir = [" << ir.first << ", " << ir.second << "] "
-            //               << "ex = " << ex << " " << (horizontal ? "horizontal" : "vertical")
-            //               << " val = " << val
-            //               << std::endl;
-            // }
-
         }
         return val;
     }
 
+    template <typename Fun, typename Form>
+    double integrate_boundary(boundary side, index_type i, const dimension& Ux, const dimension& Uy,
+                              Fun&& g, Form&& form) const {
+        double val = 0;
+        bool horizontal = side == boundary::top || side == boundary::bottom;
 
-    void assemble_problem2(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& M) {
+        if (horizontal) {
+            int ey = side == boundary::bottom ? 0 : Uy.elements - 1;
+            if (! supported_in_1d(i[1], ey, Uy)) return 0;
+
+            auto y0 = side == boundary::bottom ? Uy.a : Uy.b;
+
+            for (auto e : Ux.basis.element_range(i[0])) {
+                double J = Ux.basis.J[e];
+
+                for (int q = 0; q < Ux.basis.quad_order; ++ q) {
+                    double w = Ux.basis.w[q];
+                    point_type x{Ux.basis.x[e][q], y0};
+                    value_type ww = eval_basis_at(x, {e, ey}, i, Ux, Uy);
+                    auto gg = g(x);
+                    double fuw = form(ww, gg);
+                    val += fuw * w * J;
+                }
+            }
+        } else {
+            int ex = side == boundary::left ? 0 : Ux.elements - 1;
+            if (! supported_in_1d(i[0], ex, Ux)) return 0;
+
+            auto x0 = side == boundary::left ? Ux.a : Ux.b;
+
+            for (auto e : Uy.basis.element_range(i[1])) {
+                double J = Uy.basis.J[e];
+
+                for (int q = 0; q < Uy.basis.quad_order; ++ q) {
+                    double w = Uy.basis.w[q];
+                    point_type x{x0, Uy.basis.x[e][q]};
+                    value_type ww = eval_basis_at(x, {ex, e}, i, Ux, Uy);
+                    auto gg = g(x);
+                    double fuw = form(ww, gg);
+                    val += fuw * w * J;
+                }
+            }
+        }
+        return val;
+    }
+
+    double dot(point_type a, point_type b) const {
+        return a[0] * b[0] + a[1] * b[1];
+    }
+
+    double dot(value_type a, point_type b) const {
+        return a.dx * b[0] + a.dy * b[1];
+    }
+
+    double dot(point_type a, value_type b) const {
+        return a[0] * b.dx + a[1] * b.dy;
+    }
+
+    point_type normal(boundary side) const {
+        switch (side) {
+        case boundary::left:   return {-1,  0};
+        case boundary::right:  return { 1,  0};
+        case boundary::bottom: return { 0, -1};
+        case boundary::top:    return { 0,  1};
+        }
+        return {0, 0};
+    }
+
+    bool touches(index_type dof, boundary side, const dimension& x, const dimension& y) const {
+        if (side == boundary::left || side == boundary::right) {
+            auto e = side == boundary::left ? 0 : x.elements - 1;
+            return supported_in_1d(dof[0], e, x);
+        } else {
+            auto e = side == boundary::bottom ? 0 : y.elements - 1;
+            return supported_in_1d(dof[1], e, y);
+        }
+    }
+
+    void assemble_problem(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& M) {
         auto N = Vx.dofs() * Vy.dofs();
         auto hh = h * h;
 
         // Gram matrix - upper left
         for (auto i : dofs(Vx, Vy)) {
             for (auto j : overlapping_dofs(i, Vx, Vy)) {
-                if (is_inflow(i, Vx, Vy) || is_inflow(j, Ux, Uy)) continue;
+                if (is_fixed(i, Vx, Vy) || is_fixed(j, Ux, Uy)) continue;
 
                 int ii = linear_index(i, Vx, Vy) + 1;
                 int jj = linear_index(j, Vx, Vy) + 1;
@@ -335,7 +337,7 @@ private:
         // B, B^T
         for (auto i : dofs(Vx, Vy)) {
             for (auto j : dofs(Ux, Uy)) {
-                if (is_inflow(i, Vx, Vy) || is_inflow(j, Ux, Uy)) continue;
+                if (is_fixed(i, Vx, Vy) || is_fixed(j, Ux, Uy)) continue;
 
                 double val = 0;
                 for (auto e : elements_supporting_dof(i, Vx, Vy)) {
@@ -349,59 +351,34 @@ private:
                         value_type uu = eval_basis(e, q, j, Ux, Uy);
 
                         auto diff = diffusion(x[0], x[1]);
-                        double bwu = diff * grad_dot(uu, ww) + (beta[0] * uu.dx + beta[1] * uu.dy) * ww.val;
+                        double bwu = diff * grad_dot(uu, ww) + dot(beta, uu) * ww.val;
                         val += bwu * w * J;
                     }
                 }
 
-                if (i[0] == Vx.dofs() - 1) {
-                    val -= integrate_boundary(boundary::right, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
-                        return epsilon * w.val * u.dx;
-                    });
-                }
+                auto int_bd = [&](auto side, auto form) {
+                    if (touches(i, side, Vx, Vy) && touches(j, side, Ux, Uy)) {
+                        val += integrate_boundary(side, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
+                            return form(w, u, this->normal(side));
+                        });
+                    }
+                };
 
-                // if (i[1] == 0) {
-                //     val -= integrate_boundary(boundary::top, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
-                //         return - epsilon * w.val * u.dy;
-                //     });
-                // }
+                auto boundary_term = [&](auto form) {
+                    // int_bd(boundary::left, form);
+                    int_bd(boundary::right, form);
+                    int_bd(boundary::top, form);
+                    int_bd(boundary::bottom, form);
+                };
 
-                // if (i[1] == Vy.dofs() - 1) {
-                //     val -= integrate_boundary(boundary::top, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
-                //         return epsilon * w.val * u.dy;
-                //     });
-                // }
-
-                if (j[0] == Ux.dofs() - 1) {
-                    val -= integrate_boundary(boundary::right, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
-                        return w.dx * u.val;
-                    });
-                }
-
-                // if (j[1] == 0) {
-                //     val -= integrate_boundary(boundary::top, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
-                //         return - w.dy * u.val;
-                //     });
-                // }
-
-                // if (j[1] == Uy.dofs() - 1) {
-                //     val -= integrate_boundary(boundary::top, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
-                //         return w.dy * u.val;
-                //     });
-                // }
-
-                // if (is_outflow(i, Vx, Vy)) {
-                //     auto side = i[0] == Vx.dofs() - 1 ? boundary::right : boundary::top;
-                //     val -= integrate_boundary(side, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
-                //         return epsilon * w.val * (side == boundary::right ? u.dx : u.dy);
-                //     });
-                // }
-                // if (is_outflow(j, Ux, Uy)) {
-                //     auto side = j[0] == Ux.dofs() - 1 ? boundary::right : boundary::top;
-                //     val -= integrate_boundary(side, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
-                //         return u.val * (side == boundary::right ? w.dx : w.dy);
-                //     });
-                // }
+                // <eps \/u*n, v>
+                boundary_term([&](auto w, auto u, auto n) { return - epsilon * w.val * dot(u, n); });
+                // <u, eps \/v*n>
+                boundary_term([&](auto w, auto u, auto n) { return - epsilon * u.val * dot(w, n); });
+                // <u, v beta*n>
+                boundary_term([&](auto w, auto u, auto n) { return - u.val * w.val * dot(beta, n); });
+                // <u, gamma v>
+                boundary_term([&](auto w, auto u, auto  ) { return - u.val * w.val * gamma; });
 
                 if (val != 0) {
                     int ii = linear_index(i, Vx, Vy) + 1;
@@ -415,7 +392,7 @@ private:
 
         // Dirichlet BC - upper left
         for_boundary_dofs(Vx, Vy, [&](index_type dof) {
-            if (is_inflow(dof, Vx, Vy)) {
+            if (is_fixed(dof, Vx, Vy)) {
                 int i = linear_index(dof, Vx, Vy) + 1;
                 problem.add(i, i, 1);
             }
@@ -423,7 +400,7 @@ private:
 
         // Dirichlet BC - lower right
         for_boundary_dofs(Ux, Uy, [&](index_type dof) {
-            if (is_inflow(dof, Ux, Uy)) {
+            if (is_fixed(dof, Ux, Uy)) {
                 int i = linear_index(dof, Ux, Uy) + 1;
                 problem.add(N + i, N + i, 1);
             }
@@ -543,7 +520,7 @@ private:
 
         int size = Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs();
         mumps::problem problem(full_rhs.data(), size);
-        assemble_problem2(problem, Vx, Vy, matrices(x_refined, y_refined));
+        assemble_problem(problem, Vx, Vy, matrices(x_refined, y_refined));
         solver.solve(problem);
 
         add_solution(u_rhs, r_rhs, Vx, Vy);
@@ -614,12 +591,13 @@ private:
                     double val = -lv;
 
                     // Bu
-                    val += diff * uu.dx * v.dx + beta[0] * uu.dx * v.val;
-                    val += diff * uu.dy * v.dy + beta[1] * uu.dy * v.val;
+                    val += diff * grad_dot(uu, v) + dot(beta, uu) * v.val;
                     // -Aw
-                    val -= (rr.val * v.val + h * h * (rr.dx * v.dx + rr.dy * v.dy));
+                    val -= (rr.val * v.val + h * h * grad_dot(rr, v));
 
                     R(aa[0], aa[1]) += val * WJ;
+
+
                 }
                 for (auto a : dofs_on_element(e, Ux, Uy)) {
                     auto aa = dof_global_to_local(e, a, Ux, Uy);
@@ -627,9 +605,7 @@ private:
                     double val = 0;
 
                     // -B'w
-                    val -= (diff * w.dx * rr.dx + beta[0] * w.dx * rr.val);
-                    val -= (diff * w.dy * rr.dy + beta[1] * w.dy * rr.val);
-
+                    val -= diff * grad_dot(w, rr) + dot(beta, w) * rr.val;
                     U(aa[0], aa[1]) += val * WJ;
                 }
             }
@@ -638,6 +614,34 @@ private:
                 update_global_rhs(u_rhs, U, e, Ux, Uy);
             });
         });
+        // // Boundary terms
+        // for (auto i : dofs(Vx, Vy)) {
+        //     double val = 0;
+        //     auto g = [](auto x) { return x[0] == 0 ? std::sin(M_PI * x[1]) : 0; };
+
+        //     auto int_bd = [&](auto side, auto form) {
+        //         if (touches(i, side, Vx, Vy)) {
+        //             val += integrate_boundary(side, i, Vx, Vy, g, [&](auto w, auto u) {
+        //                 return form(w, u, this->normal(side));
+        //             });
+        //         }
+        //     };
+
+        //     auto boundary_term = [&](auto form) {
+        //         int_bd(boundary::left, form);
+        //         int_bd(boundary::right, form);
+        //         int_bd(boundary::top, form);
+        //         int_bd(boundary::bottom, form);
+        //     };
+        //     // <g, eps \/v*n>
+        //     boundary_term([&](auto w, auto g, auto n) { return - epsilon * g * dot(w, n); });
+        //     // <g, v beta*n>
+        //     boundary_term([&](auto w, auto g, auto n) { return - g * w.val * dot(beta, n); });
+        //     // <u, gamma v>
+        //     boundary_term([&](auto w, auto g, auto  ) { return - g * w.val * gamma; });
+
+        //     r_rhs(i[0], i[1]) += val;
+        // }
     }
 
     void compute_rhs_nonstationary(const dimension& Vx, const dimension& Vy, vector_view& r_rhs, vector_view& u_rhs,

@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
     int ders = 2;
 
     bool adapt_x = true && adapt;
-    bool adapt_y = true && adapt;
+    bool adapt_y = false && adapt;
 
     // auto d = 1e-4;
     auto d = shishkin_const(nx, 1e-6);
@@ -144,6 +144,8 @@ int main(int argc, char* argv[]) {
     } else {
         std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
     }
+    int dofs1D = type == "supg" ? trial_dim : trial_dim + test_dim;
+    std::cout << "DOFs : " << dofs1D * dofs1D << std::endl;
 
     if (type == "igrm-mumps") erikkson_mumps{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
     if (type == "igrm-cg") erikkson_CG{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
