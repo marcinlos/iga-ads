@@ -64,6 +64,8 @@ private:
 
     point_type c_diff{{ epsilon, epsilon }};
 
+    double b = 1e-2;
+
     // double angle = 0;
     double angle = M_PI / 6;
 
@@ -71,11 +73,14 @@ private:
 
     // point_type beta{{ len * cos(angle), len * sin(angle) }};
     // point_type beta{{ 1, 1 }};
-    point_type beta{{ 1, 0 }};
+    // point_type beta{{ 1, 0 }};
 
     mumps::solver solver;
 
     output_manager<2> output;
+
+    Galois::StatTimer integration_timer{"integration"};
+    Galois::StatTimer solver_timer{"solver"};
 
 public:
     erikkson_CG_weak(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, const timesteps_config& steps)
@@ -135,7 +140,7 @@ private:
         // return false;
     }
 
-    double diffusion(double x, double y) const {
+    double diffusion(point_type x) const {
         return epsilon;
 
         // bool left = x < 1 - 1/peclet, right = !left;
@@ -146,6 +151,12 @@ private:
         // } else {
             // return 1 / peclet;
         // }
+    }
+
+    point_type beta(point_type x) const {
+        // return {1, 0};
+        double r = b / std::sqrt(x[0] * x[0] + x[1] * x[1]);
+        return { - r * x[1], r * x[0] };
     }
 
     value_type eval_basis_at(point_type p, index_type e, index_type dof, const dimension& x, const dimension& y) const {
@@ -210,7 +221,7 @@ private:
                     point_type x{Ux.basis.x[e][q], y0};
                     value_type ww = eval_basis_at(x, {e, ey}, i, Ux, Uy);
                     value_type uu = eval_basis_at(x, {e, ey}, j, Vx, Vy);
-                    double fuw = form(ww, uu);
+                    double fuw = form(ww, uu, x);
                     val += fuw * w * J;
                 }
             }
@@ -230,7 +241,7 @@ private:
                     point_type x{x0, Uy.basis.x[e][q]};
                     value_type ww = eval_basis_at(x, {ex, e}, i, Ux, Uy);
                     value_type uu = eval_basis_at(x, {ex, e}, j, Vx, Vy);
-                    double fuw = form(ww, uu);
+                    double fuw = form(ww, uu, x);
                     val += fuw * w * J;
                 }
             }
@@ -350,16 +361,16 @@ private:
                         value_type ww = eval_basis(e, q, i, Vx, Vy);
                         value_type uu = eval_basis(e, q, j, Ux, Uy);
 
-                        auto diff = diffusion(x[0], x[1]);
-                        double bwu = diff * grad_dot(uu, ww) + dot(beta, uu) * ww.val;
+                        auto diff = diffusion(x);
+                        double bwu = diff * grad_dot(uu, ww) + dot(beta(x), uu) * ww.val;
                         val += bwu * w * J;
                     }
                 }
 
                 auto int_bd = [&](auto side, auto form) {
                     if (touches(i, side, Vx, Vy) && touches(j, side, Ux, Uy)) {
-                        val += integrate_boundary(side, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u) {
-                            return form(w, u, this->normal(side));
+                        val += integrate_boundary(side, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u, auto x) {
+                            return form(w, u, x, this->normal(side));
                         });
                     }
                 };
@@ -372,13 +383,13 @@ private:
                 };
 
                 // <eps \/u*n, v>
-                boundary_term([&](auto w, auto u, auto n) { return - epsilon * w.val * dot(u, n); });
+                boundary_term([&](auto w, auto u, auto  , auto n) { return - epsilon * w.val * dot(u, n); });
                 // <u, eps \/v*n>
-                boundary_term([&](auto w, auto u, auto n) { return - epsilon * u.val * dot(w, n); });
+                boundary_term([&](auto w, auto u, auto  , auto n) { return - epsilon * u.val * dot(w, n); });
                 // <u, v beta*n>
-                boundary_term([&](auto w, auto u, auto n) { return - u.val * w.val * dot(beta, n); });
+                boundary_term([&](auto w, auto u, point_type x, auto n) { return - u.val * w.val * dot(beta(x), n); });
                 // <u, gamma v>
-                boundary_term([&](auto w, auto u, auto  ) { return - u.val * w.val * gamma; });
+                boundary_term([&](auto w, auto u, auto  , auto  ) { return - u.val * w.val * gamma; });
 
                 if (val != 0) {
                     int ii = linear_index(i, Vx, Vy) + 1;
@@ -468,9 +479,15 @@ private:
         zero(r.data);
         zero(u);
 
-        stationary_bc(u, Ux, Uy);
+        // stationary_bc(u, Ux, Uy);
         // skew_bc(u, Ux, Uy);
         // zero_bc(u, Ux, Uy);
+
+        dirichlet_bc(u, boundary::left, Ux, Uy, [&](double t) {
+            double tt = std::abs(t);
+            return 0.5 * (b / epsilon * std::tanh(tt < 0.5 ? tt - 0.35 : 0.65 - tt) + 1);
+        });
+
 
         output.to_file(u, "out_0.data");
     }
@@ -503,6 +520,7 @@ private:
 
         std::fill(begin(full_rhs), end(full_rhs), 0);
 
+        integration_timer.start();
         // compute_rhs_nonstationary(Vx, Vy, r_rhs, u_rhs, t);
         compute_rhs(Vx, Vy, r_rhs, u_rhs);
 
@@ -521,7 +539,11 @@ private:
         int size = Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs();
         mumps::problem problem(full_rhs.data(), size);
         assemble_problem(problem, Vx, Vy, matrices(x_refined, y_refined));
+        integration_timer.stop();
+
+        solver_timer.start();
         solver.solve(problem);
+        solver_timer.stop();
 
         add_solution(u_rhs, r_rhs, Vx, Vy);
         return norm(u_rhs);
@@ -540,11 +562,11 @@ private:
         // swap(u, u_prev);
         // zero(u);
 
-        std::cout << "Step " << (iter + 1) << std::endl;
+        // std::cout << "Step " << (iter + 1) << std::endl;
         constexpr auto max_iters = 1;
         for (int i = 1; ; ++ i) {
             auto norm = substep(true, true, t);
-            std::cout << "  substep " << i << ": |eta| = " << norm << std::endl;
+            // std::cout << "  substep " << i << ": |eta| = " << norm << std::endl;
             if (norm < 1e-7 || i >= max_iters) {
                 break;
             }
@@ -553,7 +575,7 @@ private:
 
     void after_step(int iter, double t) override {
         if ((iter + 1) % save_every == 0) {
-            std::cout << "Step " << (iter + 1) << " : " << errorL2(t) << " " << errorH1(t) << std::endl;
+            // std::cout << "Step " << (iter + 1) << " : " << errorL2(t) << " " << errorH1(t) << std::endl;
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
     }
@@ -561,7 +583,11 @@ private:
     void after() override {
         plot_middle("final.data", u, Ux, Uy);
         double T = steps.dt * steps.step_count;
-        std::cout << "{ 'L2': '" << errorL2(T) << "', 'H1': '" << errorH1(T) << "'}" << std::endl;
+        std::cout << "L2: " << errorL2(T) << std::endl;
+        std::cout << "H1: " << errorH1(T) << std::endl;
+        std::cout << "integration: " << static_cast<double>(integration_timer.get()) << std::endl;
+        std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << std::endl;
+
         print_solution("solution.data", u, Ux, Uy);
     }
 
@@ -577,7 +603,7 @@ private:
                 auto x = point(e, q);
                 value_type uu = eval(u, e, q, Ux, Uy);
                 value_type rr = eval(r.data, e, q, *r.Vx, *r.Vy);
-                auto diff = diffusion(x[0], x[1]);
+                auto diff = diffusion(x);
 
                 for (auto a : dofs_on_element(e, Vx, Vy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
@@ -591,7 +617,7 @@ private:
                     double val = -lv;
 
                     // Bu
-                    val += diff * grad_dot(uu, v) + dot(beta, uu) * v.val;
+                    val += diff * grad_dot(uu, v) + dot(beta(x), uu) * v.val;
                     // -Aw
                     val -= (rr.val * v.val + h * h * grad_dot(rr, v));
 
@@ -603,7 +629,7 @@ private:
                     double val = 0;
 
                     // -B'w
-                    val -= diff * grad_dot(w, rr) + dot(beta, w) * rr.val;
+                    val -= diff * grad_dot(w, rr) + dot(beta(x), w) * rr.val;
                     U(aa[0], aa[1]) += val * WJ;
                 }
             }
@@ -670,8 +696,8 @@ private:
 
                     // Bu
                     val += uu.val * v.val;
-                    val += steps.dt * (c_diff[0] * uu.dx * v.dx + beta[0] * uu.dx * v.val);
-                    val += steps.dt * (c_diff[1] * uu.dy * v.dy + beta[1] * uu.dy * v.val);
+                    val += steps.dt * (c_diff[0] * uu.dx * v.dx + beta(x)[0] * uu.dx * v.val);
+                    val += steps.dt * (c_diff[1] * uu.dy * v.dy + beta(x)[1] * uu.dy * v.val);
                     // -Aw
                     val -= (rr.val * v.val + h * h * (rr.dx * v.dx + rr.dy * v.dy));
 
@@ -684,8 +710,8 @@ private:
 
                     // -B'w
                     val -= w.val * rr.val;
-                    val -= steps.dt * (c_diff[0] * w.dx * rr.dx + beta[0] * w.dx * rr.val);
-                    val -= steps.dt * (c_diff[1] * w.dy * rr.dy + beta[1] * w.dy * rr.val);
+                    val -= steps.dt * (c_diff[0] * w.dx * rr.dx + beta(x)[0] * w.dx * rr.val);
+                    val -= steps.dt * (c_diff[1] * w.dy * rr.dy + beta(x)[1] * w.dy * rr.val);
 
                     U(aa[0], aa[1]) += val * WJ;
                 }
