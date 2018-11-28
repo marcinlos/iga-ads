@@ -365,7 +365,7 @@ private:
                 };
 
                 auto boundary_term = [&](auto form) {
-                    // int_bd(boundary::left, form);
+                    int_bd(boundary::left, form);
                     int_bd(boundary::right, form);
                     int_bd(boundary::top, form);
                     int_bd(boundary::bottom, form);
@@ -596,8 +596,6 @@ private:
                     val -= (rr.val * v.val + h * h * grad_dot(rr, v));
 
                     R(aa[0], aa[1]) += val * WJ;
-
-
                 }
                 for (auto a : dofs_on_element(e, Ux, Uy)) {
                     auto aa = dof_global_to_local(e, a, Ux, Uy);
