@@ -64,7 +64,7 @@ private:
 
     point_type c_diff{{ epsilon, epsilon }};
 
-    double b = 1e-2;
+    double b = 1;
 
     // double angle = 0;
     double angle = M_PI / 6;
@@ -485,7 +485,7 @@ private:
 
         dirichlet_bc(u, boundary::left, Ux, Uy, [&](double t) {
             double tt = std::abs(t);
-            return 0.5 * (b / epsilon * std::tanh(tt < 0.5 ? tt - 0.35 : 0.65 - tt) + 1);
+            return 0.5 * (std::tanh(b / epsilon * (tt < 0.5 ? tt - 0.35 : 0.65 - tt)) + 1);
         });
 
 
