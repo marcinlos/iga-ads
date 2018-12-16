@@ -93,8 +93,8 @@ int main(int argc, char* argv[]) {
         dtest_x, dtest_y
     };
 
-    // auto sim = stokes_conforming{trial, test, steps};
-    auto sim = stokes{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
+    auto sim = stokes_conforming{trial, test, steps};
+    // auto sim = stokes{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
 
     sim.run();
 }

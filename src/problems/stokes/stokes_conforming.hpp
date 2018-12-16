@@ -201,6 +201,37 @@ public:
         return val;
     }
 
+    value_type eval_basis_at(point_type p, index_type e, index_type dof, const dimension& x, const dimension& y) const {
+        int spanx = bspline::find_span(p[0], x.B);
+        int spany = bspline::find_span(p[1], y.B);
+
+        bspline::eval_ders_ctx cx{x.p, 1};
+        bspline::eval_ders_ctx cy{y.p, 1};
+
+        double** bvx = cx.basis_vals();
+        double** bvy = cy.basis_vals();
+
+        eval_basis_with_derivatives(spanx, p[0], x.B, bvx, 1, cx);
+        eval_basis_with_derivatives(spany, p[1], y.B, bvy, 1, cy);
+
+        int offsetx = spanx - x.p;
+        int offsety = spany - y.p;
+
+        int ix = dof[0] - offsetx;
+        int iy = dof[1] - offsety;
+
+        auto value = bvx[0][ix] * bvy[0][iy];
+        auto dx    = bvx[1][ix] * bvy[0][iy];
+        auto dy    = bvx[0][ix] * bvy[1][iy];
+
+        return { value, dx, dy };
+    }
+
+    bool supported_in_1d(int dof, int e, const dimension& x) const {
+        auto xrange = x.basis.element_ranges[dof];
+        return e >= xrange.first && e <= xrange.second;
+    }
+
     template <typename Form>
     double integrate_boundary(boundary side, index_type i, index_type j, const dimension& Ux, const dimension& Uy,
                               const dimension& Vx, const dimension& Vy, Form&& form) const {
@@ -209,38 +240,45 @@ public:
 
         if (horizontal) {
             int ey = side == boundary::bottom ? 0 : Uy.elements - 1;
+            if (! supported_in_1d(j[1], ey, Vy) || ! supported_in_1d(i[1], ey, Uy)) return 0;
+
+            auto y0 = side == boundary::bottom ? Uy.a : Uy.b;
+
             for (auto e : Ux.basis.element_range(i[0])) {
-                auto jrange = Vx.basis.element_ranges[j[0]];
-                if (e < jrange.first || e > jrange.second) continue;
+                if (! supported_in_1d(j[0], e, Vx)) continue;
 
                 double J = Ux.basis.J[e];
-                int qy = Uy.basis.quad_order - (side == boundary::bottom ? 2 : 1);
+
                 for (int q = 0; q < Ux.basis.quad_order; ++ q) {
                     double w = Ux.basis.w[q];
-                    value_type ww = eval_basis({e, ey}, {q, qy}, i, Ux, Uy);
-                    value_type uu = eval_basis({e, ey}, {q, qy}, j, Vx, Vy);
-                    double fuw = form(ww, uu);
+                    point_type x{Ux.basis.x[e][q], y0};
+                    value_type ww = eval_basis_at(x, {e, ey}, i, Ux, Uy);
+                    value_type uu = eval_basis_at(x, {e, ey}, j, Vx, Vy);
+                    double fuw = form(ww, uu, x);
                     val += fuw * w * J;
                 }
             }
         } else {
             int ex = side == boundary::left ? 0 : Ux.elements - 1;
+            if (! supported_in_1d(j[0], ex, Vx) || ! supported_in_1d(i[0], ex, Ux)) return 0;
+
+            auto x0 = side == boundary::left ? Ux.a : Ux.b;
+
             for (auto e : Uy.basis.element_range(i[1])) {
-                auto jrange = Vy.basis.element_ranges[j[1]];
-                if (e < jrange.first || e > jrange.second) continue;
+                if (! supported_in_1d(j[1], e, Vy)) continue;
 
                 double J = Uy.basis.J[e];
-                int qx = Ux.basis.quad_order - (side == boundary::left ? 2 : 1);
+
                 for (int q = 0; q < Uy.basis.quad_order; ++ q) {
                     double w = Uy.basis.w[q];
-                    value_type ww = eval_basis({ex, e}, {qx, q}, i, Ux, Uy);
-                    value_type uu = eval_basis({ex, e}, {qx, q}, j, Vx, Vy);
-                    double fuw = form(ww, uu);
+                    point_type x{x0, Uy.basis.x[e][q]};
+                    value_type ww = eval_basis_at(x, {ex, e}, i, Ux, Uy);
+                    value_type uu = eval_basis_at(x, {ex, e}, j, Vx, Vy);
+                    double fuw = form(ww, uu, x);
                     val += fuw * w * J;
                 }
             }
         }
-
         return val;
     }
 
@@ -393,7 +431,7 @@ public:
                 if (is_boundary(i[1], test.U1y) || is_boundary(j[1], trial.U1y)) {
                     auto side = i[1] == 0 ? boundary::bottom : boundary::top;
                     int n = side == boundary::top ? 1 : -1;
-                    value -= integrate_boundary(side, i, j, test.U1x, test.U1y, trial.U1x, trial.U1y, [&](auto w, auto u) {
+                    value -= integrate_boundary(side, i, j, test.U1x, test.U1y, trial.U1x, trial.U1y, [&](auto w, auto u, auto) {
                         return n * w.dy * u.val + pen_term(w, u);
                     });
                 }
@@ -420,7 +458,7 @@ public:
                 if (is_boundary(i[0], test.U2x) || is_boundary(j[0], trial.U2x)) {
                     auto side = i[0] == 0 ? boundary::left : boundary::right;
                     int n = side == boundary::right ? 1 : -1;
-                    value -= integrate_boundary(side, i, j, test.U2x, test.U2y, trial.U2x, trial.U2y, [&](auto w, auto u) {
+                    value -= integrate_boundary(side, i, j, test.U2x, test.U2y, trial.U2x, trial.U2y, [&](auto w, auto u, auto) {
                         return n * w.dx * u.val + pen_term(w, u);
                     });
                 }
