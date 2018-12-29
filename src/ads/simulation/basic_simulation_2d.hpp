@@ -181,7 +181,7 @@ protected:
         }
         for (auto jy = 1; jy < y.dofs() - 1; ++ jy) {
             fun({0, jy});
-            fun({y.dofs() - 1, jy});
+            fun({x.dofs() - 1, jy});
         }
     }
 
