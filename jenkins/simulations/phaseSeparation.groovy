@@ -7,7 +7,7 @@ def defaultElements() {
 }
 
 def defaultSteps() {
-    "2000000"
+    "200"
 }
 
 def defaultDelta() {
