@@ -37,16 +37,17 @@ protected:
         for_boundary_dofs(Ux, Uy, [&](index_type i) { u(i[0], i[1]) = 0; });
     }
 
-    void plot_middle(const char* filename, const vector_type& u, const dimension& Ux, const dimension& Uy) const {
+    void plot_horizontal(const char* filename, double y0, const vector_type& u,
+                         const dimension& Ux, const dimension& Uy) const {
         std::ofstream out{filename};
         bspline::eval_ctx ctx_x{ Ux.B.degree }, ctx_y{ Uy.B.degree };
 
         auto print = [&](double xx) {
-            auto val = bspline::eval(xx, 0.5, u, Ux.B, Uy.B, ctx_x, ctx_y);
+            auto val = bspline::eval(xx, y0, u, Ux.B, Uy.B, ctx_x, ctx_y);
             out << std::setprecision(16) << xx << " " << val << std::endl;
         };
 
-        print(0);
+        print(Ux.a);
         auto N = Ux.basis.quad_order;
         for (auto e : Ux.element_indices()) {
             std::vector<double> qs(Ux.basis.x[e], Ux.basis.x[e] + N);
@@ -55,7 +56,33 @@ protected:
                 print(xx);
             }
         }
-        print(1);
+        print(Ux.b);
+    }
+
+    void plot_vertical(const char* filename, double x0, const vector_type& u,
+                         const dimension& Ux, const dimension& Uy) const {
+        std::ofstream out{filename};
+        bspline::eval_ctx ctx_x{ Ux.B.degree }, ctx_y{ Uy.B.degree };
+
+        auto print = [&](double yy) {
+            auto val = bspline::eval(x0, yy, u, Ux.B, Uy.B, ctx_x, ctx_y);
+            out << std::setprecision(16) << yy << " " << val << std::endl;
+        };
+
+        print(Uy.a);
+        auto N = Uy.basis.quad_order;
+        for (auto e : Uy.element_indices()) {
+            std::vector<double> qs(Uy.basis.x[e], Uy.basis.x[e] + N);
+            std::sort(begin(qs), end(qs));
+            for (auto yy : qs) {
+                print(yy);
+            }
+        }
+        print(Uy.b);
+    }
+
+    void plot_middle(const char* filename, const vector_type& u, const dimension& Ux, const dimension& Uy) const {
+        plot_horizontal(filename, 0.5, u, Ux, Uy);
     }
 
     void print_solution(const char* filename, const vector_type& u, const dimension& Ux, const dimension& Uy) const {
