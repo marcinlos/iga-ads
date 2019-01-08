@@ -147,6 +147,9 @@ if (NOT SKIP_PROBLEMS)
     define_problem(erikkson_mumps
       src/problems/erikkson/main_mumps.cpp)
 
+    define_problem(erikkson_nonstationary
+      src/problems/erikkson/main_nonstationary.cpp)
+
     define_problem(stokes
       src/problems/stokes/main.cpp)
 

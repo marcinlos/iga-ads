@@ -27,7 +27,7 @@ private:
 
     int save_every = 1;
 
-    double peclet = 1e6;
+    double peclet = 1e2;
     double epsilon = 1 / peclet;
 
     double C1 = 4, C2 = 2;
@@ -344,7 +344,7 @@ private:
         integration_timer.stop();
 
         solver_timer.start();
-        solver.solve(problem);
+        solver.solve(problem, "matrix");
         solver_timer.stop();
 
         u = rhs;

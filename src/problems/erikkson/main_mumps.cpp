@@ -117,13 +117,13 @@ int main(int argc, char* argv[]) {
     bool adapt_y = false && adapt;
 
     // auto d = 1e-4;
-    auto d = shishkin_const(nx, 1e-6);
+    auto d = shishkin_const(nx, 1e-2);
 
     auto trial_basis_x = create_basis(0, S, p_trial, nx, p_trial - 1 - C_trial, adapt_x, d);
     // auto trial_basis_x = create_checkboard_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_x);
     auto dtrial_x = dimension{ trial_basis_x, quad, ders, subdivision };
 
-    auto trial_basis_y = create_basis(-S, S, p_trial, ny, p_trial - 1 - C_trial, adapt_y, d);
+    auto trial_basis_y = create_basis(0, S, p_trial, ny, p_trial - 1 - C_trial, adapt_y, d);
     // auto trial_basis_y = create_checkboard_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_y);
     auto dtrial_y = dimension{ trial_basis_y, quad, ders, subdivision };
 
@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
     // auto test_basis_x = create_checkboard_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test, adapt_x);
     auto dtest_x = dimension{ test_basis_x, quad, ders, 1 };
 
-    auto test_basis_y = create_basis(-S, S, p_test, subdivision*ny, p_test - 1 - C_test, adapt_y, d);
+    auto test_basis_y = create_basis(0, S, p_test, subdivision*ny, p_test - 1 - C_test, adapt_y, d);
     // auto test_basis_y = create_checkboard_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test, adapt_y);
     auto dtest_y = dimension{ test_basis_y, quad, ders, 1 };
 
@@ -156,7 +156,7 @@ int main(int argc, char* argv[]) {
     if (type == "supg") erikkson_supg {dtrial_x, dtrial_y, steps}.run();
     if (type == "supg-weak") erikkson_supg_weak{dtrial_x, dtrial_y, steps}.run();
     if (type == "pollution") pollution_rotation{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
-    if (type == "split") erikkson_mumps_split{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
+    // if (type == "split") erikkson_mumps_split{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
 
 
     // erikkson_mumps_split sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
