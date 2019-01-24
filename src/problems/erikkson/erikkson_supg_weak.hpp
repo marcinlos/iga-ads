@@ -241,8 +241,15 @@ private:
                         auto diff = diffusion(pt[0], pt[1]);
                         double bwu = diff * grad_dot(uu, ww) + dot(beta, uu) * ww.val;
 
-                        double h = elem_diam(e);
-                        double tau = 1 / (C1 * epsilon / (h * h) + C2 / h);
+                        // double h = elem_diam(e);
+                        // double tau = 1 / (C1 * epsilon / (h * h) + C2 / h);
+                        double hx = 2 * x.basis.J[e[0]];
+                        double hy = 2 * y.basis.J[e[1]];
+                        double hh = hx * hx + hy * hy;
+                        // double tau = \tau ^(-2) = ( bx/hx+by/hy)^2+ 3 \mu * 1 / (hx^2+hy^2)
+                        double tau = 1. / std::sqrt( 1 / (hx * hx) + 3 * diff / hh);
+
+
 
                         double bDw = dot(beta, ww);
 
