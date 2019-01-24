@@ -5,6 +5,8 @@
 #include "ads/bspline/bspline.hpp"
 #include "problems/stokes/stokes.hpp"
 #include "problems/stokes/stokes_conforming.hpp"
+#include "problems/stokes/stokes_constrained.hpp"
+
 
 
 using namespace ads;
@@ -22,7 +24,7 @@ int main(int argc, char* argv[]) {
     int p_test = std::atoi(argv[4]);
     int C_test = std::atoi(argv[5]);
 
-    int quad = std::max(p_trial, p_test) + 1;
+    int quad = std::max(p_trial, p_test) + 1 + 1; // to integrate velocity
 
     timesteps_config steps{ 1, 0 };
     int ders = 2;
@@ -93,7 +95,8 @@ int main(int argc, char* argv[]) {
         dtest_x, dtest_y
     };
 
-    auto sim = stokes_conforming{trial, test, steps};
+    // auto sim = stokes_conforming{trial, test, steps};
+    auto sim = stokes_constrained{trial, test, steps};
     // auto sim = stokes{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
 
     sim.run();
