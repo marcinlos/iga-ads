@@ -22,7 +22,7 @@ private:
     double h;
 
     double Cpen;// = 10;//5 * (3 + 1);
-    double hF = 1 / 20.;
+    double hF;// = 1 / 20.;
 
     mumps::solver solver;
     output_manager<2> outputU1, outputU2, outputP;
@@ -39,6 +39,7 @@ public:
     {
         // 5(p + 1)
         Cpen = 5 * trial.U1x.B.degree;
+        hF = 1. / trial.Px.dofs();
     }
 
     double element_diam(const dimension& Ux, const dimension& Uy) const {
@@ -318,7 +319,7 @@ public:
 
                 if (! is_boundary(i[0], test.U1x) && ! is_boundary(j[0], test.U1x)) {
                     test_vx(ii, jj, eval([hh](auto w, auto u) {
-                                return /*w.val * u.val + hh */ ( w.dx * u.dx + w.dy * u.dy);
+                        return w.val * u.val + hh * (w.dx * u.dx + w.dy * u.dy);
                     }));
                 }
             }
@@ -334,7 +335,7 @@ public:
 
                 if (! is_boundary(i[1], test.U2y) && ! is_boundary(j[1], test.U2y)) {
                     test_vy(ii, jj, eval([hh](auto w, auto u) {
-                                return /*w.val * u.val + hh */ (w.dy * u.dy + w.dx + u.dx);
+                        return w.val * u.val + hh * (w.dy * u.dy + w.dx + u.dx);
                     }));
                 }
             }
@@ -483,12 +484,12 @@ public:
         //     trial_vy(i, i, 1);
         // });
         int ii = linear_index({0, 0}, trial.Px, trial.Py) + 1;
-        // trial_p(ii, ii, 1.0);
+        trial_p(ii, ii, 1.0);
 
-        for (auto j : dofs(trial.Px, trial.Py)) {
-            int jj = linear_index(j, trial.Px, trial.Py) + 1;
-            trial_p(ii, jj, integrate({0,0}, j, trial.Px, trial.Py, trial.Px, trial.Py, [](auto w, auto u) { return u.val; }));
-        }
+        // for (auto j : dofs(trial.Px, trial.Py)) {
+        //     int jj = linear_index(j, trial.Px, trial.Py) + 1;
+        //     trial_p(ii, jj, integrate({0,0}, j, trial.Px, trial.Py, trial.Px, trial.Py, [](auto w, auto u) { return u.val; }));
+        // }
     }
 
     void compute_rhs(vector_view& vx, vector_view& vy) const {

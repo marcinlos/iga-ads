@@ -21,8 +21,8 @@ private:
 
     double h;
 
-    double Cpen = 5 * (3 + 1);
-    double hF = 1 / 20.;
+    double Cpen;// = 5 * (3 + 1);
+    double hF;// = 1 / 20.;
 
     mumps::solver solver;
     output_manager<2> outputU1, outputU2, outputP;
@@ -36,7 +36,11 @@ public:
     , outputU1{ trial.U1x.B, trial.U1y.B, 500 }
     , outputU2{ trial.U2x.B, trial.U2y.B, 500 }
     , outputP{ trial.Px.B, trial.Py.B, 500 }
-    { }
+    {
+        // 5(p + 1)
+        Cpen = 5 * trial.U1x.B.degree;
+        hF = 1. / trial.Px.dofs();
+    }
 
     double element_diam(const dimension& Ux, const dimension& Uy) const {
         return std::sqrt(max_element_size(Ux) * max_element_size(Uy));

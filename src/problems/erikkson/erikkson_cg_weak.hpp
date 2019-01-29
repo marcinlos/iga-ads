@@ -59,7 +59,7 @@ private:
     double h;
     double gamma;
 
-    double peclet = 1e2;
+    double peclet = 1e6;
     double epsilon = 1 / peclet;
 
     point_type c_diff{{ epsilon, epsilon }};
@@ -587,8 +587,10 @@ private:
         // plot_vertical("vertical.data", 0.2, u, Ux, Uy);
 
         double T = steps.dt * steps.step_count;
-        std::cout << "L2: " << errorL2(T) << std::endl;
-        std::cout << "H1: " << errorH1(T) << std::endl;
+        std::cout << "L2 abs: " << errorL2_abs(T) << std::endl;
+        std::cout << "H1 abs: " << errorH1_abs(T) << std::endl;
+        std::cout << "L2 rel: " << errorL2(T) << std::endl;
+        std::cout << "H1 rel: " << errorH1(T) << std::endl;
         std::cout << "integration: " << static_cast<double>(integration_timer.get()) << std::endl;
         std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << std::endl;
 
@@ -725,6 +727,16 @@ private:
                 update_global_rhs(u_rhs, U, e, Ux, Uy);
             });
         });
+    }
+
+    double errorL2_abs(double t) const {
+        auto sol = exact(epsilon);
+        return Base::errorL2(u, Ux, Uy, sol);
+    }
+
+    double errorH1_abs(double t) const {
+        auto sol = exact(epsilon);
+        return Base::errorH1(u, Ux, Uy, sol);
     }
 
     double errorL2(double t) const {

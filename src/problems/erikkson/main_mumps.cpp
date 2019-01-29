@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) {
     bool adapt_y = false && adapt;
 
     // auto d = 1e-4;
-    auto d = shishkin_const(nx, 1e-2);
+    auto d = shishkin_const(nx, 1e-6);
 
     auto trial_basis_x = create_basis(0, S, p_trial, nx, p_trial - 1 - C_trial, adapt_x, d);
     // auto trial_basis_x = create_checkboard_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_x);

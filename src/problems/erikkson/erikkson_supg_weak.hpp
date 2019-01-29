@@ -27,7 +27,7 @@ private:
 
     int save_every = 1;
 
-    double peclet = 1e2;
+    double peclet = 1e6;
     double epsilon = 1 / peclet;
 
     double C1 = 4, C2 = 2;
@@ -367,8 +367,10 @@ private:
     void after() override {
         plot_middle("final.data", u, x, y);
         // std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
-        std::cout << "L2: " << errorL2() << std::endl;
-        std::cout << "H1: " << errorH1() << std::endl;
+        std::cout << "L2 abs: " << errorL2_abs() << std::endl;
+        std::cout << "H1 abs: " << errorH1_abs() << std::endl;
+        std::cout << "L2 rel: " << errorL2() << std::endl;
+        std::cout << "H1 rel: " << errorH1() << std::endl;
         std::cout << "integration: " << static_cast<double>(integration_timer.get()) << std::endl;
         std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << std::endl;
 
@@ -399,6 +401,16 @@ private:
                 update_global_rhs(rhs, U, e, x, y);
             });
         });
+    }
+
+    double errorL2_abs() const {
+        auto sol = exact(epsilon);
+        return Base::errorL2(u, x, y, sol);
+    }
+
+    double errorH1_abs() const {
+        auto sol = exact(epsilon);
+        return Base::errorH1(u, x, y, sol);
     }
 
     double errorL2() const {
