@@ -17,7 +17,7 @@ private:
     vector_type u, u_prev;
 
     output_manager<2> output;
-    galois_executor executor{4};
+    galois_executor executor{8};
 
 public:
     validation(const config_2d& config)
@@ -46,8 +46,12 @@ private:
 
     static constexpr double k = 2 * M_PI * M_PI;
 
-    double solution(double x, double y, double t) const {
-        return sc(t) * fi(x, y);
+    value_type solution(double x, double y, double t) const {
+        return value_type{
+            sc(t) * fi(x, y),
+            sc(t) * M_PI * std::cos(x * M_PI) * std::sin(y * M_PI),
+            sc(t) * M_PI * std::sin(x * M_PI) * std::cos(y * M_PI)
+        };
     }
 
     double fi(double x, double y) const {
@@ -84,11 +88,16 @@ private:
         solve(u);
     }
 
+    void after() override {
+        double T = steps.dt * steps.step_count;
+        std::cout << errorL2(T) << "  " << errorH1(T) << std::endl;
+    }
+
     void after_step(int iter, double t) override {
-        if (iter % 1000 == 0) {
-            output.to_file(u, "out_%d.data", iter);
-            validate(t);
-        }
+        // if (iter % 1000 == 0) {
+        //     output.to_file(u, "out_%d.data", iter);
+        //     validate(t);
+        // }
     }
 
     void compute_rhs() {
@@ -119,30 +128,14 @@ private:
         });
     }
 
-    void validate(double t) {
-        double L2 = 0, Max = 0;
+    double errorL2(double t) const {
+        auto sol = [&](point_type x) { return solution(x[0], x[1], t); };
+        return Base::errorL2(u, x, y, sol) / normL2(x, y, sol) * 100;
+    }
 
-        executor.for_each(elements(), [&](index_type e) {
-            double localL2 = 0, localMax = 0;
-            double J = jacobian(e);
-            for (auto q : quad_points()) {
-                auto x = point(e, q);
-                double w = weigth(q);
-
-                auto uval = eval_fun(u, e, q).val;
-                auto sol = solution(x[0], x[1], t);
-                auto e = std::abs(uval - sol);
-
-                localMax = std::max(localMax, e);
-                localL2 += w * J * e * e;
-            }
-            executor.synchronized([&]() {
-                L2 += localL2;
-                Max = std::max(Max, localMax);
-            });
-        });
-        L2 = std::sqrt(L2);
-        std::cout << t << "  " << L2 << "  " << Max << std::endl;
+    double errorH1(double t) const {
+        auto sol = [&](point_type x) { return solution(x[0], x[1], t); };
+        return Base::errorH1(u, x, y, sol) / normH1(x, y, sol) * 100;
     }
 };
 
