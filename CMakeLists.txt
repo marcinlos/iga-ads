@@ -156,6 +156,10 @@ if (NOT SKIP_PROBLEMS)
     define_problem(demkowicz
       src/problems/demkowicz/main.cpp)
 
+    define_problem(multistep
+      src/problems/multistep/scheme.cpp
+      src/problems/multistep/main.cpp)
+
   endif()
 
   define_problem(heat_1d

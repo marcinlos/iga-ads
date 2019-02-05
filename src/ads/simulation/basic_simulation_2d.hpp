@@ -31,6 +31,24 @@ protected:
         top, bottom, left, right
     };
 
+    struct L2 {
+        double operator ()(value_type a) const {
+            return a.val * a.val;
+        }
+    };
+
+    struct H10 {
+        double operator ()(value_type a) const {
+            return a.dx * a.dx + a.dy * a.dy;
+        }
+    };
+
+    struct H1 {
+        double operator ()(value_type a) const {
+            return a.val * a.val + a.dx * a.dx + a.dy * a.dy;;
+        }
+    };
+
     value_type eval_basis(index_type e, index_type q, index_type a, const dimension& x, const dimension& y) const  {
         auto loc = dof_global_to_local(e, a, x, y);
 
@@ -225,6 +243,21 @@ protected:
         dirichlet_bc(u, side, x, y, [value](double) { return value; });
     }
 
+    template <typename Norm, typename Sol>
+    double norm(const Sol& u, const dimension& Ux, const dimension& Uy, Norm&& norm) const {
+        double val = 0;
+
+        for (auto e : elements(Ux, Ux)) {
+            double J = jacobian(e, Ux, Uy);
+            for (auto q : quad_points(Ux, Uy)) {
+                double w = weigth(q, Ux, Uy);
+                value_type uu = eval(u, e, q, Ux, Uy);
+                val += norm(uu) * w * J;
+            }
+        }
+        return std::sqrt(val);
+    }
+
     template <typename Norm, typename Fun>
     double norm(const dimension& Ux, const dimension& Uy, Norm&& norm, Fun&& fun) const {
         double val = 0;
@@ -243,14 +276,12 @@ protected:
 
     template <typename Fun>
     double normL2(const dimension& Ux, const dimension& Uy, Fun&& fun) const {
-        auto L2 = [](value_type a) { return a.val * a.val; };
-        return norm(Ux, Uy, L2, fun);
+        return norm(Ux, Uy, L2{}, fun);
     }
 
     template <typename Fun>
     double normH1(const dimension& Ux, const dimension& Uy, Fun&& fun) const {
-        auto H1 = [](value_type a) { return a.val * a.val + a.dx * a.dx + a.dy * a.dy; };
-        return norm(Ux, Uy, H1, fun);
+        return norm(Ux, Uy, H1{}, fun);
     }
 
     template <typename Sol, typename Fun, typename Norm>
@@ -273,14 +304,17 @@ protected:
 
     template <typename Sol, typename Fun>
     double errorL2(const Sol& u, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
-        auto L2 = [](value_type a) { return a.val * a.val; };
-        return error(u, Ux, Uy, L2, fun);
+        return error(u, Ux, Uy, L2{}, fun);
     }
 
     template <typename Sol, typename Fun>
     double errorH1(const Sol& u, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
-        auto H1 = [](value_type a) { return a.val * a.val + a.dx * a.dx + a.dy * a.dy; };
-        return error(u, Ux, Uy, H1, fun);
+        return error(u, Ux, Uy, H1{}, fun);
+    }
+
+    template <typename Sol, typename Fun, typename Norm>
+    double error_relative(const Sol& u, const dimension& Ux, const dimension& Uy, Norm&& norm, Fun&& fun) const {
+        return error(u, Ux, Uy, norm, fun) / this->norm(Ux, Uy, norm, fun) * 100;
     }
 
 };
