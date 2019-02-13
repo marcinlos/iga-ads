@@ -245,7 +245,9 @@ private:
     }
 
     double init_state(double x, double y, int step) const {
+        // INIT-REPLACE-START
         return i;
+        // INIT-REPLACE-END
     }
 
 };

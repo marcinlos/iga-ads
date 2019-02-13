@@ -91,8 +91,8 @@ private:
 
         int needed = us.size() - 1;
         for (int i = 0; i < needed; ++ i) {
-            double t = i * steps.dt;
-            auto init = [this,t](double x, double y, double z) { return solution(x, y, z, t).val; };
+
+            auto init = [this,i](double x, double y, double z) { return init_state(x, y, z, i); };
 
             projection(us[0], init);
             apply_bc(us[0]);
@@ -132,7 +132,6 @@ private:
 
         if (ii % 1000 == 0) {
             output.to_file(us[0], "out_%d.data", iter);
-            validate(t);
         }
 
         if (ii % 1 == 0) {
@@ -335,8 +334,10 @@ private:
         };
     }
 
-    double init_state(double x, double y, double z) const {
-        return solution(x, y, z, 0).val;
+    double init_state(double x, double y, double z, int i) const {
+        // INIT-REPLACE-START
+        return i;
+        // INIT-REPLACE-END
     }
 
 };
