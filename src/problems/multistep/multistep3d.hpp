@@ -335,9 +335,15 @@ private:
     }
 
     double init_state(double x, double y, double z, int i) const {
-        // INIT-REPLACE-START
-        return i;
-        // INIT-REPLACE-END
+        /* INIT-REPLACE-START
+            Do not remove this comment.
+            It is a marker for changing the source of the initial_state accomodating different usage scenarios.
+            Cheap trick but works fine.
+        */
+        constexpr double k = 3 * M_PI * M_PI;
+        double e = std::exp(-k * t);
+        return e * std::sin(x * M_PI) * std::sin(y * M_PI) * std::sin(z * M_PI);
+        /* INIT-REPLACE-END */
     }
 
 };
