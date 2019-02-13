@@ -83,8 +83,7 @@ private:
 
         int needed = us.size() - 1;
         for (int i = 0; i < needed; ++ i) {
-            double t = i * steps.dt;
-            auto init = [this,t](double x, double y) { return solution(x, y, t).val; };
+            auto init = [this,i](double x, double y, int i) { return init_state(x, y, i); };
 
             projection(us[0], init);
             apply_bc(us[0]);
@@ -244,8 +243,8 @@ private:
         };
     }
 
-    double init_state(double x, double y) const {
-        return solution(x, y, 0).val;
+    double init_state(double x, double y, int step) const {
+        return i;
     }
 
 };
