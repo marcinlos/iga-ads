@@ -122,17 +122,14 @@ private:
         double tt = t + steps.dt;
         int ii = iter + 1;
 
-        // Output
-        // if (ii % 1000 == 0) {
-        //     output.to_file(us[0], "out_%d.data", iter);
-        //     validate(t);
-        // }
+        if (ii % 1000 == 0) {
+            output.to_file(us[0], "out_%d.data", iter);
+        }
 
-        // Error & norm reporting
-        // if (ii % 1000 == 0) {
-        //     std::cout << ii << " " << tt << " ";
-        //     print_errors(us[0], tt);
-        // }
+        if (ii % 1000 == 0) {
+            std::cout << ii << " " << tt << " ";
+            print_errors(us[0], tt);
+        }
     }
 
     double eval_basis_dxy(index_type e, index_type q, index_type a) const  {
