@@ -58,6 +58,18 @@ Options are specified as -Doption=value, e.g.
 $ cmake -DUSE_GALOIS=ON ..
 
 
+## Problems
+
+This codebase contains a number of solvers based on this framework for common engineering problems.
+
+```
+multistep <dim> <p> <n> <scheme> <order> <steps> <dt>
+```
+
+```
+./multistep 2 4 15 "1 | -1 | 0.5 0.5" 2 1000 0.001
+```
+
 ## Contents
 
 
