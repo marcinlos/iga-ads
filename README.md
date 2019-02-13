@@ -1,4 +1,4 @@
-IGA-ADS is a C++ framework designed to facilitate creating parallel numerical simulations for time-dependent PDEs using isogeometric finite element method.
+# IGA-ADS is a C++ framework designed to facilitate creating parallel numerical simulations for time-dependent PDEs using isogeometric finite element method.
 
 **Table of contents**
 - [Requirements](#requirements)
