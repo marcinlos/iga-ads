@@ -342,6 +342,7 @@ private:
         */
         (void)i; // this is to avoid unused variable compilation error
         constexpr double k = 3 * M_PI * M_PI;
+        double t = i * steps.dt;
         double e = std::exp(-k * t);
         return e * std::sin(x * M_PI) * std::sin(y * M_PI) * std::sin(z * M_PI);
         /* INIT-REPLACE-END */
