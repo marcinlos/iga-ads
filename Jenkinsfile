@@ -1,5 +1,5 @@
 pipeline {
-
+    agent any
     environment {
         GIT_URL = "${scm.userRemoteConfigs[0].url}"
         GIT_BRANCH = "multistep"

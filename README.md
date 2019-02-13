@@ -29,8 +29,7 @@ apt update && apt install -y \
     build-essential \
     libboost-all-dev doxygen
 
-mkdir $WORKSPACE \
-    && wget http://iss.ices.utexas.edu/projects/galois/downloads/Galois-2.2.1.tar.gz \
+    wget http://iss.ices.utexas.edu/projects/galois/downloads/Galois-2.2.1.tar.gz \
     && rm -rf Galois-2.2.1 || true \
     && tar xzvf Galois-2.2.1.tar.gz \
     && cd Galois-2.2.1/build \
