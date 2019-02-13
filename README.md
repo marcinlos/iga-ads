@@ -1,13 +1,16 @@
-IGA-ADS
-=======
-
 IGA-ADS is a C++ framework designed to facilitate creating parallel numerical simulations for time-dependent PDEs using isogeometric finite element method.
 
+**Table of contents**
+- [Requirements](#requirements)
+  - [Dependencies](#dependencies)
+  - [Tools](#tools)
+- [Compilation](#compilation)
+- [Contents](#contents)
 
-Requirements
-------------
+## Requirements
 
-1. Dependencies
+
+### Dependencies
 - LAPACK, BLAS
 - Boost, version 1.58 or higher (http://www.boost.org/)
 - (optional) Galois framework, version 2.2.1 (http://iss.ices.utexas.edu/?p=projects/galois)
@@ -29,17 +32,19 @@ wget http://iss.ices.utexas.edu/projects/galois/downloads/Galois-2.2.1.tar.gz \
                     make install
 ```
 
-2. Tools
+### Tools
 - compiler: reasonable C++14 support is required (framework has been tested with GCC 5.3.1)
 - build system: CMake 3.1 or higher
 
 
-2. Compilation
+## Compilation
 
 To compile the code, create a directory for the build and execute following commands:
 
-$ cmake <options> ${PROJECT_DIR}
-$ make
+```bash
+cmake <options> ${PROJECT_DIR} \
+make
+```
 
 where ${PROJECT_DIR} is the root directory of the project source. Options allow customizing which
 parts of the project are compiled. By default parallelization using Galois is disabled, example
@@ -53,9 +58,10 @@ Options are specified as -Doption=value, e.g.
 $ cmake -DUSE_GALOIS=ON ..
 
 
-Contents
---------
+## Contents
 
+
+```bash
 Top-level structure:
   src/ads/      - framework code
   src/problems  - example problem implementations
