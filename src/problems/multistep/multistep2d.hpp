@@ -250,6 +250,7 @@ private:
             It is a marker for changing the source of the initial_state accomodating different usage scenarios.
             Cheap trick but works fine.
         */
+        (void)i; // this is to avoid unused variable compilation error
         constexpr double k = 2 * M_PI * M_PI;
         double e = std::exp(-k * t);
         return e * std::sin(x * M_PI) * std::sin(y * M_PI);
