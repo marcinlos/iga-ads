@@ -83,7 +83,8 @@ private:
 
         int needed = us.size() - 1;
         for (int i = 0; i < needed; ++ i) {
-            auto init = [this,i](double x, double y, int i) { return init_state(x, y, i); };
+
+            auto init = [this,i](double x, double y) { return init_state(x, y, i); };
 
             projection(us[0], init);
             apply_bc(us[0]);
