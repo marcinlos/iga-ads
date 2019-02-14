@@ -131,7 +131,7 @@ private:
         int ii = iter + 1;
 
         if (ii % 1000 == 0) {
-            output.to_file(us[0], "OUT/out_%d.data", iter);
+            output.to_file(us[0], "out_%d.data", iter);
         }
 
         if (ii % 1 == 0) {

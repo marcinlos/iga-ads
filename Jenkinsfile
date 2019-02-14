@@ -160,16 +160,15 @@ pipeline {
                     ${ORDER} \
                     ${STEPS} \
                     ${DELTA} \
-                    > OUT/errors.sum
+                    > errors.sum
                 '''
-                stash name: 'results', includes: 'OUT/*.data,*.sum'
+                stash name: 'results', includes: '*.data,*.sum'
             }
         }
 
         stage('Process results') {
             steps {
                 sh '''#!/bin/bash
-                    cd OUT
                     gnuplot plot
                     ./movie
                     echo "Compressing results\n"
