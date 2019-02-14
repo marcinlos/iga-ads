@@ -160,23 +160,24 @@ pipeline {
                     ${ORDER} \
                     ${STEPS} \
                     ${DELTA} \
-                    > errors.sum
+                    > OUT/errors.sum
                 '''
-                stash name: 'results', includes: '*.data,*.sum'
+                stash name: 'results', includes: 'OUT/*.data,*.sum'
             }
         }
 
         stage('Process results') {
             steps {
                 sh '''#!/bin/bash
-                    gnuplot results/plot
-                    .results/movie
+                    cd OUT
+                    gnuplot plot
+                    ./movie
                     echo "Compressing results\n"
                     zip data.zip *.data
                     zip images.zip *.png
                     zip movies.zip *.mp4
 
-                    RESULTS_DIR=/usr/share/nginx/html/sim-$BUILD_NUMBER/
+                    RESULTS_DIR=/usr/share/nginx/html/multistep-$BUILD_NUMBER/
 
                     mkdir $RESULTS_DIR
                     cp images.zip $RESULTS_DIR/
