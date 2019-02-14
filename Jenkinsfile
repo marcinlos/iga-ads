@@ -6,7 +6,6 @@ pipeline {
     }
     environment {
         GIT_URL = "${scm.userRemoteConfigs[0].url}"
-        GIT_BRANCH = "multistep"
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
     }
 
@@ -176,7 +175,7 @@ pipeline {
                     zip images.zip *.png
                     zip movies.zip *.mp4
 
-                    RESULTS_DIR=/usr/share/nginx/html/multistep-$BUILD_NUMBER/
+                    RESULTS_DIR=/home/proj/jenkins_pub/pub/multistep-$BUILD_NUMBER/
 
                     mkdir $RESULTS_DIR
                     cp images.zip $RESULTS_DIR/
