@@ -159,17 +159,22 @@ sed -i '/##INITSTART##/,/##INITEND##/!b;//!d;/##INITSTART##/r initformula' src/p
                     ${ORDER} \
                     ${STEPS} \
                     ${DELTA} \
-                    > errors.sum
+                    > errors.out
                 '''
-                stash name: 'results', includes: '*.data,*.sum'
+                stash name: 'results', includes: '*.data,*.out'
             }
         }
 
         stage('Process results') {
             steps {
                 sh '''#!/bin/bash
+                    echo 'Producing charts'
+                    gnuplot plot_norm
+
+                    echo 'Creating movie'
                     gnuplot plot
                     ./movie
+
                     echo "Compressing results\n"
                     zip data.zip *.data
                     zip images.zip *.png
@@ -178,6 +183,7 @@ sed -i '/##INITSTART##/,/##INITEND##/!b;//!d;/##INITSTART##/r initformula' src/p
                     RESULTS_DIR=/home/proj/jenkins_pub/pub/multistep-$BUILD_NUMBER/
 
                     mkdir $RESULTS_DIR
+                    cp errors.png $RESULTS_DIR/
                     cp images.zip $RESULTS_DIR/
                     cp movies.zip $RESULTS_DIR/
                     cp data.zip $RESULTS_DIR/

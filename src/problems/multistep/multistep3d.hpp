@@ -73,8 +73,8 @@ private:
     }
 
     void print_errors(const vector_type& u, double t) const {
-        std::cout << " error " << errorL2(u, t) << " " << errorH1(u, t);
-        std::cout << " norm " << norm(u, x, y, z, L2{}) << " " << norm(u, x, y, z, H1{});
+        std::cout << "," << errorL2(u, t) << "," << errorH1(u, t);
+        std::cout << "," << norm(u, x, y, z, L2{}) << "," << norm(u, x, y, z, H1{});
         std::cout << std::endl;
     }
 
@@ -122,7 +122,7 @@ private:
 
     void after() override {
         double t = steps.dt * steps.step_count;
-        std::cout << steps.step_count << " " << t << " ";
+        std::cout << steps.step_count << "," << t << ",";
         print_errors(us[0], t);
     }
 
