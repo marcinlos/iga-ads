@@ -65,7 +65,7 @@ private:
     }
 
     void print_errors(const vector_type& u, double t) const {
-        std::cout << "," << errorL2(u, t) << "," << errorH1(u, t);
+        std::cout << errorL2(u, t) << "," << errorH1(u, t);
         std::cout << "," << norm(u, x, y, L2{}) << "," << norm(u, x, y, H1{});
         std::cout << std::endl;
     }
