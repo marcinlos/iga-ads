@@ -201,10 +201,10 @@ pipeline {
                     Download the results from:
                     <ul>
                         <li>
-                        <a href="https://jenkins.a2s.agh.edu.pl/pub/ch-${BUILD_NUMBER}/movies.zip">Movies</a>
+                        <a href="https://jenkins.a2s.agh.edu.pl/pub/multistep-${BUILD_NUMBER}/movies.zip">Movies</a>
                         </li>
                         <li>
-                        <a href="https://jenkins.a2s.agh.edu.pl/pub/ch-${BUILD_NUMBER}/images.zip">Images</a>
+                        <a href="https://jenkins.a2s.agh.edu.pl/pub/multistep-${BUILD_NUMBER}/images.zip">Images</a>
                         </li>
                     </ul>
                  """,
@@ -220,7 +220,7 @@ pipeline {
                  from: 'jenkins@a2s.agh.edu.pl',
                  body: """
                     The simulations failed.
-                    Please see the <a href="https://jenkins.a2s.agh.edu.pl/job/IGA-ADS-SCAN/job/cahn-hilliard/${BUILD_NUMBER}/console">logs</a>.
+                    Please see the <a href="https://jenkins.a2s.agh.edu.pl/job/IGA-ADS-SCAN/job/multistep-atari/${BUILD_NUMBER}/console">logs</a>.
                     Reply to this e-mail if you want to report an issue.
                  """,
                  charset: 'UTF-8',
