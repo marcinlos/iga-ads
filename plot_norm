@@ -1,17 +1,11 @@
-low = system("cat errors.out | cut -d',' -f 5 | sort -r | tail -n 1")
-high = system("cat errors.out | cut -d',' -f 5 | sort | tail -n 1")
-
-first = system("cat errors.out | cut -d',' -f 2 | sort -r | tail -n 1")
-last = system("cat errors.out | cut -d',' -f 2 | sort | tail -n 1")
-
 set datafile separator ","
 set xlabel 'time'
 set ylabel 'norm'
 set term png
-set xrange [first:last]
-set yrange [low:high]
+set view map
 set output 'errors.png'
+set autoscale fix
 
-plot 'errors.out' using 1:4 with lines title 'L2', 'errors.out' using 1:5 with lines title 'H1'
+plot 'errors.out' using 1:5 title 'L2', 'errors.out' using 1:6 title 'H1'
 
 replot
