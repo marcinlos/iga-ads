@@ -6,6 +6,6 @@ set view map
 set output 'errors.png'
 set autoscale fix
 
-plot 'errors.out' using 1:5 title 'L2', 'errors.out' using 1:6 title 'H1'
+plot 'errors.out' using 2:5 title 'L2', 'errors.out' using 2:6 title 'H1'
 
 replot
