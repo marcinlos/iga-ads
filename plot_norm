@@ -5,6 +5,8 @@ set term png
 set view map
 set output 'errors.png'
 set autoscale fix
+set logscale y
+set format y "10^%L"
 
 plot 'errors.out' using 2:5 title 'L2', 'errors.out' using 2:6 title 'H1'
 
