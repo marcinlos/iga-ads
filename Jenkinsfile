@@ -102,10 +102,10 @@ pipeline {
         stage('Initialise') {
             steps {
                 sh '''#!/bin/bash
-                    cat > initformula <<'EOL'
-                    ${INITIAL_FORMULA_SNIPPET}
-                    EOL
-                    sed -i '/##INITSTART##/,/##INITEND##/!b;//!d;/##INITSTART##/r initformula' src/problems/multistep/multistep*d.hpp
+cat > initformula<<EOL
+${INITIAL_FORMULA_SNIPPET}
+EOL
+sed -i '/##INITSTART##/,/##INITEND##/!b;//!d;/##INITSTART##/r initformula' src/problems/multistep/multistep*d.hpp
                 '''
             }
         }
