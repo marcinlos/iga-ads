@@ -234,6 +234,10 @@ private:
 
 
     value_type solution(double x, double y, double t) const {
+        // ##EXACTSTART##
+        // Do not remove this comment.
+        // It is a marker for changing the source of the exact solution accomodating different usage scenarios.
+        // Cheap trick but works fine.
         constexpr double k = 2 * M_PI * M_PI;
         double e = std::exp(-k * t);
 
@@ -242,12 +246,13 @@ private:
             e * M_PI * std::cos(x * M_PI) * std::sin(y * M_PI),
             e * M_PI * std::sin(x * M_PI) * std::cos(y * M_PI)
         };
+        // ##EXACTEND##
     }
 
     double init_state(double x, double y, int i) const {
         // ##INITSTART##
         // Do not remove this comment.
-        // It is a marker for changing the source of the initial_state accomodating different usage scenarios.
+        // It is a marker for changing the source of the initial state accomodating different usage scenarios.
         // Cheap trick but works fine.
         (void)i; // this is to avoid unused variable compilation error
         constexpr double k = 2 * M_PI * M_PI;

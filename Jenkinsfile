@@ -55,6 +55,20 @@ pipeline {
                 return e * std::sin(x * M_PI) * std::sin(y * M_PI);
             """
         )
+        text(
+            name: 'EXACT_SOLUTION_FORMULA_SNIPPET',
+            description: 'CPP code snippet which should return a value for (x,y,t) for 2D or (x,y,z,t) for 3D problem. Parameter "t" is the time step. Nees to return value_type{ wartość, du/dx, d/udy }.',
+            defaultValue: """
+                constexpr double k = 2 * M_PI * M_PI;
+                double e = std::exp(-k * t);
+
+                return value_type{
+                    e * std::sin(x * M_PI) * std::sin(y * M_PI),
+                    e * M_PI * std::cos(x * M_PI) * std::sin(y * M_PI),
+                    e * M_PI * std::sin(x * M_PI) * std::cos(y * M_PI)
+                };
+            """
+        )
         string(
             name: 'EMAIL_RECIPIENTS',
             description: 'Comma-separated recipients of the email notifications (will be sent after success or failure)',
@@ -106,6 +120,10 @@ cat > initformula<<EOL
 ${INITIAL_FORMULA_SNIPPET}
 EOL
 sed -i '/##INITSTART##/,/##INITEND##/!b;//!d;/##INITSTART##/r initformula' src/problems/multistep/multistep*d.hpp
+cat > exactsolution<<EOL
+${EXACT_SOLUTION_FORMULA_SNIPPET}
+EOL
+sed -i '/##EXACTSTART##/,/##EXACTEND##/!b;//!d;/##EXACTSTART##/r exactsolution' src/problems/multistep/multistep*d.hpp
                 '''
             }
         }
