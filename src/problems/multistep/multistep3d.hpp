@@ -338,17 +338,21 @@ private:
             e * std::sin(x * M_PI) * std::sin(y * M_PI) * std::sin(z * M_PI),
             e * M_PI * std::cos(x * M_PI) * std::sin(y * M_PI) * std::sin(z * M_PI),
             e * M_PI * std::sin(x * M_PI) * std::cos(y * M_PI) * std::sin(z * M_PI),
-            e * M_PI * std::sin(x * M_PI) * std::sin(y * M_PI) * std::cos(z * M_PI),
+            e * M_PI * std::sin(x * M_PI) * std::sin(y * M_PI) * std::cos(z * M_PI)
         };
         // ##EXACTEND##
     }
 
     double init_state(double x, double y, double z, int i) const {
+        (void)x; // this is to avoid unused variable compilation error
+        (void)y; // this is to avoid unused variable compilation error
+        (void)z; // this is to avoid unused variable compilation error
+        (void)i; // this is to avoid unused variable compilation error
+        
         // ##INITSTART##
         // Do not remove this comment.
         // It is a marker for changing the source of the initial_state accomodating different usage scenarios.
         // Cheap trick but works fine.
-        (void)i; // this is to avoid unused variable compilation error
         constexpr double k = 3 * M_PI * M_PI;
         double t = i * steps.dt;
         double e = std::exp(-k * t);
