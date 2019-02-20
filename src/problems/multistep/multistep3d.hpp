@@ -323,6 +323,10 @@ private:
 
 
     value_type solution(double x, double y, double z, double t) const {
+        (void)x;
+        (void)y;
+        (void)z;
+        (void)t;
         // ##EXACTSTART##
         // Do not remove this comment.
         // It is a marker for changing the source of the exact solution accomodating different usage scenarios.
