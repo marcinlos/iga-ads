@@ -237,7 +237,7 @@ private:
         (void)x;
         (void)y;
         (void)t;
-        // ##EXACTSTART##
+        // ##EXACTSTART2D##
         // Do not remove this comment.
         // It is a marker for changing the source of the exact solution accomodating different usage scenarios.
         // Cheap trick but works fine.
@@ -249,7 +249,7 @@ private:
             e * M_PI * std::cos(x * M_PI) * std::sin(y * M_PI),
             e * M_PI * std::sin(x * M_PI) * std::cos(y * M_PI)
         };
-        // ##EXACTEND##
+        // ##EXACTEND2D##
     }
 
     double init_state(double x, double y, int i) const {

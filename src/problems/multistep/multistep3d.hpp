@@ -327,7 +327,7 @@ private:
         (void)y;
         (void)z;
         (void)t;
-        // ##EXACTSTART##
+        // ##EXACTSTART3D##
         // Do not remove this comment.
         // It is a marker for changing the source of the exact solution accomodating different usage scenarios.
         // Cheap trick but works fine.
@@ -340,7 +340,7 @@ private:
             e * M_PI * std::sin(x * M_PI) * std::cos(y * M_PI) * std::sin(z * M_PI),
             e * M_PI * std::sin(x * M_PI) * std::sin(y * M_PI) * std::cos(z * M_PI)
         };
-        // ##EXACTEND##
+        // ##EXACTEND3D##
     }
 
     double init_state(double x, double y, double z, int i) const {

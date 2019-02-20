@@ -120,10 +120,22 @@ cat > initformula<<EOL
 ${INITIAL_FORMULA_SNIPPET}
 EOL
 sed -i '/##INITSTART##/,/##INITEND##/!b;//!d;/##INITSTART##/r initformula' src/problems/multistep/multistep*d.hpp
+
+if [ "${DIMENSION}" = "2" ]; then
+
 cat > exactsolution<<EOL
 ${EXACT_SOLUTION_FORMULA_SNIPPET}
 EOL
-sed -i '/##EXACTSTART##/,/##EXACTEND##/!b;//!d;/##EXACTSTART##/r exactsolution' src/problems/multistep/multistep*d.hpp
+sed -i '/##EXACTSTART2D##/,/##EXACTEND2D##/!b;//!d;/##EXACTSTART2D##/r exactsolution' src/problems/multistep/multistep2d.hpp
+
+else
+
+cat > exactsolution<<EOL
+${EXACT_SOLUTION_FORMULA_SNIPPET}
+EOL
+sed -i '/##EXACTSTART3D##/,/##EXACTEND3D##/!b;//!d;/##EXACTSTART3D##/r exactsolution' src/problems/multistep/multistep3d.hpp
+
+fi
                 '''
             }
         }
