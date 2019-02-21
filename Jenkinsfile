@@ -56,6 +56,13 @@ pipeline {
             """
         )
         text(
+            name: 'FORCING_FORMULA_SNIPPET',
+            description: 'CPP code snippet which should return a value for (x,y) for 2D or (x,y,z) for 3D problem. A forcing value.',
+            defaultValue: """
+                return 0;
+            """
+        )
+        text(
             name: 'EXACT_SOLUTION_FORMULA_SNIPPET',
             description: 'CPP code snippet which should return a value for (x,y,t) for 2D or (x,y,z,t) for 3D problem. Parameter "t" is the time step. Nees to return value_type{ wartość, du/dx, d/udy }.',
             defaultValue: """
@@ -128,6 +135,13 @@ ${EXACT_SOLUTION_FORMULA_SNIPPET}
 EOL
 sed -i '/##EXACTSTART2D##/,/##EXACTEND2D##/!b;//!d;/##EXACTSTART2D##/r exactsolution' src/problems/multistep/multistep2d.hpp
 
+
+cat > forcing<<EOL
+${FORCING_FORMULA_SNIPPET}
+EOL
+sed -i '/##FORCINGSTART2D##/,/##FORCINGEND2D##/!b;//!d;/##FORCINGSTART2D##/r forcing' src/problems/multistep/multistep2d.hpp
+
+
 else
 
 cat > exactsolution<<EOL
@@ -135,7 +149,13 @@ ${EXACT_SOLUTION_FORMULA_SNIPPET}
 EOL
 sed -i '/##EXACTSTART3D##/,/##EXACTEND3D##/!b;//!d;/##EXACTSTART3D##/r exactsolution' src/problems/multistep/multistep3d.hpp
 
+cat > forcing<<EOL
+${FORCING_FORMULA_SNIPPET}
+EOL
+sed -i '/##FORCINGSTART3D##/,/##FORCINGEND3D##/!b;//!d;/##FORCINGSTART3D##/r forcing' src/problems/multistep/multistep3d.hpp
+
 fi
+
                 '''
             }
         }

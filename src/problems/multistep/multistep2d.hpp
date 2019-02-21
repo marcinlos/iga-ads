@@ -179,7 +179,7 @@ private:
                     value_type v = eval_basis(e, q, a);
                     double vxy = eval_basis_dxy(e, q, a);
 
-                    double val = 0;
+                    double val = forcing(x[0], x[1]) * v.val;
 
                     for (int i = 0; i <= s; ++ i) {
                         double ti = tt - i * tau;
@@ -206,6 +206,17 @@ private:
                 update_global_rhs(rhs, U, e);
             });
         });
+    }
+
+    double forcing(double x, double y) const {
+        (void)x;
+        (void)y;
+        // ##FORCINGSTART2D##
+        // Do not remove this comment.
+        // It is a marker for changing the source of the exact solution accomodating different usage scenarios.
+        // Cheap trick but works fine.
+        return 0;
+        // ##FORCINGEND2D##
     }
 
     auto exact(double t) const {

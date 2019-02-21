@@ -266,8 +266,7 @@ private:
                     double vxz = eval_basis_dxz(e, q, a);
                     double vxyz = eval_basis_dxyz(e, q, a);
 
-                    double val = 0;
-
+                    double val = forcing(x[0], x[1], x[2]) * v.val;
 
                     for (int i = 0; i <= s; ++ i) {
                         double ti = tt - i * tau;
@@ -295,6 +294,18 @@ private:
                 update_global_rhs(rhs, U, e);
             });
         });
+    }
+
+    double forcing(double x, double y, double z) const {
+        (void)x;
+        (void)y;
+        (void)z;
+        // ##FORCINGSTART3D##
+        // Do not remove this comment.
+        // It is a marker for changing the source of the exact solution accomodating different usage scenarios.
+        // Cheap trick but works fine.
+        return 0;
+        // ##FORCINGEND3D##
     }
 
     auto exact(double t) const {
