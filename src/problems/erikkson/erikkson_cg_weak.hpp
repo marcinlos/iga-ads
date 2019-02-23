@@ -334,7 +334,7 @@ private:
         // Gram matrix - upper left
         for (auto i : dofs(Vx, Vy)) {
             for (auto j : overlapping_dofs(i, Vx, Vy)) {
-                if (is_fixed(i, Vx, Vy) || is_fixed(j, Ux, Uy)) continue;
+                if (is_fixed(i, Vx, Vy) || is_fixed(j, Vx, Vy)) continue;
 
                 int ii = linear_index(i, Vx, Vy) + 1;
                 int jj = linear_index(j, Vx, Vy) + 1;
