@@ -52,6 +52,10 @@ private:
     double peclet;
     double epsilon = 1 / peclet;
 
+    double tol_outer = 1e-7;
+    double tol_inner = 1e-7;
+    int max_iters = 50;
+
     mumps::solver solver;
 
     output_manager<2> output;
@@ -128,6 +132,14 @@ private:
 
         return { value, dx, dy };
     }
+
+    template <typename Sol>
+    value_type eval_at(point_type p, const Sol& v, const dimension& x, const dimension& y) const {
+        bspline::eval_ders_ctx cx{x.p, 1};
+        bspline::eval_ders_ctx cy{y.p, 1};
+        return bspline::eval_ders(p[0], p[1], v, x.B, y.B, cx, cy);
+    }
+
 
     bool supported_in_1d(int dof, int e, const dimension& x) const {
         auto xrange = x.basis.element_ranges[dof];
@@ -229,6 +241,53 @@ private:
         return val;
     }
 
+    template <typename Form>
+    double integrate_boundary(boundary side, index_type i, const dimension& Ux, const dimension& Uy,
+                              const vector_type& u, const dimension& Vx, const dimension& Vy, Form&& form) const {
+        double val = 0;
+        bool horizontal = side == boundary::top || side == boundary::bottom;
+        auto nv = normal(side);
+
+        if (horizontal) {
+            int ey = side == boundary::bottom ? 0 : Vy.elements - 1;
+            if (! supported_in_1d(i[1], ey, Uy)) return 0;
+
+            auto y0 = side == boundary::bottom ? Uy.a : Uy.b;
+
+            for (auto e : Ux.basis.element_range(i[0])) {
+                double J = Ux.basis.J[e];
+
+                for (int q = 0; q < Ux.basis.quad_order; ++ q) {
+                    double w = Ux.basis.w[q];
+                    point_type x{Ux.basis.x[e][q], y0};
+                    value_type uu = eval_at(x, u, Vx, Vy);
+                    value_type ww = eval_basis_at(x, i, Ux, Uy);
+                    double fuw = form(uu, ww, x, nv);
+                    val += fuw * w * J;
+                }
+            }
+        } else {
+            int ex = side == boundary::left ? 0 : Vx.elements - 1;
+            if (! supported_in_1d(i[0], ex, Ux)) return 0;
+
+            auto x0 = side == boundary::left ? Ux.a : Ux.b;
+
+            for (auto e : Uy.basis.element_range(i[1])) {
+                double J = Uy.basis.J[e];
+
+                for (int q = 0; q < Uy.basis.quad_order; ++ q) {
+                    double w = Uy.basis.w[q];
+                    point_type x{x0, Uy.basis.x[e][q]};
+                    value_type uu = eval_at(x, u, Vx, Vy);
+                    value_type ww = eval_basis_at(x, i, Ux, Uy);
+                    double fuw = form(uu, ww, x, nv);
+                    val += fuw * w * J;
+                }
+            }
+        }
+        return val;
+    }
+
     double dot(point_type a, point_type b) const {
         return a[0] * b[0] + a[1] * b[1];
     }
@@ -274,7 +333,7 @@ private:
                 int jj = linear_index(j, Vx, Vy) + 1;
 
                 double val = kron(MVx, MVy, i, j) + eta * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
-                // val += eta * eta * kron(KVx, KVy, i, j);
+                val += eta * eta * kron(KVx, KVy, i, j);
                 problem.add(ii, jj, val);
             }
         }
@@ -376,7 +435,7 @@ private:
         zero(r);
         zero(u);
 
-        // auto init = [this](double x, double y) { return init_state(x, y); };
+        // auto init = [this](double x, double y) { return 2*x*x + 2*y*y; };
         // compute_projection(u, Ux.basis, Uy.basis, init);
         // vector_type u_buffer{{ Ux.dofs(), Uy.dofs() }};
         // ads_solve(u, u_buffer, Ux.data(), Uy.data());
@@ -431,13 +490,11 @@ private:
     }
 
     void step(int /*iter*/, double /*t*/) override {
-        constexpr auto max_iters = 1;
-
         for (int i = 1; ; ++ i) {
             auto norm = substep();
             std::cout << "  substep " << i << ": |eta| = " << norm << std::endl;
 
-            if (norm < 1e-7 || i >= max_iters) {
+            if (norm < tol_outer || i >= max_iters) {
                 break;
             }
         }
@@ -476,8 +533,8 @@ private:
                     value_type v = eval_basis(e, q, a, Vx, Vy);
                     double Lv = F(x) * v.val;
 
-                    // F + Ar - Bu
-                    double val = Lv + A(rr, v) - B(uu, v, x);
+                    // F - Ar - Bu
+                    double val = Lv - A(rr, v) - B(uu, v, x);
                     R(aa[0], aa[1]) += val * WJ;
                 }
                 for (auto a : dofs_on_element(e, Ux, Uy)) {
@@ -495,7 +552,33 @@ private:
             });
         });
 
-        // Boundary terms
+        // Boundary terms of -Bu
+        for (auto i : dofs(Vx, Vy)) {
+            double val = 0;
+
+            auto form = [&](auto v, auto u, auto x, auto n) { return this->bdB(u, v, x, n); };
+            for_sides(~dirichlet, [&](auto side) {
+                if (this->touches(i, side, Vx, Vy)) {
+                    val += integrate_boundary(side, i, Vx, Vy, u, Ux, Uy, form);
+                }
+            });
+            r_rhs(i[0], i[1]) -= val;
+        }
+
+        // Boundary terms of -B'r
+        for (auto i : dofs(Ux, Uy)) {
+            double val = 0;
+
+            auto form = [&](auto u, auto v, auto x, auto n) { return this->bdB(u, v, x, n); };
+            for_sides(~dirichlet, [&](auto side) {
+                if (this->touches(i, side, Ux, Uy)) {
+                    val += integrate_boundary(side, i, Ux, Uy, r, Vx, Vy, form);
+                }
+            });
+            u_rhs(i[0], i[1]) -= val;
+        }
+
+        // Boundary terms of RHS
         for (auto i : dofs(Vx, Vy)) {
             double val = 0;
 
@@ -505,7 +588,6 @@ private:
                     val += integrate_boundary(side, i, Vx, Vy, form);
                 }
             });
-
             r_rhs(i[0], i[1]) += val;
         }
     }
@@ -616,7 +698,7 @@ private:
 
     // Boundary conditions
 
-    static constexpr boundary dirichlet = boundary::left;
+    static constexpr boundary dirichlet = boundary::none;
 
     double g(point_type x) const {
         return x[0] == 0 ? std::sin(M_PI * x[1]) : 0;
