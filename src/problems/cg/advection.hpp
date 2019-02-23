@@ -103,15 +103,6 @@ private:
         return std::sqrt(max_element_size(Ux) * max_element_size(Uy));
     }
 
-    struct matrix_set {
-        using band_matrix_ref = lin::band_matrix&;
-        using dense_matrix_ref = lin::dense_matrix&;
-
-        band_matrix_ref MVx, MVy, KVx, KVy;
-        dense_matrix_ref MUVx, MUVy, KUVx, KUVy, AUVx, AUVy;
-    };
-
-
     value_type eval_basis_at(point_type p, index_type dof, const dimension& x, const dimension& y) const {
         int spanx = bspline::find_span(p[0], x.B);
         int spany = bspline::find_span(p[1], y.B);
