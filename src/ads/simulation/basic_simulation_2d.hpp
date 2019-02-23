@@ -9,6 +9,7 @@
 #include "ads/util/iter/product.hpp"
 #include "ads/simulation/dimension.hpp"
 #include "ads/lin/tensor.hpp"
+#include "ads/simulation/boundary.hpp"
 
 
 
@@ -26,10 +27,6 @@ protected:
     using index_range = boost::iterator_range<index_iter_type>;
 
     using point_type = std::array<double, 2>;
-
-    enum class boundary {
-        top, bottom, left, right
-    };
 
     value_type eval_basis(index_type e, index_type q, index_type a, const dimension& x, const dimension& y) const  {
         auto loc = dof_global_to_local(e, a, x, y);
