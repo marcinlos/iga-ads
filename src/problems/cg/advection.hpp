@@ -169,6 +169,7 @@ private:
                               const dimension& Vx, const dimension& Vy, Form&& form) const {
         double val = 0;
         bool horizontal = side == boundary::top || side == boundary::bottom;
+        auto nv = normal(side);
 
         if (horizontal) {
             int ey = side == boundary::bottom ? 0 : Uy.elements - 1;
@@ -186,7 +187,7 @@ private:
                     point_type x{Ux.basis.x[e][q], y0};
                     value_type ww = eval_basis_at(x, {e, ey}, i, Ux, Uy);
                     value_type uu = eval_basis_at(x, {e, ey}, j, Vx, Vy);
-                    double fuw = form(ww, uu, x);
+                    double fuw = form(ww, uu, x, nv);
                     val += fuw * w * J;
                 }
             }
@@ -206,7 +207,7 @@ private:
                     point_type x{x0, Uy.basis.x[e][q]};
                     value_type ww = eval_basis_at(x, {ex, e}, i, Ux, Uy);
                     value_type uu = eval_basis_at(x, {ex, e}, j, Vx, Vy);
-                    double fuw = form(ww, uu, x);
+                    double fuw = form(ww, uu, x, nv);
                     val += fuw * w * J;
                 }
             }
@@ -218,6 +219,7 @@ private:
     double integrate_boundary(boundary side, index_type i, const dimension& Ux, const dimension& Uy, Form&& form) const {
         double val = 0;
         bool horizontal = side == boundary::top || side == boundary::bottom;
+        auto nv = normal(side);
 
         if (horizontal) {
             int ey = side == boundary::bottom ? 0 : Uy.elements - 1;
@@ -232,7 +234,7 @@ private:
                     double w = Ux.basis.w[q];
                     point_type x{Ux.basis.x[e][q], y0};
                     value_type ww = eval_basis_at(x, {e, ey}, i, Ux, Uy);
-                    double fuw = form(ww, x);
+                    double fuw = form(ww, x, nv);
                     val += fuw * w * J;
                 }
             }
@@ -249,7 +251,7 @@ private:
                     double w = Uy.basis.w[q];
                     point_type x{x0, Uy.basis.x[e][q]};
                     value_type ww = eval_basis_at(x, {ex, e}, i, Ux, Uy);
-                    double fuw = form(ww, x);
+                    double fuw = form(ww, x, nv);
                     val += fuw * w * J;
                 }
             }
@@ -296,7 +298,7 @@ private:
         // Gram matrix - upper left
         for (auto i : dofs(Vx, Vy)) {
             for (auto j : overlapping_dofs(i, Vx, Vy)) {
-                if (is_fixed(i, Vx, Vy) || is_fixed(j, Ux, Uy)) continue;
+                if (is_fixed(i, Vx, Vy) || is_fixed(j, Vx, Vy)) continue;
 
                 int ii = linear_index(i, Vx, Vy) + 1;
                 int jj = linear_index(j, Vx, Vy) + 1;
@@ -326,28 +328,11 @@ private:
                     }
                 }
 
-                auto int_bd = [&](auto side, auto form) {
+                auto form = [&](auto u, auto w, auto x, auto n) { return this->bdB(u, w, x, n); };
+                for_sides(~dirichlet, [&](auto side) {
                     if (touches(i, side, Vx, Vy) && touches(j, side, Ux, Uy)) {
-                        val += integrate_boundary(side, i, j, Vx, Vy, Ux, Uy, [&](auto w, auto u, auto x) {
-                            return form(w, u, x, this->normal(side));
-                        });
+                        val += integrate_boundary(side, j, i, Ux, Uy, Vx, Vy, form);
                     }
-                };
-
-                auto boundary_term = [&](auto form) {
-                    // int_bd(boundary::left, form);
-                    int_bd(boundary::right, form);
-                    int_bd(boundary::top, form);
-                    int_bd(boundary::bottom, form);
-                };
-
-                // penalty & symmetrization
-                boundary_term([&](auto w, auto u, point_type x, auto n) {
-                    return
-                        - epsilon * w.val * dot(u, n)         // <eps \/u*n, v> -- consistency
-                        - epsilon * u.val * dot(w, n)         // <u, eps \/v*n>
-                        - u.val * w.val * dot(beta(x), n)     // <u, v beta*n>
-                        - u.val * w.val * gamma;              // <u, gamma v>   -- penalty
                 });
 
                 if (val != 0) {
@@ -475,16 +460,10 @@ private:
         compute_rhs(Vx, Vy, r_rhs, u_rhs);
 
         // BC
-        dirichlet_bc(u_rhs, boundary::left, Ux, Uy, 0);
-        // dirichlet_bc(u_rhs, boundary::bottom, Ux, Uy, 0);
-        // dirichlet_bc(u, boundary::left, Ux, Uy, [](double t) { return std::sin(M_PI * t); });
-
-
-        dirichlet_bc(r_rhs, boundary::left, Vx, Vy, 0);
-        // dirichlet_bc(r_rhs, boundary::bottom, Vx, Vy, 0);
-
-        // zero_bc(r_rhs, Vx, Vy);
-        // zero_bc(u_rhs, Ux, Uy);
+        for_sides(dirichlet, [&](auto side) {
+            dirichlet_bc(u_rhs, side, Ux, Uy, 0);
+            dirichlet_bc(r_rhs, side, Vx, Vy, 0);
+        });
 
         mumps::problem problem(full_rhs.data(), full_rhs.size());
         assemble_problem(problem, Vx, Vy, matrices(x_refined, y_refined));
@@ -542,17 +521,17 @@ private:
                 for (auto a : dofs_on_element(e, Vx, Vy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
-                    double lv = F(x) * v.val;
+                    double Lv = F(x) * v.val;
 
                     // -F + Bu - Ar
-                    double val = -lv + B(uu, v, x) - A(rr, v);
+                    double val = -Lv + B(uu, v, x) - A(rr, v);
                     R(aa[0], aa[1]) += val * WJ;
                 }
                 for (auto a : dofs_on_element(e, Ux, Uy)) {
                     auto aa = dof_global_to_local(e, a, Ux, Uy);
                     value_type w = eval_basis(e, q, a, Ux, Uy);
 
-                    // -B'w
+                    // -B'r
                     double val = -B(w, rr, x);
                     U(aa[0], aa[1]) += val * WJ;
                 }
@@ -562,44 +541,30 @@ private:
                 update_global_rhs(u_rhs, U, e, Ux, Uy);
             });
         });
+
         // Boundary terms
         for (auto i : dofs(Vx, Vy)) {
             double val = 0;
 
-            auto int_bd = [&](auto side, auto form) {
-                if (touches(i, side, Vx, Vy)) {
-                    val += integrate_boundary(side, i, Vx, Vy, [&](auto w, auto x) {
-                        return form(w, x, this->normal(side));
-                    });
+            auto form = [&](auto w, auto x, auto n) { return this->bdL(w, x, n); };
+            for_sides(~dirichlet, [&](auto side) {
+                if (this->touches(i, side, Vx, Vy)) {
+                    val += integrate_boundary(side, i, Vx, Vy, form);
                 }
-            };
-
-            auto boundary_term = [&](auto form) {
-                // int_bd(boundary::left, form);
-                int_bd(boundary::right, form);
-                int_bd(boundary::top, form);
-                int_bd(boundary::bottom, form);
-            };
-
-            boundary_term([&](auto w, point_type x, auto n) {
-                return
-                    - epsilon * g(x) * dot(w, n)       // <g, eps \/v*n>
-                    - g(x) * w.val * dot(beta(x), n)   // <g, v beta*n>
-                    - g(x) * w.val * gamma;            // <u, gamma v> -- penalty
             });
 
-            r_rhs(i[0], i[1]) += val;
+            r_rhs(i[0], i[1]) -= val;
         }
     }
 
     double errorL2_abs() const {
         auto sol = exact(epsilon);
-        return Base::errorL2(u, Ux, Uy, sol);
+        return errorL2(u, Ux, Uy, sol);
     }
 
     double errorH1_abs() const {
         auto sol = exact(epsilon);
-        return Base::errorH1(u, Ux, Uy, sol);
+        return errorH1(u, Ux, Uy, sol);
     }
 
     double errorL2() const {
@@ -611,6 +576,47 @@ private:
         auto sol = exact(epsilon);
         return errorH1(u, Ux, Uy, sol) / normH1(Ux, Uy, sol) * 100;
     }
+
+    bool is_fixed(index_type dof, const dimension& x, const dimension& y) const {
+        if (dof[0] == 0            && contains(dirichlet, boundary::left))   return true;
+        if (dof[0] == x.dofs() - 1 && contains(dirichlet, boundary::right))  return true;
+        if (dof[1] == 0            && contains(dirichlet, boundary::bottom)) return true;
+        if (dof[1] == y.dofs() - 1 && contains(dirichlet, boundary::top))    return true;
+
+        return false;
+    }
+
+    template <typename Fun>
+    void for_sides(boundary sides, Fun&& f) {
+        auto g = [&](auto s) { if (contains(sides, s)) f(s); };
+        g(boundary::left);
+        g(boundary::right);
+        g(boundary::bottom);
+        g(boundary::top);
+    }
+
+    point_type boundary_point(double t, boundary side) {
+        double x0 = Ux.a, x1 = Ux.b;
+        double y0 = Uy.a, y1 = Uy.b;
+        switch (side) {
+        case boundary::left:   return {x0, t};
+        case boundary::right:  return {x1, t};
+        case boundary::bottom: return {t, y0};
+        case boundary::top:    return {t, y1};
+        default:               return {0, 0};
+        }
+    }
+
+    void apply_bc(vector_type& u) {
+        for_sides(dirichlet, [&](auto side) {
+            dirichlet_bc(u, side, Ux, Uy, [&](double t) {
+                auto x = boundary_point(t, side);
+                return g(x);
+            });
+        });
+    }
+
+
 
     // --------------------
     // Problem definition
@@ -633,31 +639,36 @@ private:
         return diff * grad_dot(u, v) + dot(beta(x), u) * v.val;
     }
 
+
+    double bdB(value_type u, value_type v, point_type x, point_type n) const {
+        return
+            - epsilon * v.val * dot(u, n)         // <eps \/u*n, v> -- consistency
+            - epsilon * u.val * dot(v, n)         // <u, eps \/v*n> -- symmetrization
+            - u.val * v.val * dot(beta(x), n)     // <u, v beta*n>  -- symmetrization
+            - u.val * v.val * gamma;              // <u, gamma v>   -- penalty
+    }
+
+    double bdL(value_type v, point_type x, point_type n) const {
+        return
+            - epsilon * g(x) * dot(v, n)       // <g, eps \/v*n>
+            - g(x) * v.val * dot(beta(x), n)   // <g, v beta*n>
+            - g(x) * v.val * gamma;            // <u, gamma v> -- penalty
+    }
+
+    // Scalar product
+
     double A(value_type u, value_type v) const {
         return u.val * v.val + h * h * grad_dot(u, v);
     }
 
     // Boundary conditions
 
+    static constexpr boundary dirichlet = boundary::left;
+
     double g(point_type x) const {
         return x[0] == 0 ? std::sin(M_PI * x[1]) : 0;
     }
 
-    bool is_fixed(index_type dof, const dimension& x, const dimension& y) const {
-        return dof[0] == 0;
-    }
-
-    void apply_bc(vector_type& u) {
-        // stationary_bc(u, Ux, Uy);
-        // skew_bc(u, Ux, Uy);
-        // zero_bc(u, Ux, Uy);
-
-        dirichlet_bc(u, boundary::left, Ux, Uy, [&](double t) {
-            // double tt = std::abs(t);
-            // return 0.5 * (std::tanh(b / epsilon * (tt < 0.5 ? tt - 0.35 : 0.65 - tt)) + 1);
-            return std::sin(M_PI * t);
-        });
-    }
 
 
 };
