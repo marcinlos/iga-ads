@@ -156,6 +156,10 @@ if (NOT SKIP_PROBLEMS)
     define_problem(demkowicz
       src/problems/demkowicz/main.cpp)
 
+    define_problem(cg
+      src/problems/cg/main.cpp
+      src/problems/cg/shishkin.cpp)
+
   endif()
 
   define_problem(heat_1d
