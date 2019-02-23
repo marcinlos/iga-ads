@@ -43,18 +43,8 @@ private:
     lin::dense_matrix KUUx, KUUy;
     lin::dense_matrix AUUx, AUUy;
 
-    struct residuum {
-        vector_type data;
-        const dimension* Vx;
-        const dimension* Vy;
-    };
-
-    vector_type u, u_prev;
-    residuum r;
-    vector_type u_buffer;
+    vector_type u, r;
     std::vector<double> full_rhs;
-
-    int save_every = 1;
 
     double h;
     double gamma;
@@ -97,9 +87,7 @@ public:
     , AUUx{ Ux.dofs(), Ux.dofs() }
     , AUUy{ Uy.dofs(), Uy.dofs() }
     , u{{ Ux.dofs(), Uy.dofs() }}
-    , u_prev{{ Ux.dofs(), Uy.dofs() }}
-    , r{ {{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy}
-    , u_buffer{{ Ux.dofs(), Uy.dofs() }}
+    , r{{ Vx.dofs(), Vy.dofs() }}
     , full_rhs(Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs())
     , h{ element_diam(Ux, Uy) }
     , peclet{ peclet }
@@ -124,7 +112,7 @@ private:
     };
 
 
-    value_type eval_basis_at(point_type p, index_type e, index_type dof, const dimension& x, const dimension& y) const {
+    value_type eval_basis_at(point_type p, index_type dof, const dimension& x, const dimension& y) const {
         int spanx = bspline::find_span(p[0], x.B);
         int spany = bspline::find_span(p[1], y.B);
 
@@ -142,15 +130,6 @@ private:
 
         int ix = dof[0] - offsetx;
         int iy = dof[1] - offsety;
-
-        if (ix < 0 || ix > x.p || iy < 0 || iy > y.p) {
-            std::cout << "dof = (" << dof[0] << ", " << dof[1] << ") "
-                      << "e = (" << e[0] << ", " << e[1] << ") "
-                      << "(x, y) = (" << p[0] << ", " << p[1] << ") "
-                      << "span = (" << spanx << ", " << spany << ") "
-                      << "offset = (" << offsetx << ", " << offsety << ") "
-                      << "i = (" << ix << ", " << iy << ")" << std::endl;
-        }
 
         auto value = bvx[0][ix] * bvy[0][iy];
         auto dx    = bvx[1][ix] * bvy[0][iy];
@@ -185,8 +164,8 @@ private:
                 for (int q = 0; q < Ux.basis.quad_order; ++ q) {
                     double w = Ux.basis.w[q];
                     point_type x{Ux.basis.x[e][q], y0};
-                    value_type ww = eval_basis_at(x, {e, ey}, i, Ux, Uy);
-                    value_type uu = eval_basis_at(x, {e, ey}, j, Vx, Vy);
+                    value_type ww = eval_basis_at(x, i, Ux, Uy);
+                    value_type uu = eval_basis_at(x, j, Vx, Vy);
                     double fuw = form(ww, uu, x, nv);
                     val += fuw * w * J;
                 }
@@ -205,8 +184,8 @@ private:
                 for (int q = 0; q < Uy.basis.quad_order; ++ q) {
                     double w = Uy.basis.w[q];
                     point_type x{x0, Uy.basis.x[e][q]};
-                    value_type ww = eval_basis_at(x, {ex, e}, i, Ux, Uy);
-                    value_type uu = eval_basis_at(x, {ex, e}, j, Vx, Vy);
+                    value_type ww = eval_basis_at(x, i, Ux, Uy);
+                    value_type uu = eval_basis_at(x, j, Vx, Vy);
                     double fuw = form(ww, uu, x, nv);
                     val += fuw * w * J;
                 }
@@ -233,7 +212,7 @@ private:
                 for (int q = 0; q < Ux.basis.quad_order; ++ q) {
                     double w = Ux.basis.w[q];
                     point_type x{Ux.basis.x[e][q], y0};
-                    value_type ww = eval_basis_at(x, {e, ey}, i, Ux, Uy);
+                    value_type ww = eval_basis_at(x, i, Ux, Uy);
                     double fuw = form(ww, x, nv);
                     val += fuw * w * J;
                 }
@@ -250,7 +229,7 @@ private:
                 for (int q = 0; q < Uy.basis.quad_order; ++ q) {
                     double w = Uy.basis.w[q];
                     point_type x{x0, Uy.basis.x[e][q]};
-                    value_type ww = eval_basis_at(x, {ex, e}, i, Ux, Uy);
+                    value_type ww = eval_basis_at(x, i, Ux, Uy);
                     double fuw = form(ww, x, nv);
                     val += fuw * w * J;
                 }
@@ -277,8 +256,8 @@ private:
         case boundary::right:  return { 1,  0};
         case boundary::bottom: return { 0, -1};
         case boundary::top:    return { 0,  1};
+        default: return {0, 0};
         }
-        return {0, 0};
     }
 
     bool touches(index_type dof, boundary side, const dimension& x, const dimension& y) const {
@@ -291,7 +270,7 @@ private:
         }
     }
 
-    void assemble_problem(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& M) {
+    void assemble_problem(mumps::problem& problem, const dimension& Vx, const dimension& Vy) {
         auto N = Vx.dofs() * Vy.dofs();
         auto eta = h * h;
 
@@ -304,7 +283,7 @@ private:
                 int jj = linear_index(j, Vx, Vy) + 1;
 
                 double val = kron(MVx, MVy, i, j) + eta * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
-                // val += eta * eta * kron(M.KVx, M.KVy, i, j);
+                // val += eta * eta * kron(KVx, KVy, i, j);
                 problem.add(ii, jj, val);
             }
         }
@@ -339,7 +318,7 @@ private:
                     int ii = linear_index(i, Vx, Vy) + 1;
                     int jj = linear_index(j, Ux, Uy) + 1;
 
-                    problem.add(ii, N + jj, -val);
+                    problem.add(ii, N + jj, val);
                     problem.add(N + jj, ii, val);
                 }
             }
@@ -360,19 +339,6 @@ private:
                 problem.add(N + i, N + i, 1);
             }
         });
-    }
-
-
-    matrix_set matrices(bool x_refined, bool y_refined) {
-        if (x_refined && y_refined) {
-            return { MVx, MVy, KVx, KVy, MUVx, MUVy, KUVx, KUVy, AUVx, AUVy };
-        } else if (x_refined) {
-            return { MVx, MUy, KVx, KUy, MUVx, MUUy, KUVx, KUUy, AUVx, AUUy };
-        } else if (y_refined) {
-            return { MUx, MVy, KUx, KVy, MUUx, MUVy, KUUx, KUVy, AUUx, AUVy };
-        } else {
-            return { MUx, MUy, KUx, KUy, MUUx, MUUy, KUUx, KUUy, AUUx, AUUy };
-        }
     }
 
     void prepare_matrices() {
@@ -416,24 +382,23 @@ private:
         Vx.factorize_matrix();
         Vy.factorize_matrix();
 
-        // auto init = [this](double x, double y) { return init_state(x, y); };
-        // compute_projection(u, Ux.basis, Uy.basis, init);
-        // ads_solve(u, u_buffer, Ux.data(), Uy.data());
-
-        zero(r.data);
+        zero(r);
         zero(u);
 
-        apply_bc(u);
+        // auto init = [this](double x, double y) { return init_state(x, y); };
+        // compute_projection(u, Ux.basis, Uy.basis, init);
+        // vector_type u_buffer{{ Ux.dofs(), Uy.dofs() }};
+        // ads_solve(u, u_buffer, Ux.data(), Uy.data());
 
-        output.to_file(u, "out_0.data");
+        apply_bc(u);
     }
 
-    void add_solution(const vector_view& u_rhs, const vector_view& r_rhs, const dimension& Vx, const dimension& Vy) {
+    void update_solution(const vector_view& u_rhs, const vector_view& r_rhs, const dimension& Vx, const dimension& Vy) {
         for (auto i : dofs(Ux, Uy)) {
             u(i[0], i[1]) += u_rhs(i[0], i[1]);
         }
         for (auto i : dofs(Vx, Vy)) {
-            r.data(i[0], i[1]) += r_rhs(i[0], i[1]);
+            r(i[0], i[1]) += r_rhs(i[0], i[1]);
         }
     }
 
@@ -447,10 +412,7 @@ private:
         return std::sqrt(norm) / n;
     }
 
-    double substep(bool x_refined, bool y_refined, double t) {
-        dimension& Vx = x_refined ? this->Vx : Ux;
-        dimension& Vy = y_refined ? this->Vy : Uy;
-
+    double substep() {
         vector_view r_rhs{full_rhs.data(), {Vx.dofs(), Vy.dofs()}};
         vector_view u_rhs{full_rhs.data() + r_rhs.size(), {Ux.dofs(), Uy.dofs()}};
 
@@ -466,22 +428,22 @@ private:
         });
 
         mumps::problem problem(full_rhs.data(), full_rhs.size());
-        assemble_problem(problem, Vx, Vy, matrices(x_refined, y_refined));
+        assemble_problem(problem, Vx, Vy);
         integration_timer.stop();
 
         solver_timer.start();
         solver.solve(problem);
         solver_timer.stop();
 
-        add_solution(u_rhs, r_rhs, Vx, Vy);
+        update_solution(u_rhs, r_rhs, Vx, Vy);
         return norm(u_rhs);
     }
 
-    void step(int iter, double t) override {
+    void step(int /*iter*/, double /*t*/) override {
         constexpr auto max_iters = 1;
 
         for (int i = 1; ; ++ i) {
-            auto norm = substep(true, true, t);
+            auto norm = substep();
             std::cout << "  substep " << i << ": |eta| = " << norm << std::endl;
 
             if (norm < 1e-7 || i >= max_iters) {
@@ -501,8 +463,8 @@ private:
         std::cout << "L2 rel: " << errorL2() << std::endl;
         std::cout << "H1 rel: " << errorH1() << std::endl;
 
-        std::cout << "integration: " << static_cast<double>(integration_timer.get()) << std::endl;
-        std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << std::endl;
+        std::cout << "integration: " << static_cast<double>(integration_timer.get()) << " ms" << std::endl;
+        std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
     }
 
     void compute_rhs(const dimension& Vx, const dimension& Vy, vector_view& r_rhs, vector_view& u_rhs) {
@@ -516,15 +478,15 @@ private:
                 double WJ = W * J;
                 auto x = point(e, q);
                 value_type uu = eval(u, e, q, Ux, Uy);
-                value_type rr = eval(r.data, e, q, *r.Vx, *r.Vy);
+                value_type rr = eval(r, e, q, Vx, Vy);
 
                 for (auto a : dofs_on_element(e, Vx, Vy)) {
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
                     double Lv = F(x) * v.val;
 
-                    // -F + Bu - Ar
-                    double val = -Lv + B(uu, v, x) - A(rr, v);
+                    // F + Ar - Bu
+                    double val = Lv + A(rr, v) - B(uu, v, x);
                     R(aa[0], aa[1]) += val * WJ;
                 }
                 for (auto a : dofs_on_element(e, Ux, Uy)) {
@@ -553,7 +515,7 @@ private:
                 }
             });
 
-            r_rhs(i[0], i[1]) -= val;
+            r_rhs(i[0], i[1]) += val;
         }
     }
 
@@ -622,15 +584,15 @@ private:
     // Problem definition
     // --------------------
 
-    double diffusion(point_type x) const {
+    double diffusion(point_type /*x*/) const {
         return epsilon;
     }
 
-    point_type beta(point_type x) const {
+    point_type beta(point_type /*x*/) const {
         return {1, 0};
     }
 
-    double F(point_type x) const {
+    double F(point_type /*x*/) const {
         return 0;
     }
 
