@@ -229,7 +229,7 @@ protected:
     double norm(const dimension& Ux, const dimension& Uy, Norm&& norm, Fun&& fun) const {
         double val = 0;
 
-        for (auto e : elements(Ux, Ux)) {
+        for (auto e : elements(Ux, Uy)) {
             double J = jacobian(e, Ux, Uy);
             for (auto q : quad_points(Ux, Uy)) {
                 double w = weigth(q, Ux, Uy);
@@ -257,7 +257,7 @@ protected:
     double error(const Sol& u, const dimension& Ux, const dimension& Uy, Norm&& norm, Fun&& fun) const {
         double error = 0;
 
-        for (auto e : elements(Ux, Ux)) {
+        for (auto e : elements(Ux, Uy)) {
             double J = jacobian(e, Ux, Uy);
             for (auto q : quad_points(Ux, Uy)) {
                 double w = weigth(q, Ux, Uy);
