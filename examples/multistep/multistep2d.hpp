@@ -178,7 +178,7 @@ private:
 
                     for (int i = 0; i <= s; ++i) {
                         double ti = tt - i * tau;
-                        val += tau * bs[i] * force(x, ti);
+                        val += tau * bs[i] * force(x, ti) * v.val;
                     }
                     for (int i = 1; i <= s; ++i) {
                         auto u = uvals[i];
