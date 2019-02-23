@@ -29,19 +29,7 @@ private:
 
     // New stuff
     lin::band_matrix MVx, MVy;
-    lin::band_matrix MUx, MUy;
-
     lin::band_matrix KVx, KVy;
-    lin::band_matrix KUx, KUy;
-
-
-    lin::dense_matrix MUVx, MUVy;
-    lin::dense_matrix KUVx, KUVy;
-    lin::dense_matrix AUVx, AUVy;
-
-    lin::dense_matrix MUUx, MUUy;
-    lin::dense_matrix KUUx, KUUy;
-    lin::dense_matrix AUUx, AUUy;
 
     vector_type u, r;
     std::vector<double> full_rhs;
@@ -72,24 +60,8 @@ public:
     , Vy{ y }
     , MVx{Vx.p, Vx.p, Vx.dofs(), Vx.dofs(), 0}
     , MVy{Vy.p, Vy.p, Vy.dofs(), Vy.dofs(), 0}
-    , MUx{Ux.p, Ux.p, Ux.dofs(), Ux.dofs(), 0}
-    , MUy{Uy.p, Uy.p, Uy.dofs(), Uy.dofs(), 0}
     , KVx{Vx.p, Vx.p, Vx.dofs(), Vx.dofs(), 0}
     , KVy{Vy.p, Vy.p, Vy.dofs(), Vy.dofs(), 0}
-    , KUx{Ux.p, Ux.p, Ux.dofs(), Ux.dofs(), 0}
-    , KUy{Uy.p, Uy.p, Uy.dofs(), Uy.dofs(), 0}
-    , MUVx{ Vx.dofs(), Ux.dofs() }
-    , MUVy{ Vy.dofs(), Uy.dofs() }
-    , KUVx{ Vx.dofs(), Ux.dofs() }
-    , KUVy{ Vy.dofs(), Uy.dofs() }
-    , AUVx{ Vx.dofs(), Ux.dofs() }
-    , AUVy{ Vy.dofs(), Uy.dofs() }
-    , MUUx{ Ux.dofs(), Ux.dofs() }
-    , MUUy{ Uy.dofs(), Uy.dofs() }
-    , KUUx{ Ux.dofs(), Ux.dofs() }
-    , KUUy{ Uy.dofs(), Uy.dofs() }
-    , AUUx{ Ux.dofs(), Ux.dofs() }
-    , AUUy{ Uy.dofs(), Uy.dofs() }
     , u{{ Ux.dofs(), Uy.dofs() }}
     , r{{ Vx.dofs(), Vy.dofs() }}
     , full_rhs(Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs())
@@ -394,35 +366,8 @@ private:
     void prepare_matrices() {
         gram_matrix_1d(MVx, Vx.basis);
         gram_matrix_1d(MVy, Vy.basis);
-
-        gram_matrix_1d(MUx, Ux.basis);
-        gram_matrix_1d(MUy, Uy.basis);
-
-        gram_matrix_1d(MUUx, Ux.basis, Ux.basis);
-        gram_matrix_1d(MUUy, Uy.basis, Uy.basis);
-
-        gram_matrix_1d(MUVx, Ux.basis, Vx.basis);
-        gram_matrix_1d(MUVy, Uy.basis, Vy.basis);
-
-
         stiffness_matrix_1d(KVx, Vx.basis);
         stiffness_matrix_1d(KVy, Vy.basis);
-
-        stiffness_matrix_1d(KUx, Ux.basis);
-        stiffness_matrix_1d(KUy, Uy.basis);
-
-        stiffness_matrix_1d(KUVx, Ux.basis, Vx.basis);
-        stiffness_matrix_1d(KUVy, Uy.basis, Vy.basis);
-
-        stiffness_matrix_1d(KUUx, Ux.basis, Ux.basis);
-        stiffness_matrix_1d(KUUy, Uy.basis, Uy.basis);
-
-
-        advection_matrix_1d(AUVx, Ux.basis, Vx.basis);
-        advection_matrix_1d(AUVy, Uy.basis, Vy.basis);
-
-        advection_matrix_1d(AUUx, Ux.basis, Ux.basis);
-        advection_matrix_1d(AUUy, Uy.basis, Uy.basis);
     }
 
     void before() override {
