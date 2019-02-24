@@ -12,6 +12,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
+include_directories("${PROJECT_SOURCE_DIR}/lib")
+
 
 set(SRC src/ads)
 set(ads_SRC

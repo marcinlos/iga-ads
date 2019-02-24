@@ -15,7 +15,29 @@
 
 namespace ads {
 
+
 class advection : public erikkson_base {
+public:
+
+    struct config {
+        double tol_outer = 1e-7;
+        double tol_inner = 1e-7;
+        int max_outer_iters = 10;
+        int max_inner_iters = 250;
+
+        bool use_cg = true;
+
+        bool print_inner = false;
+        bool print_inner_count = true;
+        bool print_outer = true;
+        bool print_outer_count = true;
+        bool print_inner_total = true;
+
+        bool print_times = false;
+        bool print_errors = true;
+        bool plot = true;
+    };
+
 private:
     using Base = erikkson_base;
     using Base::errorL2;
@@ -45,11 +67,7 @@ private:
     double peclet;
     double epsilon = 1 / peclet;
 
-    double tol_outer = 1e-7;
-    double tol_inner = 1e-7;
-    int max_outer_iters = 10;
-    int max_inner_iters = 250;
-
+    config cfg;
 
     mumps::solver solver;
 
@@ -57,9 +75,10 @@ private:
 
     Galois::StatTimer integration_timer{"integration"};
     Galois::StatTimer solver_timer{"solver"};
+    int total_CG_iters = 0;
 
 public:
-    advection(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, double peclet)
+    advection(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, double peclet, const config& cfg)
     : Base{std::move(test_x), std::move(test_y), timesteps_config(1, 0.0)}
     , Ux{ std::move(trial_x) }
     , Uy{ std::move(trial_y) }
@@ -79,6 +98,7 @@ public:
     , full_rhs(Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs())
     , h{ element_diam(Ux, Uy) }
     , peclet{ peclet }
+    , cfg{ cfg }
     , output{ Ux.B, Uy.B, 500 }
     {
         int p = Vx.basis.degree;
@@ -473,7 +493,7 @@ private:
         return std::sqrt(norm_sq(u, x, y));
     }
 
-    vector_view substep() {
+    vector_view substep_mumps() {
         vector_view dr{full_rhs.data(), {Vx.dofs(), Vy.dofs()}};
         vector_view du{full_rhs.data() + dr.size(), {Ux.dofs(), Uy.dofs()}};
 
@@ -510,7 +530,8 @@ private:
         auto Mp = vector_type{{ Ux.dofs(), Uy.dofs() }};
         // auto q_prev = q;
 
-        for (int i = 1; i <= max_inner_iters ; ++ i) {
+        int i = 1;
+        for (; i <= cfg.max_inner_iters ; ++ i) {
             // theta = Bp
             apply_B(p, theta);
 
@@ -544,12 +565,18 @@ private:
             // convergence
             auto dimU = Ux.dofs() * Uy.dofs();
             double residuum = std::sqrt(qnorm2) / dimU;
-            std::cout << "     inner " << i << ": |q| = " << residuum << std::endl;
 
-            if (residuum < tol_inner) {
+            if (cfg.print_inner)
+                std::cout << "     inner " << i << ": |q| = " << residuum << std::endl;
+
+            if (residuum < cfg.tol_inner) {
                 break;
             }
         }
+        total_CG_iters += i;
+        if (cfg.print_inner_count)
+            std::cout << "  CG iters: " << i << std::endl;
+
 
         vector_view du{full_rhs.data(), {Ux.dofs(), Uy.dofs()}};
         for (auto i : dofs(Ux, Uy)) {
@@ -567,7 +594,8 @@ private:
         auto dc = vector_type{{ Ux.dofs(), Uy.dofs() }};
         auto Bc = vector_type{{ Vx.dofs(), Vy.dofs() }};
 
-        for (int i = 1; i <= max_outer_iters ; ++ i) {
+        int i = 1;
+        for (; i <= cfg.max_outer_iters ; ++ i) {
             // dd = A~ \ (F + Kr - Bu)
             compute_dd(Vx, Vy, dd);
             apply_bc(dd, Vx, Vy);
@@ -576,8 +604,7 @@ private:
             // dc = B' dd
             apply_Bt(dd, dc);
 
-            auto c = substep_CG(dc);
-            // auto c = substep();
+            auto c = cfg.use_cg ? substep_CG(dc) : substep_mumps();
 
             // Bc = A~ \ B c
             apply_B(c, Bc);
@@ -590,27 +617,38 @@ private:
             auto dimU = Ux.dofs() * Uy.dofs();
             auto cc = norm(c, Ux, Uy) / dimU;
 
-            std::cout << "  substep " << i << ": |c| = " << cc << std::endl;
+            if (cfg.print_outer)
+                std::cout << "  outer " << i << ": |c| = " << cc << std::endl;
 
-            if (cc < tol_outer) {
+            if (cc < cfg.tol_outer) {
                 break;
             }
         }
+        if (cfg.print_outer_count)
+            std::cout << "outer iters: " << i << std::endl;
+
+        if (cfg.use_cg && cfg.print_inner_total)
+            std::cout << "total CG iters: " << total_CG_iters << std::endl;
     }
 
     void after() override {
-        output.to_file(u, "result.data");
-        print_solution("coefficients.data", u, Ux, Uy);
+        if (cfg.plot) {
+            output.to_file(u, "result.data");
+            print_solution("coefficients.data", u, Ux, Uy);
+            plot_middle("xsection.data", u, Ux, Uy);
+        }
 
-        plot_middle("xsection.data", u, Ux, Uy);
+        if (cfg.print_errors) {
+            std::cout << "L2 abs: " << errorL2_abs() << std::endl;
+            std::cout << "H1 abs: " << errorH1_abs() << std::endl;
+            std::cout << "L2 rel: " << errorL2() << std::endl;
+            std::cout << "H1 rel: " << errorH1() << std::endl;
+        }
 
-        std::cout << "L2 abs: " << errorL2_abs() << std::endl;
-        std::cout << "H1 abs: " << errorH1_abs() << std::endl;
-        std::cout << "L2 rel: " << errorL2() << std::endl;
-        std::cout << "H1 rel: " << errorH1() << std::endl;
-
-        std::cout << "integration: " << static_cast<double>(integration_timer.get()) << " ms" << std::endl;
-        std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
+        if (cfg.print_times) {
+            std::cout << "integration: " << static_cast<double>(integration_timer.get()) << " ms" << std::endl;
+            std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
+        }
     }
 
     void compute_rhs(const dimension& Vx, const dimension& Vy, vector_view& r_rhs, vector_view& u_rhs) {
