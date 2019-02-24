@@ -31,7 +31,12 @@ private:
     lin::band_matrix MVx, MVy;
     lin::band_matrix KVx, KVy;
 
+    lin::band_matrix Ax, Ay;
+    lin::solver_ctx Ax_ctx, Ay_ctx;
+
     vector_type u, r;
+    vector_type buffer;
+
     std::vector<double> full_rhs;
 
     double h;
@@ -62,8 +67,13 @@ public:
     , MVy{Vy.p, Vy.p, Vy.dofs(), Vy.dofs(), 0}
     , KVx{Vx.p, Vx.p, Vx.dofs(), Vx.dofs(), 0}
     , KVy{Vy.p, Vy.p, Vy.dofs(), Vy.dofs(), 0}
+    , Ax{Vx.p, Vx.p, Vx.dofs()}
+    , Ay{Vy.p, Vy.p, Vy.dofs()}
+    , Ax_ctx{ Ax }
+    , Ay_ctx{ Ay }
     , u{{ Ux.dofs(), Uy.dofs() }}
     , r{{ Vx.dofs(), Vy.dofs() }}
+    , buffer{{ Vx.dofs(), Vy.dofs() }}
     , full_rhs(Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs())
     , h{ element_diam(Ux, Uy) }
     , peclet{ peclet }
@@ -213,9 +223,9 @@ private:
         return val;
     }
 
-    template <typename Form>
+    template <typename Form, typename Sol>
     double integrate_boundary(boundary side, index_type i, const dimension& Ux, const dimension& Uy,
-                              const vector_type& u, const dimension& Vx, const dimension& Vy, Form&& form) const {
+                              const Sol& u, const dimension& Vx, const dimension& Vy, Form&& form) const {
         double val = 0;
         bool horizontal = side == boundary::top || side == boundary::bottom;
         auto nv = normal(side);
@@ -363,19 +373,49 @@ private:
         });
     }
 
+    void fix_dof(int k, const dimension& dim, lin::band_matrix& K) {
+        int last = dim.dofs() - 1;
+        for (int i = clamp(k - dim.p, 0, last); i <= clamp(k + dim.p, 0, last); ++ i) {
+            K(k, i) = 0;
+        }
+        K(k, k) = 1;
+    }
+
     void prepare_matrices() {
         gram_matrix_1d(MVx, Vx.basis);
         gram_matrix_1d(MVy, Vy.basis);
         stiffness_matrix_1d(KVx, Vx.basis);
         stiffness_matrix_1d(KVy, Vy.basis);
+
+        double eta = h * h;
+
+        for (int i = 0; i < Vx.dofs(); ++ i) {
+            for (int j : overlapping_dofs(i, 0, Vx.dofs(), Vx)) {
+                Ax(i, j) = MVx(i, j) + eta * KVx(i, j);
+            }
+        }
+        for (int i = 0; i < Vy.dofs(); ++ i) {
+            for (int j : overlapping_dofs(i, 0, Vy.dofs(), Vy)) {
+                Ay(i, j) = MVy(i, j) + eta * KVy(i, j);
+            }
+        }
+
+        if (contains(dirichlet, boundary::left))   fix_dof(0, Vx, Ax);
+        if (contains(dirichlet, boundary::right))  fix_dof(Vx.dofs() - 1, Vx, Ax);
+        if (contains(dirichlet, boundary::bottom)) fix_dof(0, Vy, Ay);
+        if (contains(dirichlet, boundary::top))    fix_dof(Vy.dofs() - 1, Vy, Ay);
     }
 
     void before() override {
         prepare_matrices();
+
         Ux.factorize_matrix();
         Uy.factorize_matrix();
         Vx.factorize_matrix();
         Vy.factorize_matrix();
+
+        lin::factorize(Ax, Ax_ctx);
+        lin::factorize(Ay, Ay_ctx);
 
         zero(r);
         zero(u);
@@ -385,41 +425,60 @@ private:
         // vector_type u_buffer{{ Ux.dofs(), Uy.dofs() }};
         // ads_solve(u, u_buffer, Ux.data(), Uy.data());
 
-        apply_bc(u);
+        apply_bc(u, Ux, Uy);
     }
 
-    void update_solution(const vector_view& u_rhs, const vector_view& r_rhs, const dimension& Vx, const dimension& Vy) {
-        for (auto i : dofs(Ux, Uy)) {
-            u(i[0], i[1]) += u_rhs(i[0], i[1]);
-        }
+    template <typename U, typename V>
+    void update(const U& c, const V& d) {
         for (auto i : dofs(Vx, Vy)) {
-            r(i[0], i[1]) += r_rhs(i[0], i[1]);
+            r(i[0], i[1]) += d(i[0], i[1]);
         }
-    }
-
-    double norm(const vector_view& u) const {
-        double norm = 0;
         for (auto i : dofs(Ux, Uy)) {
-            auto a = u(i[0], i[1]);
-            norm += a * a;
+            u(i[0], i[1]) += c(i[0], i[1]);
         }
-        auto n = Ux.dofs() * Uy.dofs();
-        return std::sqrt(norm) / n;
     }
 
-    double substep() {
-        vector_view r_rhs{full_rhs.data(), {Vx.dofs(), Vy.dofs()}};
-        vector_view u_rhs{full_rhs.data() + r_rhs.size(), {Ux.dofs(), Uy.dofs()}};
+    template <typename U>
+    void update_solution(const U& c) {
+        for (auto i : dofs(Ux, Uy)) {
+            u(i[0], i[1]) += c(i[0], i[1]);
+        }
+    }
+
+    template <typename U, typename V>
+    void update_residual(const U& dd, const V& Bc) {
+        for (auto i : dofs(Vx, Vy)) {
+            r(i[0], i[1]) = dd(i[0], i[1]) - Bc(i[0], i[1]);
+        }
+    }
+
+    template <typename U, typename V>
+    double dot(const U& u, const V& v, const dimension& x, const dimension& y) const {
+        double val = 0;
+        for (auto i : dofs(x, y)) {
+            val += u(i[0], i[1]) * v(i[0], i[1]);
+        }
+        return val;
+    }
+
+    template <typename V>
+    double norm(const V& u, const dimension& x, const dimension& y) const {
+        return std::sqrt(dot(u, u, x, y));
+    }
+
+    vector_view substep() {
+        vector_view dr{full_rhs.data(), {Vx.dofs(), Vy.dofs()}};
+        vector_view du{full_rhs.data() + dr.size(), {Ux.dofs(), Uy.dofs()}};
 
         std::fill(begin(full_rhs), end(full_rhs), 0);
 
         integration_timer.start();
-        compute_rhs(Vx, Vy, r_rhs, u_rhs);
+        compute_rhs(Vx, Vy, dr, du);
 
         // BC
         for_sides(dirichlet, [&](auto side) {
-            dirichlet_bc(u_rhs, side, Ux, Uy, 0);
-            dirichlet_bc(r_rhs, side, Vx, Vy, 0);
+            dirichlet_bc(du, side, Ux, Uy, 0);
+            dirichlet_bc(dr, side, Vx, Vy, 0);
         });
 
         mumps::problem problem(full_rhs.data(), full_rhs.size());
@@ -430,16 +489,52 @@ private:
         solver.solve(problem);
         solver_timer.stop();
 
-        update_solution(u_rhs, r_rhs, Vx, Vy);
-        return norm(u_rhs);
+        return du;
+    }
+
+    void solve_A(vector_type& v) {
+        ads_solve(v, buffer, dim_data{Ax, Ax_ctx}, dim_data{Ay, Ay_ctx});
     }
 
     void step(int /*iter*/, double /*t*/) override {
-        for (int i = 1; ; ++ i) {
-            auto norm = substep();
-            std::cout << "  substep " << i << ": |eta| = " << norm << std::endl;
+        auto dd = vector_type{{ Vx.dofs(), Vy.dofs() }};
+        auto dc = vector_type{{ Ux.dofs(), Uy.dofs() }};
+        auto Bc = vector_type{{ Vx.dofs(), Vy.dofs() }};
 
-            if (norm < tol_outer || i >= max_iters) {
+        // dd = A~ \ (F + Kr - Bu)
+        compute_dd(Vx, Vy, dd);
+        apply_bc(dd, Vx, Vy);
+        solve_A(dd);
+
+        // dc = B' dd
+        apply_Bt(dd, dc);
+
+        for (int i = 1; ; ++ i) {
+            auto c = substep();
+
+            // Bc = A~ \ B c
+            apply_B(c, Bc);
+            apply_bc(Bc, Vx, Vy);
+            solve_A(Bc);
+
+            // r + d = dd - A~ \ B c
+            update_solution(c);
+            update_residual(dd, Bc);
+
+            // dd = A~ \ (F + Kr - Bu)
+            compute_dd(Vx, Vy, dd);
+            apply_bc(dd, Vx, Vy);
+            solve_A(dd);
+
+            // dc = B' dd
+            apply_Bt(dd, dc);
+
+            auto dimU = Ux.dofs() * Uy.dofs();
+            auto cc = norm(c, Ux, Uy) / dimU;
+
+            std::cout << "  substep " << i << ": |c| = " << cc << std::endl;
+
+            if (cc < tol_outer || i >= max_iters) {
                 break;
             }
         }
@@ -537,6 +632,163 @@ private:
         }
     }
 
+    double eval_basis_dxy(index_type e, index_type q, index_type dof, const dimension& x, const dimension& y) const  {
+        auto loc = dof_global_to_local(e, dof);
+        const auto& bx = x.basis;
+        const auto& by = y.basis;
+        double dB1 = bx.b[e[0]][q[0]][1][loc[0]];
+        double dB2 = by.b[e[1]][q[1]][1][loc[1]];
+        return dB1 * dB2;
+    }
+
+    double eval_fun_dxy(const vector_type& v, index_type e, index_type q, const dimension& x, const dimension& y) const {
+        double u = 0;
+        for (auto b : dofs_on_element(e)) {
+            double c = v(b[0], b[1]);
+            double B = eval_basis_dxy(e, q, b, x, y);
+            u += c * B;
+        }
+        return u;
+    }
+
+    void compute_dd(const dimension& Vx, const dimension& Vy, vector_type& dd) {
+        zero(dd);
+        executor.for_each(elements(Vx, Vy), [&](index_type e) {
+            auto R = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
+
+            double J = jacobian(e);
+            for (auto q : quad_points(Vx, Vy)) {
+                double W = weigth(q);
+                double WJ = W * J;
+                auto x = point(e, q);
+                value_type uu = eval(u, e, q, Ux, Uy);
+                double rxy = eval_fun_dxy(r, e, q, Vx, Vy);
+
+                for (auto a : dofs_on_element(e, Vx, Vy)) {
+                    auto aa = dof_global_to_local(e, a, Vx, Vy);
+                    value_type v = eval_basis(e, q, a, Vx, Vy);
+                    double vxy = eval_basis_dxy(e, q, a, Vx, Vy);
+                    double eta = h * h;
+                    double Lv = F(x) * v.val;
+
+                    // F + Kr - Bu
+                    double Kr = eta * eta * rxy * vxy;
+                    double val = Lv + Kr - B(uu, v, x);
+                    R(aa[0], aa[1]) += val * WJ;
+                }
+            }
+            executor.synchronized([&]() {
+                update_global_rhs(dd, R, e, Vx, Vy);
+            });
+        });
+
+        // Boundary terms of -Bu
+        for (auto i : dofs(Vx, Vy)) {
+            double val = 0;
+
+            auto form = [&](auto v, auto u, auto x, auto n) { return this->bdB(u, v, x, n); };
+            for_sides(~dirichlet, [&](auto side) {
+                if (this->touches(i, side, Vx, Vy)) {
+                    val += integrate_boundary(side, i, Vx, Vy, u, Ux, Uy, form);
+                }
+            });
+            dd(i[0], i[1]) -= val;
+        }
+
+        // Boundary terms of RHS
+        for (auto i : dofs(Vx, Vy)) {
+            double val = 0;
+
+            auto form = [&](auto w, auto x, auto n) { return this->bdL(w, x, n); };
+            for_sides(~dirichlet, [&](auto side) {
+                if (this->touches(i, side, Vx, Vy)) {
+                    val += integrate_boundary(side, i, Vx, Vy, form);
+                }
+            });
+            dd(i[0], i[1]) += val;
+        }
+    }
+
+
+    void apply_B(const vector_view& u, vector_type& result) {
+        zero(result);
+        executor.for_each(elements(Vx, Vy), [&](index_type e) {
+            auto rhs = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
+
+            double J = jacobian(e);
+            for (auto q : quad_points(Vx, Vy)) {
+                double W = weigth(q);
+                double WJ = W * J;
+                auto x = point(e, q);
+                value_type uu = eval(u, e, q, Ux, Uy);
+
+                for (auto a : dofs_on_element(e, Vx, Vy)) {
+                    auto aa = dof_global_to_local(e, a, Vx, Vy);
+                    value_type v = eval_basis(e, q, a, Vx, Vy);
+                    // Bu
+                    double val = B(uu, v, x);
+                    rhs(aa[0], aa[1]) += val * WJ;
+                }
+            }
+            executor.synchronized([&]() {
+                update_global_rhs(result, rhs, e, Vx, Vy);
+            });
+        });
+
+        // Boundary terms of Bu
+        for (auto i : dofs(Vx, Vy)) {
+            double val = 0;
+
+            auto form = [&](auto v, auto u, auto x, auto n) { return this->bdB(u, v, x, n); };
+            for_sides(~dirichlet, [&](auto side) {
+                if (this->touches(i, side, Vx, Vy)) {
+                    val += integrate_boundary(side, i, Vx, Vy, u, Ux, Uy, form);
+                }
+            });
+            result(i[0], i[1]) += val;
+        }
+    }
+
+    void apply_Bt(const vector_type& r, vector_type& result) {
+        zero(result);
+        executor.for_each(elements(Vx, Vy), [&](index_type e) {
+            auto U = vector_type{{ Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element() }};
+
+            double J = jacobian(e);
+            for (auto q : quad_points(Vx, Vy)) {
+                double W = weigth(q);
+                double WJ = W * J;
+                auto x = point(e, q);
+                value_type rr = eval(r, e, q, Vx, Vy);
+
+                for (auto a : dofs_on_element(e, Ux, Uy)) {
+                    auto aa = dof_global_to_local(e, a, Ux, Uy);
+                    value_type w = eval_basis(e, q, a, Ux, Uy);
+
+                    // B' r
+                    double val = B(w, rr, x);
+                    U(aa[0], aa[1]) += val * WJ;
+                }
+            }
+            executor.synchronized([&]() {
+                update_global_rhs(result, U, e, Ux, Uy);
+            });
+        });
+
+        // Boundary terms of B'r
+        for (auto i : dofs(Ux, Uy)) {
+            double val = 0;
+
+            auto form = [&](auto u, auto v, auto x, auto n) { return this->bdB(u, v, x, n); };
+            for_sides(~dirichlet, [&](auto side) {
+                if (this->touches(i, side, Ux, Uy)) {
+                    val += integrate_boundary(side, i, Ux, Uy, r, Vx, Vy, form);
+                }
+            });
+            result(i[0], i[1]) += val;
+        }
+    }
+
     double errorL2_abs() const {
         auto sol = exact(epsilon);
         return errorL2(u, Ux, Uy, sol);
@@ -587,9 +839,9 @@ private:
         }
     }
 
-    void apply_bc(vector_type& u) {
+    void apply_bc(vector_type& u, dimension& x, dimension& y) {
         for_sides(dirichlet, [&](auto side) {
-            dirichlet_bc(u, side, Ux, Uy, [&](double t) {
+            this->dirichlet_bc(u, side, x, y, [&](double t) {
                 auto x = boundary_point(t, side);
                 return g(x);
             });
@@ -643,7 +895,7 @@ private:
 
     // Boundary conditions
 
-    static constexpr boundary dirichlet = boundary::none;
+    static constexpr boundary dirichlet = boundary::full;
 
     double g(point_type x) const {
         return x[0] == 0 ? std::sin(M_PI * x[1]) : 0;

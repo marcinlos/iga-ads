@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
     int p_test = std::atoi(argv[6]);
     int C_test = std::atoi(argv[7]);
 
-    double peclet = 1e2;
+    double peclet = 1e6;
 
     std::cout << "trial (" << p_trial << ", " << C_trial << "), "
               << "test (" << p_test << ", " << C_test << ")" << std::endl;

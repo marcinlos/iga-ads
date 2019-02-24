@@ -141,7 +141,6 @@ protected:
         return { px, py };
     }
 
-private:
     auto overlapping_dofs(int dof, int begin, int end, const dimension& x) const {
         using std::min;
         using std::max;
@@ -152,7 +151,6 @@ private:
         return boost::counting_range(minx, maxx);
     }
 
-protected:
     index_range overlapping_dofs(index_type dof, const dimension& x, const dimension& y) const {
         auto rx = overlapping_dofs(dof[0], 0, x.dofs(), x);
         auto ry = overlapping_dofs(dof[1], 0, y.dofs(), y);
