@@ -47,7 +47,9 @@ private:
 
     double tol_outer = 1e-7;
     double tol_inner = 1e-7;
-    int max_iters = 50;
+    int max_outer_iters = 10;
+    int max_inner_iters = 250;
+
 
     mumps::solver solver;
 
@@ -462,8 +464,13 @@ private:
     }
 
     template <typename V>
+    double norm_sq(const V& u, const dimension& x, const dimension& y) const {
+        return dot(u, u, x, y);
+    }
+
+    template <typename V>
     double norm(const V& u, const dimension& x, const dimension& y) const {
-        return std::sqrt(dot(u, u, x, y));
+        return std::sqrt(norm_sq(u, x, y));
     }
 
     vector_view substep() {
@@ -489,6 +496,65 @@ private:
         solver.solve(problem);
         solver_timer.stop();
 
+        update_solution(du);
+        return du;
+    }
+
+    vector_view substep_CG(const vector_type& dc) {
+        vector_type u_prev = u;
+
+        auto p = dc, q = dc;
+        auto theta = vector_type{{ Vx.dofs(), Vy.dofs() }};
+        auto delta = theta;
+
+        auto Mp = vector_type{{ Ux.dofs(), Uy.dofs() }};
+        // auto q_prev = q;
+
+        for (int i = 1; i <= max_inner_iters ; ++ i) {
+            // theta = Bp
+            apply_B(p, theta);
+
+            // delta = A~ \ theta
+            delta = theta;
+            solve_A(delta);
+
+            // alpha = (p, q) / (p, Mp) !!! (q, q)
+            double alpha = dot(p, q, Ux, Uy) / dot(theta, delta, Vx, Vy);
+
+            // Mp = B' delta
+            apply_Bt(delta, Mp);
+
+            double qnorm2_prev = norm_sq(q, Ux, Uy);
+            // u := u + alpha p
+            // q := q - alpha Mp
+            for (auto i : dofs(Ux, Uy)) {
+                u(i[0], i[1]) += alpha * p(i[0], i[1]);
+                q(i[0], i[1]) -= alpha * Mp(i[0], i[1]);
+            }
+
+            // beta = |q_prev|^2 / |q|^2
+            double qnorm2 = norm_sq(q, Ux, Uy);
+            double beta = qnorm2 / qnorm2_prev;
+
+            // p := q + beta * p
+            for (auto i : dofs(Ux, Uy)) {
+                p(i[0], i[1]) = q(i[0], i[1]) + beta * p(i[0], i[1]);
+            }
+
+            // convergence
+            auto dimU = Ux.dofs() * Uy.dofs();
+            double residuum = std::sqrt(qnorm2) / dimU;
+            std::cout << "     inner " << i << ": |q| = " << residuum << std::endl;
+
+            if (residuum < tol_inner) {
+                break;
+            }
+        }
+
+        vector_view du{full_rhs.data(), {Ux.dofs(), Uy.dofs()}};
+        for (auto i : dofs(Ux, Uy)) {
+            du(i[0], i[1]) = u(i[0], i[1]) - u_prev(i[0], i[1]);
+        }
         return du;
     }
 
@@ -501,26 +567,7 @@ private:
         auto dc = vector_type{{ Ux.dofs(), Uy.dofs() }};
         auto Bc = vector_type{{ Vx.dofs(), Vy.dofs() }};
 
-        // dd = A~ \ (F + Kr - Bu)
-        compute_dd(Vx, Vy, dd);
-        apply_bc(dd, Vx, Vy);
-        solve_A(dd);
-
-        // dc = B' dd
-        apply_Bt(dd, dc);
-
-        for (int i = 1; ; ++ i) {
-            auto c = substep();
-
-            // Bc = A~ \ B c
-            apply_B(c, Bc);
-            apply_bc(Bc, Vx, Vy);
-            solve_A(Bc);
-
-            // r + d = dd - A~ \ B c
-            update_solution(c);
-            update_residual(dd, Bc);
-
+        for (int i = 1; i <= max_outer_iters ; ++ i) {
             // dd = A~ \ (F + Kr - Bu)
             compute_dd(Vx, Vy, dd);
             apply_bc(dd, Vx, Vy);
@@ -529,12 +576,23 @@ private:
             // dc = B' dd
             apply_Bt(dd, dc);
 
+            auto c = substep_CG(dc);
+            // auto c = substep();
+
+            // Bc = A~ \ B c
+            apply_B(c, Bc);
+            apply_bc(Bc, Vx, Vy);
+            solve_A(Bc);
+
+            // r + d = dd - A~ \ B c
+            update_residual(dd, Bc);
+
             auto dimU = Ux.dofs() * Uy.dofs();
             auto cc = norm(c, Ux, Uy) / dimU;
 
             std::cout << "  substep " << i << ": |c| = " << cc << std::endl;
 
-            if (cc < tol_outer || i >= max_iters) {
+            if (cc < tol_outer) {
                 break;
             }
         }
@@ -709,8 +767,8 @@ private:
         }
     }
 
-
-    void apply_B(const vector_view& u, vector_type& result) {
+    template <typename U, typename Res>
+    void apply_B(const U& u, Res& result) {
         zero(result);
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
             auto rhs = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
@@ -749,10 +807,11 @@ private:
         }
     }
 
-    void apply_Bt(const vector_type& r, vector_type& result) {
+    template <typename U, typename Res>
+    void apply_Bt(const U& r, Res& result) {
         zero(result);
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
-            auto U = vector_type{{ Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element() }};
+            auto rhs = vector_type{{ Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element() }};
 
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Vy)) {
@@ -767,11 +826,11 @@ private:
 
                     // B' r
                     double val = B(w, rr, x);
-                    U(aa[0], aa[1]) += val * WJ;
+                    rhs(aa[0], aa[1]) += val * WJ;
                 }
             }
             executor.synchronized([&]() {
-                update_global_rhs(result, U, e, Ux, Uy);
+                update_global_rhs(result, rhs, e, Ux, Uy);
             });
         });
 
@@ -789,23 +848,27 @@ private:
         }
     }
 
+    auto exact() const {
+        return [&](point_type x) { return solution(x[0], x[1]); };
+    }
+
     double errorL2_abs() const {
-        auto sol = exact(epsilon);
+        auto sol = exact();
         return errorL2(u, Ux, Uy, sol);
     }
 
     double errorH1_abs() const {
-        auto sol = exact(epsilon);
+        auto sol = exact();
         return errorH1(u, Ux, Uy, sol);
     }
 
     double errorL2() const {
-        auto sol = exact(epsilon);
+        auto sol = exact();
         return errorL2(u, Ux, Uy, sol) / normL2(Ux, Uy, sol) * 100;
     }
 
     double errorH1() const {
-        auto sol = exact(epsilon);
+        auto sol = exact();
         return errorH1(u, Ux, Uy, sol) / normH1(Ux, Uy, sol) * 100;
     }
 
@@ -871,7 +934,6 @@ private:
         return diff * grad_dot(u, v) + dot(beta(x), u) * v.val;
     }
 
-
     double bdB(value_type u, value_type v, point_type x, point_type n) const {
         return
             - epsilon * v.val * dot(u, n)         // <eps \/u*n, v> -- consistency
@@ -882,9 +944,9 @@ private:
 
     double bdL(value_type v, point_type x, point_type n) const {
         return
-            - epsilon * g(x) * dot(v, n)       // <g, eps \/v*n>
-            - g(x) * v.val * dot(beta(x), n)   // <g, v beta*n>
-            - g(x) * v.val * gamma;            // <u, gamma v> -- penalty
+            - epsilon * g(x) * dot(v, n)          // <g, eps \/v*n>
+            - g(x) * v.val * dot(beta(x), n)      // <g, v beta*n>
+            - g(x) * v.val * gamma;               // <u, gamma v> -- penalty
     }
 
     // Scalar product
@@ -895,12 +957,16 @@ private:
 
     // Boundary conditions
 
-    static constexpr boundary dirichlet = boundary::full;
+    static constexpr boundary dirichlet = boundary::none;
 
     double g(point_type x) const {
         return x[0] == 0 ? std::sin(M_PI * x[1]) : 0;
     }
 
+    // Exact solution
+    value_type solution(double x, double y) const {
+        return erikkson_exact(x, y, epsilon);
+    }
 
 
 };
