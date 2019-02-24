@@ -22,7 +22,7 @@ public:
     struct config {
         double tol_outer = 1e-7;
         double tol_inner = 1e-7;
-        int max_outer_iters = 10;
+        int max_outer_iters = 100;
         int max_inner_iters = 250;
 
         bool use_cg = true;
@@ -75,6 +75,8 @@ private:
 
     Galois::StatTimer integration_timer{"integration"};
     Galois::StatTimer solver_timer{"solver"};
+    Galois::StatTimer total_timer{"total"};
+
     int total_CG_iters = 0;
 
 public:
@@ -530,8 +532,8 @@ private:
         auto Mp = vector_type{{ Ux.dofs(), Uy.dofs() }};
         // auto q_prev = q;
 
-        int i = 1;
-        for (; i <= cfg.max_inner_iters ; ++ i) {
+        int i = 0;
+        for (; i < cfg.max_inner_iters; ++ i) {
             // theta = Bp
             apply_B(p, theta);
 
@@ -567,9 +569,10 @@ private:
             double residuum = std::sqrt(qnorm2) / dimU;
 
             if (cfg.print_inner)
-                std::cout << "     inner " << i << ": |q| = " << residuum << std::endl;
+                std::cout << "     inner " << (i + 1) << ": |q| = " << residuum << std::endl;
 
             if (residuum < cfg.tol_inner) {
+                ++ i;
                 break;
             }
         }
@@ -594,8 +597,9 @@ private:
         auto dc = vector_type{{ Ux.dofs(), Uy.dofs() }};
         auto Bc = vector_type{{ Vx.dofs(), Vy.dofs() }};
 
-        int i = 1;
-        for (; i <= cfg.max_outer_iters ; ++ i) {
+        total_timer.start();
+        int i = 0;
+        for (; i < cfg.max_outer_iters ; ++ i) {
             // dd = A~ \ (F + Kr - Bu)
             compute_dd(Vx, Vy, dd);
             apply_bc(dd, Vx, Vy);
@@ -618,16 +622,19 @@ private:
             auto cc = norm(c, Ux, Uy) / dimU;
 
             if (cfg.print_outer)
-                std::cout << "  outer " << i << ": |c| = " << cc << std::endl;
+                std::cout << "  outer " << (i + 1) << ": |c| = " << cc << std::endl;
 
             if (cc < cfg.tol_outer) {
+                ++ i;
                 break;
             }
         }
+        total_timer.stop();
+
         if (cfg.print_outer_count)
             std::cout << "outer iters: " << i << std::endl;
 
-        if (cfg.use_cg && cfg.print_inner_total)
+        if (cfg.print_inner_total)
             std::cout << "total CG iters: " << total_CG_iters << std::endl;
     }
 
@@ -648,6 +655,7 @@ private:
         if (cfg.print_times) {
             std::cout << "integration: " << static_cast<double>(integration_timer.get()) << " ms" << std::endl;
             std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
+            std::cout << "total:       " << static_cast<double>(total_timer.get()) << " ms" << std::endl;
         }
     }
 
