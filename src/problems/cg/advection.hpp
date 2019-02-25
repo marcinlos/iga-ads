@@ -26,6 +26,7 @@ public:
         int max_inner_iters = 250;
 
         bool use_cg = true;
+        bool weak_bc = false;
 
         bool print_inner = false;
         bool print_inner_count = true;
@@ -105,6 +106,7 @@ public:
     , peclet{ peclet }
     , cfg{ cfg }
     , output{ Ux.B, Uy.B, 500 }
+    , dirichlet { cfg.weak_bc ? boundary::none : boundary::full }
     {
         int p = Vx.basis.degree;
         gamma = 3 * epsilon * p * p / h;
@@ -1012,7 +1014,7 @@ private:
 
     // Boundary conditions
 
-    static constexpr boundary dirichlet = boundary::none;
+    boundary dirichlet;
 
     double g(point_type x) const {
         return x[0] == 0 ? std::sin(M_PI * x[1]) : 0;

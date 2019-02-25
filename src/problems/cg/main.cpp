@@ -35,6 +35,7 @@ auto make_config_parser(advection::config& cfg) {
         Opt(cfg.max_outer_iters, "maximum # of outer iterations")["--max-outer-iters"] |
         Opt(cfg.max_inner_iters, "maximum # of inner iterations")["--max-inner-iters"] |
         Opt(cfg.use_cg, "use CG solver?")["--cg"] |
+        Opt(cfg.weak_bc, "impose Dirichlet BC weakly?")["--weak-bc"] |
         Opt(cfg.print_inner, "print errors for inner iterations?")["--print-inner"] |
         Opt(cfg.print_inner_count, "print number of inner iterations?")["--print-inner-count"] |
         Opt(cfg.print_outer, "print errors for outer iterations?")["--print-outer"] |
