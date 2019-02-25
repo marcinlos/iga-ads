@@ -1,5 +1,6 @@
 #include "shishkin.hpp"
 #include "advection.hpp"
+#include "problems.hpp"
 #include <clara.hpp>
 
 using namespace ads;
@@ -28,7 +29,7 @@ void print_dofs(const ads::dimension& trial, const ads::dimension& test) {
     std::cout << "DOFs : " << dofs << std::endl;
 }
 
-auto make_config_parser(advection::config& cfg) {
+auto make_config_parser(advection_config& cfg) {
     return
         Opt(cfg.tol_outer, "outer iterations tolerance")["--tol-outer"] |
         Opt(cfg.tol_inner, "inner iterations tolerance")["--tol-inner"] |
@@ -48,7 +49,22 @@ auto make_config_parser(advection::config& cfg) {
         ;
 }
 
+template <typename Fun>
+void with_problem(const std::string& name, double peclet, Fun&& fun) {
+    auto epsilon = 1 / peclet;
+
+    if (name == "erikkson") {
+        fun(erikkson{epsilon});
+    } else if (name == "problem1") {
+        fun(problem1{epsilon});
+    } else {
+        std::cerr << "Unknown problem: " << name << std::endl;
+        std::exit(-1);
+    }
+}
+
 int main(int argc, char* argv[]) {
+    std::string problem;
     int nx;
     int ny;
     int p_trial;
@@ -63,10 +79,11 @@ int main(int argc, char* argv[]) {
     bool print_dof_count = false;
     bool print_dims = false;
 
-    advection::config cfg;
+    advection_config cfg;
 
     bool help = false;
     auto cli = Help(help)
+        | Arg(problem, "problem").required()
         | Arg(nx, "Nx").required()
         | Arg(ny, "Ny").required()
         | Arg(p_trial, "p trial").required()
@@ -90,8 +107,8 @@ int main(int argc, char* argv[]) {
         cli.writeToStream(std::cout);
         return 0;
     }
-    if (argc < 7) {
-        std::cerr << "Usage: cg <Nx> <Ny> <p trial> <C trial> <p test> <C test>" << std::endl;
+    if (argc < 8) {
+        std::cerr << "Usage: cg <problem> <Nx> <Ny> <p trial> <C trial> <p test> <C test>" << std::endl;
         std::exit(1);
     }
 
@@ -118,6 +135,9 @@ int main(int argc, char* argv[]) {
 
     if (print_dof_count) print_dofs(dtrial_x, dtest_x);
 
-    auto sim = advection{dtrial_x, dtrial_y, dtest_x, dtest_y, peclet, cfg};
-    sim.run();
+    with_problem(problem, peclet, [&](auto prob) {
+        using Problem = decltype(prob);
+        auto sim = advection<Problem>{dtrial_x, dtrial_y, dtest_x, dtest_y, peclet, cfg, prob};
+        sim.run();
+    });
 }

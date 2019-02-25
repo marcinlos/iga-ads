@@ -15,31 +15,33 @@
 
 namespace ads {
 
+struct advection_config {
+    double tol_outer = 1e-7;
+    double tol_inner = 1e-7;
+    int max_outer_iters = 100;
+    int max_inner_iters = 250;
 
+    bool use_cg = true;
+    bool weak_bc = false;
+
+    bool print_inner = false;
+    bool print_inner_count = true;
+    bool print_outer = true;
+    bool print_outer_count = true;
+    bool print_inner_total = true;
+
+    bool print_times = false;
+    bool print_errors = true;
+    bool plot = true;
+
+    int threads = 8;
+};
+
+
+template <typename Problem>
 class advection : public erikkson_base {
 public:
 
-    struct config {
-        double tol_outer = 1e-7;
-        double tol_inner = 1e-7;
-        int max_outer_iters = 100;
-        int max_inner_iters = 250;
-
-        bool use_cg = true;
-        bool weak_bc = false;
-
-        bool print_inner = false;
-        bool print_inner_count = true;
-        bool print_outer = true;
-        bool print_outer_count = true;
-        bool print_inner_total = true;
-
-        bool print_times = false;
-        bool print_errors = true;
-        bool plot = true;
-
-        int threads = 8;
-    };
 
 private:
     using Base = erikkson_base;
@@ -52,7 +54,6 @@ private:
     dimension& Vx;
     dimension& Vy;
 
-    // New stuff
     lin::band_matrix MVx, MVy;
     lin::band_matrix KVx, KVy;
 
@@ -70,7 +71,8 @@ private:
     double peclet;
     double epsilon = 1 / peclet;
 
-    config cfg;
+    advection_config cfg;
+    Problem problem;
 
     mumps::solver solver;
 
@@ -82,8 +84,10 @@ private:
 
     int total_CG_iters = 0;
 
+    boundary dirichlet;
+
 public:
-    advection(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, double peclet, const config& cfg)
+    advection(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, double peclet, const advection_config& cfg, Problem problem)
     : Base{std::move(test_x), std::move(test_y), timesteps_config(1, 0.0)}
     , executor{ cfg.threads }
     , Ux{ std::move(trial_x) }
@@ -105,8 +109,9 @@ public:
     , h{ element_diam(Ux, Uy) }
     , peclet{ peclet }
     , cfg{ cfg }
+    , problem{ problem }
     , output{ Ux.B, Uy.B, 500 }
-    , dirichlet { cfg.weak_bc ? boundary::none : boundary::full }
+    , dirichlet{ cfg.weak_bc ? boundary::none : boundary::full }
     {
         int p = Vx.basis.degree;
         gamma = 3 * epsilon * p * p / h;
@@ -902,7 +907,7 @@ private:
     }
 
     auto exact() const {
-        return [&](point_type x) { return solution(x[0], x[1]); };
+        return [&](point_type x) { return solution(x); };
     }
 
     double errorL2_abs() const {
@@ -959,7 +964,7 @@ private:
         for_sides(dirichlet, [&](auto side) {
             this->dirichlet_bc(u, side, x, y, [&](double t) {
                 auto x = boundary_point(t, side);
-                return g(x);
+                return this->g(x);
             });
         });
     }
@@ -968,24 +973,7 @@ private:
         for_sides(dirichlet, [&](auto side) { this->dirichlet_bc(u, side, x, y, 0); });
     }
 
-
-
-    // --------------------
-    // Problem definition
-    // --------------------
-
-    double diffusion(point_type /*x*/) const {
-        return epsilon;
-    }
-
-    point_type beta(point_type /*x*/) const {
-        return {1, 0};
-    }
-
-    double F(point_type /*x*/) const {
-        return 0;
-    }
-
+    // Forms
     double B(value_type u, value_type v, point_type x) const {
         auto diff = diffusion(x);
         return diff * grad_dot(u, v) + dot(beta(x), u) * v.val;
@@ -1007,27 +995,40 @@ private:
     }
 
     // Scalar product
-
     double A(value_type u, value_type v) const {
         return u.val * v.val + h * h * grad_dot(u, v);
     }
 
+    // --------------------
+    // Problem definition
+    // --------------------
+
+    double diffusion(point_type x) const {
+        return problem.diffusion(x);
+    }
+
+    point_type beta(point_type x) const {
+        return problem.beta(x);
+    }
+
+    // forcing
+    double F(point_type x) const {
+        return problem.forcing(x);
+    }
+
     // Boundary conditions
-
-    boundary dirichlet;
-
     double g(point_type x) const {
-        return x[0] == 0 ? std::sin(M_PI * x[1]) : 0;
+        return problem.boundary(x);
     }
 
     // Exact solution
-    value_type solution(double x, double y) const {
-        return erikkson_exact(x, y, epsilon);
+    value_type solution(point_type x) const {
+        return problem.solution(x);
     }
-
 
 };
 
 }
+
 
 #endif // PROBLEMS_CG_ADVECTION_HPP
