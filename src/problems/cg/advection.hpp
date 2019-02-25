@@ -533,22 +533,23 @@ private:
         auto delta = theta;
 
         auto Mp = vector_type{{ Ux.dofs(), Uy.dofs() }};
-        // auto q_prev = q;
 
         int i = 0;
         for (; i < cfg.max_inner_iters; ++ i) {
             // theta = Bp
             apply_B(p, theta);
+            zero_bc(theta, Vx, Vy);
 
             // delta = A~ \ theta
             delta = theta;
             solve_A(delta);
 
-            // alpha = (p, q) / (p, Mp) !!! (q, q)
+            // alpha = (p, q) / (p, Mp)
             double alpha = dot(p, q, Ux, Uy) / dot(theta, delta, Vx, Vy);
 
             // Mp = B' delta
             apply_Bt(delta, Mp);
+            zero_bc(Mp, Ux, Uy);
 
             double qnorm2_prev = norm_sq(q, Ux, Uy);
             // u := u + alpha p
@@ -605,17 +606,18 @@ private:
         for (; i < cfg.max_outer_iters ; ++ i) {
             // dd = A~ \ (F + Kr - Bu)
             compute_dd(Vx, Vy, dd);
-            apply_bc(dd, Vx, Vy);
+            zero_bc(dd, Vx, Vy);
             solve_A(dd);
 
             // dc = B' dd
             apply_Bt(dd, dc);
+            zero_bc(dc, Ux, Uy);
 
             auto c = cfg.use_cg ? substep_CG(dc) : substep_mumps();
 
             // Bc = A~ \ B c
             apply_B(c, Bc);
-            apply_bc(Bc, Vx, Vy);
+            zero_bc(Bc, Vx, Vy);
             solve_A(Bc);
 
             // r + d = dd - A~ \ B c
@@ -958,6 +960,10 @@ private:
                 return g(x);
             });
         });
+    }
+
+    void zero_bc(vector_type& u, dimension& x, dimension& y) {
+        for_sides(dirichlet, [&](auto side) { this->dirichlet_bc(u, side, x, y, 0); });
     }
 
 
