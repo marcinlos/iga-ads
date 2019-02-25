@@ -42,7 +42,8 @@ auto make_config_parser(advection::config& cfg) {
         Opt(cfg.print_inner_total, "print total number of inner iterations?")["--print-inner-total"] |
         Opt(cfg.print_times, "print integration and solver times?")["--print-times"] |
         Opt(cfg.print_errors, "print solution errors?")["--print-errors"] |
-        Opt(cfg.plot, "save data for plots?")["--plots"]
+        Opt(cfg.plot, "save data for plots?")["--plots"] |
+        Opt(cfg.threads, "number of threads")["--threads"]
         ;
 }
 

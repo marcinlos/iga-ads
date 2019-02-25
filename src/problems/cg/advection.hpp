@@ -36,6 +36,8 @@ public:
         bool print_times = false;
         bool print_errors = true;
         bool plot = true;
+
+        int threads = 8;
     };
 
 private:
@@ -82,6 +84,7 @@ private:
 public:
     advection(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, double peclet, const config& cfg)
     : Base{std::move(test_x), std::move(test_y), timesteps_config(1, 0.0)}
+    , executor{ cfg.threads }
     , Ux{ std::move(trial_x) }
     , Uy{ std::move(trial_y) }
     , Vx{ x }
