@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
         | Arg(p_test, "p test").required()
         | Arg(C_test, "C test").required()
         | Opt(adapt_x, "adapt in x direction")["--adaptx"]
-        | Opt(adapt_x, "adapt in y direction")["--adapty"]
+        | Opt(adapt_y, "adapt in y direction")["--adapty"]
         | Opt(peclet, "Peclet number")["--Pe"]
         | Opt(print_dof_count, "print # of DOFs")["--dofs"]
         | Opt(print_dims, "print dimensions of spacs")["--dims"]
