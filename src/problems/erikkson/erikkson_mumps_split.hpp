@@ -275,18 +275,18 @@ private:
         output.to_file(u, "out_0.data");
     }
 
-    void copy_solution(const vector_view& u_rhs, vector_type& u) {
+    void copy_solution(const vector_view& u_rhs, const vector_view& r_rhs, vector_type& u) {
         for (auto i = 0; i < Ux.dofs(); ++ i) {
             for (auto j = 0; j < Uy.dofs(); ++ j) {
                 u(i, j) = u_rhs(i, j);
             }
         }
-        // r = residuum{ {{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy };
-        // for (auto i = 0; i < Vx.dofs(); ++ i) {
-        //     for (auto j = 0; j < Vy.dofs(); ++ j) {
-        //         r.data(i, j) = r_rhs(i, j);
-        //     }
-        // }
+        r = residuum{ {{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy };
+        for (auto i = 0; i < Vx.dofs(); ++ i) {
+            for (auto j = 0; j < Vy.dofs(); ++ j) {
+                r.data(i, j) = r_rhs(i, j);
+            }
+        }
     }
 
     template <typename Fun>
@@ -314,7 +314,7 @@ private:
         assemble_problem(problem, Lx_lhs, Ly_lhs, sx, sy, Vx, Vy, matrices(x_refine, y_refine));
         solver.solve(problem);
 
-        copy_solution(u_rhs, u);
+        copy_solution(u_rhs, r_rhs, u);
     }
 
     void step(int iter, double t) override {
@@ -359,7 +359,8 @@ private:
             // output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
         std::cout << iter << " " << t << " " << errorL2(u, t) << " " << errorH1(u, t) << " "
-                  << rel_errorL2(u, t) << " " << rel_errorH1(u, t) << std::endl;
+                  << rel_errorL2(u, t) << " " << rel_errorH1(u, t) << " "
+                  << normL2(r.data, Vx, Vy) << " " << normH1(r.data, Vx, Vy) << std::endl;
     }
 
     void after() override {
@@ -454,6 +455,34 @@ private:
     //     });
     // }
 
+
+
+    template <typename Sol, typename Norm>
+    double norm(const Sol& u, const dimension& Ux, const dimension& Uy, Norm&& n) const {
+        double error = 0;
+        for (auto e : elements(Ux, Uy)) {
+            double J = jacobian(e, Ux, Uy);
+            for (auto q : quad_points(Ux, Uy)) {
+                double w = weigth(q, Ux, Uy);
+                value_type uu = eval(u, e, q, Ux, Uy);
+                error += n(uu) * w * J;
+            }
+        }
+        return std::sqrt(error);
+    }
+
+    template <typename Sol>
+    double normL2(const Sol& u, const dimension& Ux, const dimension& Uy) const {
+        auto L2 = [](value_type a) { return a.val * a.val; };
+        return norm(u, Ux, Uy, L2);
+    }
+
+    template <typename Sol>
+    double normH1(const Sol& u, const dimension& Ux, const dimension& Uy) const {
+        auto H1 = [](value_type a) { return a.val * a.val + a.dx * a.dx + a.dy * a.dy; };
+        return norm(u, Ux, Uy, H1);
+    }
+
     double errorL2(const vector_type& u, double t) const {
         // auto sol = exact(epsilon);
         // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
@@ -472,12 +501,12 @@ private:
 
     double rel_errorL2(const vector_type& u, double t) const {
         auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
-        return Base::errorL2(u, Ux, Uy, sol) / normL2(Ux, Uy, sol) * 100;
+        return Base::errorL2(u, Ux, Uy, sol) / Base::normL2(Ux, Uy, sol) * 100;
     }
 
     double rel_errorH1(const vector_type& u, double t) const {
         auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
-        return Base::errorH1(u, Ux, Uy, sol) / normH1(Ux, Uy, sol) * 100;
+        return Base::errorH1(u, Ux, Uy, sol) / Base::normH1(Ux, Uy, sol) * 100;
     }
 };
 
