@@ -65,6 +65,8 @@ private:
 
     output_manager<2> output;
 
+    Galois::StatTimer solver_timer{"solver"};
+
 public:
     pollution_rotation(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, const timesteps_config& steps)
     : Base{std::move(test_x), std::move(test_y), steps}
@@ -300,7 +302,10 @@ private:
         int size = Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs();
         mumps::problem problem(full_rhs.data(), size);
         assemble_problem2(problem, Vx, Vy, matrices(x_refined, y_refined));
+
+        solver_timer.start();
         solver.solve(problem);
+        solver_timer.stop();
 
         add_solution(u_rhs, r_rhs, Vx, Vy);
         return norm(u_rhs);
@@ -332,7 +337,11 @@ private:
     void after() override {
         plot_middle("final.data", u, Ux, Uy);
         double T = steps.dt * steps.step_count;
-        std::cout << "{ 'L2': '" << errorL2(T) << "', 'H1': '" << errorH1(T) << "'}" << std::endl;
+        std::cout << "{ 'L2': '" << errorL2(T)
+                  << "', 'H1': '" << errorH1(T)
+                  << "', 'solver': " << static_cast<double>(solver_timer.get()) / steps.step_count
+                  << ", 'dofs': " << Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs()
+                  << "}" << std::endl;
         print_solution("solution.data", u, Ux, Uy);
     }
 
