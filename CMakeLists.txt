@@ -155,6 +155,9 @@ if (NOT SKIP_PROBLEMS)
     define_problem(stokes
       src/problems/stokes/main.cpp)
 
+    define_problem(stokes_dg
+      src/problems/stokes/main_dg.cpp)
+
     define_problem(demkowicz
       src/problems/demkowicz/main.cpp)
 
