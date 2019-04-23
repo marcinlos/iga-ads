@@ -4,8 +4,8 @@
 
 #include "ads/bspline/bspline.hpp"
 #include "problems/stokes/stokes.hpp"
-#include "problems/stokes/stokes_conforming.hpp"
-#include "problems/stokes/stokes_constrained.hpp"
+// #include "problems/stokes/stokes_conforming.hpp"
+// #include "problems/stokes/stokes_constrained.hpp"
 #include "problems/stokes/stokes_dg.hpp"
 
 
@@ -197,6 +197,7 @@ int main2(int argc, char* argv[]) {
                                                  [](auto uu, auto vv, auto x, auto n) {
                                                      return jump(uu).val * dot(average(vv), n);
                                                  }) << std::endl;
+    return 0;
 }
 
 

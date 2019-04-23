@@ -221,8 +221,8 @@ public:
         auto test_vy = shifted(DU1, DU1, problem);
         auto test_p = shifted(DU1 + DU2, DU1 + DU2, problem);
 
-        auto test_vxy = shifted(0, DU1, problem);
-        auto test_vyx = shifted(DU1, 0, problem);
+        // auto test_vxy = shifted(0, DU1, problem);
+        // auto test_vyx = shifted(DU1, 0, problem);
 
         auto trial_vx = shifted(D, D, problem);
         auto trial_vy = shifted(D + dU1, D + dU1, problem);
@@ -235,22 +235,23 @@ public:
         // w = (tx, ty, w)
         // u = (vx, vy, p)
 
-        // w, p -> (w, p) + hh (\/w, \/p)
+        // w, p -> hh ([w], [p])
         for (auto i : dofs(test.Px, test.Py)) {
             for (auto j : overlapping_dofs(i, test.Px, test.Py)) {
                 int ii = linear_index(i, test.Px, test.Py) + 1;
                 int jj = linear_index(j, test.Px, test.Py) + 1;
-                auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, test.Px, test.Py, form); };
 
                 if (! is_pressure_fixed(i) && ! is_pressure_fixed(j)) {
-                    test_p(ii, jj, eval([hh](auto w, auto u) {
-                        return w.val * u.val;// + hh * (w.dx * u.dx + w.dy * u.dy);
-                    }));
+                    auto form = [this](auto ww, auto pp, auto, auto) {
+                        return h * jump(ww).val * jump(pp).val;
+                    };
+                    double val = integrate_over_internal_skeleton(i, j, test.Px, test.Py, test.Px, test.Py, form);
+                    test_p(ii, jj, val);
                 }
             }
         }
 
-        // tx, vx -> (tx, vx) + hh (tx,x, vx,x)
+        // tx, vx -> (\/tx, \/vx) + 1/h ([tx], [vx])
         for (auto i : dofs(test.U1x, test.U1y)) {
             for (auto j : overlapping_dofs(i, test.U1x, test.U1y)) {
                 int ii = linear_index(i, test.U1x, test.U1y) + 1;
@@ -258,14 +259,21 @@ public:
                 auto eval = [&](auto form) { return integrate(i, j, test.U1x, test.U1y, test.U1x, test.U1y, form); };
 
                 if (! is_boundary(i[0], test.U1x) && ! is_boundary(j[0], test.U1x)) {
-                    test_vx(ii, jj, eval([hh](auto w, auto u) {
-                        return w.val * u.val + /*hh **/ w.dx * u.dx        + w.dy * u.dy;
-                    }));
+                    double val = eval([](auto w, auto u) {
+                        return w.dx * u.dx + w.dy * u.dy;
+                    });
+                    // skeleton
+                    auto form = [this](auto tx, auto vx, auto, auto) {
+                        return 1/h * jump(tx).val * jump(vx).val;
+                    };
+                    val += integrate_over_skeleton(i, j, test.U1x, test.U1y, test.U1x, test.U1y, form);
+
+                    test_vx(ii, jj, val);
                 }
             }
         }
 
-        // ty, vy -> (ty, vy) + hh (ty,y, vy,y)
+        // ty, vy -> (\/ty, \/vy) + 1/h ([ty], [vy])
         for (auto i : dofs(test.U2x, test.U2y)) {
             for (auto j : overlapping_dofs(i, test.U2x, test.U2y)) {
                 int ii = linear_index(i, test.U2x, test.U2y) + 1;
@@ -273,31 +281,19 @@ public:
                 auto eval = [&](auto form) { return integrate(i, j, test.U2x, test.U2y, test.U2x, test.U2y, form); };
 
                 if (! is_boundary(i[1], test.U2y) && ! is_boundary(j[1], test.U2y)) {
-                    test_vy(ii, jj, eval([hh](auto w, auto u) {
-                        return w.val * u.val + /*hh **/ w.dy * u.dy       + w.dx + u.dx;
-                    }));
+                    double val = eval([](auto w, auto u) {
+                        return w.dy * u.dy + w.dx + u.dx;
+                    });
+                    // skeleton
+                    auto form = [this](auto ty, auto vy, auto, auto) {
+                        return 1/h * jump(ty).val * jump(vy).val;
+                    };
+                    val += integrate_over_skeleton(i, j, test.U2x, test.U2y, test.U2x, test.U2y, form);
+
+                    test_vy(ii, jj, val);
                 }
             }
         }
-
-        /*
-        // tx, vy -> hh (tx,x, vy,y)
-        // ty, vx -> hh (ty,y, vx,x)
-        for (auto i : dofs(test.U1x, test.U1y)) {
-            for (auto j : dofs(test.U2x, test.U2y)) {
-                if (! overlap(i, test.U1x, test.U1y, j, test.U2x, test.U2y)) continue;
-
-                int ii = linear_index(i, test.U1x, test.U1y) + 1;
-                int jj = linear_index(j, test.U2x, test.U2y) + 1;
-                auto eval = [&](auto form) { return integrate(i, j, test.U1x, test.U1y, test.U2x, test.U2y, form); };
-
-                if (! is_boundary(i[0], test.U1x) && ! is_boundary(j[1], test.U2y)) {
-                    test_vxy(ii, jj, eval([hh](auto w, auto u) { return hh * w.dx * u.dy; }));
-                    test_vyx(ii, jj, eval([hh](auto w, auto u) { return hh * w.dy * u.dx; }));
-                }
-            }
-        }
-        */
 
         // Dirichlet BC - test space
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -337,7 +333,7 @@ public:
 
         auto pen_term = [this](auto w, auto u) { return - 2 * Cpen / hF * w.val * u.val; };
 
-        // tx, vx -> (\/tx, \/vx)
+        // tx, vx -> (\/tx, \/vx) - ({\/tx}, [vx])
         for (auto i : dofs(test.U1x, test.U1y)) {
             for (auto j : dofs(trial.U1x, trial.U1y)) {
                 if (! overlap(i, test.U1x, test.U1y, j, trial.U1x, trial.U1y)) continue;
@@ -350,6 +346,12 @@ public:
                 bool bd_j = is_boundary(j[0], trial.U1x);
 
                 double value = eval([](auto w, auto u) { return w.dx * u.dx + w.dy * u.dy; });
+
+                // skeleton
+                auto form = [this](auto vx, auto tx, auto, auto n) {
+                    return dot(average(tx), n) * jump(vx).val;
+                };
+                value += integrate_over_skeleton(i, j, test.U1x, test.U1y, trial.U1x, trial.U1y, form);
 
                 // boundary terms
                 // top/bottom
@@ -364,7 +366,7 @@ public:
             }
         }
 
-        // ty, vy -> (\/ty, \/vy)
+        // ty, vy -> (\/ty, \/vy) - ({\/ty}, [vy])
         for (auto i : dofs(test.U2x, test.U2y)) {
             for (auto j : dofs(trial.U2x, trial.U2y)) {
                 if (! overlap(i, test.U2x, test.U2y, j, trial.U2x, trial.U2y)) continue;
@@ -377,6 +379,12 @@ public:
                 bool bd_j = is_boundary(j[1], trial.U2y);
 
                 double value = eval([](auto w, auto u) { return w.dx * u.dx + w.dy * u.dy; });
+
+                // skeleton
+                auto form = [this](auto vy, auto ty, auto, auto n) {
+                    return dot(average(ty), n) * jump(vy).val;
+                };
+                value += integrate_over_skeleton(i, j, test.U2x, test.U2y, trial.U2x, trial.U2y, form);
 
                 // boundary terms
                 // left/right
@@ -403,7 +411,8 @@ public:
                 bool fixed_i = is_pressure_fixed(i);
                 bool bd_j = is_boundary(j[0], trial.U1x);
 
-                put(ii, jj, DU1 + DU2, 0, eval([](auto w, auto u) { return w.val * u.dx; }), fixed_i, bd_j);
+                double val = eval([](auto w, auto u) { return w.val * u.dx; });
+                put(ii, jj, DU1 + DU2, 0, val, fixed_i, bd_j);
             }
         }
 
@@ -419,7 +428,8 @@ public:
                 bool fixed_i = is_pressure_fixed(i);
                 bool bd_j = is_boundary(j[1], trial.U2y);
 
-                put(ii, jj, DU1 + DU2, dU1, eval([](auto w, auto u) { return w.val * u.dy; }), fixed_i, bd_j);
+                double val = eval([](auto w, auto u) { return w.val * u.dy; });
+                put(ii, jj, DU1 + DU2, dU1, val, fixed_i, bd_j);
             }
         }
 
@@ -435,7 +445,14 @@ public:
                 bool bd_i = is_boundary(i[0], test.U1x);
                 bool fixed_j = is_pressure_fixed(j);
 
-                put(ii, jj, 0, dU1 + dU2, eval([](auto w, auto u) { return -w.dx * u.val; }), bd_i, fixed_j);
+                double val = eval([](auto w, auto u) { return -w.dx * u.val; });
+                // skeleton
+                auto form = [this](auto tx, auto p, auto, auto n) {
+                    return dot(average(p), n) * jump(tx).val;
+                };
+                val += integrate_over_skeleton(i, j, test.U1x, test.U1y, trial.Px, trial.Py, form);
+
+                put(ii, jj, 0, dU1 + dU2, val, bd_i, fixed_j);
             }
         }
 
@@ -451,7 +468,14 @@ public:
                 bool bd_i = is_boundary(i[1], test.U2y);
                 bool fixed_j = is_pressure_fixed(j);
 
-                put(ii, jj, DU1, dU1 + dU2, eval([](auto w, auto u) { return -w.dy * u.val; }), bd_i, fixed_j);
+                double val = eval([](auto w, auto u) { return -w.dy * u.val; });
+                // skeleton
+                auto form = [this](auto ty, auto p, auto, auto n) {
+                    return dot(average(p), n) * jump(ty).val;
+                };
+                val += integrate_over_skeleton(i, j, test.U2x, test.U2y, trial.Px, trial.Py, form);
+
+                put(ii, jj, DU1, dU1 + dU2, val, bd_i, fixed_j);
             }
         }
 
@@ -789,6 +813,45 @@ public:
         return val;
     }
 
+    template <typename Form>
+    double integrate_over_skeleton(index_type i, index_type j,
+                                   const dimension& Ux, const dimension& Uy,
+                                   const dimension& Vx, const dimension& Vy,
+                                   Form&& form) const {
+        double val = 0;
+        // TODO: restrict the range
+        for (int ix = 0; ix <= Ux.elements; ++ ix) {
+            for (auto ey : Uy.element_indices()) {
+                val += integrate_vface(ix, ey, i, j, Ux, Uy, Vx, Vy, form);
+            }
+        }
+        for (auto ex : Ux.element_indices()) {
+            for (int iy = 0; iy <= Uy.elements; ++ iy) {
+                val += integrate_hface(iy, ex, i, j, Ux, Uy, Vx, Vy, form);
+            }
+        }
+        return val;
+    }
+
+    template <typename Form>
+    double integrate_over_internal_skeleton(index_type i, index_type j,
+                                            const dimension& Ux, const dimension& Uy,
+                                            const dimension& Vx, const dimension& Vy,
+                                            Form&& form) const {
+        double val = 0;
+        // TODO: restrict the range
+        for (int ix = 1; ix < Ux.elements; ++ ix) {
+            for (auto ey : Uy.element_indices()) {
+                val += integrate_vface(ix, ey, i, j, Ux, Uy, Vx, Vy, form);
+            }
+        }
+        for (auto ex : Ux.element_indices()) {
+            for (int iy = 1; iy < Uy.elements; ++ iy) {
+                val += integrate_hface(iy, ex, i, j, Ux, Uy, Vx, Vy, form);
+            }
+        }
+        return val;
+    }
 
 };
 

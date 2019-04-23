@@ -7,9 +7,8 @@
 #include "problems/stokes/stokes_conforming.hpp"
 #include "problems/stokes/stokes_constrained.hpp"
 
-
-
 using namespace ads;
+
 
 int main(int argc, char* argv[]) {
     if (argc != 6) {
@@ -81,6 +80,8 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     } else {
         std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
+        auto dofs = trial_dim * trial_dim + test_dim * test_dim;
+        std::cout << "dofs = " << dofs << std::endl;
     }
 
     auto trial = space_set{
@@ -96,8 +97,8 @@ int main(int argc, char* argv[]) {
     };
 
     // auto sim = stokes_conforming{trial, test, steps};
-    auto sim = stokes_constrained{trial, test, steps};
-    // auto sim = stokes{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
+    // auto sim = stokes_constrained{trial, test, steps};
+    auto sim = stokes{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
 
     sim.run();
 }

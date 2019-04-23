@@ -168,6 +168,10 @@ public:
         double vyL2 = errorL2(vy, Ux, Uy, e_vy) / normL2(Ux, Uy, e_vy) * 100;
         double vyH1 = errorH1(vy, Ux, Uy, e_vy) / normH1(Ux, Uy, e_vy) * 100;
 
+        double vL2 = std::hypot(vxL2, vyL2) / std::sqrt(2);
+        double vH1 = std::hypot(vxH1, vyH1) / std::sqrt(2);
+
+
         double pL2 = errorL2(p, Ux, Uy, e_p) / normL2(Ux, Uy, e_p) * 100;
         double pH1 = errorH1(p, Ux, Uy, e_p) / normH1(Ux, Uy, e_p) * 100;
 
@@ -175,8 +179,9 @@ public:
         double divH1 = div_errorH1(vx, vy, Ux, Uy, div) * 100;
 
         std::cout.precision(3);
-        std::cout << "vx  : L2 = " << vxL2   << "%, H1 = " << vxH1   << "%" << std::endl;
-        std::cout << "vy  : L2 = " << vyL2   << "%, H1 = " << vyH1   << "%" << std::endl;
+        // std::cout << "vx  : L2 = " << vxL2   << "%, H1 = " << vxH1   << "%" << std::endl;
+        // std::cout << "vy  : L2 = " << vyL2   << "%, H1 = " << vyH1   << "%" << std::endl;
+        std::cout << "v   : L2 = " << vL2    << "%, H1 = " << vH1    << "%" << std::endl;
         std::cout << "p   : L2 = " << pL2    << "%, H1 = " << pH1    << "%" << std::endl;
         std::cout << "div : L2 = " << divL2  << ", H1 = " << divH1  << std::endl;
     }
