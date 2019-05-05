@@ -262,22 +262,24 @@ public:
                 // u = (vx, vy, p)
 
                 if (! is_pressure_fixed(i) && ! is_pressure_fixed(j)) {
-                    // w, p -> (w, p) + hh (\/w, \/p)
-                    test_p(ii, jj, M + hh * (Kx + Ky));
+                    // w, p -> (w, p) // + hh (\/w, \/p)
+                    test_p(ii, jj, M/* + hh * (Kx + Ky)*/);
                 }
 
                 if (! is_boundary(i, Vx, Vy) && ! is_boundary(j, Vx, Vy)) {
                     // tx, vx -> (tx, vx) + hh (tx,x, vx,x)
-                    test_vx(ii, jj, M + hh * Kx);
+                    // tx, vx -> (\/tx, \/vx)
+                    test_vx(ii, jj, /*M + hh */ Kx + Ky);
 
                     // ty, vy -> (ty, vy) + hh (ty,y, vy,y)
-                    test_vy(ii, jj, M + hh * Ky);
+                    // ty, vy -> (\/ty, \/vy)
+                    test_vy(ii, jj, /*M + hh */ Kx + Ky);
 
                     // tx, vy -> hh (tx,x, vy,y)
-                    test_vxy(ii, jj, hh * Ax);
+                    // test_vxy(ii, jj, hh * Ax);
 
                     // ty, vx -> hh (ty,y, vx,x)
-                    test_vyx(ii, jj, hh * Ay);
+                    // test_vyx(ii, jj, hh * Ay);
                 }
             }
         }
