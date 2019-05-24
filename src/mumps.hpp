@@ -81,7 +81,7 @@ public:
         icntl(7) = 5;
 
         // extra space factor
-        icntl(14) = 1500;
+        icntl(14) = 500;
 
         //streams
         icntl(1) = 3;

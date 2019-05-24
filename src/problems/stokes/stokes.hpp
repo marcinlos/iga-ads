@@ -179,8 +179,8 @@ public:
         double divH1 = div_errorH1(vx, vy, Ux, Uy, div) * 100;
 
         std::cout.precision(3);
-        // std::cout << "vx  : L2 = " << vxL2   << "%, H1 = " << vxH1   << "%" << std::endl;
-        // std::cout << "vy  : L2 = " << vyL2   << "%, H1 = " << vyH1   << "%" << std::endl;
+        std::cout << "vx  : L2 = " << vxL2   << "%, H1 = " << vxH1   << "%" << std::endl;
+        std::cout << "vy  : L2 = " << vyL2   << "%, H1 = " << vyH1   << "%" << std::endl;
         std::cout << "v   : L2 = " << vL2    << "%, H1 = " << vH1    << "%" << std::endl;
         std::cout << "p   : L2 = " << pL2    << "%, H1 = " << pH1    << "%" << std::endl;
         std::cout << "div : L2 = " << divL2  << ", H1 = " << divH1  << std::endl;
