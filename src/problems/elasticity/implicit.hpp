@@ -431,7 +431,7 @@ namespace problems {
 
         point_type force(point_type x, double t) const {
             using std::pow;
-            constexpr double t0 = 0.02;
+            constexpr double t0 = 1;
             double tt = t / t0;
             double f = tt < 1 ? pow(tt * (1 - tt), 2) : 0;
             double r = pow(x[0] - 1, 2) + pow(x[1] - 1, 2) + pow(x[2] - 1, 2);
@@ -506,41 +506,42 @@ namespace problems {
         }
 
         void after_step(int iter, double t) override {
-            if ((iter + 1) % save_every == 0) {
-                // std::cout << "** Iteration " << iter << ", t = " << t << std::endl;
+            iter += 1;
+            if (iter % save_every == 0) {
+                std::cout << "** Iteration " << iter << ", t = " << t + steps.dt << std::endl;
 
                 double Ek = kinetic_energy();
                 double Ep = potential_energy();
                 // compute_potential_energy();
 
-                // std::cout << "Kinetic energy: " << Ek << std::endl;
-                // std::cout << "Potential energy: " << Ep << std::endl;
-                // std::cout << "Total energy: " << Ek + Ep << std::endl;
+                std::cout << "Kinetic energy: " << Ek << std::endl;
+                std::cout << "Potential energy: " << Ep << std::endl;
+                std::cout << "Total energy: " << Ek + Ep << std::endl;
 
-                // std::cout << "Total disp:   : " << total() << std::endl;
-                // std::cout << std::endl;
+                std::cout << "Total disp:   : " << total() << std::endl;
+                std::cout << std::endl;
 
                 // output.to_file("out_%d.vti", iter*10,
                                // output.evaluate(now.ux),
                                // output.evaluate(now.uy),
                                // output.evaluate(now.uz),
                                // output.evaluate(energy));
-                std::cout << iter << " " << t << " " << Ek << " " << Ep << " " << Ek + Ep << std::endl;
-                std::cout << "Step " << (iter + 1) << ", t = " << t << std::endl;
+                // std::cout << iter << " " << t << " " << Ek << " " << Ep << " " << Ek + Ep << std::endl;
+                // std::cout << "Step " << (iter + 1) << ", t = " << t << std::endl;
 
-                int num = (iter + 1) / save_every;
-                auto name = str(boost::format("out_%d.data") % num);
-                std::ofstream sol(name);
-                for (int i = 0; i < x.dofs(); ++ i) {
-                    for (int j = 0; j < y.dofs(); ++ j) {
-                        for (int k = 0; k < z.dofs(); ++ k) {
-                            sol << i << " " << j << " " << " " << k << " "
-                                << now.ux(i, j, k) << " "
-                                << now.uy(i, j, k) << " "
-                                << now.uz(i, j, k) << std::endl;
-                        }
-                    }
-                }
+                // int num = (iter + 1) / save_every;
+                // auto name = str(boost::format("out_%d.data") % num);
+                // std::ofstream sol(name);
+                // for (int i = 0; i < x.dofs(); ++ i) {
+                //     for (int j = 0; j < y.dofs(); ++ j) {
+                //         for (int k = 0; k < z.dofs(); ++ k) {
+                //             sol << i << " " << j << " " << " " << k << " "
+                //                 << now.ux(i, j, k) << " "
+                //                 << now.uy(i, j, k) << " "
+                //                 << now.uz(i, j, k) << std::endl;
+                //         }
+                //     }
+                // }
             }
         }
 

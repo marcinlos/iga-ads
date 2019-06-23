@@ -260,6 +260,45 @@ private:
         return local;
     }
 
+    state local_contribution_truncated(index_type e, double t) const {
+        auto local = state{ local_shape() };
+        double dt = steps.dt / 3.0;
+
+        double J = jacobian(e);
+        for (auto q : quad_points()) {
+            auto x = point(e, q);
+            double w = weigth(q);
+            value_type ux = eval_fun(prev.ux, e, q);
+            value_type uy = eval_fun(prev.uy, e, q);
+            value_type uz = eval_fun(prev.uz, e, q);
+
+            value_type vx = eval_fun(prev.vx, e, q);
+            value_type vy = eval_fun(prev.vy, e, q);
+            value_type vz = eval_fun(prev.vz, e, q);
+
+            value_type ax = eval_fun(prev.ax, e, q);
+            value_type ay = eval_fun(prev.ay, e, q);
+            value_type az = eval_fun(prev.az, e, q);
+
+            auto F = force(x, t);
+
+            for (auto a : dofs_on_element(e)) {
+                value_type b = eval_basis(e, q, a);
+
+                double tt = 0.5 * dt * dt;
+                auto dax = - mi * grad_dot(ux, b) - dt * grad_dot(vx, b) +  F[0] * b.val;
+                auto day = - mi * grad_dot(uy, b) - dt * grad_dot(vy, b) +  F[1] * b.val;
+                auto daz = - mi * grad_dot(uz, b) - dt * grad_dot(vz, b) +  F[2] * b.val;
+
+                auto aa = dof_global_to_local(e, a);
+                ref(local.ax, aa) += dax / rho * w * J;
+                ref(local.ay, aa) += day / rho * w * J;
+                ref(local.az, aa) += daz / rho * w * J;
+            }
+        }
+        return local;
+    }
+
     void apply_local_contribution(const state& loc, index_type e) {
         update_global_rhs(now.ax, loc.ax, e);
         update_global_rhs(now.ay, loc.ay, e);
@@ -377,7 +416,7 @@ private:
 
     point_type force(point_type x, double t) const {
         using std::pow;
-        constexpr double t0 = 0.2;
+        constexpr double t0 = 1;
         double tt = t / t0;
         double f = tt < 1 ? pow(tt * (1 - tt), 2) : 0;
         double r = pow(x[0] - 1, 2) + pow(x[1] - 1, 2) + pow(x[2] - 1, 2);
@@ -403,20 +442,42 @@ private:
         auto dt = steps.dt / 3;
         auto tt = 0.5 * dt * dt;
 
-        add(now.vx, now.ax, dt);
-        add(now.vy, now.ay, dt);
-        add(now.vz, now.az, dt);
+        // add(now.vx, now.ax, dt);
+        // add(now.vy, now.ay, dt);
+        // add(now.vz, now.az, dt);
 
-        add(now.ux, now.vx, dt);
-        add(now.uy, now.vy, dt);
-        add(now.uz, now.vz, dt);
+        // add(now.ux, now.vx, dt);
+        // add(now.uy, now.vy, dt);
+        // add(now.uz, now.vz, dt);
 
-        add(now.ux, now.ax, -tt);
-        add(now.uy, now.ay, -tt);
-        add(now.uz, now.az, -tt);
+        // add(now.ux, now.ax, -tt);
+        // add(now.uy, now.ay, -tt);
+        // add(now.uz, now.az, -tt);
+
+        double beta = 0.25;
+        double gamma = 0.5;
+
+        add(now.ux, prev.vx, dt);
+        add(now.uy, prev.vy, dt);
+        add(now.uz, prev.vz, dt);
+        add(now.ux, prev.ax, tt * (1 - 2 * beta));
+        add(now.uy, prev.ay, tt * (1 - 2 * beta));
+        add(now.uz, prev.az, tt * (1 - 2 * beta));
+        add(now.ux, now.ax, tt * 2 * beta);
+        add(now.uy, now.ay, tt * 2 * beta);
+        add(now.uz, now.az, tt * 2 * beta);
+
+        add(now.vx, prev.ax, dt * (1 - gamma));
+        add(now.vy, prev.ay, dt * (1 - gamma));
+        add(now.vz, prev.az, dt * (1 - gamma));
+
+        add(now.vx, now.ax, dt * gamma);
+        add(now.vy, now.ay, dt * gamma);
+        add(now.vz, now.az, dt * gamma);
+
     }
 
-    void step(int /*iter*/, double t) override {
+    void step_split(int /*iter*/, double t) {
         using std::swap;
 
         for_all(now, [](vector_type& a) { zero(a); });
@@ -463,41 +524,65 @@ private:
         update_u_and_v();
     }
 
+    void step(int /*iter*/, double t) override {
+        using std::swap;
+
+        for_all(now, [](vector_type& a) { zero(a); });
+        executor.for_each(elements(), [&](index_type e) {
+            auto local = local_contribution_truncated(e, t);
+            executor.synchronized([&] {
+                apply_local_contribution(local, e);
+            });
+        });
+
+        auto data_x = ads::dim_data{Kx, x.ctx};
+        auto data_y = ads::dim_data{Ky, y.ctx};
+        auto data_z = ads::dim_data{Kz, z.ctx};
+
+        ads_solve(now.ax, buffer, data_x, data_y, data_z);
+        ads_solve(now.ay, buffer, data_x, data_y, data_z);
+        ads_solve(now.az, buffer, data_x, data_y, data_z);
+
+        update_u_and_v();
+    }
+
     void after_step(int iter, double t) override {
-        if ((iter + 1) % save_every == 0) {
-            // std::cout << "** Iteration " << iter << ", t = " << t << std::endl;
+        iter += 1;
+        if (iter % save_every == 0) {
+            std::cout << "** Iteration " << iter << ", t = " << t + steps.dt << std::endl;
 
-            // double Ek = kinetic_energy();
-            // double Ep = potential_energy();
-            // compute_potential_energy();
+            double Ek = kinetic_energy();
+            double Ep = potential_energy();
+            compute_potential_energy();
 
-            // std::cout << "Kinetic energy: " << Ek << std::endl;
-            // std::cout << "Potential energy: " << Ep << std::endl;
-            // std::cout << "Total energy: " << Ek + Ep << std::endl;
+            std::cout << "Kinetic energy: " << Ek << std::endl;
+            std::cout << "Potential energy: " << Ep << std::endl;
+            std::cout << "Total energy: " << Ek + Ep << std::endl;
 
-            // std::cout << "Total disp:   : " << total() << std::endl;
-            // std::cout << std::endl;
+            std::cout << "Total disp:   : " << total() << std::endl;
+            std::cout << std::endl;
 
             // output.to_file("out_%d.vti", iter,
-                           // output.evaluate(now.ux),
-                           // output.evaluate(now.uy),
-                           // output.evaluate(now.uz),
-                           // output.evaluate(energy));
+            //                output.evaluate(now.ux),
+            //                output.evaluate(now.uy),
+            //                output.evaluate(now.uz),
+            //                output.evaluate(energy));
             // std::cout << iter << " " << t << " " << Ek << " " << Ep << " " << Ek + Ep << std::endl;
-            std::cout << "Step " << (iter + 1) << ", t = " << t << std::endl;
-            int num = (iter + 1) / save_every;
-            auto name = str(boost::format("out_%d.data") % num);
-            std::ofstream sol(name);
-            for (int i = 0; i < x.dofs(); ++ i) {
-                for (int j = 0; j < y.dofs(); ++ j) {
-                    for (int k = 0; k < z.dofs(); ++ k) {
-                        sol << i << " " << j << " " << " " << k << " "
-                            << now.ux(i, j, k) << " "
-                            << now.uy(i, j, k) << " "
-                            << now.uz(i, j, k) << std::endl;
-                    }
-                }
-            }
+
+            // std::cout << "Step " << iter << ", t = " << t << std::endl;
+            // int num = iter / save_every;
+            // auto name = str(boost::format("out_%d.data") % num);
+            // std::ofstream sol(name);
+            // for (int i = 0; i < x.dofs(); ++ i) {
+            //     for (int j = 0; j < y.dofs(); ++ j) {
+            //         for (int k = 0; k < z.dofs(); ++ k) {
+            //             sol << i << " " << j << " " << " " << k << " "
+            //                 << now.ux(i, j, k) << " "
+            //                 << now.uy(i, j, k) << " "
+            //                 << now.uz(i, j, k) << std::endl;
+            //         }
+            //     }
+            // }
         }
     }
 
