@@ -162,6 +162,35 @@ namespace problems {
             return E;
         }
 
+        double huber_reduced() const {
+            double E = 0;
+            for (auto e : elements()) {
+                double J = jacobian(e);
+                for (auto q : quad_points()) {
+                    double w = weigth(q);
+                    value_type ux = eval_fun(now.ux, e, q);
+                    value_type uy = eval_fun(now.uy, e, q);
+                    value_type uz = eval_fun(now.uz, e, q);
+
+                    tensor eps = {
+                        {         ux.dx,         0.5 * (ux.dy + uy.dx), 0.5 * (ux.dz + uz.dx) },
+                        { 0.5 * (ux.dy + uy.dx),         uy.dy,         0.5 * (uy.dz + uz.dy) },
+                        { 0.5 * (ux.dz + uz.dx), 0.5 * (uy.dz + uz.dy),         uz.dz         }
+                    };
+                    tensor s{};
+                    stress_tensor(s, eps);
+                    double U = 0;
+
+                    using std::pow;
+                    U = pow(s[0][0] - s[1][1], 2) + pow(s[0][0] - s[2][2], 2) + pow(s[1][1] - s[2][2], 2)
+                        + 6 * (pow(s[0][1], 2) + pow(s[0][2], 2) + pow(s[1][2], 2));
+
+                    E += w * J * U;
+                }
+            }
+            return E;
+        }
+
         void compute_potential_energy() {
             zero(energy);
             for (auto e : elements()) {
@@ -241,25 +270,29 @@ namespace problems {
         }
 
         void after_step(int iter, double t) override {
-            if (iter % 10 == 0) {
-                std::cout << "** Iteration " << iter << ", t = " << t << std::endl;
+            if (iter % 100 == 0) {
+                // std::cout << "** Iteration " << iter << ", t = " << t << std::endl;
 
                 double Ek = kinetic_energy();
                 double Ep = potential_energy();
-                compute_potential_energy();
+                // compute_potential_energy();
+                double H = huber_reduced() / std::sqrt(2);
 
-                std::cout << "Kinetic energy: " << Ek << std::endl;
-                std::cout << "Potential energy: " << Ep << std::endl;
-                std::cout << "Total energy: " << Ek + Ep << std::endl;
+                // std::cout << "Kinetic energy: " << Ek << std::endl;
+                // std::cout << "Potential energy: " << Ep << std::endl;
+                // std::cout << "Total energy: " << Ek + Ep << std::endl;
 
-                std::cout << "Total disp:   : " << total() << std::endl;
-                std::cout << std::endl;
+                // std::cout << "Total disp:   : " << total() << std::endl;
+                // std::cout << std::endl;
 
-                output.to_file("out_%d.vti", iter*10,
-                               output.evaluate(now.ux),
-                               output.evaluate(now.uy),
-                               output.evaluate(now.uz),
-                               output.evaluate(energy));
+                std::cout << iter << " " << t << " " << Ek << " " << Ep << " " << Ek + Ep << " " << H << std::endl;
+
+
+                // output.to_file("out_%d.vti", iter*10,
+                //                output.evaluate(now.ux),
+                //                output.evaluate(now.uy),
+                //                output.evaluate(now.uz),
+                //                output.evaluate(energy));
             }
         }
 
