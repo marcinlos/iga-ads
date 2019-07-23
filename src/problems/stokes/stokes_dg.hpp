@@ -211,7 +211,8 @@ public:
     }
 
     bool is_pressure_fixed(index_type dof) const {
-        return dof[0] == 0 && dof[1] == 0;
+        // return dof[0] == 0 && dof[1] == 0;
+        return false;
     }
 
     template <typename Form>
@@ -376,8 +377,8 @@ public:
         });
 
 
-        int i = linear_index({0, 0}, test.Px, test.Py) + 1;
-        test_p(i, i, 1.0);
+        // int i = linear_index({0, 0}, test.Px, test.Py) + 1;
+        // test_p(i, i, 1.0);
 
 
         // B, B^t
@@ -635,8 +636,8 @@ public:
             trial_vy(i, i, 1);
         });
 
-        int ii = linear_index({0, 0}, trial.Px, trial.Py) + 1;
-        trial_p(ii, ii, 1.0);
+        // int ii = linear_index({0, 0}, trial.Px, trial.Py) + 1;
+        // trial_p(ii, ii, 1.0);
     }
 
     void compute_rhs(vector_view& vx, vector_view& vy, vector_view& /*p*/) const {
@@ -703,8 +704,8 @@ public:
         //     vy(i, trial.U2y.dofs() - 1) = 0;
         // }
 
-        int i = linear_index({0, 0}, trial.Px, trial.Py);
-        p(i, i) = 0; // fix pressure at a point
+        // int i = linear_index({0, 0}, trial.Px, trial.Py);
+        // p(i, i) = 0; // fix pressure at a point
     }
 
     void step(int /*iter*/, double /*t*/) override {
