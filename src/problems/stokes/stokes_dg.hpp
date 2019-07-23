@@ -588,15 +588,19 @@ public:
 
                 int ii = linear_index(i, test.Px, test.Py) + 1;
                 int jj = linear_index(j, trial.Px, trial.Py) + 1;
+                auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, trial.Px, trial.Py, form); };
+
 
                 bool fixed_i = is_pressure_fixed(i);
                 bool fixed_j = is_pressure_fixed(j);
+
+                double val = h*h*eval([this](auto q, auto p) { return grad_dot(p, q); });
 
                 // skeleton
                 auto form = [this](auto q, auto p, auto, auto) {
                     return h * jump(p).val * jump(q).val;
                 };
-                double val = integrate_over_internal_skeleton(i, j, test.Px, test.Py, trial.Px, trial.Py, form);
+                val += integrate_over_internal_skeleton(i, j, test.Px, test.Py, trial.Px, trial.Py, form);
 
                 put(ii, jj, DU1 + DU2, dU1 + dU2, val, fixed_i, fixed_j);
             }
