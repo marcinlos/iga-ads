@@ -165,6 +165,9 @@ public:
             12 * y*y + 24 * y*y*y - 12 * y*y*y*y;
 
         return { fx, fy };
+
+        // cavity flow
+        // return { 0, 0 };
     }
 
     auto shifted(int n, int k, mumps::problem& problem) const {
@@ -662,6 +665,13 @@ public:
         // Strong BC
         zero_bc(Rvx, test.U1x, test.U1y);
         zero_bc(Rvy, test.U2x, test.U2y);
+        // Cavity flow
+        // constexpr double eps = 1e-4;
+        // auto drop = [](double t) { return t < 1 - eps ? 0 : 1 - (1 - t) / eps; };
+        // dirichlet_bc(vx, boundary::left,   trial.U1x, trial.U1y, drop);
+        // dirichlet_bc(vx, boundary::right,  trial.U1x, trial.U1y, drop);
+        // dirichlet_bc(vx, boundary::top,    trial.U1x, trial.U1y, 1.0);
+        // dirichlet_bc(vx, boundary::bottom, trial.U1x, trial.U1y, 0);
 
         // Weak BC
         // vx = 0 on left/right edge
