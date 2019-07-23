@@ -740,7 +740,8 @@ public:
 
         std::cout << "Solving" << std::endl;
         solver.solve(problem);
-        correct_pressure(p);
+        auto p_avg = correct_pressure(p);
+        std::cout << "Avg pressure (pre-correction): " << p_avg << std::endl;
 
         std::cout << "Error:" << std::endl;
         print_error(vx, vy, p);
@@ -753,11 +754,12 @@ public:
 
 
     template <typename Sol>
-    void correct_pressure(Sol& pressure) const {
+    double correct_pressure(Sol& pressure) const {
         auto p_avg = average_value(pressure, trial.Px, trial.Py);
         for (auto i : dofs(trial.Px, trial.Py)) {
             pressure(i[0], i[1]) -= p_avg;
         }
+        return p_avg;
     }
 
     template <typename Sol>
