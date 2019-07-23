@@ -70,7 +70,7 @@ public:
 
     value_type exact_p(point_type p) const {
         auto x = p[0];
-        return {x * (1 - x), 1 - 2 * x, 0.0};
+        return {x * (1 - x) - 1./6, 1 - 2 * x, 0.0};
     }
 
     std::array<value_type, 2> exact_v(point_type p) const {
@@ -731,6 +731,7 @@ public:
 
         std::cout << "Solving" << std::endl;
         solver.solve(problem);
+        correct_pressure(p);
 
         std::cout << "Error:" << std::endl;
         print_error(vx, vy, p);
@@ -739,6 +740,29 @@ public:
         outputP.to_file(p, "pressure.data");
         outputU1.to_file(vx, "vx.data");
         outputU2.to_file(vy, "vy.data");
+    }
+
+
+    template <typename Sol>
+    void correct_pressure(Sol& pressure) const {
+        auto p_avg = average_value(pressure, trial.Px, trial.Py);
+        for (auto i : dofs(trial.Px, trial.Py)) {
+            pressure(i[0], i[1]) -= p_avg;
+        }
+    }
+
+    template <typename Sol>
+    double average_value(const Sol& u, const dimension& Ux, const dimension& Uy) const {
+        double val = 0;
+        for (auto e : elements(Ux, Ux)) {
+            double J = jacobian(e, Ux, Uy);
+            for (auto q : quad_points(Ux, Uy)) {
+                double w = weigth(q, Ux, Uy);
+                value_type uu = eval(u, e, q, Ux, Uy);
+                val += uu.val * w * J;
+            }
+        }
+        return val;
     }
 
     template <typename RHS>
