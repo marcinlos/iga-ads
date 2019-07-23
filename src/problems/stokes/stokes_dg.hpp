@@ -58,6 +58,13 @@ public:
         trial.Px.factorize_matrix();
         trial.Py.factorize_matrix();
 
+        test.U1x.factorize_matrix();
+        test.U1y.factorize_matrix();
+        test.U2x.factorize_matrix();
+        test.U2y.factorize_matrix();
+        test.Px.factorize_matrix();
+        test.Py.factorize_matrix();
+
         output_exact();
     }
 
@@ -661,10 +668,11 @@ public:
     }
 
 
-    void apply_bc(vector_view& Rvx, vector_view& Rvy, vector_view& Rp) {
+    void apply_bc(vector_view& vx, vector_view& vy, vector_view& p) {
         // Strong BC
-        zero_bc(Rvx, test.U1x, test.U1y);
-        zero_bc(Rvy, test.U2x, test.U2y);
+        zero_bc(vx, trial.U1x, trial.U1y);
+        zero_bc(vy, trial.U2x, trial.U2y);
+
         // Cavity flow
         // constexpr double eps = 1e-4;
         // auto drop = [](double t) { return t < 1 - eps ? 0 : 1 - (1 - t) / eps; };
@@ -675,20 +683,19 @@ public:
 
         // Weak BC
         // vx = 0 on left/right edge
-        // for (auto i = 0; i < test.U1y.dofs(); ++ i) {
-        //     Rvx(0, i) = 0;
-        //     Rvx(test.U1x.dofs() - 1, i) = 0;
+        // for (auto i = 0; i < trial.U1y.dofs(); ++ i) {
+        //     vx(0, i) = 0;
+        //     vx(trial.U1x.dofs() - 1, i) = 0;
         // }
 
         // vy = 0 on top/bottom edge
-        // for (auto i = 0; i < test.U2x.dofs(); ++ i) {
-        //     Rvy(i, 0) = 0;
-        //     Rvy(i, test.U2y.dofs() - 1) = 0;
+        // for (auto i = 0; i < trial.U2x.dofs(); ++ i) {
+        //     vy(i, 0) = 0;
+        //     vy(i, trial.U2y.dofs() - 1) = 0;
         // }
 
-        // zero_bc(Rp, test.Px, test.Py);
-        int i = linear_index({0, 0}, test.Px, test.Py);
-        Rp(i, i) = 0; // fix pressure at a point
+        int i = linear_index({0, 0}, trial.Px, trial.Py);
+        p(i, i) = 0; // fix pressure at a point
     }
 
     void step(int /*iter*/, double /*t*/) override {
@@ -720,9 +727,7 @@ public:
 
         std::cout << "Computing RHS" << std::endl;
         compute_rhs(Rvx, Rvy, Rp);
-        apply_bc(Rvx, Rvy, Rp);
-        // int i = linear_index({0, 0}, trial.Px, trial.Py);
-        // p(i, i) = 0; // fix pressure at a point
+        apply_bc(vx, vy, p);
 
         std::cout << "Solving" << std::endl;
         solver.solve(problem);
