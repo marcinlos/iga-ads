@@ -15,7 +15,12 @@ namespace ads {
 class stokes_dg : public simulation_2d {
 private:
     using Base = simulation_2d;
-    using value_pair = std::array<value_type, 2>;
+
+    struct value_pair {
+        value_type v1;
+        value_type v2;
+        bool boundary;
+    };
 
     galois_executor executor{8};
 
@@ -857,11 +862,15 @@ public:
     }
 
     value_type average(const value_pair& v) const {
-        return 0.5 * (v[0] + v[1]);
+        return 0.5 * (v.v1 + v.v2);
     }
 
     value_type jump(const value_pair& v) const {
-        return v[0] - v[1];
+        if (! v.boundary) {
+            return v.v1 - v.v2;
+        } else {
+            return v.v1;
+        }
     }
 
     value_type eval_basis_at(point_type p, index_type span, index_type dof,
@@ -895,18 +904,17 @@ public:
         int spanx = bspline::find_span(p[0], x.B);
         int spany = bspline::find_span(p[1], y.B);
         auto span = index_type{spanx, spany};
-
         auto val1 = eval_basis_at(p, span, dof, x, y);
-        auto val0 = value_type{};
 
         if (orientation == boundary::vertical) {
             int spanx0 = bspline::find_span(p[0] - 1e-10, x.B);
-            val0 = eval_basis_at(p, index_type{spanx0, spany}, dof, x, y);
+            auto val0 = eval_basis_at(p, index_type{spanx0, spany}, dof, x, y);
+            return {val0, val1, spanx == spanx0};
         } else {
             int spany0 = bspline::find_span(p[1] - 1e-10, y.B);
-            val0 = eval_basis_at(p, index_type{spanx, spany0}, dof, x, y);
+            auto val0 = eval_basis_at(p, index_type{spanx, spany0}, dof, x, y);
+            return {val0, val1, spany == spany0};
         }
-        return {val0, val1};
     }
 
     bool supported_in_1d(int dof, int e, const dimension& x) const {
