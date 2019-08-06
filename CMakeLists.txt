@@ -11,7 +11,10 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-include_directories("${PROJECT_SOURCE_DIR}/src")
+include_directories(
+  "${PROJECT_SOURCE_DIR}/src"
+  "${PROJECT_SOURCE_DIR}/libs"
+)
 
 set(SRC src/ads)
 set(ads_SRC
@@ -40,7 +43,7 @@ find_package(Boost REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 # Galois
-set(USE_GALOIS OFF CACHE BOOL "Use Galois framework")
+set(USE_GALOIS ON CACHE BOOL "Use Galois framework")
 
 if (USE_GALOIS)
   find_package(Galois REQUIRED)
@@ -57,7 +60,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
   set(warnings "-Wall -Wextra -pedantic ${ignored_warnings}")
 
   set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} ${optimization} ${warnings} ${std_version}")
+    "${CMAKE_CXX_FLAGS} ${optimization} ${warnings} ${std_version} -static-libstdc++")
 endif()
 
 # Target library definition
@@ -115,9 +118,12 @@ if (NOT SKIP_PROBLEMS)
     define_problem(linear_elasticity
       src/problems/elasticity/main.cpp)
 
+    define_problem(cahn_hilliard
+    src/problems/cahn_hilliard/ch_2d.cpp)
+
     define_problem(validation
       src/problems/validation/main.cpp)
-  endif()
+ endif()
 
   define_problem(heat_1d
       src/problems/heat/heat_1d.cpp)

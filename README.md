@@ -179,3 +179,8 @@ Unit tests:
   test/ads/lin/tensor_test.cpp
   test/ads/util/multi_array_test.cpp
 ```
+
+## Compiling Lapack & BLAS
+
+Both libraries are very hardware-specific. Make sure that if your cluster is not homogenous you use the proper version of them at each node.
+If you need to compile them use the instructions from [here](https://stackoverflow.com/questions/23463240/how-to-compile-lapack-so-that-it-can-be-used-correctly-during-installation-of-oc).
