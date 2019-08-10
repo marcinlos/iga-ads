@@ -37,6 +37,7 @@ private:
     vector_type buffer;
 
     mumps::solver solver;
+    Galois::StatTimer solver_timer{"solver"};
     output_manager<2> output;
 
 public:
@@ -478,7 +479,13 @@ public:
 
 
         std::cout << "Solving" << std::endl;
+        solver_timer.start();
         solver.solve(problem);
+        solver_timer.stop();
+
+        std::cout << "  solver time:       " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
+        std::cout << "  assembly    FLOPS: " << solver.flops_assembly() << std::endl;
+        std::cout << "  elimination FLOPS: " << solver.flops_elimination() << std::endl;
 
         std::cout << "Error:" << std::endl;
         print_error(vx, vy, p);
