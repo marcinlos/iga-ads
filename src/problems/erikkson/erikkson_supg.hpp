@@ -44,6 +44,8 @@ private:
 
     mumps::solver solver;
 
+    Galois::StatTimer solver_timer{"solver"};
+
     output_manager<2> output;
 
 public:
@@ -165,7 +167,10 @@ private:
 
         mumps::problem problem(rhs.data(), rhs.size());
         assemble_problem(problem, steps.dt);
-        solver.solve(problem, "matrix");
+
+        solver_timer.start();
+        solver.solve(problem);
+        solver_timer.stop();
 
         u = rhs;
     }
@@ -181,6 +186,7 @@ private:
         plot_middle("final.data", u, x, y);
         std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
         print_solution("solution.data", u, x, y);
+        std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
     }
 
     void compute_rhs() {
