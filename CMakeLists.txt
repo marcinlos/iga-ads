@@ -161,6 +161,9 @@ if (NOT SKIP_PROBLEMS)
     define_problem(stokes_nonstationary
       src/problems/stokes/main_nonstationary.cpp)
 
+    define_problem(stokes_projection
+      src/problems/stokes/main_projection.cpp)
+
     define_problem(demkowicz
       src/problems/demkowicz/main.cpp)
 
