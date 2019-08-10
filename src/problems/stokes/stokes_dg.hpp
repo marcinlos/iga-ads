@@ -259,6 +259,7 @@ public:
     void assemble_matrix(mumps::problem& problem) const {
         auto dU1 = trial.U1x.dofs() * trial.U1y.dofs();
         auto dU2 = trial.U2x.dofs() * trial.U2y.dofs();
+        auto dP = trial.Px.dofs() * trial.Py.dofs();
 
         auto DU1 = test.U1x.dofs() * test.U1y.dofs();
         auto DU2 = test.U2x.dofs() * test.U2y.dofs();
@@ -276,6 +277,8 @@ public:
         auto trial_vx = shifted(D, D, problem);
         auto trial_vy = shifted(D + dU1, D + dU1, problem);
         auto trial_p = shifted(D + dU1 + dU2, D + dU1 + dU2, problem);
+
+        auto N = D + dU1 + dU2 + dP;
 
         // auto hh = h * h;
 
@@ -612,6 +615,17 @@ public:
             }
         }
 
+        // Lagrange multiplier
+        for (auto i : dofs(trial.Px, trial.Py)) {
+            int ii = linear_index(i, trial.Px, trial.Py) + 1;
+
+            auto eval = [&](auto form) { return integrate(i, i, trial.Px, trial.Py, trial.Px, trial.Py, form); };
+            auto val = eval([this](auto q, auto p) { return p.val; });
+
+            problem.add(N + 1, D + dU1 + dU2 + ii, val);
+            problem.add(D + dU1 + dU2 + ii, N + 1, val);
+        }
+
         // Dirichlet BC - trial space
         // Weak BC
         // for (auto iy = 0; iy < trial.U1y.dofs(); ++ iy) {
@@ -719,7 +733,7 @@ public:
         auto DP = test.Px.dofs() * test.Py.dofs();
         auto dim_test = DU1 + DU2 + DP;
 
-        std::vector<double> rhs(dim_test + dim_trial);
+        std::vector<double> rhs(dim_test + dim_trial + 1);
 
         vector_view Rvx{rhs.data(), {test.U1x.dofs(), test.U1y.dofs()}};
         vector_view Rvy{Rvx.data() + DU1, {test.U2x.dofs(), test.U2y.dofs()}};
