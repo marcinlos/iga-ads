@@ -313,11 +313,11 @@ public:
                 if (! is_boundary(i, Vx, Vy) && ! is_boundary(j, Vx, Vy)) {
                     // tx, vx -> (tx, vx) + hh (tx,x, vx,x)
                     // tx, vx -> (\/tx, \/vx)
-                    test_vx(ii, jj, /*M + hh */ Kx + Ky);
+                    test_vx(ii, jj, /*M + hh */ (Kx + Ky));
 
                     // ty, vy -> (ty, vy) + hh (ty,y, vy,y)
                     // ty, vy -> (\/ty, \/vy)
-                    test_vy(ii, jj, /*M + hh */ Kx + Ky);
+                    test_vy(ii, jj, /*M + hh */ (Kx + Ky));
 
                     // tx, vy -> hh (tx,x, vy,y)
                     // test_vxy(ii, jj, hh * Ax);
@@ -438,13 +438,11 @@ public:
         // auto drop = [](double t) { return t < 1 - eps ? 0 : 1 - (1 - t) / eps; };
         // dirichlet_bc(Rvx, boundary::left, Ux, Uy, drop);
         // dirichlet_bc(Rvx, boundary::right, Ux, Uy, drop);
-
-        // // dirichlet_bc(Rvx, boundary::left,   Ux, Uy, 0);
-        // // dirichlet_bc(Rvx, boundary::right,  Ux, Uy, 0);
         // dirichlet_bc(Rvx, boundary::top,    Ux, Uy, 1);
         // dirichlet_bc(Rvx, boundary::bottom, Ux, Uy, 0);
 
         zero_bc(Rvy, Ux, Uy);
+
         Rp(0, 0) = 0; // fix pressure at a point
     }
 
