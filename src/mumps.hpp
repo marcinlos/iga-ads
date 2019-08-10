@@ -66,6 +66,11 @@ private:
     int& icntl(int idx) {
         return id.icntl[idx - 1];
     }
+
+    double infog(int idx) const {
+        return id.rinfog[idx - 1];
+    }
+
 public:
 
     solver() {
@@ -121,6 +126,14 @@ public:
         analyze_();
         factorize_();
         solve_();
+    }
+
+    double flops_assembly() const {
+        return infog(2);
+    }
+
+    double flops_elimination() const {
+        return infog(3);
     }
 
     ~solver() {
