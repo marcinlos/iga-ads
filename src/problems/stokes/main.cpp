@@ -42,15 +42,14 @@ int main(int argc, char* argv[]) {
 
     auto test_basis_y = bspline::create_basis(0, 1, p_test, subdivision*n, rep_test);
     auto dtest_y = dimension{ test_basis_y, quad, ders, 1 };
-
     // Velocity spaces
-    auto U1_trial_basis_x = bspline::create_basis(0, 1, p_trial + 1, n, rep_trial);
+    auto U1_trial_basis_x = bspline::create_basis(0, 1, p_trial, n, rep_trial);
     auto U1_dtrial_x = dimension{ U1_trial_basis_x, quad, ders, subdivision };
 
     auto U1_trial_basis_y = bspline::create_basis(0, 1, p_trial, n, rep_trial);
     auto U1_dtrial_y = dimension{ U1_trial_basis_y, quad, ders, subdivision };
 
-    auto U1_test_basis_x = bspline::create_basis(0, 1, p_test + 1, subdivision*n, rep_test);
+    auto U1_test_basis_x = bspline::create_basis(0, 1, p_test, subdivision*n, rep_test);
     auto U1_dtest_x = dimension{ U1_test_basis_x, quad, ders, 1 };
 
     auto U1_test_basis_y = bspline::create_basis(0, 1, p_test, subdivision*n, rep_test);
@@ -60,14 +59,15 @@ int main(int argc, char* argv[]) {
     auto U2_trial_basis_x = bspline::create_basis(0, 1, p_trial, n, rep_trial);
     auto U2_dtrial_x = dimension{ U2_trial_basis_x, quad, ders, subdivision };
 
-    auto U2_trial_basis_y = bspline::create_basis(0, 1, p_trial + 1, n, rep_trial);
+    auto U2_trial_basis_y = bspline::create_basis(0, 1, p_trial, n, rep_trial);
     auto U2_dtrial_y = dimension{ U2_trial_basis_y, quad, ders, subdivision };
 
     auto U2_test_basis_x = bspline::create_basis(0, 1, p_test, subdivision*n, rep_test);
     auto U2_dtest_x = dimension{ U2_test_basis_x, quad, ders, 1 };
 
-    auto U2_test_basis_y = bspline::create_basis(0, 1, p_test + 1, subdivision*n, rep_test);
+    auto U2_test_basis_y = bspline::create_basis(0, 1, p_test, subdivision*n, rep_test);
     auto U2_dtest_y = dimension{ U2_test_basis_y, quad, ders, 1 };
+
 
 
     // Sanity check
