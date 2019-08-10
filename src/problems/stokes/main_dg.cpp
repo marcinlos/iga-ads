@@ -123,6 +123,7 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     } else {
         std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
+        std::cout << "dofs = " << trial_dim + test_dim << std::endl;
     }
 
     auto trial = space_set{
