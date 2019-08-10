@@ -31,9 +31,10 @@ private:
     double Cpen;// = 5 * (3 + 1);
     double hF;// = 1 / 20.;
 
-    double eta = 100;
+    double eta = 1000;
 
     mumps::solver solver;
+    Galois::StatTimer solver_timer{"solver"};
     output_manager<2> outputU1, outputU2, outputP;
 
 public:
@@ -754,7 +755,14 @@ public:
         apply_bc(vx, vy, p);
 
         std::cout << "Solving" << std::endl;
+        solver_timer.start();
         solver.solve(problem);
+        solver_timer.stop();
+
+        std::cout << "  solver time:       " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
+        std::cout << "  assembly    FLOPS: " << solver.flops_assembly() << std::endl;
+        std::cout << "  elimination FLOPS: " << solver.flops_elimination() << std::endl;
+
         auto p_avg = correct_pressure(p);
         std::cout << "Avg pressure (pre-correction): " << p_avg << std::endl;
 
