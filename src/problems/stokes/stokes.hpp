@@ -20,6 +20,8 @@ private:
     dimension& Vx;
     dimension& Vy;
 
+    dimension ref_x, ref_y;
+
     lin::band_matrix MVx, MVy;
     lin::band_matrix KVx, KVy;
     lin::band_matrix AVx, AVy;
@@ -38,10 +40,13 @@ private:
     output_manager<2> output;
 
 public:
-    stokes(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, const timesteps_config& steps)
+    stokes(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, const timesteps_config& steps,
+           dimension ref_x, dimension ref_y)
     : Base{ std::move(test_x), std::move(test_y), steps }
     , Ux{ std::move(trial_x) }
     , Uy{ std::move(trial_y) }
+    , ref_x{ ref_x }
+    , ref_y{ ref_y }
     , Vx{ x }
     , Vy{ y }
     , MVx{Vx.p, Vx.p, Vx.dofs(), Vx.dofs(), 0}
@@ -186,6 +191,45 @@ public:
         std::cout << "div : L2 = " << divL2  << ", H1 = " << divH1  << std::endl;
     }
 
+
+
+
+    void print_error(const vector_view& vx, const vector_view& vy, const vector_view& p,
+                     const vector_type& ref_vx, const vector_type& ref_vy, const vector_type& ref_p) const {
+        bspline::eval_ders_ctx cx{ref_x.p, 1};
+        bspline::eval_ders_ctx cy{ref_y.p, 1};
+
+        auto e_vx = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_vx, ref_x.B, ref_y.B, cx, cy); };
+        auto e_vy = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_vy, ref_x.B, ref_y.B, cx, cy); };
+        auto e_p = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_p, ref_x.B, ref_y.B, cx, cy); };
+        auto div = [this](point_type x) { return value_type{}; };
+
+        double vxL2 = errorL2(vx, Ux, Uy, e_vx) / normL2(Ux, Uy, e_vx) * 100;
+        double vxH1 = errorH1(vx, Ux, Uy, e_vx) / normH1(Ux, Uy, e_vx) * 100;
+
+        double vyL2 = errorL2(vy, Ux, Uy, e_vy) / normL2(Ux, Uy, e_vy) * 100;
+        double vyH1 = errorH1(vy, Ux, Uy, e_vy) / normH1(Ux, Uy, e_vy) * 100;
+
+        double vL2 = std::hypot(vxL2, vyL2) / std::sqrt(2);
+        double vH1 = std::hypot(vxH1, vyH1) / std::sqrt(2);
+
+
+        double pL2 = errorL2(p, Ux, Uy, e_p) / normL2(Ux, Uy, e_p) * 100;
+        double pH1 = errorH1(p, Ux, Uy, e_p) / normH1(Ux, Uy, e_p) * 100;
+
+        double divL2 = div_errorL2(vx, vy, Ux, Uy, div) * 100;
+        double divH1 = div_errorH1(vx, vy, Ux, Uy, div) * 100;
+
+        std::cout.precision(3);
+        std::cout << "vx  : L2 = " << vxL2   << "%, H1 = " << vxH1   << "%" << std::endl;
+        std::cout << "vy  : L2 = " << vyL2   << "%, H1 = " << vyH1   << "%" << std::endl;
+        std::cout << "v   : L2 = " << vL2    << "%, H1 = " << vH1    << "%" << std::endl;
+        std::cout << "p   : L2 = " << pL2    << "%, H1 = " << pH1    << "%" << std::endl;
+        std::cout << "div : L2 = " << divL2  << ", H1 = " << divH1  << std::endl;
+    }
+
+
+
     point_type forcing(point_type p) const {
         double x = p[0], y = p[1];
 
@@ -204,7 +248,6 @@ public:
 
         return { fx, fy };
         // return { 0, 0 };
-
     }
 
     auto shifted(int n, int k, mumps::problem& problem) const {
@@ -444,6 +487,35 @@ public:
         output.to_file(p, "pressure.data");
         output.to_file(vx, "vx.data");
         output.to_file(vy, "vy.data");
+
+        // print_solution("vx.sol", vx, Ux, Uy);
+        // print_solution("vy.sol", vy, Ux, Uy);
+        // print_solution("p.sol", p, Ux, Uy);
+
+        // auto ref_vx = read_solution("vx.sol", ref_x, ref_y);
+        // auto ref_vy = read_solution("vy.sol", ref_x, ref_y);
+        // auto ref_p = read_solution("p.sol", ref_x, ref_y);
+
+        // print_error(vx, vy, p, ref_vx, ref_vy, ref_p);
+    }
+
+    vector_type read_solution(const char* filename, const dimension& Ux, const dimension& Uy) const {
+        auto sol = vector_type{{ Ux.dofs(), Uy.dofs() }};
+        std::ifstream in{filename};
+        while (in) {
+            index_type dof;
+            in >> dof[0] >> dof[1];
+            in >> sol(dof[0], dof[1]);
+        }
+        return sol;
+    }
+
+    template <typename V>
+    void print_solution(const char* filename, const V& u, const dimension& Ux, const dimension& Uy) const {
+        std::ofstream out{filename};
+        for (auto dof : dofs(Ux, Uy)) {
+            out << dof[0] << " " << dof[1] << " " << std::setprecision(16) << u(dof[0], dof[1]) << std::endl;
+        }
     }
 
     template <typename RHS>

@@ -98,7 +98,13 @@ int main(int argc, char* argv[]) {
 
     // auto sim = stokes_conforming{trial, test, steps};
     // auto sim = stokes_constrained{trial, test, steps};
-    auto sim = stokes{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};
 
+    n = 64;
+    auto ref_basis_x = bspline::create_basis(0, 1, p_trial, n, rep_trial);
+    auto ref_x = dimension{ ref_basis_x, quad, ders, subdivision };
+    auto ref_basis_y = bspline::create_basis(0, 1, p_trial, n, rep_trial);
+    auto ref_y = dimension{ ref_basis_y, quad, ders, subdivision };
+
+    auto sim = stokes{dtrial_x, dtrial_y, dtest_x, dtest_y, steps, ref_x, ref_y};
     sim.run();
 }
