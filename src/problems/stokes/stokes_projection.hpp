@@ -87,7 +87,7 @@ public:
         value_type vx = {f(x, y), dfx(x, y), dfy(x, y)};
         value_type vy = {-f(y, x), -dfy(y, x), -dfx(y, x)};
 
-        return { et * vx, et * vy };
+        return { et * vy, et * vx };
     }
 
     value_type exact_div(point_type p, double t) const {
@@ -146,7 +146,8 @@ public:
             (4 - 24 * y + 48 * y*y - 48 * y*y*y + 24 * y*y*y*y) * x -
             12 * y*y + 24 * y*y*y - 12 * y*y*y*y;
 
-        return { et * fx - v[0].val, et * fy - v[1].val };
+        // return { et * fx - v[0].val, et * fy - v[1].val };
+        return { et * fy - v[1].val, et * fx - v[0].val };
     }
 
     auto shifted(int n, int k, mumps::problem& problem) const {
@@ -439,7 +440,7 @@ public:
         vy = rhs_vy2;
     }
 
-    void update_velocity_igrm(double t) {
+    void update_velocity_igrm(int i, double t) {
         using namespace std::placeholders;
         auto dt = steps.dt;
         auto f = [&](point_type x, double s) { return forcing(x, s); };
@@ -465,6 +466,11 @@ public:
         mumps::problem problem_vx1(rhs.data(), rhs.size());
         assemble_matrix_velocity(problem_vx1, dt/2, 0);
         solver.solve(problem_vx1);
+
+
+        outputU1.to_file(vx1, "vx_h_%d.data", i);
+        outputU2.to_file(vy1, "vy_h_%d.data", i);
+
 
         // Step 2
         std::vector<double> rhs2(dim_test + dim_trial);
@@ -506,7 +512,7 @@ public:
 
         // Step 1
         std::vector<double> rhs(dim_test + dim_trial);
-        vector_view rhs_p1{rhs.data(),         {test.Px.dofs(), test.Py.dofs()}};
+        vector_view rhs_p1{rhs.data(),        {test.Px.dofs(), test.Py.dofs()}};
         vector_view p1{rhs.data() + dim_test, {trial.Px.dofs(), trial.Py.dofs()}};
 
         compute_rhs_pressure_1(rhs_p1, vx, vy, test.Px, test.Py, steps.dt);
@@ -516,7 +522,7 @@ public:
 
         // Step 2
         std::vector<double> rhs2(dim_test + dim_trial);
-        vector_view rhs_p2{rhs2.data(),         {test.Px.dofs(), test.Py.dofs()}};
+        vector_view rhs_p2{rhs2.data(),        {test.Px.dofs(), test.Py.dofs()}};
         vector_view p2{rhs2.data() + dim_test, {trial.Px.dofs(), trial.Py.dofs()}};
 
         compute_rhs_pressure_2(rhs_p2, p1, test.Px, test.Py, steps.dt);
@@ -530,7 +536,7 @@ public:
     void step(int iter, double t) override {
         // update_velocity_galerkin(t);
         // update_velocity_minev(t);
-        update_velocity_igrm(t);
+        update_velocity_igrm(iter, t);
 
         // update_pressure();
         update_pressure_igrm();
