@@ -22,7 +22,7 @@ namespace problems {
             { }
         };
 
-        state now, prev;
+        state now, prev, pprev;
         vector_type energy;
 
         ads::output_manager<2> output;
@@ -48,7 +48,7 @@ namespace problems {
     public:
         elasticity_pouria(const ads::config_2d& config, int save_every)
         : Base{ config }
-        , now{ shape() }, prev{ shape() }
+        , now{ shape() }, prev{ shape() }, pprev{ shape() }
         , energy{ shape() }
         , output{ x.B, y.B, 50 }
         , Dx{x.p, x.p, x.B.dofs()}
@@ -355,8 +355,11 @@ namespace problems {
         }
 
         void before_step(int /*iter*/, double /*t*/) override {
-            using std::swap;
-            swap(now, prev);
+            // using std::swap;
+            // swap(now, prev);
+
+            pprev = prev;
+            prev  = now;
         }
 
         void step2(int /*iter*/, double t) {
