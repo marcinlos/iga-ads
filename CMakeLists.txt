@@ -129,6 +129,9 @@ if (NOT SKIP_PROBLEMS)
     define_problem(elasticity_victor
       src/problems/elasticity/victor.cpp)
 
+    define_problem(elasticity_pouria
+    src/problems/elasticity/elasticity_pouria.cpp)
+
     define_problem(stokes
       src/problems/stokes/main.cpp)
 
