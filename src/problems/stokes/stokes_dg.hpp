@@ -31,7 +31,7 @@ private:
     double Cpen;// = 5 * (3 + 1);
     double hF;// = 1 / 20.;
 
-    double eta = 1000;
+    double eta = 10;
 
     mumps::solver solver;
     Galois::StatTimer solver_timer{"solver"};
@@ -212,8 +212,8 @@ public:
     }
 
     bool is_pressure_fixed(index_type dof) const {
-        // return dof[0] == 0 && dof[1] == 0;
-        return false;
+        return dof[0] == 0 && dof[1] == 0;
+        // return false;
     }
 
     template <typename Form>
@@ -381,8 +381,8 @@ public:
         });
 
 
-        // int i = linear_index({0, 0}, test.Px, test.Py) + 1;
-        // test_p(i, i, 1.0);
+        int i = linear_index({0, 0}, test.Px, test.Py) + 1;
+        test_p(i, i, 1.0);
 
 
         // B, B^t
@@ -482,7 +482,7 @@ public:
             }
         }
 
-        // ux, q -> (ux,x, q)
+        // ux, q -> (ux,x, q)- [ux] n1 {q}
         for (auto i : dofs(test.Px, test.Py)) {
             for (auto j : dofs(trial.U1x, trial.U1y)) {
                 if (! dofs_touch(i, test.Px, test.Py, j, trial.U1x, trial.U1y)) continue;
@@ -501,7 +501,7 @@ public:
 
                 // skeleton
                 auto form = [this](auto q, auto ux, auto, auto n) {
-                    return - h * average(q).val * n[0] * jump(ux).val;
+                    return - average(q).val * n[0] * jump(ux).val;
                 };
                 val += integrate_over_skeleton(i, j, test.Px, test.Py, trial.U1x, trial.U1y, form);
 
@@ -509,7 +509,7 @@ public:
             }
         }
 
-        // uy, q -> (uy,y, q),
+        // uy, q -> (uy,y, q) - [uy] n2 {q}
         for (auto i : dofs(test.Px, test.Py)) {
             for (auto j : dofs(trial.U2x, trial.U2y)) {
                 if (! dofs_touch(i, test.Px, test.Py, j, trial.U2x, trial.U2y)) continue;
@@ -528,7 +528,7 @@ public:
 
                 // skeleton
                 auto form = [this](auto q, auto uy, auto, auto n) {
-                    return - h * average(q).val * n[1] * jump(uy).val;
+                    return - average(q).val * n[1] * jump(uy).val;
                 };
                 val += integrate_over_skeleton(i, j, test.Px, test.Py, trial.U2x, trial.U2y, form);
 
@@ -555,7 +555,7 @@ public:
                 double val = eval([](auto vx, auto p) { return -vx.dx * p.val; });
                 // skeleton
                 auto form = [this](auto vx, auto p, auto, auto n) {
-                    return h * average(p).val * n[0] * jump(vx).val;
+                    return average(p).val * n[0] * jump(vx).val;
                 };
                 val += integrate_over_skeleton(i, j, test.U1x, test.U1y, trial.Px, trial.Py, form);
 
@@ -582,7 +582,7 @@ public:
                 double val = eval([](auto vy, auto p) { return -vy.dy * p.val; });
                 // skeleton
                 auto form = [this](auto vy, auto p, auto, auto n) {
-                    return h * average(p).val * n[1] * jump(vy).val;
+                    return average(p).val * n[1] * jump(vy).val;
                 };
                 val += integrate_over_skeleton(i, j, test.U2x, test.U2y, trial.Px, trial.Py, form);
 
@@ -604,12 +604,12 @@ public:
                 bool fixed_i = is_pressure_fixed(i);
                 bool fixed_j = is_pressure_fixed(j);
 
-                double val = h*h*eval([this](auto q, auto p) { return grad_dot(p, q); });
-
                 // skeleton
                 auto form = [this](auto q, auto p, auto, auto) {
                     return h * jump(p).val * jump(q).val;
                 };
+                double val = integrate_over_internal_skeleton(i, j, test.Px, test.Py, trial.Px, trial.Py, form);
+                // double val = h*h*eval([this](auto q, auto p) { return grad_dot(p, q); }); // Minev
                 val += integrate_over_internal_skeleton(i, j, test.Px, test.Py, trial.Px, trial.Py, form);
 
                 put(ii, jj, DU1 + DU2, dU1 + dU2, val, fixed_i, fixed_j);
@@ -617,15 +617,15 @@ public:
         }
 
         // Lagrange multiplier
-        for (auto i : dofs(trial.Px, trial.Py)) {
-            int ii = linear_index(i, trial.Px, trial.Py) + 1;
+        // for (auto i : dofs(trial.Px, trial.Py)) {
+        //     int ii = linear_index(i, trial.Px, trial.Py) + 1;
 
-            auto eval = [&](auto form) { return integrate(i, i, trial.Px, trial.Py, trial.Px, trial.Py, form); };
-            auto val = eval([this](auto q, auto p) { return p.val; });
+        //     auto eval = [&](auto form) { return integrate(i, i, trial.Px, trial.Py, trial.Px, trial.Py, form); };
+        //     auto val = eval([this](auto q, auto p) { return p.val; });
 
-            problem.add(N + 1, D + dU1 + dU2 + ii, val);
-            problem.add(D + dU1 + dU2 + ii, N + 1, val);
-        }
+        //     problem.add(N + 1, D + dU1 + dU2 + ii, val);
+        //     problem.add(D + dU1 + dU2 + ii, N + 1, val);
+        // }
 
         // Dirichlet BC - trial space
         // Weak BC
@@ -651,8 +651,8 @@ public:
             trial_vy(i, i, 1);
         });
 
-        // int ii = linear_index({0, 0}, trial.Px, trial.Py) + 1;
-        // trial_p(ii, ii, 1.0);
+        int ii = linear_index({0, 0}, trial.Px, trial.Py) + 1;
+        trial_p(ii, ii, 1.0);
     }
 
     void compute_rhs(vector_view& vx, vector_view& vy, vector_view& /*p*/) const {
@@ -719,8 +719,8 @@ public:
         //     vy(i, trial.U2y.dofs() - 1) = 0;
         // }
 
-        // int i = linear_index({0, 0}, trial.Px, trial.Py);
-        // p(i, i) = 0; // fix pressure at a point
+        int i = linear_index({0, 0}, trial.Px, trial.Py);
+        p(i, i) = 0; // fix pressure at a point
     }
 
     void step(int /*iter*/, double /*t*/) override {
@@ -734,7 +734,7 @@ public:
         auto DP = test.Px.dofs() * test.Py.dofs();
         auto dim_test = DU1 + DU2 + DP;
 
-        std::vector<double> rhs(dim_test + dim_trial + 1);
+        std::vector<double> rhs(dim_test + dim_trial);
 
         vector_view Rvx{rhs.data(), {test.U1x.dofs(), test.U1y.dofs()}};
         vector_view Rvy{Rvx.data() + DU1, {test.U2x.dofs(), test.U2y.dofs()}};

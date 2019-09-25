@@ -86,7 +86,7 @@ public:
         icntl(7) = 5;
 
         // extra space factor
-        icntl(14) = 100;
+        icntl(14) = 400;
         // icntl(22) = 1; // out-of-core
 
         //streams
