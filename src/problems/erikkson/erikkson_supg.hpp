@@ -40,7 +40,8 @@ private:
     double len = 1;
 
     // point_type beta{{ len * cos(angle), len * sin(angle) }};
-    point_type beta{{ 1, 0 }};
+    // point_type beta{{ 1, 0 }};
+    point_type beta{{ 1, 1 }};
 
     mumps::solver solver;
 
@@ -68,7 +69,7 @@ private:
         double hx = 2 * x.basis.J[e[0]];
         double hy = 2 * y.basis.J[e[1]];
         // double h = hx;
-        return std::sqrt(hx * hy);
+        return std::sqrt(hx * hx + hy * hy);
     }
 
     double diffusion(double x, double y) const {
@@ -102,8 +103,13 @@ private:
                         auto diff = diffusion(pt[0], pt[1]);
                         double bwu = diff * grad_dot(uu, ww) + beta[0] * uu.dx * ww.val + beta[1] * uu.dy * ww.val;
 
-                        double h = elem_diam(e);
-                        double tau = 1 / (C1 * epsilon / (h * h) + C2 / h);
+                        double hx = 2 * x.basis.J[e[0]];
+                        double hy = 2 * y.basis.J[e[1]];
+                        double hh = hx * hx + hy * hy;
+
+                        // double h = elem_diam(e);
+                        // double tau = 1 / (C1 * epsilon / (h * h) + C2 / h);
+                        double tau = 1 / (1 / hx + 3 * epsilon * 4 / hh);
 
                         double bDw = beta[0] * ww.dx + beta[1] * ww.dy;
 
@@ -153,40 +159,50 @@ private:
         x.factorize_matrix();
         y.factorize_matrix();
 
-        skew_bc(u, x, y);
-        output.to_file(u, "out_0.data");
+        // skew_bc(u, x, y);
+        // output.to_file(u, "out_0.data");
     }
 
     void step(int /*iter*/, double /*t*/) override {
+        mumps::problem problem(rhs.data(), rhs.size());
+
+        std::cout << "Assembling matrix" << std::endl;
+        assemble_problem(problem, steps.dt);
+
+        std::cout << "Computing RHS" << std::endl;
         zero(rhs);
         compute_rhs();
 
-        stationary_bc(rhs, x, y);
+        // stationary_bc(rhs, x, y);
         // skew_bc(rhs, x, y);
-        // zero_bc(rhs, x, y);
+        zero_bc(rhs, x, y);
 
-        mumps::problem problem(rhs.data(), rhs.size());
-        assemble_problem(problem, steps.dt);
-
+        std::cout << "Solving" << std::endl;
         solver_timer.start();
         solver.solve(problem);
         solver_timer.stop();
 
         u = rhs;
+
+        std::cout << "  solver time:       " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
+        std::cout << "  assembly    FLOPS: " << solver.flops_assembly() << std::endl;
+        std::cout << "  elimination FLOPS: " << solver.flops_elimination() << std::endl;
+
+        std::cout << "Error: L2 = " << errorL2() << "%, H1 =  " << errorH1() << "%" << std::endl;
     }
 
     void after_step(int iter, double /*t*/) override {
         if ((iter + 1) % save_every == 0) {
-            std::cout << "Step " << (iter + 1) << " : " << errorL2() << " " << errorH1() << std::endl;
+            // std::cout << "Step " << (iter + 1) << " : " << errorL2() << " " << errorH1() << std::endl;
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
     }
 
     void after() override {
         plot_middle("final.data", u, x, y);
-        std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
+        // std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
         print_solution("solution.data", u, x, y);
-        std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
+        // std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
     }
 
     void compute_rhs() {
@@ -197,14 +213,15 @@ private:
             double J = jacobian(e, x, y);
             for (auto q : quad_points(x, y)) {
                 double w = weigth(q, x, y);
-                // auto x = point(e, q);
+                auto xx = point(e, q);
 
                 for (auto a : dofs_on_element(e, x, y)) {
                     auto aa = dof_global_to_local(e, a, x, y);
                     value_type v = eval_basis(e, q, a, x, y);
 
                     // double F = 1;
-                    double F = 0;
+                    // double F = 0;
+                    double F = erikkson2_forcing(xx[0], xx[1], epsilon);
                     double val = F * v.val;
                     U(aa[0], aa[1]) += val * w * J;
                 }
@@ -216,12 +233,14 @@ private:
     }
 
     double errorL2() const {
-        auto sol = exact(epsilon);
+        // auto sol = exact(epsilon);
+        auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         return Base::errorL2(u, x, y, sol) / normL2(x, y, sol) * 100;
     }
 
     double errorH1() const {
-        auto sol = exact(epsilon);
+        // auto sol = exact(epsilon);
+        auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         return Base::errorH1(u, x, y, sol) / normH1(x, y, sol) * 100;
     }
 
