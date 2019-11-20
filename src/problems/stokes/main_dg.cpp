@@ -120,6 +120,19 @@ int main(int argc, char* argv[]) {
     if (trial_dim > test_dim) {
         std::cerr << "Dimension of the trial space greater than that of test space ("
                   << trial_dim << " > " << test_dim << ")" << std::endl;
+        std::cerr << "dim Ux = " << U1_dtrial_x.dofs() * U1_dtrial_y.dofs()
+                  << " = " << U1_dtrial_x.dofs() << " x " << U1_dtrial_y.dofs() << std::endl;
+        std::cerr << "dim Uy = " << U2_dtrial_x.dofs() * U2_dtrial_y.dofs()
+                  << " = " << U2_dtrial_x.dofs() << " x " << U2_dtrial_y.dofs() << std::endl;
+        std::cerr << "dim P =  " << dtrial_x.dofs() * dtrial_y.dofs()
+                  << " = " << dtrial_x.dofs() << " x " << dtrial_y.dofs() << std::endl;
+
+        std::cerr << "dim Vx = " << U1_dtest_x.dofs() * U1_dtest_y.dofs()
+                  << " = " << U1_dtest_x.dofs() << " x " << U1_dtest_y.dofs() << std::endl;
+        std::cerr << "dim Vy = " << U2_dtest_x.dofs() * U2_dtest_y.dofs()
+                  << " = " << U2_dtest_x.dofs() << " x " << U2_dtest_y.dofs() << std::endl;
+        std::cerr << "dim Q =  " << dtest_x.dofs() * dtest_y.dofs()
+                  << " = " << dtest_x.dofs() << " x " << dtest_y.dofs() << std::endl;
         std::exit(1);
     } else {
         std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;

@@ -171,9 +171,14 @@ public:
         outputP.to_file(project(trial.Px, trial.Py, p), "pressure_ref.data");
         outputU1.to_file(project(trial.U1x, trial.U1y, vx), "vx_ref.data");
         outputU2.to_file(project(trial.U2x, trial.U2y, vy), "vy_ref.data");
+
+        outputP.to_file(project(trial.Px, trial.Py, p), "pressure_ref.data");
+        outputU1.to_file(project(trial.U1x, trial.U1y, vx), "vx_ref.data");
+        outputU2.to_file(project(trial.U2x, trial.U2y, vy), "vy_ref.data");
     }
 
-    void print_error(const vector_view& vx, const vector_view& vy, const vector_view& p) const {
+    void print_error(const vector_view& vx, const vector_view& vy, const vector_view& p,
+                     const vector_view& Rvx, const vector_view& Rvy, const vector_view& Rp) const {
         auto e_vx = [this](point_type x) { return exact_v(x)[0]; };
         auto e_vy = [this](point_type x) { return exact_v(x)[1]; };
         auto e_p = [this](point_type x) { return exact_p(x); };
@@ -196,6 +201,19 @@ public:
         std::cout << "vy  : L2 = " << vyL2   << "%, H1 = " << vyH1   << "%" << std::endl;
         std::cout << "p   : L2 = " << pL2    << "%, H1 = " << pH1    << "%" << std::endl;
         std::cout << "div : L2 = " << divL2  << ", H1 = " << divH1  << std::endl;
+
+        auto H10 = [](value_type a) { return a.dx * a.dx + a.dy * a.dy; };
+
+        double err_vx = error(vx, trial.U1x, trial.U1y, H10, e_vx);
+        double err_vy = error(vy, trial.U2x, trial.U2y, H10, e_vy);
+        double err_p  = errorL2(p, trial.Px, trial.Py, e_p);
+        double error_Vh = std::sqrt(err_vx * err_vx + err_vy * err_vy + err_p * err_p);
+
+        std::cout << "Error in Vh:   " << error_Vh << std::endl;
+
+        double r_norm = normV(Rvx, Rvy, Rp);
+        std::cout << "Residual norm: " << r_norm << std::endl;
+
     }
 
     point_type forcing(point_type p) const {
@@ -821,7 +839,7 @@ public:
         std::cout << "Avg pressure (pre-correction): " << p_avg << std::endl;
 
         std::cout << "Error:" << std::endl;
-        print_error(vx, vy, p);
+        print_error(vx, vy, p, Rvx, Rvy, Rp);
 
         std::cout << "Outputting" << std::endl;
         outputP.to_file(p, "pressure.data");
@@ -1162,6 +1180,59 @@ public:
             }
         }
         return val;
+    }
+
+
+
+    template <typename Sol>
+    double normV(const Sol& vx, const Sol& vy, const Sol& p) const {
+        double norm = 0;
+
+        // w, p -> (w, p) +  hh ([w], [p])
+        for (auto i : dofs(test.Px, test.Py)) {
+            for (auto j : touching_dofs(i, test.Px, test.Py)) {
+                auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, test.Px, test.Py, form); };
+                double val = eval([](auto w, auto p) { return w.val * p.val; });
+
+                auto form = [this](auto w, auto p, auto, auto) {
+                    return h * jump(w).val * jump(p).val;
+                };
+                val += integrate_over_internal_skeleton(i, j, test.Px, test.Py, test.Px, test.Py, form);
+                norm += val * p(i[0], i[1]) * p(j[0], j[1]);
+            }
+        }
+
+        // tx, vx -> (\/tx, \/vx) + 1/h ([tx], [vx])
+        for (auto i : dofs(test.U1x, test.U1y)) {
+            for (auto j : touching_dofs(i, test.U1x, test.U1y)) {
+                auto eval = [&](auto form) { return integrate(i, j, test.U1x, test.U1y, test.U1x, test.U1y, form); };
+
+                double val = eval([this](auto tx, auto vx) { return grad_dot(tx, vx); });
+                // skeleton
+                auto form = [this](auto tx, auto vx, auto, auto) {
+                    return eta/h * jump(tx).val * jump(vx).val;
+                };
+                val += integrate_over_skeleton(i, j, test.U1x, test.U1y, test.U1x, test.U1y, form);
+                norm += val * vx(i[0], i[1]) * vx(j[0], j[1]);
+            }
+        }
+
+        // ty, vy -> (\/ty, \/vy) + 1/h ([ty], [vy])
+        for (auto i : dofs(test.U2x, test.U2y)) {
+            for (auto j : touching_dofs(i, test.U2x, test.U2y)) {
+                auto eval = [&](auto form) { return integrate(i, j, test.U2x, test.U2y, test.U2x, test.U2y, form); };
+
+                double val = eval([this](auto ty, auto vy) { return grad_dot(ty, vy); });
+                // skeleton
+                auto form = [this](auto ty, auto vy, auto, auto) {
+                    return eta/h * jump(ty).val * jump(vy).val;
+                };
+                val += integrate_over_skeleton(i, j, test.U2x, test.U2y, test.U2x, test.U2y, form);
+                norm += val * vy(i[0], i[1]) * vy(j[0], j[1]);
+            }
+        }
+
+        return std::sqrt(norm);
     }
 };
 
