@@ -42,6 +42,43 @@ bspline::basis create_basis(double a, double b, int p, int elements, int repeate
     return {std::move(knot), p};
 }
 
+bspline::basis basis_from_points(const std::vector<double>& points, int p, int repeated_nodes) {
+    int elems = points.size() - 1;
+    int r = repeated_nodes + 1;
+    int size = (elems - 1) * r + 2 * (p + 1);
+    auto knot = bspline::knot_vector(size);
+
+    for (int i = 0; i <= p; ++ i) {
+        knot[i] = points[0];
+        knot[size - i - 1] = points[elems];
+    }
+
+    for (int i = 1; i < elems; ++ i) {
+        for (int j = 0; j < r; ++ j) {
+            knot[p + 1 + (i - 1) * r + j] = points[i];
+        }
+    }
+    return {std::move(knot), p};
+}
+
+std::vector<double> make_points(int n) {
+    std::vector<double> points{};
+
+    points.push_back(0);
+
+    double x = 0;
+    double h = 1;
+
+    for (int i = 0; i < n; ++ i) {
+        h /= 2;
+        x += h;
+        points.push_back(x);
+    }
+
+    points.push_back(1);
+    return points;
+}
+
 bspline::basis create_checkboard_basis(double a, double b, int p, int elements, int repeated_nodes, bool adapt) {
     int total_elements = 2 * elements + 2;
     int points = total_elements + 1;
@@ -119,6 +156,13 @@ int main(int argc, char* argv[]) {
     // auto d = 1e-4;
     auto d = shishkin_const(nx, 1e-6);
 
+    // auto points_x = make_points(nx);
+    // for (auto x : points_x) {
+    //     std::cout << std::setprecision(10) << x << "  ";
+    // }
+    // std::cout << std::endl;
+
+    // auto trial_basis_x = basis_from_points(points_x, p_trial, p_trial - 1 - C_trial);
     auto trial_basis_x = create_basis(0, S, p_trial, nx, p_trial - 1 - C_trial, adapt_x, d);
     // auto trial_basis_x = create_checkboard_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_x);
     auto dtrial_x = dimension{ trial_basis_x, quad, ders, subdivision };
@@ -127,6 +171,7 @@ int main(int argc, char* argv[]) {
     // auto trial_basis_y = create_checkboard_basis(0, S, p_trial, n, p_trial - 1 - C_trial, adapt_y);
     auto dtrial_y = dimension{ trial_basis_y, quad, ders, subdivision };
 
+    // auto test_basis_x = basis_from_points(points_x, p_test, p_test - 1 - C_test);
     auto test_basis_x = create_basis(0, S, p_test, subdivision*nx, p_test - 1 - C_test, adapt_x, d);
     // auto test_basis_x = create_checkboard_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test, adapt_x);
     auto dtest_x = dimension{ test_basis_x, quad, ders, 1 };
@@ -135,8 +180,8 @@ int main(int argc, char* argv[]) {
     // auto test_basis_y = create_checkboard_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test, adapt_y);
     auto dtest_y = dimension{ test_basis_y, quad, ders, 1 };
 
-    auto trial_dim = dtrial_x.B.dofs();
-    auto test_dim = dtest_x.B.dofs();
+    auto trial_dim = dtrial_x.dofs() * dtrial_y.dofs();
+    auto test_dim = dtest_x.dofs() * dtest_y.dofs();
 
     if (trial_dim > test_dim) {
         std::cerr << "Dimension of the trial space greater than that of test space ("
@@ -144,11 +189,10 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     } else {
         std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
+        // std::cout << "dofs = " << trial_dim + test_dim << std::endl;
+        int dofs = (type == "supg" || type == "supg-weak") ? trial_dim : trial_dim + test_dim;
+        std::cout << "dofs = " << dofs << std::endl;
     }
-    int dofsU = trial_dim * trial_dim;
-    int dofsV = test_dim * test_dim;
-    int dofs = (type == "supg" || type == "supg-weak") ? dofsU : dofsU + dofsV;
-    std::cout << "DOFs : " << dofs << std::endl;
 
     if (type == "igrm-mumps") erikkson_mumps{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
     if (type == "igrm-cg") erikkson_CG{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
