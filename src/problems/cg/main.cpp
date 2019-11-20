@@ -73,6 +73,7 @@ int main(int argc, char* argv[]) {
     int C_test;
 
     double peclet = 1e2;
+    double eta = 0.1;
     bool adapt_x = false;
     bool adapt_y = false;
 
@@ -93,6 +94,7 @@ int main(int argc, char* argv[]) {
         | Opt(adapt_x, "adapt in x direction")["--adaptx"]
         | Opt(adapt_y, "adapt in y direction")["--adapty"]
         | Opt(peclet, "Peclet number")["--Pe"]
+        | Opt(eta, "eta (solver parameter)")["--eta"]
         | Opt(print_dof_count, "print # of DOFs")["--dofs"]
         | Opt(print_dims, "print dimensions of spacs")["--dims"]
         | make_config_parser(cfg);
@@ -137,7 +139,7 @@ int main(int argc, char* argv[]) {
 
     with_problem(problem, peclet, [&](auto prob) {
         using Problem = decltype(prob);
-        auto sim = advection<Problem>{dtrial_x, dtrial_y, dtest_x, dtest_y, peclet, cfg, prob};
+        auto sim = advection<Problem>{dtrial_x, dtrial_y, dtest_x, dtest_y, peclet, eta, cfg, prob};
         sim.run();
     });
 }

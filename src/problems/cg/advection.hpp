@@ -66,6 +66,7 @@ private:
     std::vector<double> full_rhs;
 
     double h;
+    double eta;
     double gamma;
 
     double peclet;
@@ -87,7 +88,7 @@ private:
     boundary dirichlet;
 
 public:
-    advection(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, double peclet, const advection_config& cfg, Problem problem)
+    advection(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, double peclet, double eta, const advection_config& cfg, Problem problem)
     : Base{std::move(test_x), std::move(test_y), timesteps_config(1, 0.0)}
     , executor{ cfg.threads }
     , Ux{ std::move(trial_x) }
@@ -107,6 +108,7 @@ public:
     , buffer{{ Vx.dofs(), Vy.dofs() }}
     , full_rhs(Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs())
     , h{ element_diam(Ux, Uy) }
+    , eta{ eta }
     , peclet{ peclet }
     , cfg{ cfg }
     , problem{ problem }
@@ -338,7 +340,7 @@ private:
 
     void assemble_problem(mumps::problem& problem, const dimension& Vx, const dimension& Vy) {
         auto N = Vx.dofs() * Vy.dofs();
-        auto eta = h * h;
+        // auto eta = h * h;
 
         // Gram matrix - upper left
         for (auto i : dofs(Vx, Vy)) {
@@ -421,7 +423,7 @@ private:
         stiffness_matrix_1d(KVx, Vx.basis);
         stiffness_matrix_1d(KVy, Vy.basis);
 
-        double eta = h * h;
+        // double eta = h * h;
 
         for (int i = 0; i < Vx.dofs(); ++ i) {
             for (int j : overlapping_dofs(i, 0, Vx.dofs(), Vx)) {
@@ -660,8 +662,8 @@ private:
         if (cfg.print_errors) {
             std::cout << "L2 abs: " << errorL2_abs() << std::endl;
             std::cout << "H1 abs: " << errorH1_abs() << std::endl;
-            std::cout << "L2 rel: " << errorL2() << std::endl;
-            std::cout << "H1 rel: " << errorH1() << std::endl;
+            std::cout << "L2 rel: " << errorL2() << "%" << std::endl;
+            std::cout << "H1 rel: " << errorH1() << "%" << std::endl;
         }
 
         if (cfg.print_times) {
@@ -784,7 +786,7 @@ private:
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
                     double vxy = eval_basis_dxy(e, q, a, Vx, Vy);
-                    double eta = h * h;
+                    // double eta = h * h;
                     double Lv = F(x) * v.val;
 
                     // F + Kr - Bu
