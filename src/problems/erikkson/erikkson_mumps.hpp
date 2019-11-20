@@ -52,8 +52,10 @@ private:
     double angle = 0;
     double len = 1;
 
-    point_type beta{{ len * cos(angle), len * sin(angle) }};
+    // point_type beta{{ len * cos(angle), len * sin(angle) }};
+    point_type beta{{ 1, 1 }};
 
+    Galois::StatTimer solver_timer{"solver"};
     mumps::solver solver;
 
     output_manager<2> output;
@@ -182,6 +184,12 @@ private:
     }
 
     void step(int /*iter*/, double t) override {
+        mumps::problem problem(full_rhs.data(), full_rhs.size());
+
+        std::cout << "Assembling matrix" << std::endl;
+        assemble_problem(problem, steps.dt);
+
+        std::cout << "Computing RHS" << std::endl;
         compute_rhs(t);
         // zero(rhs);
 
@@ -192,23 +200,29 @@ private:
         for (auto i : dofs(Vx, Vy)) {
             view_in(i[0], i[1]) = -rhs(i[0], i[1]);
         }
-        stationary_bc(view_out, Ux, Uy);
-        // zero_bc(view_out, Ux, Uy);
+        // stationary_bc(view_out, Ux, Uy);
+        zero_bc(view_out, Ux, Uy);
 
-        mumps::problem problem(full_rhs.data(), full_rhs.size());
-        assemble_problem(problem, steps.dt);
+        std::cout << "Solving" << std::endl;
+        solver_timer.start();
         solver.solve(problem);
+        solver_timer.stop();
 
         for (auto i : dofs(Ux, Uy)) {
             u(i[0], i[1]) = view_out(i[0], i[1]);
         }
+
+        std::cout << "  solver time:       " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
+        std::cout << "  assembly    FLOPS: " << solver.flops_assembly() << std::endl;
+        std::cout << "  elimination FLOPS: " << solver.flops_elimination() << std::endl;
+
+        std::cout << "Error: L2 = " << errorL2(t) << "%, H1 =  " << errorH1(t) << "%" << std::endl;
     }
 
     void after_step(int iter, double t) override {
         if ((iter + 1) % save_every == 0) {
             // std::cout << "Step " << (iter + 1) << " : " << errorL2(t) << "% " << errorH1(t) << "%" << std::endl;
-            std::cout << iter << " " << t << " " << errorL2(t) << " " << errorH1(t) << std::endl;
-
+            // std::cout << iter << " " << t << " " << errorL2(t) << " " << errorH1(t) << std::endl;
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
     }
@@ -234,8 +248,11 @@ private:
                     auto aa = dof_global_to_local(e, a, Vx, Vy);
                     value_type v = eval_basis(e, q, a, Vx, Vy);
 
-                    double F = 0;//erikkson_forcing(x[0], x[1], epsilon, t + steps.dt);
-                    double val = (uu.val + steps.dt * F) * v.val;
+                    // double F = 0;
+                    // double F = erikkson_forcing(x[0], x[1], epsilon, t + steps.dt);
+                    double F = erikkson2_forcing(x[0], x[1], epsilon);
+                    // double val = (uu.val + steps.dt * F) * v.val;
+                    double val = F * v.val;
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
@@ -254,16 +271,16 @@ private:
     // }
 
     double errorL2(double t) const {
-        auto sol = exact(epsilon);
-        // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        // auto sol = exact(epsilon);
+        auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         // auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
 
         return Base::errorL2(u, Ux, Uy, sol) / normL2(Ux, Uy, sol) * 100;
     }
 
     double errorH1(double t) const {
-        auto sol = exact(epsilon);
-        // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
+        // auto sol = exact(epsilon);
+        auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         // auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
 
         return Base::errorH1(u, Ux, Uy, sol) / normH1(Ux, Uy, sol) * 100;
