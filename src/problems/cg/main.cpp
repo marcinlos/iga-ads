@@ -6,6 +6,44 @@
 using namespace ads;
 using namespace clara;
 
+bspline::basis basis_from_points(const std::vector<double>& points, int p, int repeated_nodes) {
+    int elems = points.size() - 1;
+    int r = repeated_nodes + 1;
+    int size = (elems - 1) * r + 2 * (p + 1);
+    auto knot = bspline::knot_vector(size);
+
+    for (int i = 0; i <= p; ++ i) {
+        knot[i] = points[0];
+        knot[size - i - 1] = points[elems];
+    }
+
+    for (int i = 1; i < elems; ++ i) {
+        for (int j = 0; j < r; ++ j) {
+            knot[p + 1 + (i - 1) * r + j] = points[i];
+        }
+    }
+    return {std::move(knot), p};
+}
+
+std::vector<double> make_points(int n) {
+    std::vector<double> points{};
+
+    points.push_back(0);
+
+    double x = 0;
+    double h = 1;
+
+    for (int i = 0; i < n; ++ i) {
+        h /= 2;
+        x += h;
+        points.push_back(x);
+    }
+
+    points.push_back(1);
+    return points;
+}
+
+
 void validate_dimensions(const ads::dimension& trial, const ads::dimension& test, bool print_dim) {
     auto trial_dim = trial.B.dofs();
     auto test_dim = test.B.dofs();
@@ -127,10 +165,16 @@ int main(int argc, char* argv[]) {
         return dimension{basis, quad, ders, 1};
     };
 
-    auto dtrial_x = make_dim(p_trial, nx, rep_trial, adapt_x);
+    auto points_x = make_points(nx);
+
+    auto trial_basis_x = basis_from_points(points_x, p_trial, rep_trial);
+    auto dtrial_x = dimension{trial_basis_x, quad, 1, 1};
+    // auto dtrial_x = make_dim(p_trial, nx, rep_trial, adapt_x);
     auto dtrial_y = make_dim(p_trial, ny, rep_trial, adapt_y);
 
-    auto dtest_x = make_dim(p_test, nx, rep_test, adapt_x);
+    auto test_basis_x = basis_from_points(points_x, p_test, rep_test);
+    auto dtest_x = dimension{test_basis_x, quad, 1, 1};
+    // auto dtest_x = make_dim(p_test, nx, rep_test, adapt_x);
     auto dtest_y = make_dim(p_test, ny, rep_test, adapt_y);
 
     validate_dimensions(dtrial_x, dtest_x, print_dims);
