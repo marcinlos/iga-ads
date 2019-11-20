@@ -206,7 +206,7 @@ protected:
         lin::solve_with_factorized(basis.M, buf, basis.ctx);
 
         int idx = side == boundary::left || side == boundary::bottom ? 0 : other.dofs() - 1;
-        for (int i = 0; i < other.dofs(); ++ i) {
+        for (int i = 0; i < basis.dofs(); ++ i) {
             if (horizontal) {
                 u(i, idx) = buf(i);
             } else {
