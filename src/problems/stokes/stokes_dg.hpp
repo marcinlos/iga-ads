@@ -31,7 +31,7 @@ private:
     double Cpen;// = 5 * (3 + 1);
     double hF;// = 1 / 20.;
 
-    double eta = 10;
+    double eta;
 
     mumps::solver solver;
     Galois::StatTimer solver_timer{"solver"};
@@ -50,6 +50,8 @@ public:
         // 5(p + 1)
         Cpen = 5 * trial.U1x.B.degree;
         hF = 1. / trial.Px.B.elements();
+        auto p = trial.Px.B.degree;
+        eta = 3 * (p + 1) * (p + 2);
     }
 
     double element_diam(const dimension& Ux, const dimension& Uy) const {
@@ -323,7 +325,7 @@ public:
                     double val = eval([this](auto tx, auto vx) { return grad_dot(tx, vx); });
                     // skeleton
                     auto form = [this](auto tx, auto vx, auto, auto) {
-                        return 1/h * jump(tx).val * jump(vx).val;
+                        return eta/h * jump(tx).val * jump(vx).val;
                     };
                     val += integrate_over_skeleton(i, j, test.U1x, test.U1y, test.U1x, test.U1y, form);
 
@@ -347,7 +349,7 @@ public:
                     double val = eval([this](auto ty, auto vy) { return grad_dot(ty, vy); });
                     // skeleton
                     auto form = [this](auto ty, auto vy, auto, auto) {
-                        return 1/h * jump(ty).val * jump(vy).val;
+                        return eta/h * jump(ty).val * jump(vy).val;
                     };
                     val += integrate_over_skeleton(i, j, test.U2x, test.U2y, test.U2x, test.U2y, form);
 
