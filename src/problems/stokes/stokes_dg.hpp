@@ -77,47 +77,82 @@ public:
     }
 
     value_type exact_p(point_type p) const {
-        auto x = p[0];
-        return {x * (1 - x) - 1./6, 1 - 2 * x, 0.0};
+        // auto x = p[0];
+        // return {x * (1 - x) - 1./6, 1 - 2 * x, 0.0};
+
+        // non-polynomial
+        using std::exp;
+        using std::pow;
+        auto x = p[0], y = p[1];
+        auto xx = x * x, yy = y * y;
+        auto ex = exp(x);
+        auto e = exp(1);
+
+        return {
+            -424 + 156*e + (yy - y) * (-456 + ex * (456 + xx * (228 - 5 *(yy - y)) + 2*x*(-228 + (yy - y)) + 2*pow(x,3) * (-36 + (yy - y)) + pow(x,4) * (12 + (yy - y)))),
+            ex * (y - 1) * y * (pow(x,4) * (yy - y + 12) + 6 * pow(x,3) * (yy - y - 4) + xx * (yy - y + 12) - 8 * x * (y - 1) * y + 2 * (y - 1) * y),
+            2 * (2 * y - 1) * (ex * (pow(x,4) * (yy - y + 6) + 2 * pow(x,3) * (yy - y - 18) + xx * (-5 * yy + 5 * y + 114) + 2 * x * (yy - y - 114) + 228) - 228)
+        };
     }
 
     std::array<value_type, 2> exact_v(point_type p) const {
-        auto f = [](double x, double y) {
-            return x*x * (1 - x) * (1 - x) * (2 * y - 6 * y*y + 4 * y*y*y);
+        // auto f = [](double x, double y) {
+        //     return x*x * (1 - x) * (1 - x) * (2 * y - 6 * y*y + 4 * y*y*y);
+        // };
+
+        // auto dfx = [](double x, double y) {
+        //     return (4 * x*x*x - 6 * x*x + 2 * x) * (2 * y - 6 * y*y + 4 * y*y*y);
+        // };
+
+        // auto dfy = [](double x, double y) {
+        //     return x*x * (1 - x) * (1 - x) * (2 - 12 * y + 12 * y*y);
+        // };
+
+        // double x = p[0], y = p[1];
+        // value_type vx = {f(x, y), dfx(x, y), dfy(x, y)};
+        // value_type vy = {-f(y, x), -dfy(y, x), -dfx(y, x)};
+
+        // return { vx ,vy };
+
+        // non-polynomial
+        using std::exp;
+        using std::pow;
+        auto x = p[0], y = p[1];
+        auto ex = exp(x);
+
+        auto ux = value_type{
+            2*ex * pow(-1 + x, 2) * x * x * (y * y - y) * (-1 + 2*y),
+            2*ex * x * (pow(x,3) + 2 * x * x - 5 * x + 2) * y*  (2 * y * y - 3 * y + 1),
+            2*ex * pow(x - 1, 2) * x * x * (6 *  y * y - 6 * y + 1)
         };
 
-        auto dfx = [](double x, double y) {
-            return (4 * x*x*x - 6 * x*x + 2 * x) * (2 * y - 6 * y*y + 4 * y*y*y);
+        auto uy = value_type{
+            -ex * (-1 + x) * x* (-2 + x * (3 + x)) * pow(-1 + y, 2) * y * y,
+            -ex * (pow(x,4) + 6 * pow(x,3) + x * x - 8 * x + 2) * pow(y - 1, 2) * y * y,
+            -2 * ex * x * (pow(x,3) + 2 * x * x - 5 *  x + 2) * y * (2 * y * y - 3 * y + 1)
         };
 
-        auto dfy = [](double x, double y) {
-            return x*x * (1 - x) * (1 - x) * (2 - 12 * y + 12 * y*y);
-        };
-
-        double x = p[0], y = p[1];
-        value_type vx = {f(x, y), dfx(x, y), dfy(x, y)};
-        value_type vy = {-f(y, x), -dfy(y, x), -dfx(y, x)};
-
-        return { vx ,vy };
+        return {ux, uy};
     }
 
     value_type exact_div(point_type p) const {
-        auto v = exact_v(p);
-        auto div = v[0].dx + v[1].dy;
+        // auto v = exact_v(p);
+        // auto div = v[0].dx + v[1].dy;
 
-        auto dfxy = [](double x, double y) {
-            return (4 * x*x*x - 6 * x*x + 2 * x) * (2 - 12 * y + 12 * y*y);
-        };
+        // auto dfxy = [](double x, double y) {
+        //     return (4 * x*x*x - 6 * x*x + 2 * x) * (2 - 12 * y + 12 * y*y);
+        // };
 
-        auto dfxx = [](double x, double y) {
-            return (12 * x*x - 12 * x + 2) * (2 * y - 6 * y*y + 4 * y*y*y);
-        };
+        // auto dfxx = [](double x, double y) {
+        //     return (12 * x*x - 12 * x + 2) * (2 * y - 6 * y*y + 4 * y*y*y);
+        // };
 
-        double x = p[0], y = p[1];
-        double dx = dfxx(x, y) - dfxy(y, x);
-        double dy = dfxy(x, y) - dfxx(y, x);
+        // double x = p[0], y = p[1];
+        // double dx = dfxx(x, y) - dfxy(y, x);
+        // double dy = dfxy(x, y) - dfxx(y, x);
 
-        return { div, dx, dy };
+        // return { div, dx, dy };
+        return {0, 0, 0};
     }
 
     void output_exact() {
@@ -164,25 +199,42 @@ public:
     }
 
     point_type forcing(point_type p) const {
-        double x = p[0], y = p[1];
+        // double x = p[0], y = p[1];
 
-        auto fx =
-            (12 - 24 * y) * x*x*x*x +
-            (-24 + 48 * y) * x*x*x +
-            (-48 * y + 72 * y*y - 48 * y*y*y + 12) * x*x +
-            (-2 + 24*y - 72 * y*y + 48 * y*y*y) * x +
-            1 - 4 * y + 12 * y*y - 8 * y*y*y;
+        // auto fx =
+        //     (12 - 24 * y) * x*x*x*x +
+        //     (-24 + 48 * y) * x*x*x +
+        //     (-48 * y + 72 * y*y - 48 * y*y*y + 12) * x*x +
+        //     (-2 + 24*y - 72 * y*y + 48 * y*y*y) * x +
+        //     1 - 4 * y + 12 * y*y - 8 * y*y*y;
 
-        auto fy =
-            (8 - 48 * y + 48 * y*y) * x*x*x +
-            (-12 + 72 * y - 72 * y*y) * x*x +
-            (4 - 24 * y + 48 * y*y - 48 * y*y*y + 24 * y*y*y*y) * x -
-            12 * y*y + 24 * y*y*y - 12 * y*y*y*y;
+        // auto fy =
+        //     (8 - 48 * y + 48 * y*y) * x*x*x +
+        //     (-12 + 72 * y - 72 * y*y) * x*x +
+        //     (4 - 24 * y + 48 * y*y - 48 * y*y*y + 24 * y*y*y*y) * x -
+        //     12 * y*y + 24 * y*y*y - 12 * y*y*y*y;
 
-        return { fx, fy };
+        // return { fx, fy };
 
         // cavity flow
         // return { 0, 0 };
+
+        // non-polynomial
+        using std::exp;
+        using std::pow;
+        auto x = p[0], y = p[1];
+        auto xx = x * x, yy = y * y;
+        auto ex = exp(x);
+
+        auto px = ex * (y - 1) * y * (pow(x,4) * (yy - y + 12) + 6 * pow(x,3) * (yy - y - 4) + xx * (yy - y + 12) - 8 * x * (y - 1) * y + 2 * (y - 1) * y);
+        auto py = 2 * (2 * y - 1) * (ex * (pow(x,4) * (yy - y + 6) + 2 * pow(x,3) * (yy - y - 18) + xx * (-5 * yy + 5 * y + 114) + 2 * x * (yy - y - 114) + 228) - 228);
+
+        auto Lux = 2 * ex * (pow(x,4) * (2 * pow(y,3) - 3 * yy + 13 * y - 6) + 6 * pow(x,3) * (2 * pow(y,3) - 3 * yy - 3 * y + 2) +
+                             xx * (2 * pow(y,3) - 3 * yy + 13 * y - 6) - 8 * x * y * (2 * yy - 3 * y + 1) + 2 * y * (2 * yy - 3 * y + 1));
+        auto Luy = -ex * (pow(x,4) * (pow(y,4) - 2 * pow(y,3) + 13 * yy - 12 * y + 2) + 2 * pow(x,3) * (5 * pow(y,4) - 10 * pow(y,3) + 17 * yy - 12 * y + 2) +
+                          xx * (19 * pow(y,4) - 38 * pow(y,3) - 41 * yy + 60 * y - 10) + x * (-6 * pow(y,4) + 12 * pow(y,3) + 18 * yy - 24 * y + 4) - 6 * pow(y - 1, 2) * yy);
+
+        return {-Lux + px, -Luy + py};
     }
 
     auto shifted(int n, int k, mumps::problem& problem) const {
