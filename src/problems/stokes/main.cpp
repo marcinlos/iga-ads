@@ -71,8 +71,13 @@ int main(int argc, char* argv[]) {
 
 
     // Sanity check
-    auto trial_dim = dtrial_x.B.dofs();
-    auto test_dim = dtest_x.B.dofs();
+    auto trial_v_dim = U1_dtrial_x.dofs() * U1_dtrial_y.dofs() + U2_dtrial_x.dofs() * U2_dtrial_y.dofs();
+    auto trial_p_dim = dtrial_x.dofs() * dtrial_y.dofs();
+    auto trial_dim = trial_v_dim + trial_p_dim;
+
+    auto test_v_dim = U1_dtest_x.dofs() * U1_dtest_y.dofs() + U2_dtest_x.dofs() * U2_dtest_y.dofs();
+    auto test_p_dim = dtest_x.dofs() * dtest_y.dofs();
+    auto test_dim = test_v_dim + test_p_dim;
 
     if (trial_dim > test_dim) {
         std::cerr << "Dimension of the trial space greater than that of test space ("
@@ -80,7 +85,7 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     } else {
         std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
-        auto dofs = trial_dim * trial_dim + test_dim * test_dim;
+        auto dofs = trial_dim + test_dim;
         std::cout << "dofs = " << dofs << std::endl;
     }
 
@@ -99,7 +104,7 @@ int main(int argc, char* argv[]) {
     // auto sim = stokes_conforming{trial, test, steps};
     // auto sim = stokes_constrained{trial, test, steps};
 
-    n = 64;
+    // n = 64;
     auto ref_basis_x = bspline::create_basis(0, 1, p_trial, n, rep_trial);
     auto ref_x = dimension{ ref_basis_x, quad, ders, subdivision };
     auto ref_basis_y = bspline::create_basis(0, 1, p_trial, n, rep_trial);
