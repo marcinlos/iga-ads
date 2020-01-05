@@ -136,22 +136,6 @@ public:
     }
 
     value_type exact_div(point_type p) const {
-        // auto v = exact_v(p);
-        // auto div = v[0].dx + v[1].dy;
-
-        // auto dfxy = [](double x, double y) {
-        //     return (4 * x*x*x - 6 * x*x + 2 * x) * (2 - 12 * y + 12 * y*y);
-        // };
-
-        // auto dfxx = [](double x, double y) {
-        //     return (12 * x*x - 12 * x + 2) * (2 * y - 6 * y*y + 4 * y*y*y);
-        // };
-
-        // double x = p[0], y = p[1];
-        // double dx = dfxx(x, y) - dfxy(y, x);
-        // double dy = dfxy(x, y) - dfxx(y, x);
-
-        // return { div, dx, dy };
         return {0, 0, 0};
     }
 
@@ -352,6 +336,8 @@ public:
         auto trial_p = shifted(D + dU1 + dU2, D + dU1 + dU2, problem);
 
         auto N = D + dU1 + dU2 + dP;
+        bool bc = true;
+        bool fix_p = true;
 
         // auto hh = h * h;
 
@@ -367,7 +353,7 @@ public:
                 int ii = linear_index(i, test.Px, test.Py) + 1;
                 int jj = linear_index(j, test.Px, test.Py) + 1;
 
-                if (! is_pressure_fixed(i) && ! is_pressure_fixed(j)) {
+                if (!fix_p || (! is_pressure_fixed(i) && ! is_pressure_fixed(j))) {
                     auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, test.Px, test.Py, form); };
                     double product = eval([](auto w, auto p) { return w.val * p.val; });
 
@@ -391,7 +377,7 @@ public:
                 // Weak BC
                 // if (! is_boundary(i[0], test.U1x) && ! is_boundary(j[0], test.U1x)) {
                 // Strong BC
-                if (! is_boundary(i, test.U1x, test.U1y) && ! is_boundary(j, test.U1x, test.U1y)) {
+                if (!bc || (! is_boundary(i, test.U1x, test.U1y) && ! is_boundary(j, test.U1x, test.U1y))) {
                     double val = eval([this](auto tx, auto vx) { return grad_dot(tx, vx); });
                     // skeleton
                     auto form = [this](auto tx, auto vx, auto, auto) {
@@ -415,7 +401,7 @@ public:
                 // Weak BC
                 // if (! is_boundary(i[1], test.U2y) && ! is_boundary(j[1], test.U2y)) {
                 // Strong BC
-                if (! is_boundary(i, test.U2x, test.U2y) && ! is_boundary(j, test.U2x, test.U2y)) {
+                if (!bc || (! is_boundary(i, test.U2x, test.U2y) && ! is_boundary(j, test.U2x, test.U2y))) {
                     double val = eval([this](auto ty, auto vy) { return grad_dot(ty, vy); });
                     // skeleton
                     auto form = [this](auto ty, auto vy, auto, auto) {
@@ -443,18 +429,20 @@ public:
         //     test_vy(i1, i1, 1);
         // }
         // Strong BC
-        for_boundary_dofs(test.U1x, test.U1y, [&](index_type dof) {
-            int i = linear_index(dof, test.U1x, test.U1y) + 1;
-            test_vx(i, i, 1);
-        });
-        for_boundary_dofs(test.U2x, test.U2y, [&](index_type dof) {
-            int i = linear_index(dof, test.U2x, test.U2y) + 1;
-            test_vy(i, i, 1);
-        });
-
-
-        int i = linear_index({0, 0}, test.Px, test.Py) + 1;
-        test_p(i, i, 1.0);
+        if (bc) {
+            for_boundary_dofs(test.U1x, test.U1y, [&](index_type dof) {
+                int i = linear_index(dof, test.U1x, test.U1y) + 1;
+                test_vx(i, i, 1);
+            });
+            for_boundary_dofs(test.U2x, test.U2y, [&](index_type dof) {
+                int i = linear_index(dof, test.U2x, test.U2y) + 1;
+                test_vy(i, i, 1);
+            });
+        }
+        if (fix_p) {
+            int i = linear_index({0, 0}, test.Px, test.Py) + 1;
+            test_p(i, i, 1.0);
+        }
 
 
         // B, B^t
@@ -489,8 +477,8 @@ public:
                 // bool bd_i = is_boundary(i[0], test.U1x);
                 // bool bd_j = is_boundary(j[0], trial.U1x);
                 // Strong BC
-                bool bd_i = is_boundary(i, test.U1x, test.U1y);
-                bool bd_j = is_boundary(j, trial.U1x, trial.U1y);
+                bool bd_i = is_boundary(i, test.U1x, test.U1y) && bc;
+                bool bd_j = is_boundary(j, trial.U1x, trial.U1y) && bc;
 
                 double value = eval([this](auto vx, auto ux) { return grad_dot(vx, ux); });
 
@@ -528,8 +516,8 @@ public:
                 // bool bd_i = is_boundary(i[1], test.U2y);
                 // bool bd_j = is_boundary(j[1], trial.U2y);
                 // Strong BC
-                bool bd_i = is_boundary(i, test.U2x, test.U2y);
-                bool bd_j = is_boundary(j, trial.U2x, trial.U2y);
+                bool bd_i = is_boundary(i, test.U2x, test.U2y) && bc;
+                bool bd_j = is_boundary(j, trial.U2x, trial.U2y) && bc;
 
                 double value = eval([this](auto vy, auto uy) { return grad_dot(vy, uy); });
 
@@ -563,11 +551,11 @@ public:
                 int jj = linear_index(j, trial.U1x, trial.U1y) + 1;
                 auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, trial.U1x, trial.U1y, form); };
 
-                bool fixed_i = is_pressure_fixed(i);
+                bool fixed_i = is_pressure_fixed(i) && fix_p;
                 // Weak BC
                 // bool bd_j = is_boundary(j[0], trial.U1x);
                 // Strong BC
-                bool bd_j = is_boundary(j, trial.U1x, trial.U1y);
+                bool bd_j = is_boundary(j, trial.U1x, trial.U1y) && bc;
 
                 double val = eval([](auto q, auto ux) { return q.val * ux.dx; });
 
@@ -590,11 +578,11 @@ public:
                 int jj = linear_index(j, trial.U2x, trial.U2y) + 1;
                 auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, trial.U2x, trial.U2y, form); };
 
-                bool fixed_i = is_pressure_fixed(i);
+                bool fixed_i = is_pressure_fixed(i) && fix_p;
                 // Weak BC
                 // bool bd_j = is_boundary(j[1], trial.U2y);
                 // Strong BC
-                bool bd_j = is_boundary(j, trial.U2x, trial.U2y);
+                bool bd_j = is_boundary(j, trial.U2x, trial.U2y) && bc;
 
                 double val = eval([](auto q, auto uy) { return q.val * uy.dy; });
 
@@ -620,9 +608,9 @@ public:
                 // Weak BC
                 // bool bd_i = is_boundary(i[0], test.U1x);
                 // Strong BC
-                bool bd_i = is_boundary(i, test.U1x, test.U1y);
+                bool bd_i = is_boundary(i, test.U1x, test.U1y) && bc;
 
-                bool fixed_j = is_pressure_fixed(j);
+                bool fixed_j = is_pressure_fixed(j) && fix_p;
 
                 double val = eval([](auto vx, auto p) { return -vx.dx * p.val; });
                 // skeleton
@@ -647,9 +635,9 @@ public:
                 // Weak BC
                 // bool bd_i = is_boundary(i[1], test.U2y);
                 // Strong BC
-                bool bd_i = is_boundary(i, test.U2x, test.U2y);
+                bool bd_i = is_boundary(i, test.U2x, test.U2y) && bc;
 
-                bool fixed_j = is_pressure_fixed(j);
+                bool fixed_j = is_pressure_fixed(j) && fix_p;
 
                 double val = eval([](auto vy, auto p) { return -vy.dy * p.val; });
                 // skeleton
@@ -670,19 +658,17 @@ public:
 
                 int ii = linear_index(i, test.Px, test.Py) + 1;
                 int jj = linear_index(j, trial.Px, trial.Py) + 1;
-                auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, trial.Px, trial.Py, form); };
+                // auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, trial.Px, trial.Py, form); };
 
-
-                bool fixed_i = is_pressure_fixed(i);
-                bool fixed_j = is_pressure_fixed(j);
+                bool fixed_i = is_pressure_fixed(i) && fix_p;
+                bool fixed_j = is_pressure_fixed(j) && fix_p;
 
                 // skeleton
                 auto form = [this](auto q, auto p, auto, auto) {
                     return h * jump(p).val * jump(q).val;
                 };
                 double val = integrate_over_internal_skeleton(i, j, test.Px, test.Py, trial.Px, trial.Py, form);
-                // double val = h*h*eval([this](auto q, auto p) { return grad_dot(p, q); }); // Minev
-                val += integrate_over_internal_skeleton(i, j, test.Px, test.Py, trial.Px, trial.Py, form);
+                // val += h*h*eval([this](auto q, auto p) { return grad_dot(p, q); }); // Minev
 
                 put(ii, jj, DU1 + DU2, dU1 + dU2, val, fixed_i, fixed_j);
             }
@@ -714,20 +700,23 @@ public:
         //     trial_vy(i1, i1, 1);
         // }
         // Strong BC
-        for_boundary_dofs(trial.U1x, trial.U1y, [&](index_type dof) {
-            int i = linear_index(dof, trial.U1x, trial.U1y) + 1;
-            trial_vx(i, i, 1);
-        });
-        for_boundary_dofs(trial.U2x, trial.U2y, [&](index_type dof) {
-            int i = linear_index(dof, trial.U2x, trial.U2y) + 1;
-            trial_vy(i, i, 1);
-        });
-
-        int ii = linear_index({0, 0}, trial.Px, trial.Py) + 1;
-        trial_p(ii, ii, 1.0);
+        if (bc) {
+            for_boundary_dofs(trial.U1x, trial.U1y, [&](index_type dof) {
+                int i = linear_index(dof, trial.U1x, trial.U1y) + 1;
+                trial_vx(i, i, 1);
+            });
+            for_boundary_dofs(trial.U2x, trial.U2y, [&](index_type dof) {
+                int i = linear_index(dof, trial.U2x, trial.U2y) + 1;
+                trial_vy(i, i, 1);
+            });
+        }
+        if (fix_p) {
+            int ii = linear_index({0, 0}, trial.Px, trial.Py) + 1;
+            trial_p(ii, ii, 1.0);
+        }
     }
 
-    void compute_rhs(vector_view& vx, vector_view& vy, vector_view& /*p*/) const {
+    void compute_rhs(vector_view& vx, vector_view& vy, vector_view& p) const {
         using shape = std::array<std::size_t, 2>;
         auto u1_shape = shape{ test.U1x.basis.dofs_per_element(), test.U1y.basis.dofs_per_element() };
         auto u2_shape = shape{ test.U2x.basis.dofs_per_element(), test.U2y.basis.dofs_per_element() };
@@ -762,6 +751,38 @@ public:
                 update_global_rhs(vy, vy_loc, e, test.U2x, test.U2y);
             });
         });
+
+        // // cavity flow
+        // auto side = boundary::top;
+
+        // // vx
+        // for (auto i : dofs(test.U1x, test.U1y)) {
+        //     double val = 0;
+
+        //     auto form = [&](auto v, auto x, auto n) {
+        //         auto g = 1;
+        //         return - dot(v, n) * g + eta / hF * v.val * g;
+        //     };
+        //     if (touches(i, side, test.U1x, test.U1y)) {
+        //         val += integrate_boundary(side, i, test.U1x, test.U1y, form);
+        //     }
+        //     vx(i[0], i[1]) -= val;
+        // }
+        // // vy - 0
+
+        // // p
+        // for (auto i : dofs(test.Px, test.Py)) {
+        //     double val = 0;
+
+        //     auto form = [&](auto q, auto x, auto n) {
+        //         auto g = 1;
+        //         return q.val * n[0];
+        //     };
+        //     if (touches(i, side, test.Px, test.Py)) {
+        //         val += integrate_boundary(side, i, test.Px, test.Py, form);
+        //     }
+        //     p(i[0], i[1]) -= val;
+        // }
     }
 
 
@@ -777,6 +798,8 @@ public:
         // dirichlet_bc(vx, boundary::right,  trial.U1x, trial.U1y, drop);
         // dirichlet_bc(vx, boundary::top,    trial.U1x, trial.U1y, 1.0);
         // dirichlet_bc(vx, boundary::bottom, trial.U1x, trial.U1y, 0);
+        // zero_bc(vy, trial.U2x, trial.U2y);
+
 
         // Weak BC
         // vx = 0 on left/right edge
@@ -970,6 +993,16 @@ public:
         }
     }
 
+    point_type normal(boundary side) const {
+        switch (side) {
+        case boundary::left:   return {-1,  0};
+        case boundary::right:  return { 1,  0};
+        case boundary::bottom: return { 0, -1};
+        case boundary::top:    return { 0,  1};
+        default: return {0, 0};
+        }
+    }
+
     value_type eval_basis_at(point_type p, index_type span, index_type dof,
                              const dimension& x, const dimension& y) const {
         bspline::eval_ders_ctx cx{x.p, 1};
@@ -994,6 +1027,13 @@ public:
         auto dy    = bvx[0][ix] * bvy[1][iy];
 
         return { value, dx, dy };
+    }
+
+    value_type eval_basis_at(point_type p, index_type dof, const dimension& x, const dimension& y) const {
+        int spanx = bspline::find_span(p[0], x.B);
+        int spany = bspline::find_span(p[1], y.B);
+
+        return eval_basis_at(p, {spanx, spany}, dof, x, y);
     }
 
     value_pair eval_basis_at_edge(point_type p, boundary orientation, index_type dof,
@@ -1083,27 +1123,25 @@ public:
                                    const dimension& Ux, const dimension& Uy,
                                    const dimension& Vx, const dimension& Vy,
                                    Form&& form) const {
-        // TODO: restrict the range
+        using std::min;
+        using std::max;
+
         auto rUx = Ux.basis.element_ranges[i[0]];
         auto rVx = Vx.basis.element_ranges[j[0]];
         auto rUy = Uy.basis.element_ranges[i[1]];
         auto rVy = Vy.basis.element_ranges[j[1]];
-        auto ex0 = std::min(rUx.first, rVx.first);
-        auto ex1 = std::max(rUx.second, rVx.second);
-        auto ey0 = std::min(rUy.first, rVy.first);
-        auto ey1 = std::max(rUy.second, rVy.second);
+        auto ex0 = min(rUx.first, rVx.first);
+        auto ex1 = max(rUx.second, rVx.second);
+        auto ey0 = min(rUy.first, rVy.first);
+        auto ey1 = max(rUy.second, rVy.second);
 
         double val = 0;
-        // for (int ix = 0; ix <= Ux.elements; ++ ix) {
         for (int ix = ex0; ix <= ex1 + 1; ++ ix) {
-            // for (auto ey : Uy.element_indices()) {
             for (auto ey = ey0; ey <= ey1; ++ ey) {
                 val += integrate_vface(ix, ey, i, j, Ux, Uy, Vx, Vy, form);
             }
         }
         for (auto ex = ex0; ex <= ex1; ++ ex) {
-        // for (auto ex : Ux.element_indices()) {
-            // for (int iy = 0; iy <= Uy.elements; ++ iy) {
             for (int iy = ey0; iy <= ey1 + 1; ++ iy) {
                 val += integrate_hface(iy, ex, i, j, Ux, Uy, Vx, Vy, form);
             }
@@ -1116,15 +1154,26 @@ public:
                                             const dimension& Ux, const dimension& Uy,
                                             const dimension& Vx, const dimension& Vy,
                                             Form&& form) const {
+        using std::min;
+        using std::max;
+
+        auto rUx = Ux.basis.element_ranges[i[0]];
+        auto rVx = Vx.basis.element_ranges[j[0]];
+        auto rUy = Uy.basis.element_ranges[i[1]];
+        auto rVy = Vy.basis.element_ranges[j[1]];
+        auto ex0 = min(rUx.first, rVx.first);
+        auto ex1 = max(rUx.second, rVx.second);
+        auto ey0 = min(rUy.first, rVy.first);
+        auto ey1 = max(rUy.second, rVy.second);
+
         double val = 0;
-        // TODO: restrict the range
-        for (int ix = 1; ix < Ux.elements; ++ ix) {
-            for (auto ey : Uy.element_indices()) {
+        for (int ix = max(1, ex0); ix < min(Ux.elements, ex1 + 2); ++ ix) {
+            for (auto ey = ey0; ey <= ey1; ++ ey) {
                 val += integrate_vface(ix, ey, i, j, Ux, Uy, Vx, Vy, form);
             }
         }
-        for (auto ex : Ux.element_indices()) {
-            for (int iy = 1; iy < Uy.elements; ++ iy) {
+        for (auto ex = ex0; ex <= ex1; ++ ex) {
+            for (int iy = max(1, ey0); iy < min(Uy.elements, ey1 + 2); ++ iy) {
                 val += integrate_hface(iy, ex, i, j, Ux, Uy, Vx, Vy, form);
             }
         }
@@ -1182,6 +1231,60 @@ public:
         return val;
     }
 
+    template <typename Form>
+    double integrate_boundary(boundary side, index_type i, const dimension& Ux, const dimension& Uy, Form&& form) const {
+        double val = 0;
+        bool horizontal = side == boundary::top || side == boundary::bottom;
+        auto nv = normal(side);
+
+        if (horizontal) {
+            int ey = side == boundary::bottom ? 0 : Uy.elements - 1;
+            if (! supported_in_1d(i[1], ey, Uy)) return 0;
+
+            auto y0 = side == boundary::bottom ? Uy.a : Uy.b;
+
+            for (auto e : Ux.basis.element_range(i[0])) {
+                double J = Ux.basis.J[e];
+
+                for (int q = 0; q < Ux.basis.quad_order; ++ q) {
+                    double w = Ux.basis.w[q];
+                    point_type x{Ux.basis.x[e][q], y0};
+                    value_type ww = eval_basis_at(x, i, Ux, Uy);
+                    double fuw = form(ww, x, nv);
+                    val += fuw * w * J;
+                }
+            }
+        } else {
+            int ex = side == boundary::left ? 0 : Ux.elements - 1;
+            if (! supported_in_1d(i[0], ex, Ux)) return 0;
+
+            auto x0 = side == boundary::left ? Ux.a : Ux.b;
+
+            for (auto e : Uy.basis.element_range(i[1])) {
+                double J = Uy.basis.J[e];
+
+                for (int q = 0; q < Uy.basis.quad_order; ++ q) {
+                    double w = Uy.basis.w[q];
+                    point_type x{x0, Uy.basis.x[e][q]};
+                    value_type ww = eval_basis_at(x, i, Ux, Uy);
+                    double fuw = form(ww, x, nv);
+                    val += fuw * w * J;
+                }
+            }
+        }
+        return val;
+    }
+
+
+    bool touches(index_type dof, boundary side, const dimension& x, const dimension& y) const {
+        if (side == boundary::left || side == boundary::right) {
+            auto e = side == boundary::left ? 0 : x.elements - 1;
+            return supported_in_1d(dof[0], e, x);
+        } else {
+            auto e = side == boundary::bottom ? 0 : y.elements - 1;
+            return supported_in_1d(dof[1], e, y);
+        }
+    }
 
 
     template <typename Sol>

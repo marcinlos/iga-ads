@@ -247,8 +247,8 @@ public:
             (4 - 24 * y + 48 * y*y - 48 * y*y*y + 24 * y*y*y*y) * x -
             12 * y*y + 24 * y*y*y - 12 * y*y*y*y;
 
-        return { fx, fy };
-        // return { 0, 0 };
+        // return { fx, fy };
+        return { 0, 0 };
     }
 
     auto shifted(int n, int k, mumps::problem& problem) const {
@@ -434,12 +434,12 @@ public:
     void apply_bc(vector_view& Rvx, vector_view& Rvy, vector_view& Rp) {
         zero_bc(Rvx, Ux, Uy);
 
-        // constexpr double eps = 1e-4;
-        // auto drop = [](double t) { return t < 1 - eps ? 0 : 1 - (1 - t) / eps; };
-        // dirichlet_bc(Rvx, boundary::left, Ux, Uy, drop);
-        // dirichlet_bc(Rvx, boundary::right, Ux, Uy, drop);
-        // dirichlet_bc(Rvx, boundary::top,    Ux, Uy, 1);
-        // dirichlet_bc(Rvx, boundary::bottom, Ux, Uy, 0);
+        constexpr double eps = 1e-4;
+        auto drop = [](double t) { return t < 1 - eps ? 0 : 1 - (1 - t) / eps; };
+        dirichlet_bc(Rvx, boundary::left, Ux, Uy, drop);
+        dirichlet_bc(Rvx, boundary::right, Ux, Uy, drop);
+        dirichlet_bc(Rvx, boundary::top,    Ux, Uy, 1);
+        dirichlet_bc(Rvx, boundary::bottom, Ux, Uy, 0);
 
         zero_bc(Rvy, Ux, Uy);
 
