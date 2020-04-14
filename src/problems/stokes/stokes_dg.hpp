@@ -190,7 +190,7 @@ public:
 
         double err_vx = error(vx, trial.U1x, trial.U1y, H10, e_vx);
         double err_vy = error(vy, trial.U2x, trial.U2y, H10, e_vy);
-        double err_p  = errorL2(p, trial.Px, trial.Py, e_p);
+        double err_p  = 0*errorL2(p, trial.Px, trial.Py, e_p);
         double error_Vh = std::sqrt(err_vx * err_vx + err_vy * err_vy + err_p * err_p);
 
         std::cout << "Error in Vh:   " << error_Vh << std::endl;
@@ -336,8 +336,8 @@ public:
         auto trial_p = shifted(D + dU1 + dU2, D + dU1 + dU2, problem);
 
         auto N = D + dU1 + dU2 + dP;
-        bool bc = true;
-        bool fix_p = true;
+        bool bc = false;
+        bool fix_p = false;
 
         // auto hh = h * h;
 
@@ -788,8 +788,8 @@ public:
 
     void apply_bc(vector_view& vx, vector_view& vy, vector_view& p) {
         // Strong BC
-        zero_bc(vx, trial.U1x, trial.U1y);
-        zero_bc(vy, trial.U2x, trial.U2y);
+        // zero_bc(vx, trial.U1x, trial.U1y);
+        // zero_bc(vy, trial.U2x, trial.U2y);
 
         // Cavity flow
         // constexpr double eps = 1e-4;
@@ -814,8 +814,8 @@ public:
         //     vy(i, trial.U2y.dofs() - 1) = 0;
         // }
 
-        int i = linear_index({0, 0}, trial.Px, trial.Py);
-        p(i, i) = 0; // fix pressure at a point
+        // int i = linear_index({0, 0}, trial.Px, trial.Py);
+        // p(i, i) = 0; // fix pressure at a point
     }
 
     void step(int /*iter*/, double /*t*/) override {
@@ -1300,8 +1300,8 @@ public:
                 auto form = [this](auto w, auto p, auto, auto) {
                     return h * jump(w).val * jump(p).val;
                 };
-                val += integrate_over_internal_skeleton(i, j, test.Px, test.Py, test.Px, test.Py, form);
-                norm += val * p(i[0], i[1]) * p(j[0], j[1]);
+                // val += integrate_over_internal_skeleton(i, j, test.Px, test.Py, test.Px, test.Py, form);
+                // norm += val * p(i[0], i[1]) * p(j[0], j[1]);
             }
         }
 
@@ -1315,7 +1315,7 @@ public:
                 auto form = [this](auto tx, auto vx, auto, auto) {
                     return eta/h * jump(tx).val * jump(vx).val;
                 };
-                val += integrate_over_skeleton(i, j, test.U1x, test.U1y, test.U1x, test.U1y, form);
+                // val += integrate_over_skeleton(i, j, test.U1x, test.U1y, test.U1x, test.U1y, form);
                 norm += val * vx(i[0], i[1]) * vx(j[0], j[1]);
             }
         }
@@ -1330,7 +1330,7 @@ public:
                 auto form = [this](auto ty, auto vy, auto, auto) {
                     return eta/h * jump(ty).val * jump(vy).val;
                 };
-                val += integrate_over_skeleton(i, j, test.U2x, test.U2y, test.U2x, test.U2y, form);
+                // val += integrate_over_skeleton(i, j, test.U2x, test.U2y, test.U2x, test.U2y, form);
                 norm += val * vy(i[0], i[1]) * vy(j[0], j[1]);
             }
         }
