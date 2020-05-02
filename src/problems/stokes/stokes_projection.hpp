@@ -435,7 +435,7 @@ public:
         vector_type rhs_vy{{ trial.U2x.dofs(), trial.U2y.dofs() }};
 
         // Velocity - first equation
-        compute_rhs(rhs_vx, rhs_vy, vx, vy, vx, vy, p, dt, F(t + dt/2), 0, 0, -dt, -dt, dt, dt);
+        compute_rhs(rhs_vx, rhs_vy, vx, vy, vx, vy, p, dt, F(t + dt/2), 0, 0, -dt, -dt, dt, dt, dt);
         zero_bc(rhs_vx, trial.U1x, trial.U1y);
         zero_bc(rhs_vy, trial.U2x, trial.U2y);
 
@@ -450,7 +450,7 @@ public:
         // Velocity - step 2
         vector_type rhs_vx2{{ trial.U1x.dofs(), trial.U1y.dofs() }};
         vector_type rhs_vy2{{ trial.U2x.dofs(), trial.U2y.dofs() }};
-        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, rhs_vx, rhs_vy, p, dt, F(t + dt/2), dt/2, 0, 0, 0, 0, 0);
+        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, rhs_vx, rhs_vy, p, dt, F(t + dt/2), dt/2, 0, 0, 0, 0, 0, 0);
 
         zero_bc(rhs_vx2, trial.U1x, trial.U1y);
         zero_bc(rhs_vy2, trial.U2x, trial.U2y);
@@ -466,7 +466,7 @@ public:
         // Velocity - step 3
         vector_type rhs_vx3{{ trial.U1x.dofs(), trial.U1y.dofs() }};
         vector_type rhs_vy3{{ trial.U2x.dofs(), trial.U2y.dofs() }};
-        compute_rhs(rhs_vx3, rhs_vy3, vx, vy, rhs_vx2, rhs_vy2, p, dt, F(t + dt/2), 0, dt/2, 0, 0, 0, 0);
+        compute_rhs(rhs_vx3, rhs_vy3, vx, vy, rhs_vx2, rhs_vy2, p, dt, F(t + dt/2), 0, dt/2, 0, 0, 0, 0, 0);
 
         zero_bc(rhs_vx3, trial.U1x, trial.U1y);
         zero_bc(rhs_vy3, trial.U2x, trial.U2y);
@@ -493,7 +493,7 @@ public:
         vector_type rhs_vy{{ trial.U2x.dofs(), trial.U2y.dofs() }};
 
         // Step 1
-        compute_rhs(rhs_vx, rhs_vy, vx, vy, vx, vy, p_star, dt, F(t + dt/2), 0, 0, 0, - dt/2, dt/2, dt/2);
+        compute_rhs(rhs_vx, rhs_vy, vx, vy, vx, vy, p_star, dt, F(t + dt/2), 0, 0, 0, - dt/2, dt/2, dt/2, dt/2);
 
         auto apply_bc = [this,t](auto& rhs, auto& Vx, auto& Vy, auto i) {
             dirichlet_bc(rhs, boundary::left,   Vx, Vy, [this,t,i](auto s) { return this->exact_v({0, s}, t)[i].val; });
@@ -524,7 +524,7 @@ public:
         vector_type rhs_vx2{{ trial.U1x.dofs(), trial.U1y.dofs() }};
         vector_type rhs_vy2{{ trial.U2x.dofs(), trial.U2y.dofs() }};
 
-        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, rhs_vx, rhs_vy, p_star, dt, F(t + dt/2), 0, 0, -dt/2, 0, dt/2, dt/2);
+        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, rhs_vx, rhs_vy, p_star, dt, F(t + dt/2), 0, 0, -dt/2, 0, dt/2, dt/2, dt/2);
 
         // BC
         // zero_bc(rhs_vx2, trial.U1x, trial.U1y);
@@ -570,7 +570,7 @@ public:
         vector_view vx1{rhs.data() + dim_test,  {trial.U1x.dofs(), trial.U1y.dofs()}};
         vector_view vy1{vx1.data() + dU1,       {trial.U2x.dofs(), trial.U2y.dofs()}};
 
-        compute_rhs(rhs_vx1, rhs_vy1, vx, vy, vx, vy, p_star, dt, F(t + dt/2), 0, 0, 0, - dt/(2*Re), dt/2, dt/2);
+        compute_rhs(rhs_vx1, rhs_vy1, vx, vy, vx, vy, p_star, dt, F(t + dt/2), 0, 0, 0, - dt/(2*Re), dt/2, dt/2, dt/2);
 
         auto apply_bc = [this,t](auto& rhs, auto& Vx, auto& Vy, auto i) {
             // dirichlet_bc(rhs, boundary::left,   Vx, Vy, [this,t,i](auto s) { return this->exact_v({0, s}, t)[i].val; });
@@ -597,7 +597,7 @@ public:
         vector_view vx2{rhs2.data() + dim_test, {trial.U1x.dofs(), trial.U1y.dofs()}};
         vector_view vy2{vx2.data() + dU1,       {trial.U2x.dofs(), trial.U2y.dofs()}};
 
-        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, vx1, vy1, p_star, dt, F(t + dt/2), 0, 0, -dt/(2*Re), 0, dt/2, dt/2);
+        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, vx1, vy1, p_star, dt, F(t + dt/2), 0, 0, -dt/(2*Re), 0, dt/2, dt/2, dt/2);
         apply_bc(vx2, trial.U1x, trial.U1y, 0);
         apply_bc(vy2, trial.U2x, trial.U2y, 1);
 
@@ -704,13 +704,14 @@ public:
     //
     // (v, w) + ax (dv0/dx, dw/dx) + ay (dv0/dy, dw/dy) +
     //          bx (dv/dx, dw/dx) + by (dv/dy, dw/dy) +
+    //          conv * u * \/u
     //          c (\/p, w) + d  (f, w)
     template <typename RHS, typename S1, typename S2, typename S3, typename Fun>
     void compute_rhs(RHS& rhsx, RHS& rhsy,
                      const S1& vx0, const S1& vy0,
                      const S2& vx, const S2& vy, const S3& p,
                      double dt, Fun&& forcing,
-                     double ax, double ay, double bx, double by, double c, double d) const {
+                     double ax, double ay, double bx, double by, double conv, double c, double d) const {
         using shape = std::array<std::size_t, 2>;
         auto u1_shape = shape{ test.U1x.basis.dofs_per_element(), test.U1y.basis.dofs_per_element() };
         auto u2_shape = shape{ test.U2x.basis.dofs_per_element(), test.U2y.basis.dofs_per_element() };
@@ -740,6 +741,7 @@ public:
                         + bx * vvx.dx * v.dx
                         + by * vvx.dy * v.dy
                         + c * pp.val * v.dx
+                        + conv * (vvx.val * vvx.dx + vvy.val * vvx.dy) * v.val
                         + d * F[0] * v.val;
                     vx_loc(aa[0], aa[1]) += val * W * J;
                 }
@@ -753,6 +755,7 @@ public:
                         + bx * vvy.dx * v.dx
                         + by * vvy.dy * v.dy
                         + c * pp.val * v.dy
+                        + conv * (vvx.val * vvy.dx + vvy.val * vvy.dy) * v.val
                         + d * F[1] * v.val;
                     vy_loc(aa[0], aa[1]) += val * W * J;
                 }
