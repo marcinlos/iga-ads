@@ -18,6 +18,7 @@ private:
     using value_pair = std::array<value_type, 2>;
 
     double Re;
+    bool convection;
 
     galois_executor executor{8};
 
@@ -31,9 +32,10 @@ private:
     output_manager<2> outputU1, outputU2, outputP;
 
 public:
-    stokes_projection(space_set trial_, space_set test_, const timesteps_config& steps, double Re)
+    stokes_projection(space_set trial_, space_set test_, const timesteps_config& steps, double Re, bool convection)
     : Base{ test_.Px, test_.Py, steps }
     , Re{ Re }
+    , convection{ convection }
     , trial{ std::move(trial_) }
     , test{ std::move(test_) }
     , vx{{ trial.U1x.dofs(), trial.U1y.dofs() }}
@@ -430,12 +432,13 @@ public:
         auto dt = steps.dt;
         auto f = [&](point_type x, double s) { return forcing(x, s); };
         auto F = [&](double s) { return std::bind(f, _1, s); };
+        auto conv = convection ? dt : 0;
 
         vector_type rhs_vx{{ trial.U1x.dofs(), trial.U1y.dofs() }};
         vector_type rhs_vy{{ trial.U2x.dofs(), trial.U2y.dofs() }};
 
         // Velocity - first equation
-        compute_rhs(rhs_vx, rhs_vy, vx, vy, vx, vy, p, dt, F(t + dt/2), 0, 0, -dt, -dt, dt, dt, dt);
+        compute_rhs(rhs_vx, rhs_vy, vx, vy, vx, vy, p, dt, F(t + dt/2), 0, 0, -dt, -dt, conv, dt, dt);
         zero_bc(rhs_vx, trial.U1x, trial.U1y);
         zero_bc(rhs_vy, trial.U2x, trial.U2y);
 
@@ -488,12 +491,13 @@ public:
         auto dt = steps.dt;
         auto f = [&](point_type x, double s) { return forcing(x, s); };
         auto F = [&](double s) { return std::bind(f, _1, s); };
+        auto conv = convection ? dt/2 : 0;
 
         vector_type rhs_vx{{ trial.U1x.dofs(), trial.U1y.dofs() }};
         vector_type rhs_vy{{ trial.U2x.dofs(), trial.U2y.dofs() }};
 
         // Step 1
-        compute_rhs(rhs_vx, rhs_vy, vx, vy, vx, vy, p_star, dt, F(t + dt/2), 0, 0, 0, - dt/2, dt/2, dt/2, dt/2);
+        compute_rhs(rhs_vx, rhs_vy, vx, vy, vx, vy, p_star, dt, F(t + dt/2), 0, 0, 0, - dt/2, conv, dt/2, dt/2);
 
         auto apply_bc = [this,t](auto& rhs, auto& Vx, auto& Vy, auto i) {
             dirichlet_bc(rhs, boundary::left,   Vx, Vy, [this,t,i](auto s) { return this->exact_v({0, s}, t)[i].val; });
@@ -524,7 +528,7 @@ public:
         vector_type rhs_vx2{{ trial.U1x.dofs(), trial.U1y.dofs() }};
         vector_type rhs_vy2{{ trial.U2x.dofs(), trial.U2y.dofs() }};
 
-        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, rhs_vx, rhs_vy, p_star, dt, F(t + dt/2), 0, 0, -dt/2, 0, dt/2, dt/2, dt/2);
+        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, rhs_vx, rhs_vy, p_star, dt, F(t + dt/2), 0, 0, -dt/2, 0, conv, dt/2, dt/2);
 
         // BC
         // zero_bc(rhs_vx2, trial.U1x, trial.U1y);
@@ -554,6 +558,7 @@ public:
         auto dt = steps.dt;
         auto f = [&](point_type x, double s) { return forcing(x, s); };
         auto F = [&](double s) { return std::bind(f, _1, s); };
+        auto conv = convection ? dt/2 : 0;
 
         auto dU1 = trial.U1x.dofs() * trial.U1y.dofs();
         auto dU2 = trial.U2x.dofs() * trial.U2y.dofs();
@@ -570,7 +575,7 @@ public:
         vector_view vx1{rhs.data() + dim_test,  {trial.U1x.dofs(), trial.U1y.dofs()}};
         vector_view vy1{vx1.data() + dU1,       {trial.U2x.dofs(), trial.U2y.dofs()}};
 
-        compute_rhs(rhs_vx1, rhs_vy1, vx, vy, vx, vy, p_star, dt, F(t + dt/2), 0, 0, 0, - dt/(2*Re), dt/2, dt/2, dt/2);
+        compute_rhs(rhs_vx1, rhs_vy1, vx, vy, vx, vy, p_star, dt, F(t + dt/2), 0, 0, 0, - dt/(2*Re), conv, dt/2, dt/2);
 
         auto apply_bc = [this,t](auto& rhs, auto& Vx, auto& Vy, auto i) {
             // dirichlet_bc(rhs, boundary::left,   Vx, Vy, [this,t,i](auto s) { return this->exact_v({0, s}, t)[i].val; });
@@ -597,7 +602,7 @@ public:
         vector_view vx2{rhs2.data() + dim_test, {trial.U1x.dofs(), trial.U1y.dofs()}};
         vector_view vy2{vx2.data() + dU1,       {trial.U2x.dofs(), trial.U2y.dofs()}};
 
-        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, vx1, vy1, p_star, dt, F(t + dt/2), 0, 0, -dt/(2*Re), 0, dt/2, dt/2, dt/2);
+        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, vx1, vy1, p_star, dt, F(t + dt/2), 0, 0, -dt/(2*Re), 0, conv, dt/2, dt/2);
         apply_bc(vx2, trial.U1x, trial.U1y, 0);
         apply_bc(vy2, trial.U2x, trial.U2y, 1);
 

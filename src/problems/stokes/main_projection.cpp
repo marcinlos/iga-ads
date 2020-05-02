@@ -21,15 +21,16 @@ dimension make_dimension(int p, int c, int n, int quad, int ders) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 28) {
-        std::cerr << "Usage: stokes_projection <N> <steps> <spaces...>" << std::endl;
+    if (argc != 29) {
+        std::cerr << "Usage: stokes_projection <N> <steps> <Navier-Stokes> <Re> <spaces...>" << std::endl;
         std::exit(1);
     }
-    int n = std::atoi(argv[1]);
-    int nsteps = std::atoi(argv[2]);
+    int idx = 1;
+    int n = std::atoi(argv[idx ++]);
+    int nsteps = std::atoi(argv[idx ++]);
+    bool NS = std::atoi(argv[idx ++]);
+    auto Re = std::atof(argv[idx ++]);
 
-    auto Re = std::atof(argv[3]);
-    int idx = 4;
     int vxp_trial_x = std::atoi(argv[idx ++]);
     int vxc_trial_x = std::atoi(argv[idx ++]);
     int vxp_trial_y = std::atoi(argv[idx ++]);
@@ -111,6 +112,6 @@ int main(int argc, char* argv[]) {
         std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
     }
 
-    auto sim = stokes_projection{trial, test, steps, Re};
+    auto sim = stokes_projection{trial, test, steps, Re, NS};
     sim.run();
 }
