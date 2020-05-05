@@ -248,6 +248,33 @@ protected:
         return norm(Ux, Uy, H1, fun);
     }
 
+    template <typename Sol, typename Norm>
+    double norm(const Sol& u, const dimension& Ux, const dimension& Uy, Norm&& norm) const {
+        double val = 0;
+
+        for (auto e : elements(Ux, Uy)) {
+            double J = jacobian(e, Ux, Uy);
+            for (auto q : quad_points(Ux, Uy)) {
+                double w = weigth(q, Ux, Uy);
+                value_type uu = eval(u, e, q, Ux, Uy);
+                val += norm(uu) * w * J;
+            }
+        }
+        return std::sqrt(val);
+    }
+
+    template <typename Sol>
+    double normL2(const Sol& u, const dimension& Ux, const dimension& Uy) const {
+        auto L2 = [](value_type a) { return a.val * a.val; };
+        return norm(u, Ux, Uy, L2);
+    }
+
+    template <typename Sol>
+    double normH1(const Sol& u, const dimension& Ux, const dimension& Uy) const {
+        auto H1 = [](value_type a) { return a.val * a.val + a.dx * a.dx + a.dy * a.dy; };
+        return norm(u, Ux, Uy, H1);
+    }
+
     template <typename Sol, typename Fun, typename Norm>
     double error(const Sol& u, const dimension& Ux, const dimension& Uy, Norm&& norm, Fun&& fun) const {
         double error = 0;
