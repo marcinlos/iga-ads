@@ -293,6 +293,27 @@ protected:
         return std::sqrt(error);
     }
 
+    template <typename Sol, typename Fun, typename Norm>
+    double error_relative(const Sol& u, const dimension& Ux, const dimension& Uy,
+            Norm&& norm, Fun&& fun) const {
+        double error = 0;
+        double ref_norm = 0;
+
+        for (auto e : elements(Ux, Uy)) {
+            double J = jacobian(e, Ux, Uy);
+            for (auto q : quad_points(Ux, Uy)) {
+                double w = weigth(q, Ux, Uy);
+                auto x = point(e, q, Ux, Uy);
+                value_type uu = eval(u, e, q, Ux, Uy);
+                auto fx = fun(x);
+
+                error += norm(uu - fx) * w * J;
+                ref_norm += norm(fx) * w * J;
+            }
+        }
+        return std::sqrt(error / ref_norm);
+    }
+
     template <typename Sol, typename Fun>
     double errorL2(const Sol& u, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
         auto L2 = [](value_type a) { return a.val * a.val; };
@@ -300,9 +321,21 @@ protected:
     }
 
     template <typename Sol, typename Fun>
+    double error_relative_L2(const Sol& u, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+        auto L2 = [](value_type a) { return a.val * a.val; };
+        return error_relative(u, Ux, Uy, L2, fun);
+    }
+
+    template <typename Sol, typename Fun>
     double errorH1(const Sol& u, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
         auto H1 = [](value_type a) { return a.val * a.val + a.dx * a.dx + a.dy * a.dy; };
         return error(u, Ux, Uy, H1, fun);
+    }
+
+    template <typename Sol, typename Fun>
+    double error_relative_H1(const Sol& u, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+        auto H1 = [](value_type a) { return a.val * a.val + a.dx * a.dx + a.dy * a.dy; };
+        return error_relative(u, Ux, Uy, H1, fun);
     }
 
 };
