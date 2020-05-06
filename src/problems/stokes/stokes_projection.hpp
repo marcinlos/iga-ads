@@ -291,8 +291,7 @@ public:
     }
 
 
-    bool is_pressure_fixed(index_type dof) const {
-        // return dof[0] == 0 && dof[1] == 0;
+    bool is_pressure_fixed(index_type /*dof*/) const {
         return false;
     }
 
@@ -500,7 +499,7 @@ public:
         vector_type rhs_vy{{ trial.U2x.dofs(), trial.U2y.dofs() }};
 
         // Velocity - first equation
-        compute_rhs(rhs_vx, rhs_vy, vx, vy, vx, vy, p, dt, F(t + dt/2), 0, 0, -dt, -dt, -conv, dt, dt);
+        compute_rhs(rhs_vx, rhs_vy, vx, vy, vx, vy, p, F(t + dt/2), 0, 0, -dt, -dt, -conv, dt, dt);
         zero_bc(rhs_vx, trial.U1x, trial.U1y);
         zero_bc(rhs_vy, trial.U2x, trial.U2y);
 
@@ -515,7 +514,7 @@ public:
         // Velocity - step 2
         vector_type rhs_vx2{{ trial.U1x.dofs(), trial.U1y.dofs() }};
         vector_type rhs_vy2{{ trial.U2x.dofs(), trial.U2y.dofs() }};
-        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, rhs_vx, rhs_vy, p, dt, F(t + dt/2), dt/2, 0, 0, 0, 0, 0, 0);
+        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, rhs_vx, rhs_vy, p, F(t + dt/2), dt/2, 0, 0, 0, 0, 0, 0);
 
         zero_bc(rhs_vx2, trial.U1x, trial.U1y);
         zero_bc(rhs_vy2, trial.U2x, trial.U2y);
@@ -531,7 +530,7 @@ public:
         // Velocity - step 3
         vector_type rhs_vx3{{ trial.U1x.dofs(), trial.U1y.dofs() }};
         vector_type rhs_vy3{{ trial.U2x.dofs(), trial.U2y.dofs() }};
-        compute_rhs(rhs_vx3, rhs_vy3, vx, vy, rhs_vx2, rhs_vy2, p, dt, F(t + dt/2), 0, dt/2, 0, 0, 0, 0, 0);
+        compute_rhs(rhs_vx3, rhs_vy3, vx, vy, rhs_vx2, rhs_vy2, p, F(t + dt/2), 0, dt/2, 0, 0, 0, 0, 0);
 
         zero_bc(rhs_vx3, trial.U1x, trial.U1y);
         zero_bc(rhs_vy3, trial.U2x, trial.U2y);
@@ -559,7 +558,7 @@ public:
         vector_type rhs_vy{{ trial.U2x.dofs(), trial.U2y.dofs() }};
 
         // Step 1
-        compute_rhs(rhs_vx, rhs_vy, vx, vy, vx, vy, p_star, dt, F(t + dt/2), 0, 0, 0, - dt/2, -conv, dt/2, dt/2);
+        compute_rhs(rhs_vx, rhs_vy, vx, vy, vx, vy, p_star, F(t + dt/2), 0, 0, 0, - dt/2, -conv, dt/2, dt/2);
 
         // BC
         // zero_bc(rhs_vx, trial.U1x, trial.U1y);
@@ -584,7 +583,7 @@ public:
         vector_type rhs_vx2{{ trial.U1x.dofs(), trial.U1y.dofs() }};
         vector_type rhs_vy2{{ trial.U2x.dofs(), trial.U2y.dofs() }};
 
-        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, rhs_vx, rhs_vy, p_star, dt, F(t + dt/2), 0, 0, -dt/2, 0, -conv, dt/2, dt/2);
+        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, rhs_vx, rhs_vy, p_star, F(t + dt/2), 0, 0, -dt/2, 0, -conv, dt/2, dt/2);
 
         // BC
         // zero_bc(rhs_vx2, trial.U1x, trial.U1y);
@@ -637,7 +636,6 @@ public:
                 vx, vy,                     // v0 = v from previous step
                 vx, vy,                     // v from previous substep
                 p_star,                     // pressure predictor
-                dt,
                 F(t + dt/2),                // forcing
                 0, 0,                       // v0 coeffs
                 0, - dt/(2*Re),             // v  coeffs
@@ -665,7 +663,6 @@ public:
                 vx, vy,                     // v0 = v from previous step
                 vx1, vy1,                   // v from previous substep
                 p_star,                     // pressure predictor
-                dt,
                 F(t + dt/2),                // forcing
                 0, 0,                       // v0 coeffs
                 - dt/(2*Re), 0,             // v  coeffs
@@ -715,7 +712,7 @@ public:
 
         // Step 2
         zero(phi);
-        compute_rhs_pressure_2(phi, rhs_p, trial.Px, trial.Py, steps.dt);
+        compute_rhs_pressure_2(phi, rhs_p, trial.Px, trial.Py);
         mumps::problem problem_py(phi.data(), phi.size());
         assemble_matrix(problem_py, 0, 1, false, false, trial.Px, trial.Py);
         solver.solve(problem_py);
@@ -754,7 +751,7 @@ public:
         vector_view rhs_p2{rhs2.data(),        {test.Px.dofs(), test.Py.dofs()}};
         vector_view p2{rhs2.data() + dim_test, {trial.Px.dofs(), trial.Py.dofs()}};
 
-        compute_rhs_pressure_2(rhs_p2, p1, test.Px, test.Py, steps.dt);
+        compute_rhs_pressure_2(rhs_p2, p1, test.Px, test.Py);
         mumps::problem problem_py(rhs2.data(), rhs2.size());
         assemble_matrix_pressure(problem_py, 0, 1);
         solver.solve(problem_py);
@@ -789,7 +786,7 @@ public:
     void compute_rhs(RHS& rhsx, RHS& rhsy,
                      const S1& vx0, const S1& vy0,
                      const S2& vx, const S2& vy, const S3& p,
-                     double dt, Fun&& forcing,
+                     Fun&& forcing,
                      double ax, double ay, double bx, double by, double conv, double c, double d) const {
         using shape = std::array<std::size_t, 2>;
         auto u1_shape = shape{ test.U1x.basis.dofs_per_element(), test.U1y.basis.dofs_per_element() };
@@ -877,7 +874,7 @@ public:
 
     template <typename RHS, typename Sol>
     void compute_rhs_pressure_2(RHS& rhs, const Sol& p,
-                                const dimension& Vx, const dimension& Vy, double dt) const {
+                                const dimension& Vx, const dimension& Vy) const {
         using shape = std::array<std::size_t, 2>;
         auto p_shape = shape{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() };
 
