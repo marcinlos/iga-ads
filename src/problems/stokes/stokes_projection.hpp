@@ -201,8 +201,9 @@ public:
         project(vy, trial.U2x, trial.U2y, [this](point_type x) { return exact_v(x, 0, Re)[1].val; });
 
         project(p, trial.Px, trial.Py, [this](point_type x) { return exact_p(x, 0, Re).val; });
-        project(phi, trial.Px, trial.Py, [this](point_type /*x*/) {
-            return 0;//0*- 0.5 * steps.dt * exact_p(x, 0, Re).val;
+        project(phi, trial.Px, trial.Py, [this](point_type x) {
+            // 1/2 dt dp/dt(0)
+            return 0.5 * steps.dt * cos(x[0]) * cos(x[1]);
         });
 
         save_to_file(0);
