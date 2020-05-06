@@ -204,7 +204,6 @@ public:
         project(phi, trial.Px, trial.Py, [this](point_type /*x*/) {
             return 0;//0*- 0.5 * steps.dt * exact_p(x, 0, Re).val;
         });
-        compute_pressure_predictor();
 
         save_to_file(0);
         // output_exact(0);
@@ -641,7 +640,6 @@ public:
 
         // New pressure
         apply_pressure_corrector();
-        compute_pressure_predictor();
     }
 
     void update_pressure_exact(double t) {
@@ -682,10 +680,11 @@ public:
 
         // New pressure
         apply_pressure_corrector();
-        compute_pressure_predictor();
     }
 
     void step(int iter, double t) override {
+        compute_pressure_predictor();
+
         // update_velocity_galerkin(t);
         // update_velocity_minev(t);
         update_velocity_igrm(iter, t);
