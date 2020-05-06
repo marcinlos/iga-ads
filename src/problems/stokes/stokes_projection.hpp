@@ -101,6 +101,41 @@ namespace ads {
         return {fx, fy};
     }
 
+    // Non-polynomial manufactured solution
+    /*
+    value_type exact_p(point_type p, double t, double Re)  {
+        auto x = p[0], y = p[1];
+        using std::sin;
+        using std::cos;
+
+        return { cos(x) * sin(y + t), -sin(x) * sin(y + t), cos(x) * cos(y + t) };
+    }
+
+    value_pair exact_v(point_type p, double t, double Re)  {
+        auto x = p[0], y = p[1];
+        using std::sin;
+        using std::cos;
+
+        value_type vx = { sin(x) * sin(y + t),  cos(x) * sin(y + t),  sin(x) * cos(y + t) };
+        value_type vy = { cos(x) * cos(y + t), -sin(x) * cos(y + t), -cos(x) * sin(y + t) };
+
+        return { vx, vy };
+    }
+
+    point_type forcing(point_type p, double t, double Re)  {
+        auto x = p[0], y = p[1];
+        using std::sin;
+        using std::cos;
+
+        auto fx =  sin(x) * cos(y + t) + 2 / Re * sin(x) * sin(y + t) - sin(x) * sin(y + t)
+            + sin(x) * cos(x);
+        auto fy = -cos(x) * sin(y + t) + 2 / Re * cos(x) * cos(y + t) + cos(x) * cos(y + t)
+            - sin(y + t) * cos(y + t);
+
+        return {fx, fy};
+    }
+    */
+
     // Cavity flow
     /*
     value_type exact_p(point_type, double, double Re)  {
