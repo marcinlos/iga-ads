@@ -590,8 +590,8 @@ public:
                 dt/2                        // forcing coeff
                 );
 
-        apply_velocity_bc(vx1, trial.U1x, trial.U1y, t, 0);
-        apply_velocity_bc(vy1, trial.U2x, trial.U2y, t, 1);
+        apply_velocity_bc(vx1, trial.U1x, trial.U1y, t + dt, 0);
+        apply_velocity_bc(vy1, trial.U2x, trial.U2y, t + dt, 1);
 
         mumps::problem problem_vx1(rhs.data(), rhs.size());
         assemble_matrix_velocity(problem_vx1, dt/(2*Re), 0);
@@ -618,8 +618,8 @@ public:
                 dt/2                        // forcing coeff
                 );
 
-        apply_velocity_bc(vx2, trial.U1x, trial.U1y, t, 0);
-        apply_velocity_bc(vy2, trial.U2x, trial.U2y, t, 1);
+        apply_velocity_bc(vx2, trial.U1x, trial.U1y, t + dt, 0);
+        apply_velocity_bc(vy2, trial.U2x, trial.U2y, t + dt, 1);
 
         mumps::problem problem_vx2(rhs2.data(), rhs2.size());
         assemble_matrix_velocity(problem_vx2, 0, dt/(2*Re));
