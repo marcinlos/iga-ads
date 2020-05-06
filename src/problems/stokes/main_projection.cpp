@@ -112,6 +112,9 @@ int main(int argc, char* argv[]) {
         std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
     }
 
-    auto sim = stokes_projection{trial, test, steps, Re, NS};
+    using Prob = prob_manufactured_NS_nonpoly;
+    // using Prob = prob_cavity_flow;
+    Prob problem{Re};
+    auto sim = stokes_projection<Prob>{trial, test, steps, problem};
     sim.run();
 }
