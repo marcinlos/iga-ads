@@ -20,15 +20,39 @@ dimension make_dimension(int p, int c, int n, int quad, int ders) {
     return dimension{ basis, quad, ders, 1 };
 }
 
+template <typename Fun>
+void with_problem(const std::string& name, double Re, Fun&& fun) {
+    if (name == "cavity") {
+        auto problem = prob_cavity_flow{Re, false};
+        fun(problem);
+    } else if (name == "cavity-NS") {
+        auto problem = prob_cavity_flow{Re, true};
+        fun(problem);
+    } else if (name == "mf-poly") {
+        auto problem = prob_manufactured_poly{Re};
+        fun(problem);
+    } else if (name == "mf-nonpoly") {
+        auto problem = prob_manufactured_nonpoly{Re};
+        fun(problem);
+    } else if (name == "mf-nonpoly-NS") {
+        auto problem = prob_manufactured_NS_nonpoly{Re};
+        fun(problem);
+    } else {
+        std::cerr << "Unknown problem: " << name << std::endl;
+        std::exit(-1);
+    }
+}
+
+
 int main(int argc, char* argv[]) {
     if (argc != 29) {
-        std::cerr << "Usage: stokes_projection <N> <steps> <Navier-Stokes> <Re> <spaces...>" << std::endl;
+        std::cerr << "Usage: stokes_projection <N> <steps> <problem> <Re> <spaces...>" << std::endl;
         std::exit(1);
     }
     int idx = 1;
     int n = std::atoi(argv[idx ++]);
     int nsteps = std::atoi(argv[idx ++]);
-    bool NS = std::atoi(argv[idx ++]);
+    std::string problem = argv[idx ++];
     auto Re = std::atof(argv[idx ++]);
 
     int vxp_trial_x = std::atoi(argv[idx ++]);
@@ -112,9 +136,9 @@ int main(int argc, char* argv[]) {
         std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
     }
 
-    using Prob = prob_manufactured_NS_nonpoly;
-    // using Prob = prob_cavity_flow;
-    Prob problem{Re};
-    auto sim = stokes_projection<Prob>{trial, test, steps, problem};
-    sim.run();
+    with_problem(problem, Re, [&](auto prob) {
+        using Prob = decltype(prob);
+        auto sim = stokes_projection<Prob>{trial, test, steps, prob};
+        sim.run();
+    });
 }
