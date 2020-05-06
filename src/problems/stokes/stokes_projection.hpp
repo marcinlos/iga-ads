@@ -867,54 +867,46 @@ public:
         int i = iter + 1;
         double tt = t + steps.dt;
 
-        // auto p_avg = correct_pressure(p);
-        // auto p_avg2 = average_value(p, trial.Px, trial.Py);
+        auto e_vx = [this,tt](point_type x) { return exact_v(x, tt)[0]; };
+        auto e_vy = [this,tt](point_type x) { return exact_v(x, tt)[1]; };
+        auto e_p  = [this,tt](point_type x) { return exact_p(x, tt); };
+
+        auto p_avg       = average_value(p, trial.Px, trial.Py);
+        auto p_exact_avg = average_value(trial.Px, trial.Py, e_p);
+        shift_pressure(p, p_exact_avg - p_avg);
 
         if (i % 10 == 0) {
-            // std::cout << "Outputting" << std::endl;
             save_to_file(i);
-            // output_exact(iter, t);
+            // output_exact(i, tt);
         }
 
-        auto zero = [](auto...) { return value_type{}; };
+        double vx_norm_L2 = normL2(vx, trial.U1x, trial.U1y);
+        double vy_norm_L2 = normH1(vy, trial.U2x, trial.U2y);
+        double v_norm_L2 = std::hypot(vx_norm_L2, vy_norm_L2);
 
-        // auto e_vx = [this,tt](point_type x) { return exact_v(x, tt)[0]; };
-        // auto e_vy = [this,tt](point_type x) { return exact_v(x, tt)[1]; };
-        // auto e_p = [this,tt](point_type x) { return exact_p(x, tt); };
+        double vx_norm_H1 = normL2(vx, trial.U1x, trial.U1y);
+        double vy_norm_H1 = normH1(vy, trial.U2x, trial.U2y);
+        double v_norm_H1 = std::hypot(vx_norm_H1, vy_norm_H1);
 
-        // double vxL2 = errorL2(vx, trial.U1x, trial.U1y, e_vx) / normL2(trial.U1x, trial.U1y, e_vx) * 100;
-        // double vyL2 = errorL2(vy, trial.U2x, trial.U2y, e_vy) / normL2(trial.U2x, trial.U2y, e_vy) * 100;
-        // double vL2 = std::hypot(vxL2, vyL2) / std::sqrt(2);
+        double p_norm_L2 = normL2(p, trial.Px, trial.Py);
+        double phi_norm_L2 = normL2(phi, trial.Px, trial.Py);
 
-        // double vxH1 = errorH1(vx, trial.U1x, trial.U1y, e_vx) / normH1(trial.U1x, trial.U1y, e_vx) * 100;
-        // double vyH1 = errorH1(vy, trial.U2x, trial.U2y, e_vy) / normH1(trial.U2x, trial.U2y, e_vy) * 100;
-        // double vH1 = std::hypot(vxH1, vyH1) / std::sqrt(2);
+        double vx_error_L2 = error_relative_L2(vx, trial.U1x, trial.U1y, e_vx) * 100;
+        double vy_error_L2 = error_relative_L2(vy, trial.U2x, trial.U2y, e_vy) * 100;
+        double v_error_L2 = std::hypot(vx_error_L2, vy_error_L2);
 
-        // double pL2 = errorL2(p, trial.Px, trial.Py, e_p) / normL2(trial.Px, trial.Py, e_p) * 100;
-        // double pH1 = errorH1(p, trial.Px, trial.Py, e_p) / normH1(trial.Px, trial.Py, e_p) * 100;
+        double vx_error_H1 = error_relative_H1(vx, trial.U1x, trial.U1y, e_vx) * 100;
+        double vy_error_H1 = error_relative_H1(vy, trial.U2x, trial.U2y, e_vy) * 100;
+        double v_error_H1 = std::hypot(vx_error_H1, vy_error_H1);
 
-        // double phiL2 = errorL2(phi, trial.Px, trial.Py, zero);
-        // double ppL2 = errorL2(p, trial.Px, trial.Py, zero);
-
-
-        // std::cout << i << " " << tt
-        //           << "  vx: " << vxL2 << " " << vxH1
-        //           << "  vy: " << vyL2 << " " << vyH1
-        //           // << "  p avg: " << p_avg
-        //           << "  p:  " << pL2 << " " << pH1
-        //           << " |phi| = " << phiL2
-        //           << " |p| = " << ppL2
-        //           << std::endl;
-        auto vxL2 = errorL2(vx, trial.U1x, trial.U1y, zero);
-        auto vxH1 = errorL2(vx, trial.U1x, trial.U1y, zero);
-        auto vyL2 = errorH1(vy, trial.U2x, trial.U2y, zero);
-        auto vyH1 = errorH1(vy, trial.U2x, trial.U2y, zero);
-        auto pL2  = errorL2(p, trial.Px, trial.Py, zero);
+        double p_error_L2 = error_relative_L2(p, trial.Px, trial.Py, e_p) * 100;
 
         std::cout << i << " " << tt
-                  << "  vx: " << vxL2 << " " << vxH1
-                  << "  vy: " << vyL2 << " " << vyH1
-                  << "  p: " << pL2
+                  << " |v| = " << v_norm_L2 << " " << v_norm_H1
+                  << " |p| = " << p_norm_L2
+                  << " v err = " << v_error_L2 << " " << v_error_H1
+                  << " p err = " << p_error_L2
+                  << " |phi| = " << phi_norm_L2
                   << std::endl;
     }
 
