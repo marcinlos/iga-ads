@@ -240,7 +240,8 @@ public:
 
 
     bool is_pressure_fixed(index_type dof) const {
-        return dof[0] == 0 && dof[1] == 0;
+        // return dof[0] == 0 && dof[1] == 0;
+        return false;
     }
 
     void assemble_matrix(mumps::problem& problem, double cx, double cy, bool bcx, bool bcy,
