@@ -275,7 +275,7 @@ public:
 
     void assemble_matrix_velocity(mumps::problem& problem, double cx, double cy) const {
         auto dU1 = trial.U1x.dofs() * trial.U1y.dofs();
-        auto dU2 = trial.U2x.dofs() * trial.U2y.dofs();
+        // auto dU2 = trial.U2x.dofs() * trial.U2y.dofs();
 
         auto DU1 = test.U1x.dofs() * test.U1y.dofs();
         auto DU2 = test.U2x.dofs() * test.U2y.dofs();
@@ -387,7 +387,7 @@ public:
     }
 
     void assemble_matrix_pressure(mumps::problem& problem, double cx, double cy) const {
-        auto dP = trial.Px.dofs() * trial.Py.dofs();
+        // auto dP = trial.Px.dofs() * trial.Py.dofs();
         auto DP = test.Px.dofs() * test.Py.dofs();
 
         auto test_p = shifted(0, 0, problem);
@@ -1036,20 +1036,6 @@ public:
     bool overlap(index_type a, const dimension& Ux, const dimension& Uy,
                  index_type b, const dimension& Vx, const dimension& Vy) const {
         return overlap(a[0], Ux, b[0], Vx) && overlap(a[1], Uy, b[1], Vy);
-    }
-
-    double dot(value_type a, point_type b) const {
-        return a.dx * b[0] + a.dy * b[1];
-    }
-
-    bool supported_in_1d(int dof, int e, const dimension& x) const {
-        auto xrange = x.basis.element_ranges[dof];
-        return e >= xrange.first && e <= xrange.second;
-    }
-
-    bool touches_point(int dof, int sx, const dimension& x) const {
-        auto xrange = x.basis.element_ranges[dof];
-        return sx >= xrange.first && sx <= xrange.second + 1;
     }
 
     template <typename Form>
