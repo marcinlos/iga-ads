@@ -612,6 +612,8 @@ public:
     }
 
     void update_velocity_exact(double t) {
+        double tt = t + steps.dt;
+
         zero(vx);
         zero(vy);
 
@@ -620,8 +622,8 @@ public:
             compute_projection(rhs, x.basis, y.basis, [&](double x, double y) { return fun({x, y}); });
             ads_solve(rhs, buffer, x.data(), y.data());
         };
-        project(vx, trial.U1x, trial.U1y, [this,t](point_type x) { return exact_v(x, t, Re)[0].val; });
-        project(vy, trial.U2x, trial.U2y, [this,t](point_type x) { return exact_v(x, t, Re)[1].val; });
+        project(vx, trial.U1x, trial.U1y, [this,tt](point_type x) { return exact_v(x, tt, Re)[0].val; });
+        project(vy, trial.U2x, trial.U2y, [this,tt](point_type x) { return exact_v(x, tt, Re)[1].val; });
     }
 
     void update_pressure(double t) {
@@ -645,13 +647,14 @@ public:
     }
 
     void update_pressure_exact(double t) {
+        double th = t + steps.dt / 2;
         zero(p);
         auto project = [&](auto& rhs, auto& x, auto& y, auto fun) {
             vector_type buffer{{ x.dofs(), y.dofs() }};
             compute_projection(rhs, x.basis, y.basis, [&](double x, double y) { return fun({x, y}); });
             ads_solve(rhs, buffer, x.data(), y.data());
         };
-        project(p, trial.Px, trial.Py, [this,t](point_type x) { return exact_p(x, t, Re).val; });
+        project(p, trial.Px, trial.Py, [this,th](point_type x) { return exact_p(x, th, Re).val; });
     }
 
     void update_pressure_igrm() {
@@ -859,10 +862,11 @@ public:
     void after_step(int iter, double t) override {
         int i = iter + 1;
         double tt = t + steps.dt;
+        double th = t + steps.dt / 2;
 
         auto e_vx = [this,tt](point_type x) { return exact_v(x, tt, Re)[0]; };
         auto e_vy = [this,tt](point_type x) { return exact_v(x, tt, Re)[1]; };
-        auto e_p  = [this,tt](point_type x) { return exact_p(x, tt, Re); };
+        auto e_p  = [this,th](point_type x) { return exact_p(x, th, Re); };
 
         auto p_avg       = average_value(p, trial.Px, trial.Py);
         auto p_exact_avg = average_value(trial.Px, trial.Py, e_p);
