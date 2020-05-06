@@ -202,8 +202,8 @@ public:
 
         project(p, trial.Px, trial.Py, [this](point_type x) { return exact_p(x, 0, Re).val; });
         project(phi, trial.Px, trial.Py, [this](point_type x) {
-            // 1/2 dt dp/dt(0)
-            return 0.5 * steps.dt * cos(x[0]) * cos(x[1]);
+            // 1/2 dt dp/dt(0) ~ p(1/2) - p(0)
+            return problem.exact_p(x, 0.5).val - problem.exact_p(x, 0).val;
         });
 
         save_to_file(0);
