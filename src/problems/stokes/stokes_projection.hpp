@@ -576,7 +576,19 @@ public:
         vector_view vx1{rhs.data() + dim_test,  {trial.U1x.dofs(), trial.U1y.dofs()}};
         vector_view vy1{vx1.data() + dU1,       {trial.U2x.dofs(), trial.U2y.dofs()}};
 
-        compute_rhs(rhs_vx1, rhs_vy1, vx, vy, vx, vy, p_star, dt, F(t + dt/2), 0, 0, 0, - dt/(2*Re), -conv, dt/2, dt/2);
+        compute_rhs(
+                rhs_vx1, rhs_vy1,           // right-hand sides
+                vx, vy,                     // v0 = v from previous step
+                vx, vy,                     // v from previous substep
+                p_star,                     // pressure predictor
+                dt,
+                F(t + dt/2),                // forcing
+                0, 0,                       // v0 coeffs
+                0, - dt/(2*Re),             // v  coeffs
+                -conv,                      // u * \/u coeff (N-S term)
+                dt/2,                       // pressure coeff
+                dt/2                        // forcing coeff
+                );
 
         apply_velocity_bc(vx1, trial.U1x, trial.U1y, t, 0);
         apply_velocity_bc(vy1, trial.U2x, trial.U2y, t, 1);
@@ -592,7 +604,20 @@ public:
         vector_view vx2{rhs2.data() + dim_test, {trial.U1x.dofs(), trial.U1y.dofs()}};
         vector_view vy2{vx2.data() + dU1,       {trial.U2x.dofs(), trial.U2y.dofs()}};
 
-        compute_rhs(rhs_vx2, rhs_vy2, vx, vy, vx1, vy1, p_star, dt, F(t + dt/2), 0, 0, -dt/(2*Re), 0, -conv, dt/2, dt/2);
+        compute_rhs(
+                rhs_vx2, rhs_vy2,           // right-hand sides
+                vx, vy,                     // v0 = v from previous step
+                vx1, vy1,                   // v from previous substep
+                p_star,                     // pressure predictor
+                dt,
+                F(t + dt/2),                // forcing
+                0, 0,                       // v0 coeffs
+                - dt/(2*Re), 0,             // v  coeffs
+                -conv,                      // u * \/u coeff (N-S term)
+                dt/2,                       // pressure coeff
+                dt/2                        // forcing coeff
+                );
+
         apply_velocity_bc(vx2, trial.U1x, trial.U1y, t, 0);
         apply_velocity_bc(vy2, trial.U2x, trial.U2y, t, 1);
 
