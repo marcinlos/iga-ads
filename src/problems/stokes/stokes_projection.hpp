@@ -12,6 +12,118 @@
 
 namespace ads {
 
+    using value_type = function_value_2d;
+    using point_type = std::array<double, 2>;
+    using value_pair = std::array<value_type, 2>;
+
+    // Polynomial manufactured solution
+    /*
+    value_type exact_p(point_type p, double t, double Re) {
+        auto x = p[0];
+        auto et = std::exp(-t);
+        return {et * (x * (1 - x) - 1./6), et * (1 - 2 * x), 0.0};
+    }
+
+    value_pair exact_v(point_type p, double t, double Re) {
+        auto et = std::exp(-t);
+
+        auto f = [](double x, double y) {
+            return x*x * (1 - x) * (1 - x) * (2 * y - 6 * y*y + 4 * y*y*y);
+        };
+
+        auto dfx = [](double x, double y) {
+            return (4 * x*x*x - 6 * x*x + 2 * x) * (2 * y - 6 * y*y + 4 * y*y*y);
+        };
+
+        auto dfy = [](double x, double y) {
+            return x*x * (1 - x) * (1 - x) * (2 - 12 * y + 12 * y*y);
+        };
+
+        double x = p[0], y = p[1];
+        value_type vx = {f(x, y), dfx(x, y), dfy(x, y)};
+        value_type vy = {-f(y, x), -dfy(y, x), -dfx(y, x)};
+
+        return { et * vx, et * vy };
+    }
+
+    point_type forcing(point_type p, double t, double Re) {
+        double x = p[0], y = p[1];
+        auto v = exact_v(p, t);
+        auto et = std::exp(-t);
+
+        auto fx =
+            (12 - 24 * y) * x*x*x*x +
+            (-24 + 48 * y) * x*x*x +
+            (-48 * y + 72 * y*y - 48 * y*y*y + 12) * x*x +
+            (-2 + 24*y - 72 * y*y + 48 * y*y*y) * x +
+            1 - 4 * y + 12 * y*y - 8 * y*y*y;
+
+        auto fy =
+            (8 - 48 * y + 48 * y*y) * x*x*x +
+            (-12 + 72 * y - 72 * y*y) * x*x +
+            (4 - 24 * y + 48 * y*y - 48 * y*y*y + 24 * y*y*y*y) * x -
+            12 * y*y + 24 * y*y*y - 12 * y*y*y*y;
+
+        return { et * fx - v[0].val, et * fy - v[1].val };
+        return { et * fy - v[1].val, et * fx - v[0].val };
+        return {0, 0};
+    }
+    */
+
+    // Non-polynomial manufactured solution
+    value_type exact_p(point_type p, double t, double Re)  {
+        auto x = p[0], y = p[1];
+        using std::sin;
+        using std::cos;
+
+        return { cos(x) * sin(y + t), -sin(x) * sin(y + t), cos(x) * cos(y + t) };
+    }
+
+    value_pair exact_v(point_type p, double t, double Re)  {
+        auto x = p[0], y = p[1];
+        using std::sin;
+        using std::cos;
+
+        value_type vx = { sin(x) * sin(y + t),  cos(x) * sin(y + t),  sin(x) * cos(y + t) };
+        value_type vy = { cos(x) * cos(y + t), -sin(x) * cos(y + t), -cos(x) * sin(y + t) };
+
+        return { vx, vy };
+    }
+
+    point_type forcing(point_type p, double t, double Re)  {
+        auto x = p[0], y = p[1];
+        using std::sin;
+        using std::cos;
+
+        auto fx =  sin(x) * cos(y + t) + 2 / Re * sin(x) * sin(y + t) - sin(x) * sin(y + t);
+        auto fy = -cos(x) * sin(y + t) + 2 / Re * cos(x) * cos(y + t) + cos(x) * cos(y + t);
+
+        return {fx, fy};
+    }
+
+    // Cavity flow
+    /*
+    value_type exact_p(point_type, double, double Re)  {
+        return {};
+    }
+
+    value_pair exact_v(point_type p, double t, double Re)  {
+        auto y = p[1];
+        auto vy = value_type{};
+        auto vx = value_type{};
+
+        if (y == 1) {
+            vx.val = 1;
+        }
+        return { vx, vy };
+    }
+
+    point_type forcing(point_type p, double t, double Re)  {
+        return {0, 0};
+    }
+    */
+
+
 class stokes_projection : public simulation_2d {
 private:
     using Base = simulation_2d;
@@ -85,12 +197,12 @@ public:
             compute_projection(rhs, x.basis, y.basis, [&](double x, double y) { return fun({x, y}); });
             ads_solve(rhs, buffer, x.data(), y.data());
         };
-        project(vx, trial.U1x, trial.U1y, [this](point_type x) { return exact_v(x, 0)[0].val; });
-        project(vy, trial.U2x, trial.U2y, [this](point_type x) { return exact_v(x, 0)[1].val; });
+        project(vx, trial.U1x, trial.U1y, [this](point_type x) { return exact_v(x, 0, Re)[0].val; });
+        project(vy, trial.U2x, trial.U2y, [this](point_type x) { return exact_v(x, 0, Re)[1].val; });
 
-        project(p, trial.Px, trial.Py, [this](point_type x) { return exact_p(x, 0).val; });
-        project(phi, trial.Px, trial.Py, [this](point_type x) {
-                return 0;//0*- 0.5 * steps.dt * exact_p(x, 0).val;
+        project(p, trial.Px, trial.Py, [this](point_type x) { return exact_p(x, 0, Re).val; });
+        project(phi, trial.Px, trial.Py, [this](point_type /*x*/) {
+            return 0;//0*- 0.5 * steps.dt * exact_p(x, 0, Re).val;
         });
         compute_pressure_predictor();
 
@@ -101,120 +213,10 @@ public:
         // print_error(0);
     }
 
-    value_type exact_p(point_type p, double t) const {
-        auto x = p[0];
-        auto et = std::exp(-t);
-        return {et * (x * (1 - x) - 1./6), et * (1 - 2 * x), 0.0};
-    }
-
-    std::array<value_type, 2> exact_v(point_type p, double t) const {
-        auto et = std::exp(-t);
-
-        auto f = [](double x, double y) {
-            return x*x * (1 - x) * (1 - x) * (2 * y - 6 * y*y + 4 * y*y*y);
-        };
-
-        auto dfx = [](double x, double y) {
-            return (4 * x*x*x - 6 * x*x + 2 * x) * (2 * y - 6 * y*y + 4 * y*y*y);
-        };
-
-        auto dfy = [](double x, double y) {
-            return x*x * (1 - x) * (1 - x) * (2 - 12 * y + 12 * y*y);
-        };
-
-        double x = p[0], y = p[1];
-        value_type vx = {f(x, y), dfx(x, y), dfy(x, y)};
-        value_type vy = {-f(y, x), -dfy(y, x), -dfx(y, x)};
-
-        return { et * vx, et * vy };
-    }
-
-    point_type forcing(point_type p, double t) const {
-        double x = p[0], y = p[1];
-        auto v = exact_v(p, t);
-        auto et = std::exp(-t);
-
-        auto fx =
-            (12 - 24 * y) * x*x*x*x +
-            (-24 + 48 * y) * x*x*x +
-            (-48 * y + 72 * y*y - 48 * y*y*y + 12) * x*x +
-            (-2 + 24*y - 72 * y*y + 48 * y*y*y) * x +
-            1 - 4 * y + 12 * y*y - 8 * y*y*y;
-
-        auto fy =
-            (8 - 48 * y + 48 * y*y) * x*x*x +
-            (-12 + 72 * y - 72 * y*y) * x*x +
-            (4 - 24 * y + 48 * y*y - 48 * y*y*y + 24 * y*y*y*y) * x -
-            12 * y*y + 24 * y*y*y - 12 * y*y*y*y;
-
-        // return { et * fx - v[0].val, et * fy - v[1].val };
-        // return { et * fy - v[1].val, et * fx - v[0].val };
-        return {0, 0};
-    }
-
-
-
-
-
-
-    // value_type exact_p(point_type p, double t) const {
-    //     auto x = p[0], y = p[1];
-    //     using std::sin;
-    //     using std::cos;
-
-    //     return { cos(x) * sin(y + t), -sin(x) * sin(y + t), cos(x) * cos(y + t) };
-    // }
-
-    // std::array<value_type, 2> exact_v(point_type p, double t) const {
-    //     auto x = p[0], y = p[1];
-    //     using std::sin;
-    //     using std::cos;
-
-    //     value_type vx = { sin(x) * sin(y + t),  cos(x) * sin(y + t),  sin(x) * cos(y + t) };
-    //     value_type vy = { cos(x) * cos(y + t), -sin(x) * cos(y + t), -cos(x) * sin(y + t) };
-
-    //     return { vx, vy };
-    // }
-
-    // point_type forcing(point_type p, double t) const {
-    //     auto x = p[0], y = p[1];
-    //     using std::sin;
-    //     using std::cos;
-
-    //     auto fx =  sin(x) * cos(y + t) + 2 * sin(x) * sin(y + t) - sin(x) * sin(y + t);
-    //     auto fy = -cos(x) * sin(y + t) + 2 * cos(x) * cos(y + t) + cos(x) * cos(y + t);
-
-    //     return {fx, fy};
-    // }
-
-
-
-
-
-    value_type exact_div(point_type p, double t) const {
-        auto et = std::exp(-t);
-        auto v = exact_v(p, t);
-        auto div = v[0].dx + v[1].dy;
-
-        auto dfxy = [](double x, double y) {
-            return (4 * x*x*x - 6 * x*x + 2 * x) * (2 - 12 * y + 12 * y*y);
-        };
-
-        auto dfxx = [](double x, double y) {
-            return (12 * x*x - 12 * x + 2) * (2 * y - 6 * y*y + 4 * y*y*y);
-        };
-
-        double x = p[0], y = p[1];
-        double dx = dfxx(x, y) - dfxy(y, x);
-        double dy = dfxy(x, y) - dfxx(y, x);
-
-        return { div, et * dx, et * dy };
-    }
-
     void output_exact(int i, double t) {
-        auto p = [this,t](point_type x) { return exact_p(x, t).val; };
-        auto vx = [this,t](point_type x) { return exact_v(x, t)[0].val; };
-        auto vy = [this,t](point_type x) { return exact_v(x, t)[1].val; };
+        auto p = [this,t](point_type x) { return exact_p(x, t, Re).val; };
+        auto vx = [this,t](point_type x) { return exact_v(x, t, Re)[0].val; };
+        auto vy = [this,t](point_type x) { return exact_v(x, t, Re)[1].val; };
 
         auto project = [&](auto& x, auto& y, auto fun) {
             vector_type rhs{{ x.dofs(), y.dofs() }};
@@ -426,11 +428,18 @@ public:
         }
     }
 
+    template <typename RHS>
+    void apply_velocity_bc(RHS& rhs, dimension& Vx, dimension& Vy, double t, int i) {
+        dirichlet_bc(rhs, boundary::left,   Vx, Vy, [this,t,i](auto s) { return exact_v({0, s}, t, Re)[i].val; });
+        dirichlet_bc(rhs, boundary::right,  Vx, Vy, [this,t,i](auto s) { return exact_v({1, s}, t, Re)[i].val; });
+        dirichlet_bc(rhs, boundary::top,    Vx, Vy, [this,t,i](auto s) { return exact_v({s, 1}, t, Re)[i].val; });
+        dirichlet_bc(rhs, boundary::bottom, Vx, Vy, [this,t,i](auto s) { return exact_v({s, 0}, t, Re)[i].val; });
+    }
 
     void update_velocity_minev(double t) {
         using namespace std::placeholders;
         auto dt = steps.dt;
-        auto f = [&](point_type x, double s) { return forcing(x, s); };
+        auto f = [&](point_type x, double s) { return forcing(x, s, Re); };
         auto F = [&](double s) { return std::bind(f, _1, s); };
         auto conv = convection ? dt : 0;
 
@@ -489,7 +498,7 @@ public:
     void update_velocity_galerkin(double t) {
         using namespace std::placeholders;
         auto dt = steps.dt;
-        auto f = [&](point_type x, double s) { return forcing(x, s); };
+        auto f = [&](point_type x, double s) { return forcing(x, s, Re); };
         auto F = [&](double s) { return std::bind(f, _1, s); };
         auto conv = convection ? dt/2 : 0;
 
@@ -499,18 +508,12 @@ public:
         // Step 1
         compute_rhs(rhs_vx, rhs_vy, vx, vy, vx, vy, p_star, dt, F(t + dt/2), 0, 0, 0, - dt/2, -conv, dt/2, dt/2);
 
-        auto apply_bc = [this,t](auto& rhs, auto& Vx, auto& Vy, auto i) {
-            dirichlet_bc(rhs, boundary::left,   Vx, Vy, [this,t,i](auto s) { return this->exact_v({0, s}, t)[i].val; });
-            dirichlet_bc(rhs, boundary::right,  Vx, Vy, [this,t,i](auto s) { return this->exact_v({1, s}, t)[i].val; });
-            dirichlet_bc(rhs, boundary::top,    Vx, Vy, [this,t,i](auto s) { return this->exact_v({s, 1}, t)[i].val; });
-            dirichlet_bc(rhs, boundary::bottom, Vx, Vy, [this,t,i](auto s) { return this->exact_v({s, 0}, t)[i].val; });
-        };
         // BC
         // zero_bc(rhs_vx, trial.U1x, trial.U1y);
-        apply_bc(rhs_vx, trial.U1x, trial.U1y, 0);
+        apply_velocity_bc(rhs_vx, trial.U1x, trial.U1y, t, 0);
 
         // zero_bc(rhs_vy, trial.U2x, trial.U2y);
-        apply_bc(rhs_vy, trial.U2x, trial.U2y, 1);
+        apply_velocity_bc(rhs_vy, trial.U2x, trial.U2y, t, 1);
 
 
         mumps::problem problem_vx1(rhs_vx.data(), rhs_vx.size());
@@ -532,10 +535,10 @@ public:
 
         // BC
         // zero_bc(rhs_vx2, trial.U1x, trial.U1y);
-        apply_bc(rhs_vx2, trial.U1x, trial.U1y, 0);
+        apply_velocity_bc(rhs_vx2, trial.U1x, trial.U1y, t, 0);
 
         // zero_bc(rhs_vy2, trial.U2x, trial.U2y);
-        apply_bc(rhs_vy2, trial.U2x, trial.U2y, 1);
+        apply_velocity_bc(rhs_vy2, trial.U2x, trial.U2y, t, 1);
 
         mumps::problem problem_vx2(rhs_vx2.data(), rhs_vx2.size());
         assemble_matrix(problem_vx2, 0, dt/2, true, true, trial.U1x, trial.U1y);
@@ -553,10 +556,10 @@ public:
         vy = rhs_vy2;
     }
 
-    void update_velocity_igrm(int i, double t) {
+    void update_velocity_igrm(int /*i*/, double t) {
         using namespace std::placeholders;
         auto dt = steps.dt;
-        auto f = [&](point_type x, double s) { return forcing(x, s); };
+        auto f = [&](point_type x, double s) { return forcing(x, s, Re); };
         auto F = [&](double s) { return std::bind(f, _1, s); };
         auto conv = convection ? dt/2 : 0;
 
@@ -577,19 +580,8 @@ public:
 
         compute_rhs(rhs_vx1, rhs_vy1, vx, vy, vx, vy, p_star, dt, F(t + dt/2), 0, 0, 0, - dt/(2*Re), -conv, dt/2, dt/2);
 
-        auto apply_bc = [this,t](auto& rhs, auto& Vx, auto& Vy, auto i) {
-            // dirichlet_bc(rhs, boundary::left,   Vx, Vy, [this,t,i](auto s) { return this->exact_v({0, s}, t)[i].val; });
-            // dirichlet_bc(rhs, boundary::right,  Vx, Vy, [this,t,i](auto s) { return this->exact_v({1, s}, t)[i].val; });
-            // dirichlet_bc(rhs, boundary::top,    Vx, Vy, [this,t,i](auto s) { return this->exact_v({s, 1}, t)[i].val; });
-            // dirichlet_bc(rhs, boundary::bottom, Vx, Vy, [this,t,i](auto s) { return this->exact_v({s, 0}, t)[i].val; });
-
-            dirichlet_bc(rhs, boundary::left,   Vx, Vy, 0);
-            dirichlet_bc(rhs, boundary::right,  Vx, Vy, 0);
-            dirichlet_bc(rhs, boundary::top,    Vx, Vy, 1 - i);
-            dirichlet_bc(rhs, boundary::bottom, Vx, Vy, 0);
-        };
-        apply_bc(vx1, trial.U1x, trial.U1y, 0);
-        apply_bc(vy1, trial.U2x, trial.U2y, 1);
+        apply_velocity_bc(vx1, trial.U1x, trial.U1y, t, 0);
+        apply_velocity_bc(vy1, trial.U2x, trial.U2y, t, 1);
 
         mumps::problem problem_vx1(rhs.data(), rhs.size());
         assemble_matrix_velocity(problem_vx1, dt/(2*Re), 0);
@@ -603,8 +595,8 @@ public:
         vector_view vy2{vx2.data() + dU1,       {trial.U2x.dofs(), trial.U2y.dofs()}};
 
         compute_rhs(rhs_vx2, rhs_vy2, vx, vy, vx1, vy1, p_star, dt, F(t + dt/2), 0, 0, -dt/(2*Re), 0, -conv, dt/2, dt/2);
-        apply_bc(vx2, trial.U1x, trial.U1y, 0);
-        apply_bc(vy2, trial.U2x, trial.U2y, 1);
+        apply_velocity_bc(vx2, trial.U1x, trial.U1y, t, 0);
+        apply_velocity_bc(vy2, trial.U2x, trial.U2y, t, 1);
 
         mumps::problem problem_vx2(rhs2.data(), rhs2.size());
         assemble_matrix_velocity(problem_vx2, 0, dt/(2*Re));
@@ -627,8 +619,8 @@ public:
             compute_projection(rhs, x.basis, y.basis, [&](double x, double y) { return fun({x, y}); });
             ads_solve(rhs, buffer, x.data(), y.data());
         };
-        project(vx, trial.U1x, trial.U1y, [this,t](point_type x) { return exact_v(x, t)[0].val; });
-        project(vy, trial.U2x, trial.U2y, [this,t](point_type x) { return exact_v(x, t)[1].val; });
+        project(vx, trial.U1x, trial.U1y, [this,t](point_type x) { return exact_v(x, t, Re)[0].val; });
+        project(vy, trial.U2x, trial.U2y, [this,t](point_type x) { return exact_v(x, t, Re)[1].val; });
     }
 
     void update_pressure(double t) {
@@ -659,7 +651,7 @@ public:
             compute_projection(rhs, x.basis, y.basis, [&](double x, double y) { return fun({x, y}); });
             ads_solve(rhs, buffer, x.data(), y.data());
         };
-        project(p, trial.Px, trial.Py, [this,t](point_type x) { return exact_p(x, t).val; });
+        project(p, trial.Px, trial.Py, [this,t](point_type x) { return exact_p(x, t, Re).val; });
     }
 
     void update_pressure_igrm() {
@@ -867,9 +859,9 @@ public:
         int i = iter + 1;
         double tt = t + steps.dt;
 
-        auto e_vx = [this,tt](point_type x) { return exact_v(x, tt)[0]; };
-        auto e_vy = [this,tt](point_type x) { return exact_v(x, tt)[1]; };
-        auto e_p  = [this,tt](point_type x) { return exact_p(x, tt); };
+        auto e_vx = [this,tt](point_type x) { return exact_v(x, tt, Re)[0]; };
+        auto e_vy = [this,tt](point_type x) { return exact_v(x, tt, Re)[1]; };
+        auto e_p  = [this,tt](point_type x) { return exact_p(x, tt, Re); };
 
         auto p_avg       = average_value(p, trial.Px, trial.Py);
         auto p_exact_avg = average_value(trial.Px, trial.Py, e_p);
@@ -911,12 +903,10 @@ public:
     }
 
     template <typename Sol>
-    double correct_pressure(Sol& pressure) const {
-        auto p_avg = average_value(pressure, trial.Px, trial.Py);
+    void shift_pressure(Sol& pressure, double delta) const {
         for (auto i : dofs(trial.Px, trial.Py)) {
-            pressure(i[0], i[1]) -= p_avg;
+            pressure(i[0], i[1]) += delta;
         }
-        return p_avg;
     }
 
     template <typename Sol>
@@ -933,6 +923,20 @@ public:
         return val;
     }
 
+    template <typename Fun>
+    double average_value(const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+        double val = 0;
+        for (auto e : elements(Ux, Ux)) {
+            double J = jacobian(e, Ux, Uy);
+            for (auto q : quad_points(Ux, Uy)) {
+                double w = weigth(q, Ux, Uy);
+                auto x = point(e, q, Ux, Uy);
+                auto fx = fun(x);
+                val += fx.val * w * J;
+            }
+        }
+        return val;
+    }
 
     void save_to_file(int i) {
         outputP.to_file(p, "pressure_%d.data", i);
