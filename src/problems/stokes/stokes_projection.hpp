@@ -208,9 +208,6 @@ public:
 
         save_to_file(0);
         // output_exact(0);
-
-        // std::cout << "Initial state error:" << std::endl;
-        // print_error(0);
     }
 
     void output_exact(int i, double t) {
