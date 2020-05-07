@@ -982,6 +982,11 @@ public:
                   << " p err = " << p_error_L2
                   << " |phi| = " << phi_norm_L2
                   << std::endl;
+
+        if (v_norm_L2 > 1e4 || std::isnan(v_norm_L2)) {
+            std::cout << "Divergence detected" << std::endl;
+            std::exit(1);
+        }
     }
 
     template <typename Sol>
