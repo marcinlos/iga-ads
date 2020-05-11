@@ -157,6 +157,23 @@ protected:
         return util::product_range<index_type>(rx, ry);
     }
 
+    index_range overlapping_dofs(index_type dof, const dimension& Ux, const dimension& Uy,
+            const dimension& Vx, const dimension& Vy) const {
+        auto xrange = Ux.basis.element_ranges[dof[0]];
+        auto yrange = Uy.basis.element_ranges[dof[1]];
+
+        auto x0 = Vx.basis.first_dof(xrange.first);
+        auto x1 = Vx.basis.last_dof(xrange.second) + 1;
+
+        auto y0 = Vy.basis.first_dof(yrange.first);
+        auto y1 = Vy.basis.last_dof(yrange.second) + 1;
+
+        auto rx = boost::counting_range(x0, x1);
+        auto ry = boost::counting_range(y0, y1);
+
+        return util::product_range<index_type>(rx, ry);
+    }
+
     index_range overlapping_internal_dofs(index_type dof, const dimension& x, const dimension& y) const {
         auto rx = overlapping_dofs(dof[0], 1, x.dofs() - 1, x);
         auto ry = overlapping_dofs(dof[1], 1, y.dofs() - 1, y);
