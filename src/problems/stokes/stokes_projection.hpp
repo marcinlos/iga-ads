@@ -198,6 +198,9 @@ private:
     mumps::solver solver;
     output_manager<2> outputU1, outputU2, outputP;
 
+    Galois::Timer solver_timer;
+    Galois::Timer total_timer;
+
 public:
     stokes_projection(space_set trial_, space_set test_, const timesteps_config& steps, Problem problem)
     : Base{ test_.Px, test_.Py, steps }
@@ -214,7 +217,9 @@ public:
     , outputU1{ trial.U1x.B, trial.U1y.B, 200 }
     , outputU2{ trial.U2x.B, trial.U2y.B, 200 }
     , outputP{ trial.Px.B, trial.Py.B, 200 }
-    { }
+    {
+        total_timer.start();
+    }
 
     void pressure_sum(vector_type& target, const vector_type& a, const vector_type& b) const {
         for (auto i : dofs(trial.Px, trial.Py)) {
@@ -479,6 +484,17 @@ public:
             }
         }
     }
+    void print_solver_info(const std::string& header, const mumps::problem& problem, mumps::solver& solver) {
+        auto time = static_cast<double>(solver_timer.get());
+        std::cout << "Solver " << header << ": "
+                  << " NZ " << problem.nonzero_entries()
+                  << " time " << time << " ms"
+                  << " assembly FLOPS " << solver.flops_assembly()
+                  << " elimination FLOPS " << solver.flops_elimination()
+                  << std::endl;
+        // reset
+        solver_timer = Galois::Timer{};
+    }
 
     template <typename RHS>
     void apply_velocity_bc(RHS& rhs, dimension& Vx, dimension& Vy, double t, int i) {
@@ -649,7 +665,11 @@ public:
 
         mumps::problem problem_vx1(rhs.data(), rhs.size());
         assemble_matrix_velocity(problem_vx1, dt/(2*Re), 0);
+
+        solver_timer.start();
         solver.solve(problem_vx1);
+        solver_timer.stop();
+        print_solver_info("velocity 1", problem_vx1, solver);
 
         // Step 2
         std::vector<double> rhs2(dim_test + dim_trial);
@@ -676,7 +696,11 @@ public:
 
         mumps::problem problem_vx2(rhs2.data(), rhs2.size());
         assemble_matrix_velocity(problem_vx2, 0, dt/(2*Re));
+
+        solver_timer.start();
         solver.solve(problem_vx2);
+        solver_timer.stop();
+        print_solver_info("velocity 2", problem_vx2, solver);
 
         vx_prev = vx;
         vy_prev = vy;
@@ -744,7 +768,11 @@ public:
         compute_rhs_pressure_1(rhs_p1, vx, vy, test.Px, test.Py, steps.dt);
         mumps::problem problem_px(rhs.data(), rhs.size());
         assemble_matrix_pressure(problem_px, 1, 0);
+
+        solver_timer.start();
         solver.solve(problem_px);
+        solver_timer.stop();
+        print_solver_info("pressure 1", problem_px, solver);
 
         // Step 2
         std::vector<double> rhs2(dim_test + dim_trial);
@@ -754,7 +782,12 @@ public:
         compute_rhs_pressure_2(rhs_p2, p1, test.Px, test.Py);
         mumps::problem problem_py(rhs2.data(), rhs2.size());
         assemble_matrix_pressure(problem_py, 0, 1);
+
+        solver_timer.start();
         solver.solve(problem_py);
+        solver_timer.stop();
+        print_solver_info("pressure 2", problem_py, solver);
+
 
         for (auto i : dofs(trial.Px, trial.Py)) { phi(i[0], i[1]) = p2(i[0], i[1]); } // phi = p2;
 
@@ -985,8 +1018,15 @@ public:
 
         if (v_norm_L2 > 1e4 || std::isnan(v_norm_L2)) {
             std::cout << "Divergence detected" << std::endl;
+            after();
             std::exit(1);
         }
+    }
+
+    void after() override {
+        total_timer.stop();
+        auto time = static_cast<double>(total_timer.get()) / 1000.0;
+        std::cout << "Total time: " << time << " s" << std::endl;
     }
 
     template <typename Sol>
