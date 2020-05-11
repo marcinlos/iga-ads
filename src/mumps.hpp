@@ -26,11 +26,11 @@ struct problem {
         values_.push_back(value);
     }
 
-    int nonzero_entries() {
+    int nonzero_entries() const {
         return values_.size();
     }
 
-    int dofs() {
+    int dofs() const {
         return n;
     }
 
