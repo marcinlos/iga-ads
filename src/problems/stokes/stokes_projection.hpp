@@ -402,7 +402,7 @@ public:
 
 
         for (auto i : dofs(test.U1x, test.U1y)) {
-            for (auto j : dofs(trial.U1x, trial.U1y)) {
+            for (auto j : overlapping_dofs(i, test.U1x, test.U1y, trial.U1x, trial.U1y)) {
                 if (! overlap(i, test.U1x, test.U1y, j, trial.U1x, trial.U1y)) continue;
 
                 int ii = linear_index(i, test.U1x, test.U1y) + 1;
@@ -418,7 +418,7 @@ public:
         }
 
         for (auto i : dofs(test.U2x, test.U2y)) {
-            for (auto j : dofs(trial.U2x, trial.U2y)) {
+            for (auto j : overlapping_dofs(i, test.U1x, test.U1y, trial.U1x, trial.U1y)) {
                 if (! overlap(i, test.U2x, test.U2y, j, trial.U2x, trial.U2y)) continue;
 
                 int ii = linear_index(i, test.U2x, test.U2y) + 1;
@@ -472,7 +472,7 @@ public:
         };
 
         for (auto i : dofs(test.Px, test.Py)) {
-            for (auto j : dofs(trial.Px, trial.Py)) {
+            for (auto j : overlapping_dofs(i, test.Px, test.Py, trial.Px, trial.Py)) {
                 if (! overlap(i, test.Px, test.Py, j, trial.Px, trial.Py)) continue;
 
                 int ii = linear_index(i, test.Px, test.Py) + 1;
