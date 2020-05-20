@@ -5,6 +5,7 @@
 #include "ads/simulation/utils.hpp"
 #include "ads/executor/galois.hpp"
 #include "ads/output_manager.hpp"
+#include "problems/stokes/space_set.hpp"
 #include "mumps.hpp"
 
 
@@ -16,87 +17,37 @@ private:
 
     galois_executor executor{8};
 
-    dimension Ux, Uy;
-    dimension& Vx;
-    dimension& Vy;
-
-    dimension ref_x, ref_y;
-
-    lin::band_matrix MVx, MVy;
-    lin::band_matrix KVx, KVy;
-    lin::band_matrix AVx, AVy;
-
-    lin::dense_matrix MUVx, MUVy;
-    lin::dense_matrix KUVx, KUVy;
-    lin::dense_matrix AUVx, AUVy;
-
-    lin::dense_matrix AVUx, AVUy;
-
+    space_set trial, test, ref;
 
     double h;
-    vector_type buffer;
 
     mumps::solver solver;
     Galois::StatTimer solver_timer{"solver"};
-    output_manager<2> output;
+    output_manager<2> outputU1, outputU2, outputP;
 
 public:
-    stokes(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, const timesteps_config& steps,
-           dimension ref_x, dimension ref_y)
-    : Base{ std::move(test_x), std::move(test_y), steps }
-    , Ux{ std::move(trial_x) }
-    , Uy{ std::move(trial_y) }
-    , ref_x{ ref_x }
-    , ref_y{ ref_y }
-    , Vx{ x }
-    , Vy{ y }
-    , MVx{Vx.p, Vx.p, Vx.dofs(), Vx.dofs(), 0}
-    , MVy{Vy.p, Vy.p, Vy.dofs(), Vy.dofs(), 0}
-    , KVx{Vx.p, Vx.p, Vx.dofs(), Vx.dofs(), 0}
-    , KVy{Vy.p, Vy.p, Vy.dofs(), Vy.dofs(), 0}
-    , AVx{Vx.p, Vx.p, Vx.dofs(), Vx.dofs(), 0}
-    , AVy{Vy.p, Vy.p, Vy.dofs(), Vy.dofs(), 0}
-    , MUVx{ Vx.dofs(), Ux.dofs() }
-    , MUVy{ Vy.dofs(), Uy.dofs() }
-    , KUVx{ Vx.dofs(), Ux.dofs() }
-    , KUVy{ Vy.dofs(), Uy.dofs() }
-    , AUVx{ Vx.dofs(), Ux.dofs() }
-    , AUVy{ Vy.dofs(), Uy.dofs() }
-    , AVUx{ Ux.dofs(), Vx.dofs() }
-    , AVUy{ Uy.dofs(), Vy.dofs() }
-    , h{ element_diam(Ux, Uy) }
-    , buffer{{ Ux.dofs(), Uy.dofs() }}
-    , output{ Ux.B, Uy.B, 500 }
+    stokes(space_set trial, space_set test, space_set ref, const timesteps_config& steps)
+    : Base{ trial.U1x, trial.U1y, steps }
+    , trial{ std::move(trial) }
+    , test{ std::move(test) }
+    , ref{ std::move(ref) }
+    , h{ element_diam(this->trial.Px, this->trial.Py) }
+    , outputU1{ this->trial.U1x.B, this->trial.U1y.B, 500 }
+    , outputU2{ this->trial.U2x.B, this->trial.U2y.B, 500 }
+    , outputP{ this->trial.Px.B, this->trial.Py.B, 500 }
     { }
 
     double element_diam(const dimension& Ux, const dimension& Uy) const {
         return std::sqrt(max_element_size(Ux) * max_element_size(Uy));
     }
 
-    void prepare_matrices() {
-        gram_matrix_1d(MVx, Vx.basis);
-        gram_matrix_1d(MVy, Vy.basis);
-        gram_matrix_1d(MUVx, Ux.basis, Vx.basis);
-        gram_matrix_1d(MUVy, Uy.basis, Vy.basis);
-
-        stiffness_matrix_1d(KVx, Vx.basis);
-        stiffness_matrix_1d(KVy, Vy.basis);
-        stiffness_matrix_1d(KUVx, Ux.basis, Vx.basis);
-        stiffness_matrix_1d(KUVy, Uy.basis, Vy.basis);
-
-        advection_matrix_1d(AVx, Vx.basis);
-        advection_matrix_1d(AVy, Vy.basis);
-        advection_matrix_1d(AUVx, Ux.basis, Vx.basis);
-        advection_matrix_1d(AUVy, Uy.basis, Vy.basis);
-        advection_matrix_1d(AVUx, Vx.basis, Ux.basis);
-        advection_matrix_1d(AVUy, Vy.basis, Uy.basis);
-    }
-
     void before() override {
-        prepare_matrices();
-
-        Ux.factorize_matrix();
-        Uy.factorize_matrix();
+        trial.U1x.factorize_matrix();
+        trial.U1y.factorize_matrix();
+        trial.U2x.factorize_matrix();
+        trial.U2y.factorize_matrix();
+        trial.Px.factorize_matrix();
+        trial.Py.factorize_matrix();
 
         output_exact();
     }
@@ -150,6 +101,10 @@ public:
         auto vx = [this](point_type x) { return exact_v(x)[0].val; };
         auto vy = [this](point_type x) { return exact_v(x)[1].val; };
 
+        auto Ux = trial.U1x;
+        auto Uy = trial.U1y;
+        auto buffer = vector_type{{ Ux.dofs(), Uy.dofs() }};
+
         auto project = [&](auto fun) {
             vector_type rhs{{ Ux.dofs(), Uy.dofs() }};
             compute_projection(rhs, Ux.basis, Uy.basis, [&](double x, double y) { return fun({x, y}); });
@@ -157,9 +112,9 @@ public:
             return rhs;
         };
 
-        output.to_file(project(p), "pressure_ref.data");
-        output.to_file(project(vx), "vx_ref.data");
-        output.to_file(project(vy), "vy_ref.data");
+        outputU1.to_file(project(p), "pressure_ref.data");
+        outputU2.to_file(project(vx), "vx_ref.data");
+        outputP.to_file(project(vy), "vy_ref.data");
     }
 
     void print_error(const vector_view& vx, const vector_view& vy, const vector_view& p) const {
@@ -168,21 +123,20 @@ public:
         auto e_p = [this](point_type x) { return exact_p(x); };
         auto div = [this](point_type x) { return exact_div(x); };
 
-        double vxL2 = errorL2(vx, Ux, Uy, e_vx) / normL2(Ux, Uy, e_vx) * 100;
-        double vxH1 = errorH1(vx, Ux, Uy, e_vx) / normH1(Ux, Uy, e_vx) * 100;
+        double vxL2 = error_relative_L2(vx, trial.U1x, trial.U1y, e_vx) * 100;
+        double vxH1 = error_relative_H1(vx, trial.U1x, trial.U1y, e_vx) * 100;
 
-        double vyL2 = errorL2(vy, Ux, Uy, e_vy) / normL2(Ux, Uy, e_vy) * 100;
-        double vyH1 = errorH1(vy, Ux, Uy, e_vy) / normH1(Ux, Uy, e_vy) * 100;
+        double vyL2 = error_relative_L2(vy, trial.U2x, trial.U2y, e_vy) * 100;
+        double vyH1 = error_relative_H1(vy, trial.U2x, trial.U2y, e_vy) * 100;
 
         double vL2 = std::hypot(vxL2, vyL2) / std::sqrt(2);
         double vH1 = std::hypot(vxH1, vyH1) / std::sqrt(2);
 
+        double pL2 = error_relative_L2(p, trial.Px, trial.Py, e_p) * 100;
+        double pH1 = error_relative_H1(p, trial.Px, trial.Py, e_p) * 100;
 
-        double pL2 = errorL2(p, Ux, Uy, e_p) / normL2(Ux, Uy, e_p) * 100;
-        double pH1 = errorH1(p, Ux, Uy, e_p) / normH1(Ux, Uy, e_p) * 100;
-
-        double divL2 = div_errorL2(vx, vy, Ux, Uy, div) * 100;
-        double divH1 = div_errorH1(vx, vy, Ux, Uy, div) * 100;
+        double divL2 = div_errorL2(vx, vy, trial.Px, trial.Py, div) * 100;
+        double divH1 = div_errorH1(vx, vy, trial.Px, trial.Py, div) * 100;
 
         std::cout.precision(3);
         std::cout << "vx  : L2 = " << vxL2   << "%, H1 = " << vxH1   << "%" << std::endl;
@@ -192,34 +146,35 @@ public:
         std::cout << "div : L2 = " << divL2  << ", H1 = " << divH1  << std::endl;
     }
 
-
-
-
     void print_error(const vector_view& vx, const vector_view& vy, const vector_view& p,
                      const vector_type& ref_vx, const vector_type& ref_vy, const vector_type& ref_p) const {
-        bspline::eval_ders_ctx cx{ref_x.p, 1};
-        bspline::eval_ders_ctx cy{ref_y.p, 1};
 
-        auto e_vx = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_vx, ref_x.B, ref_y.B, cx, cy); };
-        auto e_vy = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_vy, ref_x.B, ref_y.B, cx, cy); };
-        auto e_p = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_p, ref_x.B, ref_y.B, cx, cy); };
+        auto cU1x = bspline::eval_ders_ctx{ref.U1x.p, 1};
+        auto cU1y = bspline::eval_ders_ctx{ref.U1y.p, 1};
+        auto cU2x = bspline::eval_ders_ctx{ref.U2x.p, 1};
+        auto cU2y = bspline::eval_ders_ctx{ref.U2y.p, 1};
+        auto cPx = bspline::eval_ders_ctx{ref.Px.p, 1};
+        auto cPy = bspline::eval_ders_ctx{ref.Py.p, 1};
+
+        auto e_vx = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_vx, ref.U1x.B, ref.U1y.B, cU1x, cU1y); };
+        auto e_vy = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_vy, ref.U2x.B, ref.U2y.B, cU2x, cU2y); };
+        auto e_p = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_p, ref.Px.B, ref.Py.B, cPx, cPy); };
         auto div = [this](point_type x) { return value_type{}; };
 
-        double vxL2 = errorL2(vx, Ux, Uy, e_vx) / normL2(Ux, Uy, e_vx) * 100;
-        double vxH1 = errorH1(vx, Ux, Uy, e_vx) / normH1(Ux, Uy, e_vx) * 100;
+        double vxL2 = error_relative_L2(vx, trial.U1x, trial.U1y, e_vx) * 100;
+        double vxH1 = error_relative_H1(vx, trial.U1x, trial.U1y, e_vx) * 100;
 
-        double vyL2 = errorL2(vy, Ux, Uy, e_vy) / normL2(Ux, Uy, e_vy) * 100;
-        double vyH1 = errorH1(vy, Ux, Uy, e_vy) / normH1(Ux, Uy, e_vy) * 100;
+        double vyL2 = error_relative_L2(vy, trial.U2x, trial.U2y, e_vy) * 100;
+        double vyH1 = error_relative_H1(vy, trial.U2x, trial.U2y, e_vy) * 100;
 
         double vL2 = std::hypot(vxL2, vyL2) / std::sqrt(2);
         double vH1 = std::hypot(vxH1, vyH1) / std::sqrt(2);
 
+        double pL2 = error_relative_L2(p, trial.Px, trial.Py, e_p) * 100;
+        double pH1 = error_relative_H1(p, trial.Px, trial.Py, e_p) * 100;
 
-        double pL2 = errorL2(p, Ux, Uy, e_p) / normL2(Ux, Uy, e_p) * 100;
-        double pH1 = errorH1(p, Ux, Uy, e_p) / normH1(Ux, Uy, e_p) * 100;
-
-        double divL2 = div_errorL2(vx, vy, Ux, Uy, div) * 100;
-        double divH1 = div_errorH1(vx, vy, Ux, Uy, div) * 100;
+        double divL2 = div_errorL2(vx, vy, trial.Px, trial.Py, div) * 100;
+        double divH1 = div_errorH1(vx, vy, trial.Px, trial.Py, div) * 100;
 
         std::cout.precision(3);
         std::cout << "vx  : L2 = " << vxL2   << "%, H1 = " << vxH1   << "%" << std::endl;
@@ -247,8 +202,8 @@ public:
             (4 - 24 * y + 48 * y*y - 48 * y*y*y + 24 * y*y*y*y) * x -
             12 * y*y + 24 * y*y*y - 12 * y*y*y*y;
 
-        // return { fx, fy };
-        return { 0, 0 };
+        return { fx, fy };
+        // return { 0, 0 };
     }
 
     auto shifted(int n, int k, mumps::problem& problem) const {
@@ -273,127 +228,199 @@ public:
     }
 
     void assemble_matrix(mumps::problem& problem) const {
-        auto DV = Vx.dofs() * Vy.dofs();
-        auto DU = Ux.dofs() * Uy.dofs();
+        auto dU1 = trial.U1x.dofs() * trial.U1y.dofs();
+        auto dU2 = trial.U2x.dofs() * trial.U2y.dofs();
+
+        auto DU1 = test.U1x.dofs() * test.U1y.dofs();
+        auto DU2 = test.U2x.dofs() * test.U2y.dofs();
+        auto DP = test.Px.dofs() * test.Py.dofs();
+
+        auto D = DU1 + DU2 + DP;
 
         auto test_vx = shifted(0, 0, problem);
-        auto test_vy = shifted(DV, DV, problem);
-        auto test_p = shifted(2*DV, 2*DV, problem);
+        auto test_vy = shifted(DU1, DU1, problem);
+        auto test_p = shifted(DU1 + DU2, DU1 + DU2, problem);
 
-        auto test_vxy = shifted(0, DV, problem);
-        auto test_vyx = shifted(DV, 0, problem);
-
-        auto trial_vx = shifted(3*DV, 3*DV, problem);
-        auto trial_vy = shifted(3*DV + DU, 3*DV + DU, problem);
-        auto trial_p = shifted(3*DV + 2*DU, 3*DV + 2*DU, problem);
+        auto trial_vx = shifted(D, D, problem);
+        auto trial_vy = shifted(D + dU1, D + dU1, problem);
+        auto trial_p = shifted(D + dU1 + dU2, D + dU1 + dU2, problem);
 
         auto hh = h * h;
 
         // Gram matrix
-        for (auto i : dofs(Vx, Vy)) {
-            for (auto j : overlapping_dofs(i, Vx, Vy)) {
-                int ii = linear_index(i, Vx, Vy) + 1;
-                int jj = linear_index(j, Vx, Vy) + 1;
+        for (auto i : dofs(test.U1x, test.U1y)) {
+            for (auto j : overlapping_dofs(i, test.U1x, test.U1y)) {
+                int ii = linear_index(i, test.U1x, test.U1y) + 1;
+                int jj = linear_index(j, test.U1x, test.U1y) + 1;
+                auto eval = [&](auto form) { return integrate(i, j, test.U1x, test.U1y, test.U1x, test.U1y, form); };
 
-                double M = kron(MVx, MVy, i, j);
-                double Kx = kron(KVx, MVy, i, j);
-                double Ky = kron(MVx, KVy, i, j);
-                double Ax = AVx(j[0], i[0]) * AVy(i[1], j[1]);
-                double Ay = AVx(i[0], j[0]) * AVy(j[1], i[1]);
+                if (! is_boundary(i, test.U1x, test.U1y) && ! is_boundary(j, test.U1x, test.U1y)) {
+                    double value = eval([](auto u, auto v) { return u.dx * v.dx + u.dy * v.dy; });
+                    test_vx(ii, jj, value);
+                }
+            }
+        }
 
-                // G(w, u)
-                // w = (tx, ty, w)
-                // u = (vx, vy, p)
+        for (auto i : dofs(test.U2x, test.U2y)) {
+            for (auto j : overlapping_dofs(i, test.U2x, test.U2y)) {
+                int ii = linear_index(i, test.U2x, test.U2y) + 1;
+                int jj = linear_index(j, test.U2x, test.U2y) + 1;
+                auto eval = [&](auto form) { return integrate(i, j, test.U2x, test.U2y, test.U2x, test.U2y, form); };
+
+                if (! is_boundary(i, test.U2x, test.U2y) && ! is_boundary(j, test.U2x, test.U2y)) {
+                    double value = eval([](auto u, auto v) { return u.dx * v.dx + u.dy * v.dy; });
+                    test_vy(ii, jj, value);
+                }
+            }
+        }
+
+        for (auto i : dofs(test.Px, test.Py)) {
+            for (auto j : overlapping_dofs(i, test.Px, test.Py)) {
+                int ii = linear_index(i, test.Px, test.Py) + 1;
+                int jj = linear_index(j, test.Px, test.Py) + 1;
+                auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, test.Px, test.Py, form); };
 
                 if (! is_pressure_fixed(i) && ! is_pressure_fixed(j)) {
-                    // w, p -> (w, p) // + hh (\/w, \/p)
-                    test_p(ii, jj, M/* + hh * (Kx + Ky)*/);
-                }
-
-                if (! is_boundary(i, Vx, Vy) && ! is_boundary(j, Vx, Vy)) {
-                    // tx, vx -> (tx, vx) + hh (tx,x, vx,x)
-                    // tx, vx -> (\/tx, \/vx)
-                    test_vx(ii, jj, /*M + hh */ (Kx + Ky));
-
-                    // ty, vy -> (ty, vy) + hh (ty,y, vy,y)
-                    // ty, vy -> (\/ty, \/vy)
-                    test_vy(ii, jj, /*M + hh */ (Kx + Ky));
-
-                    // tx, vy -> hh (tx,x, vy,y)
-                    // test_vxy(ii, jj, hh * Ax);
-
-                    // ty, vx -> hh (ty,y, vx,x)
-                    // test_vyx(ii, jj, hh * Ay);
+                    double value = eval([](auto p, auto q) { return p.val * q.val; });
+                    test_p(ii, jj, value);
                 }
             }
         }
 
         // Dirichlet BC - test space
-        for_boundary_dofs(Vx, Vy, [&](index_type dof) {
-            int i = linear_index(dof, Vx, Vy) + 1;
+        for_boundary_dofs(test.U1x, test.U1y, [&](index_type dof) {
+            int i = linear_index(dof, test.U1x, test.U1y) + 1;
             test_vx(i, i, 1);
+        });
+        for_boundary_dofs(test.U2x, test.U2y, [&](index_type dof) {
+            int i = linear_index(dof, test.U2x, test.U2y) + 1;
             test_vy(i, i, 1);
         });
         test_p(1, 1, 1.0);
 
         // B, B^t
-        auto put = [&](index_type i, index_type j, int si, int sj, double val, bool fixed_i, bool fixed_j) {
-            int ii = linear_index(i, Vx, Vy) + 1 + si;
-            int jj = linear_index(j, Ux, Uy) + 1 + sj;
+        auto put = [&](int i, int j, int si, int sj, double val, bool fixed_i, bool fixed_j) {
+            int ii = i + si;
+            int jj = j + sj;
 
             if (!fixed_i) {
-                problem.add(ii, 3*DV + jj, -val);
+                problem.add(ii, D + jj, -val);
             }
             if (!fixed_i && !fixed_j) {
-                problem.add(3*DV + jj, ii, val);
+                problem.add(D + jj, ii, val);
             }
         };
 
-        for (auto i : dofs(Vx, Vy)) {
-            for (auto j : dofs(Ux, Uy)) {
-                if (! overlap(i, Vx, Vy, j, Ux, Uy)) continue;
-                double Kx = kron(KUVx, MUVy, i, j);
-                double Ky = kron(MUVx, KUVy, i, j);
-                double Ax = kron(AUVx, MUVy, i, j);
-                double Ay = kron(MUVx, AUVy, i, j);
-                double AxT = AVUx(j[0], i[0]) * MUVy(i[1], j[1]);
-                double AyT = MUVx(i[0], j[0]) * AVUy(j[1], i[1]);
+        // B(v, u)
+        // u = (ux, uy, p)
+        // v = (vx, vy, q)
 
-                bool bd_i = is_boundary(i, Vx, Vy);
-                bool bd_j = is_boundary(j, Ux, Uy);
+        // vx, ux -> (\/vx, \/ux)
+        for (auto i : dofs(test.U1x, test.U1y)) {
+            for (auto j : dofs(trial.U1x, trial.U1y)) {
+                if (! overlap(i, test.U1x, test.U1y, j, trial.U1x, trial.U1y)) continue;
+
+                int ii = linear_index(i, test.U1x, test.U1y) + 1;
+                int jj = linear_index(j, trial.U1x, trial.U1y) + 1;
+
+                bool bd_i = is_boundary(i, test.U1x, test.U1y);
+                bool bd_j = is_boundary(j, trial.U1x, trial.U1y);
+
+                auto eval = [&](auto form) { return integrate(i, j, test.U1x, test.U1y, trial.U1x, trial.U1y, form); };
+                double value = eval([](auto v, auto u) { return v.dx * u.dx + v.dy * u.dy; });
+
+                put(ii, jj, 0, 0, value, bd_i, bd_j);
+            }
+        }
+        // vy, uy -> (\/vy, \/uy)
+        for (auto i : dofs(test.U2x, test.U2y)) {
+            for (auto j : dofs(trial.U2x, trial.U2y)) {
+                if (! overlap(i, test.U2x, test.U2y, j, trial.U2x, trial.U2y)) continue;
+
+                int ii = linear_index(i, test.U2x, test.U2y) + 1;
+                int jj = linear_index(j, trial.U2x, trial.U2y) + 1;
+
+                bool bd_i = is_boundary(i, test.U2x, test.U2y);
+                bool bd_j = is_boundary(j, trial.U2x, trial.U2y);
+
+                auto eval = [&](auto form) { return integrate(i, j, test.U2x, test.U2y, trial.U2x, trial.U2y, form); };
+                double value = eval([](auto v, auto u) { return v.dx * u.dx + v.dy * u.dy; });
+
+                put(ii, jj, DU1, dU1, value, bd_i, bd_j);
+            }
+        }
+        // q, ux -> (q, ux,x)
+        for (auto i : dofs(test.Px, test.Py)) {
+            for (auto j : dofs(trial.U1x, trial.U1y)) {
+                if (! overlap(i, test.Px, test.Py, j, trial.U1x, trial.U1y)) continue;
+
+                int ii = linear_index(i, test.Px, test.Py) + 1;
+                int jj = linear_index(j, trial.U1x, trial.U1y) + 1;
+
                 bool fixed_i = is_pressure_fixed(i);
+                bool bd_j = is_boundary(j, trial.U1x, trial.U1y);
+
+                auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, trial.U1x, trial.U1y, form); };
+                double value = eval([](auto q, auto u) { return q.val * u.dx; });
+                put(ii, jj, DU1 + DU2, 0, value, fixed_i, bd_j);
+            }
+        }
+        // q, uy -> (q, uy,y)
+        for (auto i : dofs(test.Px, test.Py)) {
+            for (auto j : dofs(trial.U2x, trial.U2y)) {
+                if (! overlap(i, test.Px, test.Py, j, trial.U2x, trial.U2y)) continue;
+
+                int ii = linear_index(i, test.Px, test.Py) + 1;
+                int jj = linear_index(j, trial.U2x, trial.U2y) + 1;
+
+                bool fixed_i = is_pressure_fixed(i);
+                bool bd_j = is_boundary(j, trial.U2x, trial.U2y);
+
+                auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, trial.U2x, trial.U2y, form); };
+                double value = eval([](auto q, auto u) { return q.val * u.dy; });
+                put(ii, jj, DU1 + DU2, dU1, value, fixed_i, bd_j);
+            }
+        }
+        // vx, p -> - (vx,x, p)
+        for (auto i : dofs(test.U1x, test.U1y)) {
+            for (auto j : dofs(trial.Px, trial.Py)) {
+                if (! overlap(i, test.U1x, test.U1y, j, trial.Px, trial.Py)) continue;
+
+                int ii = linear_index(i, test.U1x, test.U1y) + 1;
+                int jj = linear_index(j, trial.Px, trial.Py) + 1;
+
+                bool bd_i = is_boundary(i, test.U1x, test.U1y);
                 bool fixed_j = is_pressure_fixed(j);
 
-                // B(w, u)
-                // w = (tx, ty, w)
-                // u = (vx, vy, p)
+                auto eval = [&](auto form) { return integrate(i, j, test.U1x, test.U1y, trial.Px, trial.Py, form); };
+                double value = eval([](auto v, auto p) { return -v.dx * p.val; });
+                put(ii, jj, 0, dU1 + dU2, value, bd_i, fixed_j);
+            }
+        }
+        // vy, p ->  - (vy,y, p)
+        for (auto i : dofs(test.U2x, test.U2y)) {
+            for (auto j : dofs(trial.Px, trial.Py)) {
+                if (! overlap(i, test.U2x, test.U2y, j, trial.Px, trial.Py)) continue;
 
-                // tx, vx -> (\/tx, \/vx)
-                put(i, j, 0, 0, Kx + Ky, bd_i, bd_j);
+                int ii = linear_index(i, test.U2x, test.U2y) + 1;
+                int jj = linear_index(j, trial.Px, trial.Py) + 1;
 
-                // ty, vy -> (\/ty, \/vy)
-                put(i, j, DV, DU, Kx + Ky, bd_i, bd_j);
+                bool bd_i = is_boundary(i, test.U2x, test.U2y);
+                bool fixed_j = is_pressure_fixed(j);
 
-                // w, vx -> (w, vx,x)
-                put(i, j, 2*DV, 0, Ax, fixed_i, bd_j);
-
-                // w, vy -> (w, vy,y)
-                put(i, j, 2*DV, DU, Ay, fixed_i, bd_j);
-
-                // tx, p -> (tx, p,x) = - (tx,x, p)
-                // put(i, j, 0, 2*DU, Ax, bd_i, fixed_j);
-                put(i, j, 0, 2*DU, -AxT, bd_i, fixed_j);
-
-                // ty, p -> (ty, p,y) = - (ty,y, p)
-                // put(i, j, DV, 2*DU, Ay, bd_i, fixed_j);
-                put(i, j, DV, 2*DU, -AyT, bd_i, fixed_j);
+                auto eval = [&](auto form) { return integrate(i, j, test.U2x, test.U2y, trial.Px, trial.Py, form); };
+                double value = eval([](auto v, auto p) { return -v.dy * p.val; });
+                put(ii, jj, DU1, dU1 + dU2, value, bd_i, fixed_j);
             }
         }
 
         // Dirichlet BC - trial space
-        for_boundary_dofs(Ux, Uy, [&](index_type dof) {
-            int i = linear_index(dof, Ux, Uy) + 1;
+        for_boundary_dofs(trial.U1x, trial.U1y, [&](index_type dof) {
+            int i = linear_index(dof, trial.U1x, trial.U1y) + 1;
             trial_vx(i, i, 1);
+        });
+        for_boundary_dofs(trial.U2x, trial.U2y, [&](index_type dof) {
+            int i = linear_index(dof, trial.U2x, trial.U2y) + 1;
             trial_vy(i, i, 1);
         });
         trial_p(1, 1, 1.0);
@@ -401,69 +428,78 @@ public:
 
     void compute_rhs(vector_view& vx, vector_view& vy, vector_view& /*p*/) const {
         using shape = std::array<std::size_t, 2>;
-        auto local_shape = shape{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() };
+        auto u1_shape = shape{ test.U1x.basis.dofs_per_element(), test.U1y.basis.dofs_per_element() };
+        auto u2_shape = shape{ test.U2x.basis.dofs_per_element(), test.U2y.basis.dofs_per_element() };
 
-        executor.for_each(elements(Vx, Vy), [&](index_type e) {
-            auto vx_loc = vector_type{ local_shape };
-            auto vy_loc = vector_type{ local_shape };
+
+        executor.for_each(elements(trial.Px, trial.Py), [&](index_type e) {
+            auto vx_loc = vector_type{ u1_shape };
+            auto vy_loc = vector_type{ u2_shape };
 
             double J = jacobian(e);
-            for (auto q : quad_points(Vx, Vy)) {
+            for (auto q : quad_points(trial.Px, trial.Py)) {
                 double W = weigth(q);
                 auto x = point(e, q);
-                for (auto a : dofs_on_element(e, Vx, Vy)) {
-                    auto aa = dof_global_to_local(e, a, Vx, Vy);
-                    value_type v = eval_basis(e, q, a, Vx, Vy);
+                auto F = forcing(x);
 
-                    auto F = forcing(x);
+                for (auto a : dofs_on_element(e, test.U1x, test.U1y)) {
+                    auto aa = dof_global_to_local(e, a, test.U1x, test.U1y);
+                    value_type v = eval_basis(e, q, a, test.U1x, test.U1y);
+
                     double Lvx = F[0] * v.val;
-                    double Lvy = F[1] * v.val;
-
                     vx_loc(aa[0], aa[1]) -= Lvx * W * J;
+                }
+                for (auto a : dofs_on_element(e, test.U2x, test.U2y)) {
+                    auto aa = dof_global_to_local(e, a, test.U2x, test.U2y);
+                    value_type v = eval_basis(e, q, a, test.U2x, test.U2y);
+
+                    double Lvy = F[1] * v.val;
                     vy_loc(aa[0], aa[1]) -= Lvy * W * J;
                 }
             }
             executor.synchronized([&]() {
-                update_global_rhs(vx, vx_loc, e, Vx, Vy);
-                update_global_rhs(vy, vy_loc, e, Vx, Vy);
+                update_global_rhs(vx, vx_loc, e, test.U1x, test.U1y);
+                update_global_rhs(vy, vy_loc, e, test.U2x, test.U2y);
             });
         });
     }
 
 
     void apply_bc(vector_view& Rvx, vector_view& Rvy, vector_view& Rp) {
-        zero_bc(Rvx, Ux, Uy);
+        zero_bc(Rvx, trial.U1x, trial.U1y);
 
-        constexpr double eps = 1e-4;
-        auto drop = [](double t) { return t < 1 - eps ? 0 : 1 - (1 - t) / eps; };
-        dirichlet_bc(Rvx, boundary::left, Ux, Uy, drop);
-        dirichlet_bc(Rvx, boundary::right, Ux, Uy, drop);
-        dirichlet_bc(Rvx, boundary::top,    Ux, Uy, 1);
-        dirichlet_bc(Rvx, boundary::bottom, Ux, Uy, 0);
+        // constexpr double eps = 1e-4;
+        // auto drop = [](double t) { return t < 1 - eps ? 0 : 1 - (1 - t) / eps; };
+        // dirichlet_bc(Rvx, boundary::left,   trial.U1x, trial.U1y, drop);
+        // dirichlet_bc(Rvx, boundary::right,  trial.U1x, trial.U1y, drop);
+        // dirichlet_bc(Rvx, boundary::top,    trial.U1x, trial.U1y, 1);
+        // dirichlet_bc(Rvx, boundary::bottom, trial.U1x, trial.U1y, 0);
 
-        zero_bc(Rvy, Ux, Uy);
+        zero_bc(Rvy, trial.U2x, trial.U2y);
 
         Rp(0, 0) = 0; // fix pressure at a point
     }
 
     void step(int /*iter*/, double /*t*/) override {
-        auto trial_dim = Ux.dofs() * Uy.dofs();
-        auto test_dim = Vx.dofs() * Vy.dofs();
+        auto dU1 = trial.U1x.dofs() * trial.U1y.dofs();
+        auto dU2 = trial.U2x.dofs() * trial.U2y.dofs();
+        auto dP = trial.Px.dofs() * trial.Py.dofs();
+        auto dim_trial = dU1 + dU2 + dP;
 
-        using shape = std::array<std::size_t, 2>;
-        auto test_shape = shape{ Vx.dofs(), Vy.dofs() };
-        auto trial_shape = shape{ Ux.dofs(), Uy.dofs() };
+        auto DU1 = test.U1x.dofs() * test.U1y.dofs();
+        auto DU2 = test.U2x.dofs() * test.U2y.dofs();
+        auto DP = test.Px.dofs() * test.Py.dofs();
+        auto dim_test = DU1 + DU2 + DP;
 
+        std::vector<double> rhs(dim_test + dim_trial);
 
-        std::vector<double> rhs(3 * (test_dim + trial_dim));
+        vector_view Rvx{rhs.data(), {test.U1x.dofs(), test.U1y.dofs()}};
+        vector_view Rvy{Rvx.data() + DU1, {test.U2x.dofs(), test.U2y.dofs()}};
+        vector_view Rp{Rvy.data() + DU2, {test.Px.dofs(), test.Py.dofs()}};
 
-        vector_view Rvx{rhs.data(), test_shape};
-        vector_view Rvy{Rvx.data() + test_dim, test_shape};
-        vector_view Rp{Rvy.data() + test_dim, test_shape};
-
-        vector_view vx{Rp.data() + test_dim, trial_shape};
-        vector_view vy{vx.data() + trial_dim, trial_shape};
-        vector_view p{vy.data() + trial_dim, trial_shape};
+        vector_view vx{Rp.data() + DP, {trial.U1x.dofs(), trial.U1y.dofs()}};
+        vector_view vy{vx.data() + dU1, {trial.U2x.dofs(), trial.U2y.dofs()}};
+        vector_view p{vy.data() + dU2, {trial.Px.dofs(), trial.Py.dofs()}};
 
 
         mumps::problem problem(rhs.data(), rhs.size());
@@ -489,9 +525,9 @@ public:
         print_error(vx, vy, p);
 
         std::cout << "Outputting" << std::endl;
-        output.to_file(p, "pressure.data");
-        output.to_file(vx, "vx.data");
-        output.to_file(vy, "vy.data");
+        outputU1.to_file(p, "pressure.data");
+        outputU2.to_file(vx, "vx.data");
+        outputP.to_file(vy, "vy.data");
 
         // print_solution("vx.sol", vx, Ux, Uy);
         // print_solution("vy.sol", vy, Ux, Uy);
@@ -589,6 +625,27 @@ public:
             div.dy += c * dxy + d * dyy;
         }
         return div;
+    }
+
+    template <typename Form>
+    double integrate(index_type i, index_type j, const dimension& Ux, const dimension& Uy,
+                     const dimension& Vx, const dimension& Vy, Form&& form) const {
+        double val = 0;
+
+        for (auto e : elements_supporting_dof(i, Ux, Uy)) {
+            if (! supported_in(j, e, Vx, Vy)) continue;
+
+            double J = jacobian(e, Ux, Uy);
+            for (auto q : quad_points(Ux, Uy)) {
+                double w = weigth(q, Ux, Uy);
+                value_type ww = eval_basis(e, q, i, Ux, Uy);
+                value_type uu = eval_basis(e, q, j, Vx, Vy);
+
+                double fuw = form(ww, uu);
+                val += fuw * w * J;
+            }
+        }
+        return val;
     }
 
 };
