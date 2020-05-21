@@ -135,8 +135,8 @@ public:
         double pL2 = error_relative_L2(p, trial.Px, trial.Py, e_p) * 100;
         double pH1 = error_relative_H1(p, trial.Px, trial.Py, e_p) * 100;
 
-        double divL2 = div_errorL2(vx, vy, trial.Px, trial.Py, div) * 100;
-        double divH1 = div_errorH1(vx, vy, trial.Px, trial.Py, div) * 100;
+        double divL2 = div_errorL2(vx, vy, trial.U1x, trial.U1y, div) * 100;
+        double divH1 = div_errorH1(vx, vy, trial.U1x, trial.U1y, div) * 100;
 
         std::cout.precision(3);
         std::cout << "vx  : L2 = " << vxL2   << "%, H1 = " << vxH1   << "%" << std::endl;
