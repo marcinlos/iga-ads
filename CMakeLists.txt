@@ -43,7 +43,7 @@ list(APPEND ads_LIBS ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 set(USE_MUMPS OFF CACHE BOOL "Use MUMPS solver")
 
 if (USE_MUMPS)
-  set(MUMPS_LIBRARIES "dmumps_seq")
+  set(MUMPS_LIBRARIES "dmumps")
   list(APPEND ads_LIBS ${MUMPS_LIBRARIES})
 endif()
 
