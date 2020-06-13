@@ -74,7 +74,7 @@ namespace ads {
             auto val2 = sin(k * M_PI * x[0]) * cos(l * M_PI * x[2]);
             auto dv2x1 =   k * M_PI * cos(k * M_PI * x[0]) * cos(l * M_PI * x[2]);
             auto dv2x2 =   0.0;
-            auto dv2x3 = - l * M_PI * sin(k * M_PI * x[1]) * sin(l * M_PI * x[2]);
+            auto dv2x3 = - l * M_PI * sin(k * M_PI * x[0]) * sin(l * M_PI * x[2]);
             auto v2 = value_type{val2, dv2x1, dv2x2, dv2x3};
 
             auto val3 = sin(k * M_PI * x[0]) * cos(l * M_PI * x[1]);
@@ -100,7 +100,7 @@ namespace ads {
 
             auto val3 = cos(k * M_PI * x[0]) * sin(l * M_PI * x[1]);
             auto dv3x1 = - k * M_PI * sin(k * M_PI * x[0]) * sin(l * M_PI * x[1]);
-            auto dv3x2 =   l * M_PI * sin(k * M_PI * x[0]) * cos(l * M_PI * x[1]);
+            auto dv3x2 =   l * M_PI * cos(k * M_PI * x[0]) * cos(l * M_PI * x[1]);
             auto dv3x3 = 0.0;
             auto v3 = value_type{val3, dv3x1, dv3x2, dv3x3};
 
@@ -122,7 +122,7 @@ namespace ads {
             auto val2 = cos(k * M_PI * x[0]) * sin(l * M_PI * x[2]);
             auto dv2x1 = - k * M_PI * sin(k * M_PI * x[0]) * sin(l * M_PI * x[2]);
             auto dv2x2 =   0.0;
-            auto dv2x3 =   l * M_PI * cos(k * M_PI * x[1]) * cos(l * M_PI * x[2]);
+            auto dv2x3 =   l * M_PI * cos(k * M_PI * x[0]) * cos(l * M_PI * x[2]);
             auto v2 = value_type{val2, dv2x1, dv2x2, dv2x3};
 
             return ((k/d) * v1 + 2 * (-k/d) * v2) * time;
