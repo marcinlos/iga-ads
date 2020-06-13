@@ -83,7 +83,7 @@ namespace ads {
             auto dv3x3 =   0.0;
             auto v3 = value_type{val3, dv3x1, dv3x2, dv3x3};
 
-            return (2 * (-l/d) * v2 + 3 * (-l/d) * v3) * time;
+            return (2 * (l/d) * v2 + 3 * (-l/d) * v3) * time;
         }
 
         value_type H2(point_type x, double t) const {
@@ -125,7 +125,7 @@ namespace ads {
             auto dv2x3 =   l * M_PI * cos(k * M_PI * x[1]) * cos(l * M_PI * x[2]);
             auto v2 = value_type{val2, dv2x1, dv2x2, dv2x3};
 
-            return ((k/d) * v1 + 2 * (k/d) * v2) * time;
+            return ((k/d) * v1 + 2 * (-k/d) * v2) * time;
         }
 
         auto E1_at(double t) const {
