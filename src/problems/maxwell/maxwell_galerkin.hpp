@@ -369,8 +369,20 @@ private:
         auto E1_err_L2 = errorL2(now.E1, UE1x, UE1y, UE1z, problem.E1_at(tt));
         auto E2_err_L2 = errorL2(now.E2, UE2x, UE2y, UE2z, problem.E2_at(tt));
         auto E3_err_L2 = errorL2(now.E3, UE3x, UE3y, UE3z, problem.E3_at(tt));
+        auto E_err_L2 = std::sqrt(E1_err_L2 * E1_err_L2 + E2_err_L2 * E2_err_L2 + E3_err_L2 * E3_err_L2);
+
+        auto E1_norm_H1 = normH1(now.E1, UE1x, UE1y, UE1z);
+        auto E2_norm_H1 = normH1(now.E2, UE2x, UE2y, UE2z);
+        auto E3_norm_H1 = normH1(now.E3, UE3x, UE3y, UE3z);
+        auto E_norm_H1 = std::sqrt(E1_norm_H1 * E1_norm_H1 + E2_norm_H1 * E2_norm_H1 + E3_norm_H1 * E3_norm_H1);
+
+        auto E1_err_H1 = errorH1(now.E1, UE1x, UE1y, UE1z, problem.E1_at(tt));
+        auto E2_err_H1 = errorH1(now.E2, UE2x, UE2y, UE2z, problem.E2_at(tt));
+        auto E3_err_H1 = errorH1(now.E3, UE3x, UE3y, UE3z, problem.E3_at(tt));
+        auto E_err_H1 = std::sqrt(E1_err_H1 * E1_err_H1 + E2_err_H1 * E2_err_H1 + E3_err_H1 * E3_err_H1);
 
         auto rot_E = norm_rot(now.E1, now.E2, now.E3, Vx, Vy, Vz);
+        auto div_E = norm_div(now.E1, now.E2, now.E3, Vx, Vy, Vz);
 
         auto H1_norm_L2 = normL2(now.H1, UH1x, UH1y, UH1z);
         auto H2_norm_L2 = normL2(now.H2, UH2x, UH2y, UH2z);
@@ -380,21 +392,35 @@ private:
         auto H1_err_L2 = errorL2(now.H1, UH1x, UH1y, UH1z, problem.H1_at(tt));
         auto H2_err_L2 = errorL2(now.H2, UH2x, UH2y, UH2z, problem.H2_at(tt));
         auto H3_err_L2 = errorL2(now.H3, UH3x, UH3y, UH3z, problem.H3_at(tt));
+        auto H_err_L2 = std::sqrt(H1_err_L2 * H1_err_L2 + H2_err_L2 * H2_err_L2 + H3_err_L2 * H3_err_L2);
+
+        auto H1_norm_H1 = normH1(now.H1, UH1x, UH1y, UH1z);
+        auto H2_norm_H1 = normH1(now.H2, UH2x, UH2y, UH2z);
+        auto H3_norm_H1 = normH1(now.H3, UH3x, UH3y, UH3z);
+        auto H_norm_H1 = std::sqrt(H1_norm_H1 * H1_norm_H1 + H2_norm_H1 * H2_norm_H1 + H3_norm_H1 * H3_norm_H1);
+
+        auto H1_err_H1 = errorH1(now.H1, UH1x, UH1y, UH1z, problem.H1_at(tt));
+        auto H2_err_H1 = errorH1(now.H2, UH2x, UH2y, UH2z, problem.H2_at(tt));
+        auto H3_err_H1 = errorH1(now.H3, UH3x, UH3y, UH3z, problem.H3_at(tt));
+        auto H_err_H1 = std::sqrt(H1_err_H1 * H1_err_H1 + H2_err_H1 * H2_err_H1 + H3_err_H1 * H3_err_H1);
 
         auto rot_H = norm_rot(now.H1, now.H2, now.H1, Vx, Vy, Vz);
+        auto div_H = norm_div(now.H1, now.H2, now.H1, Vx, Vy, Vz);
 
         std::cout << "After step " << i << ", t = " << tt << std::endl;
-        std::cout << "  |E|     = " << E_norm_L2 << std::endl;
+        std::cout << "  |E|     = " << E_norm_L2 << "  " << E_norm_H1 << std::endl;
         std::cout << "  |rot E| = " << rot_E << std::endl;
-        std::cout << "  E1 err = " << E1_err_L2 << std::endl;
-        std::cout << "  E2 err = " << E2_err_L2 << std::endl;
-        std::cout << "  E3 err = " << E3_err_L2 << std::endl;
+        std::cout << "  |div E| = " << div_E << std::endl;
+        std::cout << "  E err = " << E_err_L2 << "  " << E_err_H1 << std::endl;
+        std::cout << "    rel = " << E_err_L2 / E_norm_L2 * 100 << "%  "
+                                  << E_err_H1 / E_norm_H1 * 100 << "%" << std::endl;
 
-        std::cout << "  |H| = " << H_norm_L2 << std::endl;
+        std::cout << "  |H| = " << H_norm_L2 << "  " << H_norm_H1 << std::endl;
         std::cout << "  |rot H| = " << rot_H << std::endl;
-        std::cout << "  H1 err = " << H1_err_L2 << std::endl;
-        std::cout << "  H2 err = " << H2_err_L2 << std::endl;
-        std::cout << "  H3 err = " << H3_err_L2 << std::endl;
+        std::cout << "  |div H| = " << div_H << std::endl;
+        std::cout << "  H err = " << H_err_L2 << "  " << H_err_H1 << std::endl;
+        std::cout << "    rel = " << H_err_L2 / H_norm_L2 * 100 << "%  "
+                                  << H_err_H1 / H_norm_H1 * 100 << "%" << std::endl;
     }
 
 };
