@@ -16,6 +16,9 @@ namespace ads {
         double l;
         double d;
 
+        double eps = 1;
+        double mu = 1;
+
         maxwell_manufactured1(double k, double l)
         : k{k}, l{l}, d{std::hypot(k, l)}
         { }
@@ -123,6 +126,54 @@ namespace ads {
             auto v2 = value_type{val2, dv2x1, dv2x2, dv2x3};
 
             return ((k/d) * v1 + 2 * (k/d) * v2) * time;
+        }
+
+        auto E1_at(double t) const {
+            return [this,t](point_type x) { return E1(x, t); };
+        }
+
+        auto E2_at(double t) const {
+            return [this,t](point_type x) { return E2(x, t); };
+        }
+
+        auto E3_at(double t) const {
+            return [this,t](point_type x) { return E3(x, t); };
+        }
+
+        auto H1_at(double t) const {
+            return [this,t](point_type x) { return H1(x, t); };
+        }
+
+        auto H2_at(double t) const {
+            return [this,t](point_type x) { return H2(x, t); };
+        }
+
+        auto H3_at(double t) const {
+            return [this,t](point_type x) { return H3(x, t); };
+        }
+
+        auto E1_val_at(double t) const {
+            return [this,t](point_type x) { return E1(x, t).val; };
+        }
+
+        auto E2_val_at(double t) const {
+            return [this,t](point_type x) { return E2(x, t).val; };
+        }
+
+        auto E3_val_at(double t) const {
+            return [this,t](point_type x) { return E3(x, t).val; };
+        }
+
+        auto H1_val_at(double t) const {
+            return [this,t](point_type x) { return H1(x, t).val; };
+        }
+
+        auto H2_val_at(double t) const {
+            return [this,t](point_type x) { return H2(x, t).val; };
+        }
+
+        auto H3_val_at(double t) const {
+            return [this,t](point_type x) { return H3(x, t).val; };
         }
     };
 }
