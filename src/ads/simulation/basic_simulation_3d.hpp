@@ -323,6 +323,29 @@ protected:
         return error_relative(u, Ux, Uy, Uz, H1, fun);
     }
 
+    template <typename Sol>
+    double norm_rot(const Sol& X, const Sol& Y, const Sol& Z,
+            const dimension& Ux, const dimension& Uy, const dimension& Uz) const {
+        double val = 0;
+
+        for (auto e : elements(Ux, Uy, Uz)) {
+            double J = jacobian(e, Ux, Uy, Uz);
+            for (auto q : quad_points(Ux, Uy, Uz)) {
+                double w = weigth(q, Ux, Uy, Uz);
+                auto x = eval(X, e, q, Ux, Uy, Uz);
+                auto y = eval(Y, e, q, Ux, Uy, Uz);
+                auto z = eval(Z, e, q, Ux, Uy, Uz);
+
+                auto rx = z.dy - y.dz;
+                auto ry = x.dz - z.dx;
+                auto rz = y.dx - x.dy;
+
+                val += (rx * rx + ry * ry + rz * rz) * w * J;
+            }
+        }
+        return std::sqrt(val);
+    }
+
 };
 
 }
