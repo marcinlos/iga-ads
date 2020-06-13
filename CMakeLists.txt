@@ -171,6 +171,9 @@ if (NOT SKIP_PROBLEMS)
       src/problems/cg/main.cpp
       src/problems/cg/shishkin.cpp)
 
+    define_problem(maxwell
+      src/problems/maxwell/main.cpp)
+
   endif()
 
   define_problem(heat_1d
