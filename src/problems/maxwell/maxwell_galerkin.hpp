@@ -6,6 +6,8 @@
 #include "ads/executor/galois.hpp"
 #include "ads/simulation.hpp"
 #include "ads/form_matrix.hpp"
+#include "ads/output_manager.hpp"
+
 
 namespace ads {
 
@@ -26,6 +28,8 @@ private:
 
     Problem problem{1, 1};
 
+    ads::output_manager<3> output;
+
 public:
     maxwell_galerkin(const config_3d& config)
     : Base{config}
@@ -44,6 +48,7 @@ public:
     , Bx_ctx{Bx}
     , By_ctx{By}
     , Bz_ctx{Bz}
+    , output{Ux.B, Uy.B, Uz.B, 50}
     { }
 
 private:
@@ -253,6 +258,16 @@ private:
     void after_step(int iter, double t) override {
         auto i = iter + 1;
         auto tt = t + steps.dt;
+
+        if (i % 10 == 0) {
+            output.to_file("out_%d.vti", i,
+                    output.evaluate(now.E1),
+                    output.evaluate(now.E2),
+                    output.evaluate(now.E3),
+                    output.evaluate(now.H1),
+                    output.evaluate(now.H2),
+                    output.evaluate(now.H3));
+        }
 
         auto E1_norm_L2 = normL2(now.E1, Ux, Uy, Uz);
         auto E2_norm_L2 = normL2(now.E2, Ux, Uy, Uz);
