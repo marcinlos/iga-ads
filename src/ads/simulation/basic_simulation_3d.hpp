@@ -346,6 +346,26 @@ protected:
         return std::sqrt(val);
     }
 
+    template <typename Sol>
+    double norm_div(const Sol& X, const Sol& Y, const Sol& Z,
+            const dimension& Ux, const dimension& Uy, const dimension& Uz) const {
+        double val = 0;
+
+        for (auto e : elements(Ux, Uy, Uz)) {
+            double J = jacobian(e, Ux, Uy, Uz);
+            for (auto q : quad_points(Ux, Uy, Uz)) {
+                double w = weigth(q, Ux, Uy, Uz);
+                auto x = eval(X, e, q, Ux, Uy, Uz);
+                auto y = eval(Y, e, q, Ux, Uy, Uz);
+                auto z = eval(Z, e, q, Ux, Uy, Uz);
+
+                auto val = x.dx + y.dy + z.dz;
+                val += val * val * w * J;
+            }
+        }
+        return std::sqrt(val);
+    }
+
 };
 
 }
