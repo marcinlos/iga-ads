@@ -16,7 +16,7 @@ private:
     using Base = simulation_3d;
     using Problem = maxwell_manufactured1;
 
-    galois_executor executor{6};
+    galois_executor executor{4};
 
     dimension UE1x, UE1y, UE1z;
     dimension UE2x, UE2y, UE2z;
@@ -351,15 +351,15 @@ private:
         auto i = iter + 1;
         auto tt = t + steps.dt;
 
-        if (i % 10 == 0) {
-            output.to_file("out_%d.vti", i,
-                    output.evaluate(now.E1),
-                    output.evaluate(now.E2),
-                    output.evaluate(now.E3),
-                    output.evaluate(now.H1),
-                    output.evaluate(now.H2),
-                    output.evaluate(now.H3));
-        }
+        // if (i % 10 == 0) {
+        //     output.to_file("out_%d.vti", i,
+        //             output.evaluate(now.E1),
+        //             output.evaluate(now.E2),
+        //             output.evaluate(now.E3),
+        //             output.evaluate(now.H1),
+        //             output.evaluate(now.H2),
+        //             output.evaluate(now.H3));
+        // }
 
         auto E1_norm_L2 = normL2(now.E1, UE1x, UE1y, UE1z);
         auto E2_norm_L2 = normL2(now.E2, UE2x, UE2y, UE2z);
@@ -383,6 +383,9 @@ private:
 
         auto rot_E = norm_rot(now.E1, now.E2, now.E3, Vx, Vy, Vz);
         auto div_E = norm_div(now.E1, now.E2, now.E3, Vx, Vy, Vz);
+        auto E_err_rot = error_rot(now.E1, now.E2, now.E3,
+                UE1x, UE1y, UE1z, UE2x, UE2y, UE2z, UE3x, UE3y, UE3z,
+                problem.E1_at(tt), problem.E2_at(tt), problem.E3_at(tt));
 
         auto H1_norm_L2 = normL2(now.H1, UH1x, UH1y, UH1z);
         auto H2_norm_L2 = normL2(now.H2, UH2x, UH2y, UH2z);
@@ -406,21 +409,26 @@ private:
 
         auto rot_H = norm_rot(now.H1, now.H2, now.H1, Vx, Vy, Vz);
         auto div_H = norm_div(now.H1, now.H2, now.H1, Vx, Vy, Vz);
+        auto H_err_rot = error_rot(now.H1, now.H2, now.H3,
+                UH1x, UH1y, UH1z, UH2x, UH2y, UH2z, UH3x, UH3y, UH3z,
+                problem.H1_at(tt), problem.H2_at(tt), problem.H3_at(tt));
 
         std::cout << "After step " << i << ", t = " << tt << std::endl;
         std::cout << "  |E|     = " << E_norm_L2 << "  " << E_norm_H1 << std::endl;
         std::cout << "  |rot E| = " << rot_E << std::endl;
         std::cout << "  |div E| = " << div_E << std::endl;
-        std::cout << "  E err = " << E_err_L2 << "  " << E_err_H1 << std::endl;
-        std::cout << "    rel = " << E_err_L2 / E_norm_L2 * 100 << "%  "
-                                  << E_err_H1 / E_norm_H1 * 100 << "%" << std::endl;
+        std::cout << "  E err L2 = " << E_err_L2 << "  " << E_err_H1 << std::endl;
+        std::cout << "    rel L2 = " << E_err_L2 / E_norm_L2 * 100 << "%  "
+                                     << E_err_H1 / E_norm_H1 * 100 << "%" << std::endl;
+        std::cout << "  E err rot = " << E_err_rot << std::endl;
 
         std::cout << "  |H| = " << H_norm_L2 << "  " << H_norm_H1 << std::endl;
         std::cout << "  |rot H| = " << rot_H << std::endl;
         std::cout << "  |div H| = " << div_H << std::endl;
-        std::cout << "  H err = " << H_err_L2 << "  " << H_err_H1 << std::endl;
-        std::cout << "    rel = " << H_err_L2 / H_norm_L2 * 100 << "%  "
-                                  << H_err_H1 / H_norm_H1 * 100 << "%" << std::endl;
+        std::cout << "  H err L2 = " << H_err_L2 << "  " << H_err_H1 << std::endl;
+        std::cout << "    rel L2 = " << H_err_L2 / H_norm_L2 * 100 << "%  "
+                                     << H_err_H1 / H_norm_H1 * 100 << "%" << std::endl;
+        std::cout << "  H err rot = " << H_err_rot << std::endl;
     }
 
 };

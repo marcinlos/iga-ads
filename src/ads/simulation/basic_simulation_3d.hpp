@@ -346,6 +346,33 @@ protected:
         return std::sqrt(val);
     }
 
+    template <typename Sol, typename FunX, typename FunY, typename FunZ>
+    double error_rot(const Sol& X, const Sol& Y, const Sol& Z,
+            const dimension& U1x, const dimension& U1y, const dimension& U1z,
+            const dimension& U2x, const dimension& U2y, const dimension& U2z,
+            const dimension& U3x, const dimension& U3y, const dimension& U3z,
+            FunX&& fx, FunY&& fy, FunZ&& fz) const {
+        double val = 0;
+
+        for (auto e : elements(U1x, U1y, U1z)) {
+            double J = jacobian(e, U1x, U1y, U1z);
+            for (auto q : quad_points(U1x, U1y, U1z)) {
+                auto p = point(e, q, U1x, U2y, U3z);
+                double w = weigth(q, U1x, U2y, U3z);
+                auto x = eval(X, e, q, U1x, U1y, U1z) - fx(p);
+                auto y = eval(Y, e, q, U2x, U2y, U2z) - fy(p);
+                auto z = eval(Z, e, q, U3x, U3y, U3z) - fz(p);
+
+                auto rx = z.dy - y.dz;
+                auto ry = x.dz - z.dx;
+                auto rz = y.dx - x.dy;
+
+                val += (rx * rx + ry * ry + rz * rz) * w * J;
+            }
+        }
+        return std::sqrt(val);
+    }
+
     template <typename Sol>
     double norm_div(const Sol& X, const Sol& Y, const Sol& Z,
             const dimension& Ux, const dimension& Uy, const dimension& Uz) const {

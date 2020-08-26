@@ -983,7 +983,7 @@ public:
         shift_pressure(p, p_exact_avg - p_avg);
 
         if (i % 10 == 0) {
-            save_to_file(i);
+            // save_to_file(i);
             // output_exact(i, tt);
         }
 
@@ -1012,11 +1012,13 @@ public:
                   << " |v| = " << v_norm_L2 << " " << v_norm_H1
                   << " |p| = " << p_norm_L2
                   << " v err = " << v_error_L2 << " " << v_error_H1
+                  << " vx_err = " << vx_error_L2
+                  << " vy_err = " << vy_error_L2
                   << " p err = " << p_error_L2
                   << " |phi| = " << phi_norm_L2
                   << std::endl;
 
-        if (v_norm_L2 > 1e4 || std::isnan(v_norm_L2)) {
+        if (v_norm_L2 > 1e3 || std::isnan(v_norm_L2)) {
             std::cout << "Divergence detected" << std::endl;
             after();
             std::exit(1);

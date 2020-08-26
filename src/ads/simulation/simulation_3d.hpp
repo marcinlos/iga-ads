@@ -19,7 +19,7 @@ namespace ads {
 
 
 class simulation_3d : public basic_simulation_3d, public simulation_base {
-protected:
+public:
     using basic_simulation_3d::eval;
     using basic_simulation_3d::eval_basis;
     using basic_simulation_3d::elements;
