@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstring>
 #include <iostream>
+#include <mpi.h>
 
 
 namespace mumps {
@@ -74,6 +75,10 @@ private:
 public:
 
     solver() {
+        int argc = 0;
+        char** argv = nullptr;
+        MPI_Init(&argc, &argv);
+
         id.job = -1;
         id.par = 1;
         id.sym = 0;

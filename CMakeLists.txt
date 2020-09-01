@@ -45,6 +45,9 @@ set(USE_MUMPS OFF CACHE BOOL "Use MUMPS solver")
 if (USE_MUMPS)
   set(MUMPS_LIBRARIES "dmumps")
   list(APPEND ads_LIBS ${MUMPS_LIBRARIES})
+  find_package(MPI)
+  include_directories(${MPI_CXX_INCLUDE_DIRS})
+  list(APPEND ads_LIBS ${MPI_CXX_LIBRARIES})
 endif()
 
 
