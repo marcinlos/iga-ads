@@ -9,12 +9,6 @@
 
 using namespace ads;
 
-int total_dimension(const space_set& s) {
-    auto u_dim = s.U1x.dofs() * s.U1y.dofs() + s.U2x.dofs() * s.U2y.dofs();
-    auto p_dim = s.Px.dofs() * s.Py.dofs();
-    return u_dim + p_dim;
-}
-
 dimension make_dimension(int p, int c, int n, int quad, int ders) {
     int rep = p - 1 - c;
     auto basis = bspline::create_basis(0, 1, p, n, rep);
