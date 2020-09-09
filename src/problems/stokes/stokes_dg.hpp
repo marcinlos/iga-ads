@@ -716,6 +716,119 @@ public:
         }
     }
 
+
+
+    void assemble_gram_matrix_no_jumps(mumps::problem& problem) const {
+        auto dU1 = trial.U1x.dofs() * trial.U1y.dofs();
+        auto dU2 = trial.U2x.dofs() * trial.U2y.dofs();
+        auto dP = trial.Px.dofs() * trial.Py.dofs();
+
+        auto DU1 = test.U1x.dofs() * test.U1y.dofs();
+        auto DU2 = test.U2x.dofs() * test.U2y.dofs();
+        auto DP = test.Px.dofs() * test.Py.dofs();
+
+        auto D = DU1 + DU2 + DP;
+
+        auto test_vx = shifted(0, 0, problem);
+        auto test_vy = shifted(DU1, DU1, problem);
+        auto test_p = shifted(DU1 + DU2, DU1 + DU2, problem);
+
+        auto trial_vx = shifted(D, D, problem);
+        auto trial_vy = shifted(D + dU1, D + dU1, problem);
+        auto trial_p = shifted(D + dU1 + dU2, D + dU1 + dU2, problem);
+
+        auto N = D + dU1 + dU2 + dP;
+        bool bc = false;
+        bool fix_p = false;
+
+        // Gram matrix
+        // G(w, u)
+        // w = (tx, ty, w)
+        // u = (vx, vy, p)
+
+        // w, p -> (w, p)
+        for (auto i : dofs(test.Px, test.Py)) {
+            // for (auto j : overlapping_dofs(i, test.Px, test.Py)) {
+            for (auto j : touching_dofs(i, test.Px, test.Py)) {
+                int ii = linear_index(i, test.Px, test.Py) + 1;
+                int jj = linear_index(j, test.Px, test.Py) + 1;
+
+                if (!fix_p || (! is_pressure_fixed(i) && ! is_pressure_fixed(j))) {
+                    auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, test.Px, test.Py, form); };
+                    double product = eval([](auto w, auto p) { return w.val * p.val; });
+                    test_p(ii, jj, product);
+                }
+            }
+        }
+
+        // tx, vx -> (\/tx, \/vx)
+        for (auto i : dofs(test.U1x, test.U1y)) {
+            // for (auto j : overlapping_dofs(i, test.U1x, test.U1y)) {
+            for (auto j : touching_dofs(i, test.U1x, test.U1y)) {
+                int ii = linear_index(i, test.U1x, test.U1y) + 1;
+                int jj = linear_index(j, test.U1x, test.U1y) + 1;
+                auto eval = [&](auto form) { return integrate(i, j, test.U1x, test.U1y, test.U1x, test.U1y, form); };
+
+                // Weak BC
+                // if (! is_boundary(i[0], test.U1x) && ! is_boundary(j[0], test.U1x)) {
+                // Strong BC
+                if (!bc || (! is_boundary(i, test.U1x, test.U1y) && ! is_boundary(j, test.U1x, test.U1y))) {
+                    double val = eval([this](auto tx, auto vx) { return grad_dot(tx, vx); });
+                    test_vx(ii, jj, val);
+                }
+            }
+        }
+
+        // ty, vy -> (\/ty, \/vy)
+        for (auto i : dofs(test.U2x, test.U2y)) {
+            // for (auto j : overlapping_dofs(i, test.U2x, test.U2y)) {
+            for (auto j : touching_dofs(i, test.U2x, test.U2y)) {
+                int ii = linear_index(i, test.U2x, test.U2y) + 1;
+                int jj = linear_index(j, test.U2x, test.U2y) + 1;
+                auto eval = [&](auto form) { return integrate(i, j, test.U2x, test.U2y, test.U2x, test.U2y, form); };
+
+                // Weak BC
+                // if (! is_boundary(i[1], test.U2y) && ! is_boundary(j[1], test.U2y)) {
+                // Strong BC
+                if (!bc || (! is_boundary(i, test.U2x, test.U2y) && ! is_boundary(j, test.U2x, test.U2y))) {
+                    double val = eval([this](auto ty, auto vy) { return grad_dot(ty, vy); });
+                    test_vy(ii, jj, val);
+                }
+            }
+        }
+
+        // Dirichlet BC - test space
+        // Weak BC
+        // for (auto iy = 0; iy < test.U1y.dofs(); ++ iy) {
+        //     int i0 = linear_index({0, iy}, test.U1x, test.U1y) + 1;
+        //     test_vx(i0, i0, 1);
+        //     int i1 = linear_index({test.U1x.dofs() - 1, iy}, test.U1x, test.U1y) + 1;
+        //     test_vx(i1, i1, 1);
+        // }
+        // for (auto ix = 0; ix < test.U2x.dofs(); ++ ix) {
+        //     int i0 = linear_index({ix, 0}, test.U2x, test.U2y) + 1;
+        //     test_vy(i0, i0, 1);
+        //     int i1 = linear_index({ix, test.U2y.dofs() - 1}, test.U2x, test.U2y) + 1;
+        //     test_vy(i1, i1, 1);
+        // }
+        // Strong BC
+        if (bc) {
+            for_boundary_dofs(test.U1x, test.U1y, [&](index_type dof) {
+                int i = linear_index(dof, test.U1x, test.U1y) + 1;
+                test_vx(i, i, 1);
+            });
+            for_boundary_dofs(test.U2x, test.U2y, [&](index_type dof) {
+                int i = linear_index(dof, test.U2x, test.U2y) + 1;
+                test_vy(i, i, 1);
+            });
+        }
+        if (fix_p) {
+            int i = linear_index({0, 0}, test.Px, test.Py) + 1;
+            test_p(i, i, 1.0);
+        }
+    }
+
+
     void compute_rhs(vector_view& vx, vector_view& vy, vector_view& p) const {
         using shape = std::array<std::size_t, 2>;
         auto u1_shape = shape{ test.U1x.basis.dofs_per_element(), test.U1y.basis.dofs_per_element() };
@@ -845,21 +958,28 @@ public:
         std::cout << "Assembling matrix" << std::endl;
         assemble_matrix(problem);
 
+
+        std::cout << "Assembling no jumps matrix" << std::endl;
+        std::vector<double> dummy(dim_test);
+        mumps::problem problem2(dummy.data(), dummy.size());
+        assemble_gram_matrix_no_jumps(problem2);
+        solver.solve(problem2, "no-jumps");
+
         std::cout << "Computing RHS" << std::endl;
         compute_rhs(Rvx, Rvy, Rp);
         apply_bc(vx, vy, p);
 
         std::cout << "Solving" << std::endl;
         solver_timer.start();
-        solver.solve(problem);
+        solver.solve(problem, "problem");
         solver_timer.stop();
 
         std::cout << "  solver time:       " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
         std::cout << "  assembly    FLOPS: " << solver.flops_assembly() << std::endl;
         std::cout << "  elimination FLOPS: " << solver.flops_elimination() << std::endl;
 
-        auto p_avg = correct_pressure(p);
-        std::cout << "Avg pressure (pre-correction): " << p_avg << std::endl;
+        // auto p_avg = correct_pressure(p);
+        // std::cout << "Avg pressure (pre-correction): " << p_avg << std::endl;
 
         std::cout << "Error:" << std::endl;
         print_error(vx, vy, p, Rvx, Rvy, Rp);
@@ -868,6 +988,20 @@ public:
         outputP.to_file(p, "pressure.data");
         outputU1.to_file(vx, "vx.data");
         outputU2.to_file(vy, "vy.data");
+
+        save_vector(Rvx.data(), dim_test, "residuum.rhs");
+        save_vector(vx.data(), dim_trial, "solution.rhs");
+    }
+
+    void save_vector(const double* data, int size, const std::string& path) const {
+        std::ofstream os{path};
+
+        os << "%%MatrixMarket matrix array real general" << std::endl;
+        os << size << " " << 1 << std::endl;
+
+        for (int i = 0; i < size; ++ i) {
+            os << data[i] << std::endl;
+        }
     }
 
 
