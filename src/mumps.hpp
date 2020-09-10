@@ -112,17 +112,15 @@ public:
         }
     }
 
+    void save_to_file(problem& problem, const char* output_path) {
+        prepare_(problem);
+        strcpy(id.write_problem, output_path);
+
+        analyze_();
+    }
+
     void solve(problem& problem, const char* output_path = nullptr) {
-        id.n = problem.dofs();
-        id.nz = problem.nonzero_entries();
-
-        id.irn = problem.irn();
-        id.jcn = problem.jcn();
-        id.a = problem.a();
-
-        id.rhs = problem.rhs();
-        id.nrhs = 1;
-        id.lrhs = id.n;
+        prepare_(problem);
 
         if (output_path) {
             strcpy(id.write_problem, output_path);
@@ -147,6 +145,19 @@ public:
     }
 
 private:
+    void prepare_(problem& problem) {
+        id.n = problem.dofs();
+        id.nz = problem.nonzero_entries();
+
+        id.irn = problem.irn();
+        id.jcn = problem.jcn();
+        id.a = problem.a();
+
+        id.rhs = problem.rhs();
+        id.nrhs = 1;
+        id.lrhs = id.n;
+    }
+
     void factorize_() {
         id.job = 2;
         dmumps_c(&id);
