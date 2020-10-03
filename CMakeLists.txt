@@ -131,6 +131,15 @@ if (NOT SKIP_PROBLEMS)
     define_problem(linear_elasticity
       src/problems/elasticity/main.cpp)
 
+    define_problem(elasticity_victor
+      src/problems/elasticity/victor.cpp)
+
+    define_problem(elasticity_pouria
+    src/problems/elasticity/elasticity_pouria.cpp)
+
+    define_problem(stokes_split
+      src/problems/stokes/main_split.cpp)
+
     define_problem(validation
       src/problems/validation/main.cpp)
 
@@ -177,6 +186,8 @@ if (NOT SKIP_PROBLEMS)
     define_problem(maxwell
       src/problems/maxwell/main.cpp)
 
+    define_problem(error
+      src/tools/error.cpp)
   endif()
 
   define_problem(heat_1d
@@ -184,5 +195,8 @@ if (NOT SKIP_PROBLEMS)
 
   define_problem(heat_3d
     src/problems/heat/heat_3d.cpp)
+
+  define_problem(implicit
+    src/problems/implicit/main.cpp)
 
 endif()

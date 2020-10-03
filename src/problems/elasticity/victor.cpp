@@ -1,8 +1,7 @@
 #include "ads/simulation.hpp"
 #include "ads/executor/sequential.hpp"
 #include "ads/executor/galois.hpp"
-#include "problems/elasticity/elasticity.hpp"
-#include "problems/elasticity/implicit.hpp"
+#include "problems/elasticity/elasticity_victor.hpp"
 
 
 
@@ -27,6 +26,6 @@ int main(int argc, char* argv[]) {
 
     // timesteps_config steps { 4000, 2.7e-2 };
     config_3d c { dim, dim, dim, steps, ders };
-    problems::implicit_elasticity sim{c, save_every};
+    problems::elasticity_victor sim{c, save_every};
     sim.run();
 }
