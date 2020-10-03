@@ -34,7 +34,11 @@ private:
     double eta;
 
     mumps::solver solver;
+
     Galois::StatTimer solver_timer{"solver"};
+    Galois::StatTimer assembly_timer{"assembly"};
+    Galois::StatTimer rhs_timer{"rhs"};
+
     output_manager<2> outputU1, outputU2, outputP;
 
 public:
@@ -49,9 +53,10 @@ public:
     {
         // 5(p + 1)
         Cpen = 5 * trial.U1x.B.degree;
-        hF = 1. / trial.Px.B.elements();
+        hF = h;//1. / trial.Px.B.elements();
         auto p = trial.Px.B.degree;
-        eta = 3 * (p + 1) * (p + 2);
+        // eta = 3 * (p + 1) * (p + 2);
+        eta = 10 * (p + 1) * (p + 2);
     }
 
     double element_diam(const dimension& Ux, const dimension& Uy) const {
@@ -73,7 +78,7 @@ public:
         test.Px.factorize_matrix();
         test.Py.factorize_matrix();
 
-        output_exact();
+        // output_exact();
     }
 
     value_type exact_p(point_type p) const {
@@ -155,10 +160,6 @@ public:
         outputP.to_file(project(trial.Px, trial.Py, p), "pressure_ref.data");
         outputU1.to_file(project(trial.U1x, trial.U1y, vx), "vx_ref.data");
         outputU2.to_file(project(trial.U2x, trial.U2y, vy), "vy_ref.data");
-
-        outputP.to_file(project(trial.Px, trial.Py, p), "pressure_ref.data");
-        outputU1.to_file(project(trial.U1x, trial.U1y, vx), "vx_ref.data");
-        outputU2.to_file(project(trial.U2x, trial.U2y, vy), "vy_ref.data");
     }
 
     void print_error(const vector_view& vx, const vector_view& vy, const vector_view& p,
@@ -190,7 +191,7 @@ public:
 
         double err_vx = error(vx, trial.U1x, trial.U1y, H10, e_vx);
         double err_vy = error(vy, trial.U2x, trial.U2y, H10, e_vy);
-        double err_p  = 0*errorL2(p, trial.Px, trial.Py, e_p);
+        double err_p  = errorL2(p, trial.Px, trial.Py, e_p);
         double error_Vh = std::sqrt(err_vx * err_vx + err_vy * err_vy + err_p * err_p);
 
         std::cout << "Error in Vh:   " << error_Vh << std::endl;
@@ -931,6 +932,11 @@ public:
         // p(i, i) = 0; // fix pressure at a point
     }
 
+    void apply_bc_test(vector_view& Rvx, vector_view& Rvy, vector_view& Rp) {
+        // zero_bc(Rvx, test.U1x, test.U1y);
+        // zero_bc(Rvy, test.U2y, test.U2y);
+    }
+
     void step(int /*iter*/, double /*t*/) override {
         auto dU1 = trial.U1x.dofs() * trial.U1y.dofs();
         auto dU2 = trial.U2x.dofs() * trial.U2y.dofs();
@@ -956,30 +962,38 @@ public:
         mumps::problem problem(rhs.data(), rhs.size());
 
         std::cout << "Assembling matrix" << std::endl;
+        assembly_timer.start();
         assemble_matrix(problem);
-
+        assembly_timer.stop();
 
         std::cout << "Assembling no jumps matrix" << std::endl;
-        std::vector<double> dummy(dim_test);
-        mumps::problem problem2(dummy.data(), dummy.size());
+        mumps::problem problem2(nullptr, dim_test);
         assemble_gram_matrix_no_jumps(problem2);
-        solver.solve(problem2, "no-jumps");
+        solver.save_to_file(problem2, "no-jumps");
 
         std::cout << "Computing RHS" << std::endl;
+        rhs_timer.start();
         compute_rhs(Rvx, Rvy, Rp);
         apply_bc(vx, vy, p);
+        apply_bc_test(Rvx, Rvy, Rp);
+        rhs_timer.stop();
 
         std::cout << "Solving" << std::endl;
         solver_timer.start();
         solver.solve(problem, "problem");
         solver_timer.stop();
 
+        std::cout << "  matrix time:       " << static_cast<double>(assembly_timer.get()) << " ms" << std::endl;
+        std::cout << "  RHS time:          " << static_cast<double>(rhs_timer.get()) << " ms" << std::endl;
         std::cout << "  solver time:       " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
         std::cout << "  assembly    FLOPS: " << solver.flops_assembly() << std::endl;
         std::cout << "  elimination FLOPS: " << solver.flops_elimination() << std::endl;
 
-        // auto p_avg = correct_pressure(p);
-        // std::cout << "Avg pressure (pre-correction): " << p_avg << std::endl;
+        // std::cout << "Reading the solution" << std::endl;
+        // read_vector(vx.data(), dim_trial, "solution.mtx");
+
+        auto p_avg = correct_pressure(p);
+        std::cout << "Avg pressure (pre-correction): " << p_avg << std::endl;
 
         std::cout << "Error:" << std::endl;
         print_error(vx, vy, p, Rvx, Rvy, Rp);
@@ -989,8 +1003,8 @@ public:
         outputU1.to_file(vx, "vx.data");
         outputU2.to_file(vy, "vy.data");
 
-        save_vector(Rvx.data(), dim_test, "residuum.rhs");
-        save_vector(vx.data(), dim_trial, "solution.rhs");
+        // save_vector(Rvx.data(), dim_test, "residuum.rhs");
+        // save_vector(vx.data(), dim_trial, "solution.rhs");
     }
 
     void save_vector(const double* data, int size, const std::string& path) const {
@@ -1004,6 +1018,18 @@ public:
         }
     }
 
+    void read_vector(double* data, int size, const std::string& path) const {
+        std::ifstream is{path};
+
+        // ignore mtx header
+        for (int i = 0; i < 3; ++ i) {
+            is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
+
+        for (int i = 0; i < size; ++ i) {
+            is >> data[i];
+        }
+    }
 
     template <typename Sol>
     double correct_pressure(Sol& pressure) const {
@@ -1434,8 +1460,8 @@ public:
                 auto form = [this](auto w, auto p, auto, auto) {
                     return h * jump(w).val * jump(p).val;
                 };
-                // val += integrate_over_internal_skeleton(i, j, test.Px, test.Py, test.Px, test.Py, form);
-                // norm += val * p(i[0], i[1]) * p(j[0], j[1]);
+                val += integrate_over_internal_skeleton(i, j, test.Px, test.Py, test.Px, test.Py, form);
+                norm += val * p(i[0], i[1]) * p(j[0], j[1]);
             }
         }
 
@@ -1449,7 +1475,7 @@ public:
                 auto form = [this](auto tx, auto vx, auto, auto) {
                     return eta/h * jump(tx).val * jump(vx).val;
                 };
-                // val += integrate_over_skeleton(i, j, test.U1x, test.U1y, test.U1x, test.U1y, form);
+                val += integrate_over_skeleton(i, j, test.U1x, test.U1y, test.U1x, test.U1y, form);
                 norm += val * vx(i[0], i[1]) * vx(j[0], j[1]);
             }
         }
@@ -1464,7 +1490,7 @@ public:
                 auto form = [this](auto ty, auto vy, auto, auto) {
                     return eta/h * jump(ty).val * jump(vy).val;
                 };
-                // val += integrate_over_skeleton(i, j, test.U2x, test.U2y, test.U2x, test.U2y, form);
+                val += integrate_over_skeleton(i, j, test.U2x, test.U2y, test.U2x, test.U2y, form);
                 norm += val * vy(i[0], i[1]) * vy(j[0], j[1]);
             }
         }
