@@ -1,4 +1,4 @@
-#include "problems/stokes/stokes.hpp"
+#include "problems/stokes/stokes_split.hpp"
 
 using namespace ads;
 using namespace ads::problems;
@@ -19,6 +19,6 @@ int main(int argc, char* argv[]) {
     int ders = 1;
 
     config_2d c{dim, dim, steps, ders};
-    stokes sim{c};
+    stokes_split sim{c};
     sim.run();
 }

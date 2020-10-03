@@ -11,7 +11,7 @@
 namespace ads {
 namespace problems {
 
-class stokes : public simulation_2d {
+class stokes_split : public simulation_2d {
 private:
     using Base = simulation_2d;
     using vector_view = lin::tensor_view<double, 2>;
@@ -48,7 +48,7 @@ private:
     static constexpr std::size_t RES = 400;
 
 public:
-    stokes(const config_2d& config)
+    stokes_split(const config_2d& config)
     : Base{ config }
     , now{ shape() }
     , u{ shape() }
