@@ -14,3 +14,4 @@ CTestTestfile.cmake
 *.png
 *.gif
 build/
+approx/

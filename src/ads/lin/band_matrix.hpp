@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <vector>
+#include <iostream>
 #include <iomanip>
 #include "ads/lin/lapack.hpp"
 #include "ads/lin/dense_matrix.hpp"

@@ -188,6 +188,16 @@ if (NOT SKIP_PROBLEMS)
 
     define_problem(error
       src/tools/error.cpp)
+
+    define_problem(tumor
+      src/problems/tumor/vasculature/plot.cpp
+      src/problems/tumor/vasculature/vasculature.cpp
+      src/problems/tumor/tumor.cpp
+      src/problems/tumor.cpp)
+
+    define_problem(tumor_3d
+      src/problems/tumor/3d/main.cpp)
+
   endif()
 
   define_problem(heat_1d
@@ -201,5 +211,6 @@ if (NOT SKIP_PROBLEMS)
 
   define_problem(coupled
     src/problems/implicit/coupled.cpp)
+
 
 endif()
