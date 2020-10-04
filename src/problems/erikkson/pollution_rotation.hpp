@@ -9,9 +9,10 @@
 #include "mumps.hpp"
 #include "problems/erikkson/solution.hpp"
 
-
 #include "ads/lin/dense_matrix.hpp"
 #include "ads/lin/dense_solve.hpp"
+
+#include <galois/Timer.h>
 
 
 namespace ads {
@@ -65,7 +66,7 @@ private:
 
     output_manager<2> output;
 
-    Galois::StatTimer solver_timer{"solver"};
+    galois::StatTimer solver_timer{"solver"};
 
 public:
     pollution_rotation(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, const timesteps_config& steps)

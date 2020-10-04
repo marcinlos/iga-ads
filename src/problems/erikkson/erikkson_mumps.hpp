@@ -12,6 +12,8 @@
 #include "ads/lin/dense_matrix.hpp"
 #include "ads/lin/dense_solve.hpp"
 
+#include <galois/Timer.h>
+
 
 namespace ads {
 
@@ -55,7 +57,7 @@ private:
     // point_type beta{{ len * cos(angle), len * sin(angle) }};
     point_type beta{{ 1, 1 }};
 
-    Galois::StatTimer solver_timer{"solver"};
+    galois::StatTimer solver_timer{"solver"};
     mumps::solver solver;
 
     output_manager<2> output;

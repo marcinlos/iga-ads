@@ -9,6 +9,8 @@
 #include "ads/lin/dense_matrix.hpp"
 #include "ads/lin/dense_solve.hpp"
 
+#include <galois/Timer.h>
+
 
 namespace ads {
 
@@ -45,7 +47,7 @@ private:
 
     mumps::solver solver;
 
-    Galois::StatTimer solver_timer{"solver"};
+    galois::StatTimer solver_timer{"solver"};
 
     output_manager<2> output;
 

@@ -8,6 +8,8 @@
 #include "problems/stokes/space_set.hpp"
 #include "mumps.hpp"
 
+#include <galois/Timer.h>
+
 
 namespace ads {
 
@@ -22,7 +24,7 @@ private:
     double h;
 
     mumps::solver solver;
-    Galois::StatTimer solver_timer{"solver"};
+    galois::StatTimer solver_timer{"solver"};
     output_manager<2> outputU1, outputU2, outputP;
 
 public:

@@ -15,6 +15,7 @@
 
 #include "problems/tumor/3d/vasculature.hpp"
 
+#include <galois/Timer.h>
 
 namespace tumor {
 
@@ -40,10 +41,10 @@ namespace tumor {
 
         ads::galois_executor executor;
 
-        Galois::StatTimer timer{"total"};
-        Galois::StatTimer integration_timer{"integration"};
-        Galois::StatTimer bc_timer{"bc"};
-        Galois::StatTimer init_timer{"init"};
+        galois::StatTimer timer{"total"};
+        galois::StatTimer integration_timer{"integration"};
+        galois::StatTimer bc_timer{"bc"};
+        galois::StatTimer init_timer{"init"};
 
     public:
         tumor_3d(const ads::config_3d& config, const params& params, vasculature vasc, int threads)

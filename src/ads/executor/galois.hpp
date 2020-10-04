@@ -2,16 +2,17 @@
 #define ADS_EXECUTOR_GALOIS_HPP_
 
 #include <iterator>
-#include <Galois/Galois.h>
-#include <Galois/Threads.h>
-#include <Galois/Runtime/ll/SimpleLock.h>
+#include <galois/Galois.h>
+#include <galois/substrate/SimpleLock.h>
 
 namespace ads {
 
 class galois_executor {
 private:
-    using lock_type = Galois::Runtime::LL::SimpleLock<true>;
+    using lock_type = galois::substrate::SimpleLock;
     lock_type lock;
+
+    galois::SharedMemSys G;
 
 public:
     template <typename Fun>
@@ -28,10 +29,11 @@ public:
 
         auto a = begin(range);
         auto b = end(range);
+        auto items = galois::iterate(a, b);
 
-        Galois::for_each(a, b, [&fun](auto&& item, auto&& /*ctx*/) {
+        galois::do_all(items, [&fun](auto&& item) {
             fun(item);
-        });
+        }, galois::no_stats());
     }
 
     galois_executor(int threads);

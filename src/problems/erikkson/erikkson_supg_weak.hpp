@@ -9,6 +9,8 @@
 #include "ads/lin/dense_matrix.hpp"
 #include "ads/lin/dense_solve.hpp"
 
+#include <galois/Timer.h>
+
 
 namespace ads {
 
@@ -48,8 +50,8 @@ private:
 
     output_manager<2> output;
 
-    Galois::StatTimer integration_timer{"integration"};
-    Galois::StatTimer solver_timer{"solver"};
+    galois::StatTimer integration_timer{"integration"};
+    galois::StatTimer solver_timer{"solver"};
 
 public:
     erikkson_supg_weak(dimension trial_x, dimension trial_y, const timesteps_config& steps)

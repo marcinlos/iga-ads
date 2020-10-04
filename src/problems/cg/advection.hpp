@@ -12,6 +12,8 @@
 #include "ads/lin/dense_matrix.hpp"
 #include "ads/lin/dense_solve.hpp"
 
+#include <galois/Timer.h>
+
 
 namespace ads {
 
@@ -79,9 +81,9 @@ private:
 
     output_manager<2> output;
 
-    Galois::StatTimer integration_timer{"integration"};
-    Galois::StatTimer solver_timer{"solver"};
-    Galois::StatTimer total_timer{"total"};
+    galois::StatTimer integration_timer{"integration"};
+    galois::StatTimer solver_timer{"solver"};
+    galois::StatTimer total_timer{"total"};
 
     int total_CG_iters = 0;
 

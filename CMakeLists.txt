@@ -3,7 +3,7 @@ project(ADS C CXX)
 
 
 # We use C++14
-set (CMAKE_CXX_STANDARD 14)
+set (CMAKE_CXX_STANDARD 17)
 
 # Default to Release build
 if(NOT CMAKE_BUILD_TYPE)
@@ -58,12 +58,8 @@ include_directories(${Boost_INCLUDE_DIRS})
 set(USE_GALOIS OFF CACHE BOOL "Use Galois framework")
 
 if (USE_GALOIS)
-  find_package(Galois REQUIRED)
-  include_directories(${Galois_INCLUDE_DIRS})
-  set(CMAKE_CXX_COMPILER ${Galois_CXX_COMPILER})
-  set(CMAKE_CXX_FLAGS "${Galois_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
-
-  list(APPEND ads_LIBS ${Galois_LIBRARIES})
+  find_package(Galois 6.0 REQUIRED)
+  list(APPEND ads_LIBS Galois::shmem)
   list(APPEND ads_SRC ${SRC}/executor/galois.cpp)
 endif()
 

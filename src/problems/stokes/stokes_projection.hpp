@@ -8,6 +8,7 @@
 #include "problems/stokes/space_set.hpp"
 #include "mumps.hpp"
 
+#include <galois/Timer.h>
 
 
 namespace ads {
@@ -198,8 +199,8 @@ private:
     mumps::solver solver;
     output_manager<2> outputU1, outputU2, outputP;
 
-    Galois::Timer solver_timer;
-    Galois::Timer total_timer;
+    galois::Timer solver_timer;
+    galois::Timer total_timer;
 
 public:
     stokes_projection(space_set trial_, space_set test_, const timesteps_config& steps, Problem problem)
@@ -493,7 +494,7 @@ public:
                   << " elimination FLOPS " << solver.flops_elimination()
                   << std::endl;
         // reset
-        solver_timer = Galois::Timer{};
+        solver_timer = galois::Timer{};
     }
 
     template <typename RHS>

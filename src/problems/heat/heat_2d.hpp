@@ -6,6 +6,8 @@
 #include "ads/output_manager.hpp"
 #include "ads/executor/galois.hpp"
 
+#include <galois/Timer.h>
+
 
 namespace ads {
 namespace problems {
@@ -17,7 +19,7 @@ private:
     vector_type u, u_prev;
 
     output_manager<2> output;
-    Galois::StatTimer integration_timer{"integration"};
+    galois::StatTimer integration_timer{"integration"};
     galois_executor executor{1};
 
 public:
