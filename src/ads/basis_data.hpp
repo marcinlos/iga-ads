@@ -25,16 +25,17 @@ struct basis_data {
     int quad_order;
     int elem_division;
     std::vector<double> points;
+    bspline::basis basis;
     double**** b;
     double** x;
     const double* w;
     double* J;
 
-    basis_data(const bspline::basis& basis, int derivatives)
-    : basis_data{ basis, derivatives, basis.degree + 1, 1 }
+    basis_data(bspline::basis basis, int derivatives)
+    : basis_data{ std::move(basis), derivatives, basis.degree + 1, 1 }
     { }
 
-    basis_data(const bspline::basis& basis, int derivatives, int quad_order, int elem_division);
+    basis_data(bspline::basis basis, int derivatives, int quad_order, int elem_division);
 
     int first_dof(element_id e) const {
         return first_dofs[e / elem_division];

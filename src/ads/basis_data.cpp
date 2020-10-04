@@ -5,7 +5,7 @@
 
 namespace ads {
 
-    basis_data::basis_data(const bspline::basis& basis, int derivatives, int quad_order, int elem_division)
+    basis_data::basis_data(bspline::basis basis, int derivatives, int quad_order, int elem_division)
     : first_dofs(bspline::first_nonzero_dofs(basis))
     , element_ranges(bspline::elements_supporting_dofs(basis))
     , degree(basis.degree)
@@ -14,6 +14,7 @@ namespace ads {
     , quad_order(quad_order)
     , elem_division(elem_division)
     , points(elements + 1)
+    , basis(std::move(basis))
     , w(quad::gauss::Ws[quad_order])
     {
         int p = basis.degree;
@@ -25,9 +26,9 @@ namespace ads {
         bspline::eval_ctx ctx(p);
 
         // compute points of the subdivided elements
-        for (int e = 0; e < basis.elements(); ++ e) {
-            double x1 = basis.points[e];
-            double x2 = basis.points[e + 1];
+        for (int e = 0; e < this->basis.elements(); ++ e) {
+            double x1 = this->basis.points[e];
+            double x2 = this->basis.points[e + 1];
             for (int k = 0; k <= elem_division; ++ k) {
                 points[e * elem_division + k] = ads::lerp(k, elem_division, x1, x2);
             }
@@ -51,8 +52,8 @@ namespace ads {
                 for (int d = 0; d <= derivatives; ++ d) {
                     b[e][k][d] = new double[p + 1];
                 }
-                int span = find_span(x[e][k], basis);
-                eval_basis_with_derivatives(span, x[e][k], basis, b[e][k], derivatives, ctx);
+                int span = find_span(x[e][k], this->basis);
+                eval_basis_with_derivatives(span, x[e][k], this->basis, b[e][k], derivatives, ctx);
             }
         }
     }
