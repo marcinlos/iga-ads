@@ -1,9 +1,11 @@
-cmake_minimum_required(VERSION 3.1)
-project(ADS C CXX)
+cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
+project(ADS LANGUAGES C CXX)
 
 
-# We use C++14
-set (CMAKE_CXX_STANDARD 17)
+# We use C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Default to Release build
 if(NOT CMAKE_BUILD_TYPE)
@@ -12,7 +14,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 include_directories("${PROJECT_SOURCE_DIR}/src")
-include_directories("${PROJECT_SOURCE_DIR}/lib")
+include_directories(SYSTEM "${PROJECT_SOURCE_DIR}/lib")
 
 
 set(SRC src/ads)
@@ -46,13 +48,13 @@ if (USE_MUMPS)
   set(MUMPS_LIBRARIES "dmumps")
   list(APPEND ads_LIBS ${MUMPS_LIBRARIES})
   find_package(MPI)
-  include_directories(${MPI_CXX_INCLUDE_DIRS})
+  include_directories(SYSTEM ${MPI_CXX_INCLUDE_DIRS})
   list(APPEND ads_LIBS ${MPI_CXX_LIBRARIES})
 endif()
 
 
 find_package(Boost REQUIRED)
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 # Galois
 set(USE_GALOIS OFF CACHE BOOL "Use Galois framework")
@@ -64,8 +66,8 @@ if (USE_GALOIS)
 endif()
 
 if (CMAKE_COMPILER_IS_GNUCXX)
-  set(ignored_warnings "-Wno-narrowing -Wno-deprecated-declarations")
-  set(warnings "-Wall -Wextra -pedantic ${ignored_warnings}")
+  set(ignored_warnings "-Wno-narrowing")
+  set(warnings "-Wall -Wextra -pedantic -Woverloaded-virtual -Wnon-virtual-dtor ${ignored_warnings}")
 
   set(CMAKE_CXX_FLAGS
     "${CMAKE_CXX_FLAGS} ${optimization} ${warnings} ${std_version}")
