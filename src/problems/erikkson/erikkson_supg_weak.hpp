@@ -210,8 +210,8 @@ private:
         case boundary::right:  return { 1,  0};
         case boundary::bottom: return { 0, -1};
         case boundary::top:    return { 0,  1};
+        default:               return {0, 0};
         }
-        return {0, 0};
     }
 
     bool touches(index_type dof, boundary side, const dimension& x, const dimension& y) const {
