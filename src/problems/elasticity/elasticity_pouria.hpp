@@ -367,7 +367,7 @@ namespace problems {
             for_all(now, [this](vector_type& a) { solve(a); });
         }
 
-        void step(int /*iter*/, double t) {
+        void step(int /*iter*/, double t) override {
             using std::swap;
 
             for_all(now, [](vector_type& a) { zero(a); });
