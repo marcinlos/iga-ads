@@ -349,7 +349,7 @@ namespace problems {
             constexpr double t0 = 1;
             double tt = t / t0;
             double f = tt < 1 ? pow(tt * (1 - tt), 2) : 0;
-            double r = pow(x[0] - 1, 2) + pow(x[1] - 1, 2) + pow(x[2] - 1, 2);
+            double r = pow(x[0] - 1, 2) + pow(x[1] - 1, 2);
             double a = - 10 * f * std::exp(- 10 * r);
             return {a, a};
         }
