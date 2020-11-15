@@ -16,6 +16,9 @@
 namespace ads {
 
 class basic_simulation_3d {
+public:
+    virtual ~basic_simulation_3d() = default;
+
 protected:
     using vector_type = lin::tensor<double, 3>;
     using vector_view = lin::tensor_view<double, 3>;

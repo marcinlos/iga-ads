@@ -16,6 +16,9 @@
 namespace ads {
 
 class basic_simulation_2d {
+public:
+    virtual ~basic_simulation_2d() = default;
+
 protected:
     using vector_type = lin::tensor<double, 2>;
     using vector_view = lin::tensor_view<double, 2>;
