@@ -82,7 +82,7 @@ public:
         id.job = -1;
         id.par = 1;
         id.sym = 0;
-        id.comm_fortran = 1;
+        id.comm_fortran = MPI_Comm_c2f(MPI_COMM_SELF);
 
 
         dmumps_c(&id);
