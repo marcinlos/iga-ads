@@ -78,9 +78,9 @@ int main(int argc, char* argv[]) {
         // std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
     }
 
-    int dofsU = trial_dim * trial_dim;
-    int dofsV = test_dim * test_dim;
-    int dofs = dofsU + dofsV;
+    // int dofsU = trial_dim * trial_dim;
+    // int dofsV = test_dim * test_dim;
+    // int dofs = dofsU + dofsV;
     // std::cout << "DOFs : " << dofs << std::endl;
 
     // std::cout << "/\\t = " << dt << std::endl;

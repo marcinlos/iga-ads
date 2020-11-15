@@ -585,7 +585,7 @@ public:
                 auto F = forcing(x);
                 value_type vvx = eval(vx, e, q, trial.U1x, trial.U1y);
                 value_type vvy = eval(vy, e, q, trial.U2x, trial.U2y);
-                value_type pp = eval(p, e, q, trial.Px, trial.Py);
+                // value_type pp = eval(p, e, q, trial.Px, trial.Py);
 
                 for (auto a : dofs_on_element(e, test.U1x, test.U1y)) {
                     auto aa = dof_global_to_local(e, a, test.U1x, test.U1y);

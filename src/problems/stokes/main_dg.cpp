@@ -49,8 +49,8 @@ int main(int argc, char* argv[]) {
 
     int p_max = std::max(std::max(pmax_trial_x, pmax_trial_y), std::max(pmax_test_x, pmax_test_y));
 
-    // int quad = p_max + 1; // to integrate velocity
-    int quad = 7; // due to exponential
+    int quad = p_max + 1; // to integrate velocity
+    // int quad = 7; // due to exponential
 
     timesteps_config steps{ 1, 0 };
     int ders = 2;

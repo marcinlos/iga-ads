@@ -246,7 +246,7 @@ private:
 
         mumps::problem problem(rhs.data(), rhs.size());
 
-        auto nvx = vx.data() - rhs.data();
+        // auto nvx = vx.data() - rhs.data();
         auto nvy = vy.data() - rhs.data();
         auto np = p.data() - rhs.data();
 

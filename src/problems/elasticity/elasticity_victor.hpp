@@ -276,16 +276,16 @@ private:
             value_type vy = eval_fun(prev.vy, e, q);
             value_type vz = eval_fun(prev.vz, e, q);
 
-            value_type ax = eval_fun(prev.ax, e, q);
-            value_type ay = eval_fun(prev.ay, e, q);
-            value_type az = eval_fun(prev.az, e, q);
+            // value_type ax = eval_fun(prev.ax, e, q);
+            // value_type ay = eval_fun(prev.ay, e, q);
+            // value_type az = eval_fun(prev.az, e, q);
 
             auto F = force(x, t);
 
             for (auto a : dofs_on_element(e)) {
                 value_type b = eval_basis(e, q, a);
 
-                double tt = 0.5 * dt * dt;
+                // double tt = 0.5 * dt * dt;
                 auto dax = - mi * grad_dot(ux, b) - dt * grad_dot(vx, b) +  F[0] * b.val;
                 auto day = - mi * grad_dot(uy, b) - dt * grad_dot(vy, b) +  F[1] * b.val;
                 auto daz = - mi * grad_dot(uz, b) - dt * grad_dot(vz, b) +  F[2] * b.val;

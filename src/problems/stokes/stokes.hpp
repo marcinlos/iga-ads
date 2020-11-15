@@ -247,7 +247,7 @@ public:
         auto trial_vy = shifted(D + dU1, D + dU1, problem);
         auto trial_p = shifted(D + dU1 + dU2, D + dU1 + dU2, problem);
 
-        auto hh = h * h;
+        // auto hh = h * h;
 
         // Gram matrix
         for (auto i : dofs(test.U1x, test.U1y)) {

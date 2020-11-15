@@ -252,9 +252,9 @@ private:
     }
 
     double init_state(double x, double y) {
-        double dx = x - 0.5;
-        double dy = y - 0.5;
-        double r2 = std::min( (dx * dx + dy * dy), 1.0);
+        // double dx = x - 0.5;
+        // double dy = y - 0.5;
+        // double r2 = std::min( (dx * dx + dy * dy), 1.0);
         // return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
         // return 1;
         return 0;
@@ -319,8 +319,8 @@ private:
 
     void step(int iter, double t) override {
         using namespace std::placeholders;
-        bool xref = true;
-        bool yref = true;
+        // bool xref = true;
+        // bool yref = true;
 
         auto dt = steps.dt;
 

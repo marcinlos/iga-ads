@@ -221,9 +221,9 @@ private:
     }
 
     double emission(double x, double y, double u) {
-        double dx = (x - 3000) / 25;
-        double dy = (y - 400) / 25;
-        double r2 = std::min((dx * dx + dy * dy), 1.0);
+        // double dx = (x - 3000) / 25;
+        // double dy = (y - 400) / 25;
+        // double r2 = std::min((dx * dx + dy * dy), 1.0);
         // return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1); // g/m^3
         return 0;
     };
@@ -318,7 +318,7 @@ private:
     void before() override {
         prepare_matrices();
 
-        auto init = [this](double x, double y) { return ambient; };
+        // auto init = [this](double x, double y) { return ambient; };
 
         // projection(u, init);
         // solve(u);

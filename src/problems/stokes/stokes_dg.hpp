@@ -318,7 +318,7 @@ public:
     void assemble_matrix(mumps::problem& problem) const {
         auto dU1 = trial.U1x.dofs() * trial.U1y.dofs();
         auto dU2 = trial.U2x.dofs() * trial.U2y.dofs();
-        auto dP = trial.Px.dofs() * trial.Py.dofs();
+        // auto dP = trial.Px.dofs() * trial.Py.dofs();
 
         auto DU1 = test.U1x.dofs() * test.U1y.dofs();
         auto DU2 = test.U2x.dofs() * test.U2y.dofs();
@@ -337,7 +337,7 @@ public:
         auto trial_vy = shifted(D + dU1, D + dU1, problem);
         auto trial_p = shifted(D + dU1 + dU2, D + dU1 + dU2, problem);
 
-        auto N = D + dU1 + dU2 + dP;
+        // auto N = D + dU1 + dU2 + dP;
         bool bc = false;
         bool fix_p = false;
 
@@ -721,25 +721,25 @@ public:
 
 
     void assemble_gram_matrix_no_jumps(mumps::problem& problem) const {
-        auto dU1 = trial.U1x.dofs() * trial.U1y.dofs();
-        auto dU2 = trial.U2x.dofs() * trial.U2y.dofs();
-        auto dP = trial.Px.dofs() * trial.Py.dofs();
+        // auto dU1 = trial.U1x.dofs() * trial.U1y.dofs();
+        // auto dU2 = trial.U2x.dofs() * trial.U2y.dofs();
+        // auto dP = trial.Px.dofs() * trial.Py.dofs();
 
         auto DU1 = test.U1x.dofs() * test.U1y.dofs();
         auto DU2 = test.U2x.dofs() * test.U2y.dofs();
-        auto DP = test.Px.dofs() * test.Py.dofs();
+        // auto DP = test.Px.dofs() * test.Py.dofs();
 
-        auto D = DU1 + DU2 + DP;
+        // auto D = DU1 + DU2 + DP;
 
         auto test_vx = shifted(0, 0, problem);
         auto test_vy = shifted(DU1, DU1, problem);
         auto test_p = shifted(DU1 + DU2, DU1 + DU2, problem);
 
-        auto trial_vx = shifted(D, D, problem);
-        auto trial_vy = shifted(D + dU1, D + dU1, problem);
-        auto trial_p = shifted(D + dU1 + dU2, D + dU1 + dU2, problem);
+        // auto trial_vx = shifted(D, D, problem);
+        // auto trial_vy = shifted(D + dU1, D + dU1, problem);
+        // auto trial_p = shifted(D + dU1 + dU2, D + dU1 + dU2, problem);
 
-        auto N = D + dU1 + dU2 + dP;
+        // auto N = D + dU1 + dU2 + dP;
         bool bc = false;
         bool fix_p = false;
 
