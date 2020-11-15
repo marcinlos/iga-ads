@@ -53,7 +53,7 @@ public:
         return diffusion_coefficient[layer_at(x, y, z)];
     }
 
-    double init_M(double x, double y, double z) const {
+    double init_M(double /*x*/, double /*y*/, double /*z*/) const {
         // return layer_at(x, y, z) == dermis ? 1.0 : 0.1;
         return 0.1;
     }

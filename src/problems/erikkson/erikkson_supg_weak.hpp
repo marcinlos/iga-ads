@@ -95,7 +95,7 @@ private:
     }
 
 
-    double diffusion(double x, double y) const {
+    double diffusion(double /*x*/, double /*y*/) const {
         return 1/peclet;
         // constexpr double eta = 1e6;
         // bool left = x < 0.5, right = !left;
@@ -109,7 +109,7 @@ private:
     }
 
 
-    bool is_fixed(index_type dof, const dimension& x, const dimension& y) const {
+    bool is_fixed(index_type dof, const dimension& /*x*/, const dimension& /*y*/) const {
         // return dof[0] == 0 || dof[0] == x.dofs() - 1 || dof[1] == 0 || dof[1] == y.dofs() - 1;
         return dof[0] == 0;
     }
@@ -224,7 +224,7 @@ private:
         }
     }
 
-    void assemble_problem(mumps::problem& problem, double dt) {
+    void assemble_problem(mumps::problem& problem, double /*dt*/) {
         for (auto a : dofs(x, y)) {
             for (auto b : overlapping_dofs(a, x, y)) {
                 if (is_fixed(a, x, y)) continue;

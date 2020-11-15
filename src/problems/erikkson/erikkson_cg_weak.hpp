@@ -137,12 +137,12 @@ private:
         dense_matrix_ref MUVx, MUVy, KUVx, KUVy, AUVx, AUVy;
     };
 
-    bool is_fixed(index_type dof, const dimension& x, const dimension& y) const {
+    bool is_fixed(index_type dof, const dimension& /*x*/, const dimension& /*y*/) const {
         return dof[0] == 0;
         // return false;
     }
 
-    double diffusion(point_type x) const {
+    double diffusion(point_type /*x*/) const {
         return epsilon;
 
         // bool left = x < 1 - 1/peclet, right = !left;
@@ -155,7 +155,7 @@ private:
         // }
     }
 
-    point_type beta(point_type x) const {
+    point_type beta(point_type /*x*/) const {
         return {1, 0};
         // double r = b / std::sqrt(x[0] * x[0] + x[1] * x[1]);
         // return { - r * x[1], r * x[0] };
@@ -329,7 +329,7 @@ private:
         }
     }
 
-    void assemble_problem(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& M) {
+    void assemble_problem(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& /*M*/) {
         auto N = Vx.dofs() * Vy.dofs();
         auto hh = h * h;
 
@@ -514,7 +514,7 @@ private:
         return std::sqrt(norm);
     }
 
-    double substep(bool x_refined, bool y_refined, double t) {
+    double substep(bool x_refined, bool y_refined, double /*t*/) {
         dimension& Vx = x_refined ? this->Vx : Ux;
         dimension& Vy = y_refined ? this->Vy : Uy;
 
@@ -552,7 +552,7 @@ private:
         return norm(u_rhs);
     }
 
-    void step(int iter, double t) override {
+    void step(int /*iter*/, double t) override {
         // bool xrhs[] = { false, true };
 
         // bool x_rhs = xrhs[iter % sizeof(xrhs)];
@@ -576,7 +576,7 @@ private:
         }
     }
 
-    void after_step(int iter, double t) override {
+    void after_step(int iter, double /*t*/) override {
         if ((iter + 1) % save_every == 0) {
             // std::cout << "Step " << (iter + 1) << " : " << errorL2(t) << " " << errorH1(t) << std::endl;
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
@@ -731,17 +731,17 @@ private:
         });
     }
 
-    double errorL2_abs(double t) const {
+    double errorL2_abs(double /*t*/) const {
         auto sol = exact(epsilon);
         return Base::errorL2(u, Ux, Uy, sol);
     }
 
-    double errorH1_abs(double t) const {
+    double errorH1_abs(double /*t*/) const {
         auto sol = exact(epsilon);
         return Base::errorH1(u, Ux, Uy, sol);
     }
 
-    double errorL2(double t) const {
+    double errorL2(double /*t*/) const {
         auto sol = exact(epsilon);
         // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         // auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
@@ -749,7 +749,7 @@ private:
         return Base::errorL2(u, Ux, Uy, sol) / normL2(Ux, Uy, sol) * 100;
     }
 
-    double errorH1(double t) const {
+    double errorH1(double /*t*/) const {
         auto sol = exact(epsilon);
         // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         // auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };

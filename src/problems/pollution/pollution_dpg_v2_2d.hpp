@@ -220,7 +220,7 @@ private:
         advection_matrix(B, bU, bV, h, advection);
     }
 
-    double emission(double x, double y, double u) {
+    double emission(double /*x*/, double /*y*/, double /*u*/) {
         // double dx = (x - 3000) / 25;
         // double dy = (y - 400) / 25;
         // double r2 = std::min((dx * dx + dy * dy), 1.0);
@@ -367,7 +367,7 @@ private:
 
 
         lin::vector buf_y0{{ Ux.dofs() }};
-        compute_projection(buf_y0, Ux.basis, [&](double t) {
+        compute_projection(buf_y0, Ux.basis, [&](double /*t*/) {
             // return std::sin(t * M_PI);
             // return 1 - t;
             return 1;
@@ -375,7 +375,7 @@ private:
         lin::solve_with_factorized(MUx_loc, buf_y0, ctx_x);
 
         lin::vector buf_y1{{ Ux.dofs() }};
-        compute_projection(buf_y1, Ux.basis, [&](double t) {
+        compute_projection(buf_y1, Ux.basis, [&](double /*t*/) {
             // auto a =  std::sin(t * 3 * M_PI);
             // return a * a;
             return 0;
@@ -392,7 +392,7 @@ private:
         lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
 
         lin::vector buf_x1{{ Uy.dofs() }};
-        compute_projection(buf_x1, Uy.basis, [&](double t) {
+        compute_projection(buf_x1, Uy.basis, [&](double /*t*/) {
             // auto a =  std::sin(t * 2 * M_PI);
             // return a * a;
             return 0;
@@ -501,7 +501,7 @@ private:
         lin::cyclic_transpose(F2, u);
     }
 
-    void after_step(int iter, double t) override {
+    void after_step(int iter, double /*t*/) override {
         if ((iter + 1) % save_every == 0) {
             std::cout << "Step " << (iter + 1) << std::endl;
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);

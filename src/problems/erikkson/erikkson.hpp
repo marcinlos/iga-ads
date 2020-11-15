@@ -337,7 +337,7 @@ private:
         lin::solve_with_factorized(MUx_loc, buf_y1, ctx_x);
 
         lin::vector buf_x0{{ Uy.dofs() }};
-        compute_projection(buf_x0, Uy.basis, [&](double t) {
+        compute_projection(buf_x0, Uy.basis, [&](double /*t*/) {
             // return std::sin(M_PI * t);
             return 0;
         });
@@ -603,7 +603,7 @@ private:
         return u;
     }
 
-    double forcing(double x, double y, double t) {
+    double forcing(double x, double y, double /*t*/) {
         // constexpr double pi = M_PI;
         // auto s = [](double a) { return std::sin(pi * a); };
         // auto c = [](double a) { return std::cos(pi * a); };
@@ -718,13 +718,13 @@ private:
     //     };
     // }
 
-    double errorL2(double t) const {
+    double errorL2(double /*t*/) const {
         // auto sol = exact(epsilon);
         auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         return Base::errorL2(u, Ux, Uy, sol) / normL2(Ux, Uy, sol) * 100;
     }
 
-    double errorH1(double t) const {
+    double errorH1(double /*t*/) const {
         // auto sol = exact(epsilon);
         auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         return Base::errorH1(u, Ux, Uy, sol) / normH1(Ux, Uy, sol) * 100;

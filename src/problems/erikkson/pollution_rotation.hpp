@@ -118,7 +118,7 @@ private:
         dense_matrix_ref MUVx, MUVy, KUVx, KUVy, AUVx, AUVy;
     };
 
-    double diffusion(double x, double y) const {
+    double diffusion(double /*x*/, double /*y*/) const {
         return epsilon;
         // const double eta = epsilon;
         // return 1 / eta;
@@ -133,7 +133,7 @@ private:
         // }
     }
 
-    void assemble_problem2(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& M) {
+    void assemble_problem2(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& /*M*/) {
         auto N = Vx.dofs() * Vy.dofs();
         auto hh = h * h;
 
@@ -355,7 +355,7 @@ private:
     }
 
     void compute_rhs_nonstationary(const dimension& Vx, const dimension& Vy, vector_view& r_rhs, vector_view& u_rhs,
-                                   double t) {
+                                   double /*t*/) {
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
             auto R = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
             auto U = vector_type{{ Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element() }};
@@ -410,13 +410,13 @@ private:
         });
     }
 
-    double errorL2(double t) const {
+    double errorL2(double /*t*/) const {
         auto sol = [](auto) { return value_type{0, 0, 0}; };
         return Base::errorL2(u, Ux, Uy, sol);
 
     }
 
-    double errorH1(double t) const {
+    double errorH1(double /*t*/) const {
         auto sol = [](auto) { return value_type{0, 0, 0}; };
         return Base::errorH1(u, Ux, Uy, sol);
 

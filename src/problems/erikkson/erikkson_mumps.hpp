@@ -94,7 +94,7 @@ private:
         return std::sqrt(max_element_size(Ux) * max_element_size(Uy));
     }
 
-    void assemble_problem(mumps::problem& problem, double dt) {
+    void assemble_problem(mumps::problem& problem, double /*dt*/) {
         auto N = Vx.dofs() * Vy.dofs();
         auto hh = h * h;
 
@@ -221,7 +221,7 @@ private:
         std::cout << "Error: L2 = " << errorL2(t) << "%, H1 =  " << errorH1(t) << "%" << std::endl;
     }
 
-    void after_step(int iter, double t) override {
+    void after_step(int iter, double /*t*/) override {
         if ((iter + 1) % save_every == 0) {
             // std::cout << "Step " << (iter + 1) << " : " << errorL2(t) << "% " << errorH1(t) << "%" << std::endl;
             // std::cout << iter << " " << t << " " << errorL2(t) << " " << errorH1(t) << std::endl;
@@ -235,7 +235,7 @@ private:
         print_solution("solution.data", u, Ux, Uy);
     }
 
-    void compute_rhs(double t) {
+    void compute_rhs(double /*t*/) {
         zero(rhs);
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
             auto U = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
@@ -272,7 +272,7 @@ private:
     //     return Base::errorH1(u, Ux, Uy, exact(epsilon));
     // }
 
-    double errorL2(double t) const {
+    double errorL2(double /*t*/) const {
         // auto sol = exact(epsilon);
         auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         // auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
@@ -280,7 +280,7 @@ private:
         return Base::errorL2(u, Ux, Uy, sol) / normL2(Ux, Uy, sol) * 100;
     }
 
-    double errorH1(double t) const {
+    double errorH1(double /*t*/) const {
         // auto sol = exact(epsilon);
         auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         // auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };

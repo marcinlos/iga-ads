@@ -93,7 +93,7 @@ private:
         std::cout << errorL2(T) << "  " << errorH1(T) << std::endl;
     }
 
-    void after_step(int iter, double t) override {
+    void after_step(int /*iter*/, double /*t*/) override {
         // if (iter % 1000 == 0) {
         //     output.to_file(u, "out_%d.data", iter);
         //     validate(t);

@@ -176,7 +176,7 @@ private:
         });
     }
 
-    double diffusion(double x, double y) const {
+    double diffusion(double /*x*/, double /*y*/) const {
         return epsilon;
         // const double eta = epsilon;
         // return 1 / eta;
@@ -191,7 +191,7 @@ private:
         // }
     }
 
-    void assemble_problem2(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& M) {
+    void assemble_problem2(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& /*M*/) {
         auto N = Vx.dofs() * Vy.dofs();
         auto hh = h * h;
 
@@ -339,7 +339,7 @@ private:
         return std::sqrt(norm);
     }
 
-    double substep(bool x_refined, bool y_refined, double t) {
+    double substep(bool x_refined, bool y_refined, double /*t*/) {
         dimension& Vx = x_refined ? this->Vx : Ux;
         dimension& Vy = y_refined ? this->Vy : Uy;
 
@@ -508,7 +508,7 @@ private:
         });
     }
 
-    double errorL2(double t) const {
+    double errorL2(double /*t*/) const {
         // auto sol = exact(epsilon);
         auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         // auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
@@ -516,7 +516,7 @@ private:
         return Base::errorL2(u, Ux, Uy, sol) / normL2(Ux, Uy, sol) * 100;
     }
 
-    double errorH1(double t) const {
+    double errorH1(double /*t*/) const {
         // auto sol = exact(epsilon);
         auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         // auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };

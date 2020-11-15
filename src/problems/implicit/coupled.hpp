@@ -72,7 +72,7 @@ public:
 
 private:
     // NEW: Mass matrix no longer diagonal
-    void mass_matrix(lin::dense_matrix& M, const basis_data& d, double h) {
+    void mass_matrix(lin::dense_matrix& M, const basis_data& d, double /*h*/) {
         auto N = d.basis.dofs() - 1;
         for (element_id e = 0; e < d.elements; ++ e) {
             for (int q = 0; q < d.quad_order; ++ q) {

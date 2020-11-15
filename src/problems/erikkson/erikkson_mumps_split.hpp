@@ -251,7 +251,7 @@ private:
         advection_matrix_1d(AUUy, Uy.basis, Uy.basis);
     }
 
-    double init_state(double x, double y) {
+    double init_state(double /*x*/, double /*y*/) {
         // double dx = x - 0.5;
         // double dy = y - 0.5;
         // double r2 = std::min( (dx * dx + dy * dy), 1.0);
@@ -317,7 +317,7 @@ private:
         copy_solution(u_rhs, r_rhs, u);
     }
 
-    void step(int iter, double t) override {
+    void step(int /*iter*/, double t) override {
         using namespace std::placeholders;
         // bool xref = true;
         // bool yref = true;

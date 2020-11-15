@@ -141,7 +141,7 @@ public:
         return {ux, uy};
     }
 
-    value_type exact_div(point_type p) const {
+    value_type exact_div(point_type /*p*/) const {
         return {0, 0, 0};
     }
 
@@ -831,7 +831,7 @@ public:
     }
 
 
-    void compute_rhs(vector_view& vx, vector_view& vy, vector_view& p) const {
+    void compute_rhs(vector_view& vx, vector_view& vy, vector_view& /*p*/) const {
         using shape = std::array<std::size_t, 2>;
         auto u1_shape = shape{ test.U1x.basis.dofs_per_element(), test.U1y.basis.dofs_per_element() };
         auto u2_shape = shape{ test.U2x.basis.dofs_per_element(), test.U2y.basis.dofs_per_element() };
@@ -901,7 +901,7 @@ public:
     }
 
 
-    void apply_bc(vector_view& vx, vector_view& vy, vector_view& p) {
+    void apply_bc(vector_view& /*vx*/, vector_view& /*vy*/, vector_view& /*p*/) {
         // Strong BC
         // zero_bc(vx, trial.U1x, trial.U1y);
         // zero_bc(vy, trial.U2x, trial.U2y);
@@ -933,7 +933,7 @@ public:
         // p(i, i) = 0; // fix pressure at a point
     }
 
-    void apply_bc_test(vector_view& Rvx, vector_view& Rvy, vector_view& Rp) {
+    void apply_bc_test(vector_view& /*Rvx*/, vector_view& /*Rvy*/, vector_view& /*Rp*/) {
         // zero_bc(Rvx, test.U1x, test.U1y);
         // zero_bc(Rvy, test.U2y, test.U2y);
     }

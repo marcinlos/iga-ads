@@ -74,7 +74,7 @@ private:
         return std::sqrt(hx * hx + hy * hy);
     }
 
-    double diffusion(double x, double y) const {
+    double diffusion(double /*x*/, double /*y*/) const {
         return 1/peclet;
         // constexpr double eta = 1e6;
         // bool left = x < 0.5, right = !left;
@@ -87,7 +87,7 @@ private:
         // }
     }
 
-    void assemble_problem(mumps::problem& problem, double dt) {
+    void assemble_problem(mumps::problem& problem, double /*dt*/) {
         for (auto a : internal_dofs(x, y)) {
             for (auto b : overlapping_dofs(a, x, y)) {
 

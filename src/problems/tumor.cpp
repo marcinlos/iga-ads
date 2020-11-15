@@ -76,7 +76,7 @@ sim_params parse_params(char* args[], int idx) {
     return { p, elems, { nsteps, dt }, plot_every, tumor, vasc };
 }
 
-int main(int argc, char* argv[]) {
+int main(int /*argc*/, char* argv[]) {
     sim_params sp = parse_params(argv, 1);
 
     dim_config dim { sp.p, sp.elems, 0, 3000.0 };

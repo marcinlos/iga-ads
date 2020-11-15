@@ -79,7 +79,7 @@ std::vector<double> make_points(int n) {
     return points;
 }
 
-bspline::basis create_checkboard_basis(double a, double b, int p, int elements, int repeated_nodes, bool adapt) {
+bspline::basis create_checkboard_basis(double a, double b, int p, int elements, int repeated_nodes, bool /*adapt*/) {
     int total_elements = 2 * elements + 2;
     int points = total_elements + 1;
     int r = repeated_nodes + 1;

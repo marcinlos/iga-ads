@@ -122,7 +122,7 @@ private:
         return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1); // g/m^3
     };
 
-    void impose_bc(vector_type& v) const {
+    void impose_bc(vector_type& /*v*/) const {
         // {
         //     // {0} x X
         //     lin::vector buf{{ y.dofs() }};
@@ -180,7 +180,7 @@ private:
     void before() override {
         prepare_matrices();
 
-        auto init = [this](double x, double y) { return ambient; };
+        auto init = [this](double /*x*/, double /*y*/) { return ambient; };
 
         projection(u, init);
         impose_bc(u);
@@ -226,7 +226,7 @@ private:
         return a[0] * u.dx + a[1] * u.dy;
     }
 
-    point_type local_wind(double x, double y) const {
+    point_type local_wind(double /*x*/, double /*y*/) const {
         // auto dx = x - 2500;
         // auto dy = y - 2500;
         // auto r = std::sqrt(dx * dx + dy * dy);

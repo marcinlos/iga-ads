@@ -593,7 +593,7 @@ private:
         });
     }
 
-    void analyze(int iter, double t) {
+    void analyze(int iter, double /*t*/) {
         double total = 0.0;
         double em = 0.0;
         for (auto e : elements(Ux, Ux, Uz)) {
