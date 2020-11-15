@@ -1,24 +1,15 @@
 #include <algorithm>
-#include <libunittest/all.hpp>
+#include <catch2/catch.hpp>
 #include "ads/lin/tensor.hpp"
 #include "ads/lin/dense_matrix.hpp"
 #include "ads/lin/dense_solve.hpp"
 
 
-using namespace unittest::assertions;
+using namespace ads::lin;
 
-namespace ads {
-namespace lin {
+TEST_CASE("Dense matrix") {
 
-
-struct dense_solver_test : unittest::testcase<> {
-
-    static void run() {
-        UNITTEST_CLASS(dense_solver_test)
-        UNITTEST_RUN(test_example_matrix)
-    }
-
-    void test_example_matrix() {
+    SECTION("Solver") {
         int kl = 1;
         int ku = 2;
         int n = 6;
@@ -48,12 +39,6 @@ struct dense_solver_test : unittest::testcase<> {
         factorize(m, ctx);
         solve_with_factorized(m, b, ctx);
 
-        assert_true(approx_equal(x, b, 1e-5));
+        CHECK(approx_equal(x, b, 1e-5));
     }
-
-};
-
-REGISTER(dense_solver_test)
-
-}
 }

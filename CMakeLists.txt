@@ -84,26 +84,8 @@ target_link_libraries(ads ${ads_LIBS})
 set(COMPILE_TESTS OFF CACHE BOOL "Enable unit tests")
 
 if (COMPILE_TESTS)
-  # Unit testing
-  enable_testing()
-
-  function(define_test name)
-    add_executable(${name}-test ${ARGN})
-    set_target_properties(${name}-test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tests)
-    target_link_libraries(${name}-test ads unittest pthread)
-    add_test(NAME ${name} COMMAND ${name}-test -v)
-  endfunction()
-
-  set(TSRC test)
-
-  define_test(bspline
-    ${TSRC}/ads/bspline/bspline_test.cpp
-    ${TSRC}/ads/bspline/eval_test.cpp)
-  define_test(tensor ${TSRC}/ads/lin/tensor_test.cpp)
-  define_test(solver ${TSRC}/ads/lin/banded_solver_test.cpp)
-  define_test(dense_solver ${TSRC}/ads/lin/dense_solver_test.cpp)
-  define_test(array ${TSRC}/ads/util/multi_array_test.cpp)
-
+  include(CTest)
+  add_subdirectory(test)
 endif()
 
 # --------------------------------------------------------------------

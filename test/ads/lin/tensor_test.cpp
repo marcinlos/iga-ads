@@ -1,59 +1,50 @@
-#include <libunittest/all.hpp>
+#include <catch2/catch.hpp>
 #include "ads/lin/tensor.hpp"
+#include <iostream>
 
-using namespace unittest::assertions;
 
-namespace ads {
-namespace lin {
+using namespace ads::lin;
 
-struct tensor_test: unittest::testcase<> {
+TEST_CASE("Tensor") {
 
-    static void run() {
-        UNITTEST_CLASS(tensor_test)
-        UNITTEST_RUN(test_tensor_basics)
-        UNITTEST_RUN(test_equal_tensors_should_be_equal)
-        UNITTEST_RUN(test_cyclic_transpose)
-    }
-
-    void test_tensor_basics() {
-        tensor<double, 2> t {{ 5, 3 }};
-        double x = 2;
-        t(2, 1) = x;
+    SECTION("Buffer is correctly updated after writing by index") {
+        auto t = tensor<double, 2>{{ 5, 3 }};
+        t(2, 1) = 17.0;
         int idx = 5 + 2;
-        assert_equal(x, t.data()[idx]);
+        CHECK(t.data()[idx] == 17.0);
     }
 
-    void test_equal_tensors_should_be_equal() {
+    SECTION("Equal tensors are ==") {
         int p = 5, q = 3;
-        tensor<double, 2> a {{ p, q }};
-        tensor<double, 2> b {{ p, q }};
+        auto a = tensor<double, 2>{{ p, q }};
+        auto b = tensor<double, 2>{{ p, q }};
 
         for (int i = 0; i < p; ++ i) {
             for (int j = 0; j < q; ++ j) {
                 a(i, j) = b(i, j) = 7;
             }
         }
-        assert_true(a == b);
+        CHECK(a == b);
     }
 
-    void test_reshape() {
+    SECTION("Reshaping") {
         int p = 5, q = 3;
 
         double data[] = {
             1, 2, 3, 4, 5,
             6, 7, 8, 9, 10
         };
-        tensor_view<double, 2> tensor2d { data, { p, q }};
-        tensor_view<double, 1> tensor1d { data, { p * q }};
-        tensor_view<double, 1> reshaped = reshape(tensor2d, p * q);
-        assert_equal(tensor1d, reshaped);
+        auto tensor2d = tensor_view<double, 2>{data, { p, q }};
+        auto tensor1d = tensor_view<double, 1>{data, { p * q }};
+        auto reshaped = reshape(tensor2d, p * q);
+        CHECK(tensor1d == reshaped);
     }
 
-    void test_cyclic_transpose() {
+    SECTION("Cyclic transpose") {
         int k = 2, n = 3, m = 2;
 
-        tensor<double, 3> a {{ k, n, m }};
-        tensor<double, 3> e {{ n, m, k }};
+        auto a = tensor<double, 3>{{ k, n, m }};
+        auto e = tensor<double, 3>{{ n, m, k }};
 
         a(0, 0, 0) = e(0, 0, 0) = 111;
         a(1, 0, 0) = e(0, 0, 1) = 211;
@@ -69,21 +60,14 @@ struct tensor_test: unittest::testcase<> {
         a(0, 2, 1) = e(2, 1, 0) = 132;
         a(1, 2, 1) = e(2, 1, 1) = 232;
 
-        tensor<double, 3> out {{ n, m, k }};
+        auto out = tensor<double, 3>{{ n, m, k }};
         cyclic_transpose(a, out);
+        CHECK(out == e);
 
-        assert_true(out == e);
-
-        tensor<double, 3> a2 {{ m, k, n }}, a3 {{ k, n, m }};
+        auto a2 = tensor<double, 3>{{ m, k, n }};
+        auto a3 = tensor<double, 3>{{ k, n, m }};
         cyclic_transpose(out, a2);
         cyclic_transpose(a2, a3);
-
-        assert_true(a3 == a);
+        CHECK(a3 == a);
     }
-
-};
-
-REGISTER(tensor_test)
-
-}
 }

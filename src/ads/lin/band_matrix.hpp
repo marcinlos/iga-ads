@@ -104,8 +104,8 @@ inline void multiply(const band_matrix& M, const Vec1& x, Vec2& y, int count = 1
     int lda = M.column_size();
 
     for (int i = 0; i < count; ++ i) {
-        auto in = x.data() + M.rows * i;
-        auto out = y.data() + M.cols * i;
+        auto in = x.data() + M.cols * i;
+        auto out = y.data() + M.rows * i;
         dgbmv_(transpose, &M.rows, &M.cols, &M.kl, &M.ku, &alpha, M.data(), &lda, in, &incx, &beta, out, &incy);
     }
 }

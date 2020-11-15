@@ -1,50 +1,42 @@
-#include <libunittest/all.hpp>
+#include <catch2/catch.hpp>
 #include "ads/bspline/bspline.hpp"
 
-using namespace unittest::assertions;
 
-namespace ads {
-namespace bspline {
+using namespace ads::bspline;
+using namespace Catch::Matchers;
 
-struct bspline_test: unittest::testcase<> {
+TEST_CASE("B-spline basis", "[splines]") {
 
-    static void run() {
-        UNITTEST_CLASS(bspline_test)
-        UNITTEST_RUN(create_basis_test)
-        UNITTEST_RUN(find_span_test)
-        UNITTEST_RUN(first_nonzero_dofs_test)
+    basis b = create_basis(0.0, 1.0, 2, 4);
+
+    SECTION("Knot vector is correct after creation") {
+        REQUIRE_THAT(b.knot, Equals<double>({0, 0, 0, 0.25, 0.5, 0.75, 1, 1, 1}));
     }
 
-    void create_basis_test() {
-        basis b = create_basis(0, 1, 2, 4);
-        double expected[] = { 0, 0, 0, 0.25, 0.5, 0.75, 1, 1, 1 };
-        assert_equal_containers(expected, b.knot, "quadratic basis");
+    SECTION("Finding span") {
+        SECTION("point outside domain") {
+            // degree = 2 is the lowest possible result
+            CHECK(find_span(-1, b) == 2);
+            CHECK(find_span(2.0, b) == 5);
+        }
+        SECTION("point on domain boundary") {
+            CHECK(find_span(0.0, b) == 2);
+            CHECK(find_span(1.0, b) == 5);
+        }
+        SECTION("point on element boundary") {
+            CHECK(find_span(0.25, b) == 3);
+            CHECK(find_span(0.75, b) == 5);
+        }
+        SECTION("point in element interior") {
+            CHECK(find_span(0.1, b) == 2);
+            CHECK(find_span(0.3, b) == 3);
+            CHECK(find_span(0.7, b) == 4);
+            CHECK(find_span(0.9, b) == 5);
+        }
     }
 
-    void find_span_test() {
-        basis b = create_basis(0, 1, 2, 4);
-
-        assert_equal(2, find_span(-1, b), "x = -1"); // degree = 2 is the lowest possible result
-        assert_equal(2, find_span(0, b), "x = 0");
-        assert_equal(2, find_span(0.1, b), "x = 0.1");
-        assert_equal(3, find_span(0.25, b), "x = 0.25");
-        assert_equal(3, find_span(0.3, b), "x = 0.3");
-        assert_equal(4, find_span(0.7, b), "x = 0.7");
-        assert_equal(5, find_span(0.75, b), "x = 0.75");
-        assert_equal(5, find_span(0.9, b), "x = 0.9");
-        assert_equal(5, find_span(1, b), "x = 1");
-        assert_equal(5, find_span(2, b), "x = 2");
+    SECTION("First non-zero dofs") {
+        REQUIRE_THAT(first_nonzero_dofs(b), Equals<int>({0, 1, 2, 3}));
     }
-
-    void first_nonzero_dofs_test() {
-        basis b = create_basis(0, 1, 2, 4);
-        std::vector<int> dofs = first_nonzero_dofs(b);
-        int expected[] = { 0, 1, 2, 3 };
-        assert_equal_containers(expected, dofs);
-    }
-};
-
-REGISTER(bspline_test)
-
 }
-}
+
