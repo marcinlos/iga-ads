@@ -34,6 +34,8 @@ set(ads_SRC
 # --------------------------------------------------------------------
 set(ads_LIBS)
 
+include(libs/CMakeLists.txt)
+
 # Numerical libraries
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
@@ -96,7 +98,7 @@ option(SKIP_PROBLEMS "skip compiling example problems" OFF)
 
 function(define_problem name)
   add_executable(${name} ${ARGN})
-  target_link_libraries(${name} ads)
+  target_link_libraries(${name} ads clara::clara)
 endfunction()
 
 if (NOT SKIP_PROBLEMS)
