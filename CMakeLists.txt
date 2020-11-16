@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 project(ADS LANGUAGES C CXX)
 
-
 # We use C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,9 +12,27 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-include_directories("${PROJECT_SOURCE_DIR}/src")
-include_directories(SYSTEM "${PROJECT_SOURCE_DIR}/lib")
+# Options
+option(USE_MUMPS "Use MUMPS solver")
+option(USE_GALOIS "Use Galois framework")
+option(SKIP_PROBLEMS "Skip compiling example problems")
+option(COMPILE_TESTS "Enable unit tests")
 
+# Compiler options
+if (CMAKE_COMPILER_IS_GNUCXX)
+  add_compile_options(
+      -Wall -Wextra -pedantic
+      -Wnon-virtual-dtor
+      -Woverloaded-virtual
+      -Wsuggest-override
+      -Wmisleading-indentation
+      # ignored warnings
+      -Wno-narrowing
+      )
+endif()
+
+
+include_directories("${PROJECT_SOURCE_DIR}/src")
 
 set(SRC src/ads)
 set(ads_SRC
@@ -40,12 +57,9 @@ include(libs/CMakeLists.txt)
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 
-
 list(APPEND ads_LIBS ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 
 # MUMPS
-set(USE_MUMPS OFF CACHE BOOL "Use MUMPS solver")
-
 if (USE_MUMPS)
   set(MUMPS_LIBRARIES "dmumps")
   list(APPEND ads_LIBS ${MUMPS_LIBRARIES})
@@ -54,25 +68,15 @@ if (USE_MUMPS)
   list(APPEND ads_LIBS ${MPI_CXX_LIBRARIES})
 endif()
 
-
+# Boost
 find_package(Boost REQUIRED)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 # Galois
-set(USE_GALOIS OFF CACHE BOOL "Use Galois framework")
-
 if (USE_GALOIS)
   find_package(Galois 6.0 REQUIRED)
   list(APPEND ads_LIBS Galois::shmem)
   list(APPEND ads_SRC ${SRC}/executor/galois.cpp)
-endif()
-
-if (CMAKE_COMPILER_IS_GNUCXX)
-  set(ignored_warnings "-Wno-narrowing")
-  set(warnings "-Wall -Wextra -pedantic -Woverloaded-virtual -Wnon-virtual-dtor ${ignored_warnings}")
-
-  set(CMAKE_CXX_FLAGS
-    "${CMAKE_CXX_FLAGS} ${optimization} ${warnings} ${std_version}")
 endif()
 
 # Target library definition
@@ -82,9 +86,6 @@ target_link_libraries(ads ${ads_LIBS})
 # --------------------------------------------------------------------
 # Tests
 # --------------------------------------------------------------------
-
-set(COMPILE_TESTS OFF CACHE BOOL "Enable unit tests")
-
 if (COMPILE_TESTS)
   include(CTest)
   add_subdirectory(test)
@@ -93,8 +94,6 @@ endif()
 # --------------------------------------------------------------------
 # Problems
 # --------------------------------------------------------------------
-
-option(SKIP_PROBLEMS "skip compiling example problems" OFF)
 
 function(define_problem name)
   add_executable(${name} ${ARGN})
@@ -193,6 +192,5 @@ if (NOT SKIP_PROBLEMS)
 
   define_problem(coupled
     src/problems/implicit/coupled.cpp)
-
 
 endif()
