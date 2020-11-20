@@ -32,7 +32,8 @@ TEST_CASE("Tensor") {
 
         double data[] = {
             1, 2, 3, 4, 5,
-            6, 7, 8, 9, 10
+            6, 7, 8, 9, 10,
+            11, 12, 13, 14, 15
         };
         auto tensor2d = tensor_view<double, 2>{data, { p, q }};
         auto tensor1d = tensor_view<double, 1>{data, { p * q }};
