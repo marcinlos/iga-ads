@@ -193,4 +193,7 @@ if (NOT SKIP_PROBLEMS)
   define_problem(coupled
     src/problems/implicit/coupled.cpp)
 
+  define_problem(dg_laplace
+    src/problems/dg/laplace.cpp)
+
 endif()
