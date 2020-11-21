@@ -62,13 +62,29 @@ private:
 
 class solver {
 private:
-    DMUMPS_STRUC_C id;
+    DMUMPS_STRUC_C id{};
 
     int& icntl(int idx) {
         return id.icntl[idx - 1];
     }
 
-    double infog(int idx) const {
+    double& cntl(int idx) {
+        return id.cntl[idx - 1];
+    }
+
+    int info(int idx) const {
+        return id.info[idx - 1];
+    }
+
+    double rinfo(int idx) const {
+        return id.rinfo[idx - 1];
+    }
+
+    int infog(int idx) const {
+        return id.infog[idx - 1];
+    }
+
+    double rinfog(int idx) const {
         return id.rinfog[idx - 1];
     }
 
@@ -82,17 +98,30 @@ public:
         id.job = -1;
         id.par = 1;
         id.sym = 0;
-        id.comm_fortran = MPI_Comm_c2f(MPI_COMM_SELF);
-
+        id.comm_fortran = (MUMPS_INT) MPI_Comm_c2f(MPI_COMM_SELF);
 
         dmumps_c(&id);
 
-        //ordering metis (5), or pord (4), or AMD (0), AMF (2), QAMD (6)
-        icntl(7) = 5;
+        // Use ordering scheme: auto (0), sequential (1), parallel (2)
+        icntl(28) = 1;
+
+        // Sequential orderings:
+        // Metis (5), PORD (4), SCOTCH (3), AMD (0), AMF (2), QAMD (6), automatic choice (7)
+        icntl(7) = 7;
+
+        // Parallel orderings:
+        // PT-SCOTCH (1), ParMetis (2), automatic choice (0)
+        // icntl(29) = 2;
 
         // extra space factor
-        icntl(14) = 200;
-        // icntl(22) = 1; // out-of-core
+        icntl(14) = 20;
+
+        // null pivot detection
+        icntl(24) = 1;
+        cntl(3) = 1e-5;
+
+        // out-of-core
+        // icntl(22) = 1;
 
         //streams
         icntl(1) = 3;
@@ -127,16 +156,20 @@ public:
         }
 
         analyze_();
+        // std::cout << "Analysis type: " << infog(32) << std::endl;
+        // std::cout << "Ordering used: " << infog(7) << std::endl;
+        // report_after_analysis(std::cout);
         factorize_();
+        // std::cout << "Deficiency: " << infog(28) << std::endl;
         solve_();
     }
 
     double flops_assembly() const {
-        return infog(2);
+        return rinfog(2);
     }
 
     double flops_elimination() const {
-        return infog(3);
+        return rinfog(3);
     }
 
     ~solver() {
@@ -197,6 +230,51 @@ private:
             os << "Problem of workspace allocation (size = " << info2 << ")";
             break;
         }
+    }
+
+    long handle_neg(int value) const {
+        if (value >= 0) {
+            return value;
+        } else {
+            return -value * 1'000'000L;
+        }
+    }
+
+    double as_MB(long size) const {
+        return static_cast<double>(size) / (1024 * 1024) * sizeof(double);
+    }
+
+    void report_after_analysis(std::ostream& os) const {
+        os << "MUMPS (" << id.version_number << ") after analysis:" << std::endl;
+        os << "RINFO:" << std::endl;
+        os << "  Estimated FLOPS for the elimination:          " << rinfo(1) << std::endl;
+        os << "  Disk space for out-of-core factorization:     " << rinfo(5) << " MB" << std::endl;
+        os << "  Size of the file used to save data:           " << rinfo(7) << " MB" << std::endl;
+        os << "  Size of the MUMPS structure:                  " << rinfo(8) << " MB" << std::endl;
+        os << "INFO:" << std::endl;
+        os << "  Success:                                      " << info(1) << std::endl;
+        auto real_store = handle_neg(info(3));
+        os << "  Size of the real space to store factors:      " << real_store
+                                                                 << " (" << as_MB(real_store) << " MB)" << std::endl;
+        os << "  Size of the integer space to store factors:   " << info(4) << std::endl;
+        os << "  Estimated maximum front size:                 " << info(5) << std::endl;
+        os << "  Number of nodes in a tree:                    " << info(6) << std::endl;
+        os << "  Size of the integer space to factorize:       " << info(7) << std::endl;
+        auto real_factor = handle_neg(info(8));
+        os << "  Size of the real space to factorize:          " << real_factor
+                                                                 << " (" << as_MB(real_factor) << " MB)" << std::endl;
+        os << "  Total memory needed:                          " << info(15) << " MB" << std::endl;
+        os << "  Total memory needed (OoC):                    " << info(17) << " MB" << std::endl;
+        os << "  Size of the integer space to factorize (OoC): " << info(19) << std::endl;
+        auto real_factor_ooc = handle_neg(info(20));
+        os << "  Size of the real space to factorize (OoC):    " << real_factor_ooc
+                                                                 << " (" << as_MB(real_factor_ooc) << " MB)" << std::endl;
+        os << "  Estimated number of entries in factors:       " << handle_neg(info(24)) << std::endl;
+        auto low_real_factor = handle_neg(info(29));
+        os << "  Size of the real space to factorize (low-r):  " << low_real_factor
+                                                                 << " (" << as_MB(low_real_factor) << " MB)" << std::endl;
+        os << "  Total memory needed (low-rank):               " << info(30) << " MB" << std::endl;
+        os << "  Total memory needed (low-rank, OoC):          " << info(31) << " MB" << std::endl;
     }
 };
 
