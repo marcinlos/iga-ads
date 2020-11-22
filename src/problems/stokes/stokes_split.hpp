@@ -224,7 +224,7 @@ private:
     }
 
     void compute_exact() {
-        auto e_pressure = [this](double x, double /*y*/) {
+        auto e_pressure = [](double x, double /*y*/) {
             return x * (1 - x);
         };
 

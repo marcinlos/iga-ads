@@ -234,7 +234,7 @@ public:
                 // if (! is_boundary(i[0], test.U1x) && ! is_boundary(j[0], test.U1x)) {
                 // Strong BC
                 if (! is_boundary(i, test.U1x, test.U1y) && ! is_boundary(j, test.U1x, test.U1y)) {
-                    double val = eval([this,sx,sy](auto tx, auto vx) {
+                    double val = eval([sx,sy](auto tx, auto vx) {
                         return sx * tx.dx * vx.dx + sy * tx.dy * vx.dy;
                     });
                     // skeleton
@@ -259,7 +259,7 @@ public:
                 // if (! is_boundary(i[1], test.U2y) && ! is_boundary(j[1], test.U2y)) {
                 // Strong BC
                 if (! is_boundary(i, test.U2x, test.U2y) && ! is_boundary(j, test.U2x, test.U2y)) {
-                    double val = eval([this,sx,sy](auto ty, auto vy) {
+                    double val = eval([sx,sy](auto ty, auto vy) {
                         return sx * ty.dx * vy.dx + sy * ty.dy * vy.dy;
                     });
                     // skeleton
@@ -337,7 +337,7 @@ public:
                 bool bd_i = is_boundary(i, test.U1x, test.U1y);
                 bool bd_j = is_boundary(j, trial.U1x, trial.U1y);
 
-                double value = eval([this,cx,cy](auto vx, auto ux) {
+                double value = eval([cx,cy](auto vx, auto ux) {
                     return vx.val * ux.val + cx * vx.dx * ux.dx + cy * vx.dy * ux.dy;
                 });
 
@@ -378,7 +378,7 @@ public:
                 bool bd_i = is_boundary(i, test.U2x, test.U2y);
                 bool bd_j = is_boundary(j, trial.U2x, trial.U2y);
 
-                double value = eval([this,cx,cy](auto vy, auto uy) {
+                double value = eval([cx,cy](auto vy, auto uy) {
                     return vy.val * uy.val + cx * vy.dx * uy.dx + cy * vy.dy * uy.dy;
                 });
 
@@ -648,7 +648,7 @@ public:
         auto f = [&](point_type x, double s) { return forcing(x, s); };
         auto F = [&](double s) { return std::bind(f, _1, s); };
         auto Favg = [&](double s1, double s2) {
-            return [&](point_type x) {
+            return [=,&f](point_type x) {
                 auto f1 = f(x, s1);
                 auto f2 = f(x, s2);
                 return point_type{0.5 * (f1[0] + f2[0]), 0.5 * (f1[1] + f2[1])};

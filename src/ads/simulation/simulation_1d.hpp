@@ -101,7 +101,7 @@ protected:
     }
 
     index_type dof_global_to_local(index_type e, index_type a) const {
-        return { a - x.basis.first_dof(e) };
+        return  a - x.basis.first_dof(e) ;
     }
 
     vector_type element_rhs() const {

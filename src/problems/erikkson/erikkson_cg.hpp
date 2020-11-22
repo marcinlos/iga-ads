@@ -64,9 +64,9 @@ private:
     point_type c_diff{{ epsilon, epsilon }};
 
     // double angle = 0;
-    double angle = M_PI / 6;
+    // double angle = M_PI / 6;
 
-    double len = 1;
+    // double len = 1;
 
     // point_type beta{{ len * cos(angle), len * sin(angle) }};
     point_type beta{{ 1, 1 }};

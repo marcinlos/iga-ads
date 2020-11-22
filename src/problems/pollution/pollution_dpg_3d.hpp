@@ -37,7 +37,7 @@ private:
 
     int save_every = 1;
 
-    double ambient = 1e-6; // g/m^3
+    // double ambient = 1e-6; // g/m^3
     // double Vd = 0.1;
     point_type c_diff{{ 50, 50, 0.5 }}; // m/s^2
 
@@ -46,7 +46,7 @@ private:
 
     point_type wind{{ wind_speed * cos(wind_angle), wind_speed * sin(wind_angle), 0.0 }};
 
-    double absorbed = 0.0;
+    // double absorbed = 0.0;
 
     output_manager<3> output;
 

@@ -354,7 +354,7 @@ public:
                 auto eval = [&](auto form) { return integrate(i, j, test.U1x, test.U1y, test.U1x, test.U1y, form); };
 
                 if (! is_boundary(i, test.U1x, test.U1y) && ! is_boundary(j, test.U1x, test.U1y)) {
-                    double val = eval([this,cx,cy](auto tx, auto vx) {
+                    double val = eval([cx,cy](auto tx, auto vx) {
                         return tx.val * vx.val + cx * tx.dx * vx.dx + cy * tx.dy * vx.dy;
                     });
                     test_vx(ii, jj, val);
@@ -370,7 +370,7 @@ public:
                 auto eval = [&](auto form) { return integrate(i, j, test.U2x, test.U2y, test.U2x, test.U2y, form); };
 
                 if (! is_boundary(i, test.U2x, test.U2y) && ! is_boundary(j, test.U2x, test.U2y)) {
-                    double val = eval([this,cx,cy](auto ty, auto vy) {
+                    double val = eval([cx,cy](auto ty, auto vy) {
                         return ty.val * vy.val + cx * ty.dx * vy.dx + cy * ty.dy * vy.dy;
                     });
                     test_vy(ii, jj, val);
@@ -726,7 +726,7 @@ public:
         project(vy, trial.U2x, trial.U2y, [this,tt](point_type x) { return problem.exact_v(x, tt)[1].val; });
     }
 
-    void update_pressure(double t) {
+    void update_pressure(double /*t*/) {
         vector_type rhs_p{{ trial.Px.dofs(), trial.Py.dofs() }};
 
         // Step 1

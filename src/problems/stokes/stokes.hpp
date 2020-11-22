@@ -161,7 +161,7 @@ public:
         auto e_vx = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_vx, ref.U1x.B, ref.U1y.B, cU1x, cU1y); };
         auto e_vy = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_vy, ref.U2x.B, ref.U2y.B, cU2x, cU2y); };
         auto e_p = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_p, ref.Px.B, ref.Py.B, cPx, cPy); };
-        auto div = [this](point_type /*x*/) { return value_type{}; };
+        auto div = [](point_type /*x*/) { return value_type{}; };
 
         double vxL2 = error_relative_L2(vx, trial.U1x, trial.U1y, e_vx) * 100;
         double vxH1 = error_relative_H1(vx, trial.U1x, trial.U1y, e_vx) * 100;

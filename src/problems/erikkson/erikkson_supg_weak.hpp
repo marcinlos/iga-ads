@@ -32,14 +32,14 @@ private:
     double peclet = 1e6;
     double epsilon = 1 / peclet;
 
-    double C1 = 4, C2 = 2;
+    // double C1 = 4, C2 = 2;
 
-    point_type c_diff{{ epsilon, epsilon }};
+    // point_type c_diff{{ epsilon, epsilon }};
 
     // double angle = 0;
-    double angle = M_PI / 6;
+    // double angle = M_PI / 6;
 
-    double len = 1;
+    // double len = 1;
 
     double hmax;
 

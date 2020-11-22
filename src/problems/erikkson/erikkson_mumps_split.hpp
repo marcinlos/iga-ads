@@ -63,9 +63,9 @@ private:
     // double tau = 0.1;
     // double tau = 1;
     // double rho = 0;
-    double alpha = 1;
+    // double alpha = 1;
     // double gamma = 1;
-    double hh = 1;//(1. / 30 / 30);
+    // double hh = 1;//(1. / 30 / 30);
 
     // double bbeta = 0;
 
@@ -327,7 +327,7 @@ private:
         auto f = [&](point_type x, double s) { return erikkson_forcing(x[0], x[1], epsilon, s); };
         auto F = [&](double s) { return std::bind(f, _1, s); };
         auto Favg = [&](double s1, double s2) {
-            return [&](point_type x) { return 0.5 * (f(x, s1) + f(x, s2)); };
+            return [=,&f](point_type x) { return 0.5 * (f(x, s1) + f(x, s2)); };
         };
         auto zero = [&](point_type) { return 0; };
 

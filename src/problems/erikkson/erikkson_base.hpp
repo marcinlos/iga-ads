@@ -93,11 +93,11 @@ protected:
     }
 
     auto exact(double eps) const {
-        return [&](point_type x) { return erikkson_exact(x[0], x[1], eps); };
+        return [eps](point_type x) { return erikkson_exact(x[0], x[1], eps); };
     }
 
     auto exact_nonstationary(double t) const {
-        return [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
+        return [t](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
     }
 };
 
