@@ -1,10 +1,12 @@
-cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
 project(ADS LANGUAGES C CXX)
 
 # We use C++17
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
 
 # Default to Release build
 if(NOT CMAKE_BUILD_TYPE)
@@ -18,70 +20,62 @@ option(USE_GALOIS "Use Galois framework")
 option(SKIP_PROBLEMS "Skip compiling example problems")
 option(COMPILE_TESTS "Enable unit tests")
 
-# Compiler options
-if (CMAKE_COMPILER_IS_GNUCXX)
-  add_compile_options(
-      -Wall -Wextra -pedantic
-      -Wnon-virtual-dtor
-      -Woverloaded-virtual
-      -Wsuggest-override
-      -Wmisleading-indentation
-      # ignored warnings
-      -Wno-narrowing
-      )
-endif()
+# Imaginary library to propagate settings
+add_library(project_options INTERFACE)
+
+# Compiler warning options
+include(cmake/Warnings.cmake)
+
+# Sanitizers
+# Enable address sanitizer
+add_compile_options("$<$<CONFIG:Debug>:-fsanitize=address,undefined;-fno-omit-frame-pointer>")
+add_link_options("$<$<CONFIG:Debug>:-fsanitize=address,undefined>")
 
 
-include_directories("${PROJECT_SOURCE_DIR}/src")
+# Target library definition
+add_library(ads
+  STATIC
+  src/ads/form_matrix.cpp
+  src/ads/bspline/bspline.cpp
+  src/ads/quad/gauss_data.cpp
+  src/ads/basis_data.cpp
+  src/ads/simulation/dimension.cpp
+  src/ads/simulation/simulation_base.cpp
+  src/ads/simulation/simulation_1d.cpp
+  src/ads/simulation/simulation_2d.cpp
+  src/ads/simulation/simulation_3d.cpp)
 
-set(SRC src/ads)
-set(ads_SRC
-  ${SRC}/form_matrix.cpp
-  ${SRC}/bspline/bspline.cpp
-  ${SRC}/quad/gauss_data.cpp
-  ${SRC}/basis_data.cpp
-  ${SRC}/simulation/dimension.cpp
-  ${SRC}/simulation/simulation_base.cpp
-  ${SRC}/simulation/simulation_1d.cpp
-  ${SRC}/simulation/simulation_2d.cpp
-  ${SRC}/simulation/simulation_3d.cpp)
+target_link_libraries(ads PRIVATE project_options)
+target_include_directories(ads PUBLIC ${PROJECT_SOURCE_DIR}/src)
 
 # --------------------------------------------------------------------
 # Libraries
 # --------------------------------------------------------------------
-set(ads_LIBS)
 
 include(libs/CMakeLists.txt)
 
 # Numerical libraries
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
-
-list(APPEND ads_LIBS ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
-
-# MUMPS
-if (USE_MUMPS)
-  set(MUMPS_LIBRARIES "dmumps")
-  list(APPEND ads_LIBS ${MUMPS_LIBRARIES})
-  find_package(MPI)
-  include_directories(SYSTEM ${MPI_CXX_INCLUDE_DIRS})
-  list(APPEND ads_LIBS ${MPI_CXX_LIBRARIES})
-endif()
+target_link_libraries(ads PUBLIC ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 
 # Boost
 find_package(Boost REQUIRED)
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
+target_link_libraries(ads PUBLIC Boost::boost)
+
+# MUMPS
+if (USE_MUMPS)
+  find_package(MUMPS)
+  target_link_libraries(ads PUBLIC MUMPS::MUMPS)
+endif()
 
 # Galois
 if (USE_GALOIS)
   find_package(Galois 6.0 REQUIRED)
-  list(APPEND ads_LIBS Galois::shmem)
-  list(APPEND ads_SRC ${SRC}/executor/galois.cpp)
+  target_link_libraries(ads PUBLIC Galois::shmem)
+  target_sources(ads PRIVATE src/ads/executor/galois.cpp)
 endif()
 
-# Target library definition
-add_library(ads STATIC ${ads_SRC})
-target_link_libraries(ads ${ads_LIBS})
 
 # --------------------------------------------------------------------
 # Tests
@@ -97,7 +91,7 @@ endif()
 
 function(define_problem name)
   add_executable(${name} ${ARGN})
-  target_link_libraries(${name} ads clara::clara)
+  target_link_libraries(${name} PRIVATE ads project_options)
 endfunction()
 
 if (NOT SKIP_PROBLEMS)
@@ -163,9 +157,11 @@ if (NOT SKIP_PROBLEMS)
     define_problem(cg
       src/problems/cg/main.cpp
       src/problems/cg/shishkin.cpp)
+    target_link_libraries(cg PRIVATE clara::clara)
 
     define_problem(maxwell
       src/problems/maxwell/main.cpp)
+    target_link_libraries(maxwell PRIVATE clara::clara)
 
     define_problem(error
       src/tools/error.cpp)
