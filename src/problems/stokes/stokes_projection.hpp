@@ -157,7 +157,7 @@ namespace ads {
     struct prob_cavity_flow {
 
         double Re;
-        double navier_stokes;
+        bool navier_stokes;
 
         value_type exact_p(point_type, double)  {
             return {};

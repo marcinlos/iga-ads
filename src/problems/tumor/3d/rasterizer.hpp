@@ -22,7 +22,9 @@ public:
 
         auto d = b - a;
 
-        int nx = abs(d.x) * sx, ny = abs(d.y) * sy, nz = abs(d.z) * sz;
+        int nx = static_cast<int>(abs(d.x) * sx);
+        int ny = static_cast<int>(abs(d.y) * sy);
+        int nz = static_cast<int>(abs(d.z) * sz);
         int nsteps = max(nx, max(ny, nz));
 
         point_type step = d / nsteps;

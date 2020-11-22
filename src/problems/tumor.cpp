@@ -24,7 +24,7 @@ sim_params parse_params(char* args[], int idx) {
     int p = next_int();
     int elems = next_int();
     int nsteps = next_int();
-    float dt = next_float();
+    double dt = next_float();
     int plot_every = next_int();
 
     // tumor parameters

@@ -127,7 +127,7 @@ void eval_basis_with_derivatives(int i, double x, const basis& b, double** out, 
         out[0][j] = ndu(j, b.degree);
     }
     for (int r = 0; r <= b.degree; ++ r) {
-        double s1 = 0, s2 = 1;
+        int s1 = 0, s2 = 1;
         a(0, 0) = 1;
         for (int k = 1; k <= der; ++ k) {
             double d = 0;
