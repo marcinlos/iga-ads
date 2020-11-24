@@ -1,5 +1,6 @@
 #include <vector>
 #include <tuple>
+#include <optional>
 #include <cassert>
 #include <iostream>
 #include <iomanip>
@@ -10,14 +11,14 @@
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/range/counting_range.hpp>
 
-#include <ads/util.hpp>
-#include <ads/util/iter/product.hpp>
-#include <ads/bspline/bspline.hpp>
-#include <ads/bspline/eval.hpp>
-#include <ads/quad/gauss.hpp>
-#include <ads/lin/tensor.hpp>
-#include <ads/util/function_value.hpp>
-#include <mumps.hpp>
+#include "ads/util.hpp"
+#include "ads/util/iter/product.hpp"
+#include "ads/bspline/bspline.hpp"
+#include "ads/bspline/eval.hpp"
+#include "ads/quad/gauss.hpp"
+#include "ads/lin/tensor.hpp"
+#include "ads/util/function_value.hpp"
+#include "mumps.hpp"
 
 
 namespace ads {
@@ -78,6 +79,9 @@ namespace ads {
         return (1 - t) * s.left + t * s.right;
     }
 
+    auto operator <<(std::ostream& os, interval s) -> std::ostream& {
+        return os << "[" << s.left << ", " << s.right << "]";
+    }
 
     class interval_mesh {
     private:
@@ -88,21 +92,53 @@ namespace ads {
         using element_index    = simple_index;
         using element_iterator = simple_index_iterator;
         using element_range    = simple_index_range;
+        using facet_index      = simple_index;
+        using facet_range      = simple_index_range;
 
-        interval_mesh(partition points) noexcept
+        explicit interval_mesh(partition points) noexcept
         : points_{std::move(points)}
         { }
 
         auto elements() const noexcept -> element_range {
-            const auto elem_count = points_.size() - 1;
-            return range(0, elem_count);
+            return range(0, element_count());
+        }
+
+        auto element_count() const noexcept -> int {
+            return points_.size() - 1;
         }
 
         auto subinterval(element_index e) const noexcept -> interval {
             return ads::subinterval(points_, e);
         }
+
+        struct point_data {
+            point  position;
+            double normal;
+        };
+
+        auto facets() const noexcept -> facet_range {
+            const auto facet_count = points_.size();
+            return range(0, facet_count);
+        }
+
+        auto boundary_facets() const noexcept -> std::array<facet_index, 2> {
+            const auto last = points_.size() - 1;
+            return {0, last};
+        }
+
+        auto facet(facet_index i) const noexcept -> point_data {
+            assert(i < as_signed(points_.size()) && "Point index out of range");
+            // all points are positive except for the first one
+            const auto normal = i > 0 ? 1.0 : -1.0;
+            return {points_[i], normal};
+        }
+
     };
 
+    enum class orientation {
+        horizontal,
+        vertical
+    };
 
     class regular_mesh {
     private:
@@ -114,9 +150,16 @@ namespace ads {
         using element_index    = index_types::index;
         using element_iterator = index_types::index_iterator;
         using element_range    = index_types::index_range;
-        using facet_index      = void;
-        using facet_iterator   = void;
-        using facet_range      = void;
+
+        struct edge_index {
+            simple_index ix;
+            simple_index iy;
+            orientation  dir;
+        };
+
+        using facet_index      = edge_index;
+        // using facet_iterator   = void;
+        // using facet_range      = void;
 
         regular_mesh(partition xs, partition ys) noexcept
         : mesh_x_{std::move(xs)}
@@ -134,23 +177,101 @@ namespace ads {
             interval span_y;
         };
 
+        struct edge_data {
+            interval    span;
+            double      position;
+            orientation direction;
+            point       normal;
+        };
+
         auto element(element_index e) const noexcept -> element_data {
             const auto [ix, iy] = e;
             const auto sx = mesh_x_.subinterval(ix);
             const auto sy = mesh_y_.subinterval(iy);
             return {sx, sy};
         }
+
+        auto facets() const noexcept -> std::vector<edge_index> {
+            auto indices = std::vector<edge_index>{};
+
+            for (auto ix : mesh_x_.elements()) {
+                for (auto iy : mesh_y_.facets()) {
+                    indices.push_back({ix, iy, orientation::horizontal});
+                }
+            }
+            for (auto ix : mesh_x_.facets()) {
+                for (auto iy : mesh_y_.elements()) {
+                    indices.push_back({ix, iy, orientation::vertical});
+                }
+            }
+            return indices;
+        }
+
+        auto boundary_facets() const noexcept -> std::vector<edge_index> {
+            auto indices = std::vector<edge_index>{};
+
+            for (auto iy : mesh_y_.boundary_facets()) {
+                for (auto ix : mesh_x_.elements()) {
+                    indices.push_back({ix, iy, orientation::horizontal});
+                }
+            }
+            for (auto ix : mesh_x_.boundary_facets()) {
+                for (auto iy : mesh_y_.elements()) {
+                    indices.push_back({ix, iy, orientation::vertical});
+                }
+            }
+            return indices;
+        }
+
+        auto facet(edge_index e) const noexcept -> edge_data {
+            const auto [ix, iy, dir] = e;
+
+            if (dir == orientation::horizontal) {
+                const auto [y, ny] = mesh_y_.facet(iy);
+                const auto span    = mesh_x_.subinterval(ix);
+                const auto normal  = point{0, ny};
+                return {span, y, dir, normal};
+            } else {
+                assert(dir == orientation::vertical && "Invalid edge orientation");
+                const auto [x, nx] = mesh_x_.facet(ix);
+                const auto span    = mesh_y_.subinterval(iy);
+                const auto normal  = point{nx, 0};
+                return {span, x, dir, normal};
+            }
+        }
+
     };
+
+    auto operator <<(std::ostream& os, const regular_mesh::edge_index& edge) -> std::ostream& {
+        const auto [ix, iy, dir] = edge;
+        const char* sign = dir == orientation::horizontal ? "-" : "|";
+        return os << "(" << ix << ", " << iy << ")[" << sign << "]";
+    }
 
 
     using local_dof  = simple_index;
     using global_dof = simple_index;
 
 
+    auto spans_for_elements(const bspline::basis& b) -> std::vector<int> {
+        auto spans = std::vector<int>{};
+        spans.reserve(b.elements());
+
+        for (int i = 0; i + 1 < as_signed(b.knot_size()); ++ i) {
+            if (b.knot[i] != b.knot[i + 1]) {
+                spans.push_back(i);
+            }
+        }
+        assert(as_signed(spans.size()) == b.elements());
+        return spans;
+    }
+
+
     class bspline_space {
     private:
         bspline::basis   basis_;
         std::vector<int> first_dofs_;
+        std::vector<int> spans_;
 
     public:
         using point         = double;
@@ -163,6 +284,7 @@ namespace ads {
         explicit bspline_space(bspline::basis basis)
         : basis_{std::move(basis)}
         , first_dofs_{first_nonzero_dofs(basis_)}
+        , spans_{spans_for_elements(basis_)}
         { }
 
         auto basis() const noexcept -> const bspline::basis& {
@@ -185,6 +307,13 @@ namespace ads {
             return dofs_per_element();
         }
 
+        auto facet_dof_count(facet_index f) const noexcept -> int {
+            auto dofs = dofs_on_facet(f);
+            using std::begin;
+            using std::end;
+            return std::distance(begin(dofs), end(dofs));
+        }
+
         auto dofs() const noexcept -> dof_range {
             return range(0, dof_count());
         }
@@ -197,6 +326,33 @@ namespace ads {
         auto local_index(dof_index dof, element_index e) const noexcept -> local_dof {
             const auto first = first_dofs_[e];
             return dof - first;
+        }
+
+        auto first_dof(element_index e) const noexcept -> global_dof {
+            return first_dofs_[e];
+        }
+
+        auto last_dof(element_index e) const noexcept -> global_dof {
+            return first_dof(e) + dofs_per_element() - 1;
+        }
+
+        auto dofs_on_facet(facet_index f) const noexcept -> dof_range {
+            const auto last_element  = basis_.elements() - 1;
+            const auto elem_left     = std::max(f - 1, 0);
+            const auto elem_right    = std::min(f, last_element);
+            const auto first         = first_dofs_[elem_left];
+            const auto one_past_last = first_dofs_[elem_right] + dofs_per_element();
+            return range(first, one_past_last);
+        }
+
+        auto facet_local_index(dof_index dof, facet_index f) const noexcept -> local_dof {
+            const auto elem_left = std::max(f - 1, 0);
+            const auto first     = first_dofs_[elem_left];
+            return dof - first;
+        }
+
+        auto span(element_index e) const noexcept -> int {
+            return spans_[e];
         }
     };
 
@@ -246,6 +402,142 @@ namespace ads {
             eval_basis_with_derivatives(span, x, space.basis(), buffer, ders, context);
         }
         return values;
+    }
+
+    class bspline_basis_values_on_vertex {
+    private:
+        std::optional<bspline_basis_values> left_;
+        std::optional<bspline_basis_values> right_;
+        local_dof left_last_;
+        local_dof right_first_;
+
+    public:
+        bspline_basis_values_on_vertex(std::optional<bspline_basis_values> left,
+                                       std::optional<bspline_basis_values> right,
+                                       local_dof left_last, local_dof right_first) noexcept
+        : left_{std::move(left)}
+        , right_{std::move(right)}
+        , left_last_{left_last}
+        , right_first_{right_first} {
+            assert((left_ || right_) && "Neither left nor right adjacent element data specified");
+        }
+
+        auto operator ()(local_dof i, int der) const noexcept -> double {
+            if (left_ && i <= left_last_) {
+                return left(i, der);
+            } else { // right_ has value
+                return right(i, der);
+            }
+        }
+
+        auto left(local_dof i, int der) const noexcept -> double {
+            if (left_ && i <= left_last_) {
+                return (*left_)(0, i, der);
+            } else {
+                return 0.0;
+            }
+        }
+
+        auto right(local_dof i, int der) const noexcept -> double {
+            if (right_ && i >= right_first_) {
+                const auto idx = i - right_first_;
+                return (*right_)(0, idx, der);
+            } else {
+                return 0.0;
+            }
+        }
+
+        auto jump(local_dof i, int der, double normal) const noexcept -> double {
+            const auto left_val  = left(i, der);
+            const auto right_val = right(i, der);
+            return normal * (left_val - right_val);
+        }
+
+        auto average(local_dof i, int der) const noexcept -> double {
+            const auto left_val  = left(i, der);
+            const auto right_val = right(i, der);
+            const auto sum       = left_val + right_val;
+            if (left_ && right_) {
+                return sum / 2;
+            } else {
+                // one of these is zero
+                return sum;
+            }
+        }
+    };
+
+
+    auto evaluate_basis_at_point(double x, const bspline_space& space, int ders, int span) -> bspline_basis_values {
+        const auto dof_count = space.dofs_per_element();
+
+        auto values  = bspline_basis_values{1, dof_count, ders};
+        auto context = bspline::eval_ctx{space.degree()};
+
+        const auto buffer = values.point_buffer(0);
+
+        eval_basis_with_derivatives(span, x, space.basis(), buffer, ders, context);
+        std::cout << "x = " << x << ", span = " << span << std::endl;
+        for (int i = 0; i < dof_count; ++ i) {
+            std::cout << "values(0, " << i << ", 0) = " << values(0, i, 0) << std::endl;
+        }
+
+        return values;
+    }
+
+    auto element_left(bspline_space::facet_index f, const bspline::basis&) -> std::optional<int> {
+        return f > 0 ? f - 1 : std::optional<int>{};
+    }
+
+    auto element_right(bspline_space::facet_index f, const bspline::basis& b) -> std::optional<int> {
+        return f < b.elements() ? f : std::optional<int>{};
+    }
+
+    auto evaluate_basis(bspline_space::facet_index f, const bspline_space& space, int ders)
+                        -> bspline_basis_values_on_vertex {
+        const auto& basis = space.basis();
+        const auto  x     = basis.points[f];
+
+        const auto maybe_elem_left  = element_left(f, space.basis());
+        const auto maybe_elem_right = element_right(f, space.basis());
+
+        if (maybe_elem_left && maybe_elem_right) {
+            const auto elem_left       = maybe_elem_left.value();
+            const auto elem_right      = maybe_elem_right.value();
+            const auto span_left       = space.span(elem_left);
+            const auto span_right      = space.span(elem_right);
+            const auto left_last       = space.last_dof(elem_left);
+            const auto right_first     = space.first_dof(elem_right);
+            const auto left_last_loc   = space.facet_local_index(left_last, f);
+            const auto right_first_loc = space.facet_local_index(right_first, f);
+
+            auto vals_left  = evaluate_basis_at_point(x, space, ders, span_left);
+            auto vals_right = evaluate_basis_at_point(x, space, ders, span_right);
+
+            return {std::move(vals_left), std::move(vals_right), left_last_loc, right_first_loc};
+
+        } else if (maybe_elem_left) {
+            const auto elem_left     = maybe_elem_left.value();
+            const auto span_left     = space.span(elem_left);
+            const auto left_last     = space.last_dof(elem_left);
+            const auto left_last_loc = space.facet_local_index(left_last, f);
+
+            auto vals_left = evaluate_basis_at_point(x, space, ders, span_left);
+
+            return {std::move(vals_left), {}, left_last_loc, {}};
+
+        } else if (maybe_elem_right) {
+            const auto elem_right      = maybe_elem_right.value();
+            const auto span_right      = space.span(elem_right);
+            const auto right_first     = space.first_dof(elem_right);
+            const auto right_first_loc = space.facet_local_index(right_first, f);
+
+            auto vals_right = evaluate_basis_at_point(x, space, ders, span_right);
+
+            return {{}, std::move(vals_right), {}, right_first_loc};
+
+        } else {
+            assert(false && "No elements adjacent to specified face");
+        }
     }
 
 
@@ -309,7 +601,8 @@ namespace ads {
         using point_iterator = index_types::index_iterator;
         using point_range    = index_types::index_range;
 
-        tensor_quadrature_points(interval_quadrature_points ptx, interval_quadrature_points pty)
+        tensor_quadrature_points(interval_quadrature_points ptx,
+                                 interval_quadrature_points pty) noexcept
         : ptx_{std::move(ptx)}
         , pty_{std::move(pty)}
         { }
@@ -354,6 +647,54 @@ namespace ads {
         }
     };
 
+    class edge_quadrature_points {
+    private:
+        interval_quadrature_points points_;
+        double                     position_;
+        orientation                direction_;
+
+    public:
+        using point          = std::tuple<double, double>;
+        using point_index    = interval_quadrature_points::point_index;
+        using point_iterator = interval_quadrature_points::point_iterator;
+        using point_range    = interval_quadrature_points::point_range;
+
+        edge_quadrature_points(interval_quadrature_points points, double position,
+                               orientation direction) noexcept
+        : points_{std::move(points)}
+        , position_{position}
+        , direction_{direction}
+        { }
+
+        auto indices() const noexcept -> point_range {
+            return points_.indices();
+        }
+
+        auto coords(point_index q) const noexcept -> point {
+            const auto s = points_.coords(q);
+            if (direction_ == orientation::horizontal) {
+                return {s, position_};
+            } else {
+                return {position_, s};
+            }
+        }
+
+        auto weight(point_index q) const noexcept -> double {
+            return points_.weight(q);
+        }
+
+        struct point_data {
+            point  x;
+            double weight;
+        };
+
+        auto data(point_index q) const noexcept -> point_data {
+            const auto x = coords(q);
+            const auto w = weight(q);
+            return {x, w};
+        }
+    };
+
 
     class quadrature {
     private:
@@ -361,9 +702,11 @@ namespace ads {
         int point_count_;
 
     public:
-        using point         = regular_mesh::point;
-        using element_index = regular_mesh::element_index;
-        using point_set     = tensor_quadrature_points;
+        using point          = regular_mesh::point;
+        using element_index  = regular_mesh::element_index;
+        using facet_index    = regular_mesh::facet_index;
+        using point_set      = tensor_quadrature_points;
+        using edge_point_set = edge_quadrature_points;
 
         quadrature(regular_mesh* mesh, int point_count)
         : mesh_{mesh}
@@ -377,6 +720,13 @@ namespace ads {
             auto pty = data_for_interval(element.span_y);
 
             return {std::move(ptx), std::move(pty)};
+        }
+
+        auto coordinates(facet_index f) const -> edge_point_set {
+            const auto edge = mesh_->facet(f);
+            auto pts = data_for_interval(edge.span);
+
+            return {std::move(pts), edge.position, edge.direction};
         }
 
     private:
@@ -453,6 +803,21 @@ namespace ads {
             return nx * ny;
         }
 
+        auto facet_dof_count(facet_index f) const noexcept -> int {
+            const auto [fx, fy, dir] = f;
+
+            if (dir == orientation::horizontal) {
+                const auto ndofs_x = space_x_.dofs_per_element();
+                const auto ndofs_y = space_y_.facet_dof_count(fy);
+                return ndofs_x * ndofs_y;
+            } else {
+                assert(dir == orientation::vertical && "Invalid edge orientation");
+                const auto ndofs_x = space_x_.facet_dof_count(fx);
+                const auto ndofs_y = space_y_.dofs_per_element();
+                return ndofs_x * ndofs_y;
+            }
+        }
+
         auto dofs() const noexcept -> dof_range {
             const auto dofs_x = space_x_.dofs();
             const auto dofs_y = space_y_.dofs();
@@ -468,6 +833,21 @@ namespace ads {
             return util::product_range<dof_index>(dofs_x, dofs_y);
         }
 
+        auto dofs_on_facet(facet_index f) const noexcept -> dof_range {
+            const auto [ix, iy, dir] = f;
+
+            if (dir == orientation::horizontal) {
+                const auto dofs_x = space_x_.dofs(ix);
+                const auto dofs_y = space_y_.dofs_on_facet(iy);
+                return util::product_range<dof_index>(dofs_x, dofs_y);
+            } else {
+                assert(dir == orientation::vertical && "Invalid edge orientation");
+                const auto dofs_x = space_x_.dofs_on_facet(ix);
+                const auto dofs_y = space_y_.dofs(iy);
+                return util::product_range<dof_index>(dofs_x, dofs_y);
+            }
+        }
+
         auto local_index(dof_index dof, element_index e) const noexcept -> local_dof {
             const auto idx = index_on_element(dof, e);
 
@@ -475,6 +855,23 @@ namespace ads {
             const auto ndofs_y = space_y_.dofs_per_element();
 
             return linearized(idx, {ndofs_x, ndofs_y});
+        }
+
+        auto facet_local_index(dof_index dof, facet_index f) const noexcept -> local_dof {
+            const auto idx = index_on_facet(dof, f);
+
+            const auto [fx, fy, dir] = f;
+
+            if (dir == orientation::horizontal) {
+                const auto ndofs_x = space_x_.dofs_per_element();
+                const auto ndofs_y = space_y_.facet_dof_count(fy);
+                return linearized(idx, {ndofs_x, ndofs_y});
+            } else {
+                assert(dir == orientation::vertical && "Invalid edge orientation");
+                const auto ndofs_x = space_x_.facet_dof_count(fx);
+                const auto ndofs_y = space_y_.dofs_per_element();
+                return linearized(idx, {ndofs_x, ndofs_y});
+            }
         }
 
         auto global_index(dof_index dof) const noexcept -> global_dof {
@@ -539,6 +936,22 @@ namespace ads {
             const auto iy = space_y_.local_index(dy, ey);
 
             return {ix, iy};
+        }
+
+        auto index_on_facet(dof_index dof, facet_index f) const noexcept -> dof_index {
+            const auto [fx, fy, dir] = f;
+            const auto [dx, dy]      = dof;
+
+            if (dir == orientation::horizontal) {
+                const auto ix = space_x_.local_index(dx, fx);
+                const auto iy = space_y_.facet_local_index(dy, fy);
+                return {ix, iy};
+            } else {
+                assert(dir == orientation::vertical && "Invalid edge orientation");
+                const auto ix = space_x_.facet_local_index(dx, fx);
+                const auto iy = space_y_.local_index(dy, fy);
+                return {ix, iy};
+            }
         }
 
         auto linearized(dof_index dof, std::array<int, 2> bounds) const noexcept -> simple_index {
@@ -620,15 +1033,21 @@ namespace ads {
 }
 
 int main() {
-    auto elems = 64;
+    auto elems = 5;
     auto p     = 3;
-    auto c     = 1;
+    auto c     = -1;
 
     auto xs = ads::evenly_spaced(0.0, 1.0, elems);
-    auto ys = ads::evenly_spaced(0.0, 1.0, elems);
+    auto ys = ads::evenly_spaced(0.0, 5.0, elems);
 
     auto bx = ads::make_bspline_basis(xs, p, c);
     auto by = ads::make_bspline_basis(ys, p, c);
+
+
+    auto spans = ads::spans_for_elements(bx);
+    for (int i = 0; i < ads::as_signed(spans.size()); ++ i) {
+        std::cout << "element " << i << "  -> span " << spans[i] << std::endl;
+    }
 
     auto mesh = ads::regular_mesh{xs, ys};
     auto space = ads::space{&mesh, bx, by};
@@ -645,7 +1064,61 @@ int main() {
         return std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count();
     };
 
+    const auto& xspace = space.space_x();
+    auto xmesh = ads::interval_mesh{xs};
+
+    for (auto f : xmesh.facets()) {
+        auto vals = evaluate_basis(f, xspace, 1);
+        auto [x, normal] = xmesh.facet(f);
+        std::cout << "Point " << x << ", n = " << normal << std::endl;
+        for (auto dof : xspace.dofs_on_facet(f)) {
+            auto i      = xspace.facet_local_index(dof, f);
+            auto val    = vals(i, 0);
+            auto left   = vals.left(i, 0);
+            auto right  = vals.right(i, 0);
+            auto avg    = vals.average(i, 0);
+            auto jump   = vals.jump(i, 0, normal);
+            auto dleft  = vals.left(i, 1);
+            auto dright = vals.right(i, 1);
+            auto dval   = vals(i, 1);
+            auto davg   = vals.average(i, 1);
+            auto djump  = vals.jump(i, 1, normal);
+            std::cout << "  DOF " << dof << " (local: " << i << ")" <<std::endl;
+            std::cout << "    val =   " << std::setw(5) << val << "    " << dval << std::endl;
+            std::cout << "    left =  " << std::setw(5) << left << "    " << dleft << std::endl;
+            std::cout << "    right = " << std::setw(5) << right << "    " << dright << std::endl;
+            std::cout << "    avg =   " << std::setw(5) << avg << "    " << davg << std::endl;
+            std::cout << "    jump =  " << std::setw(5) << jump << "    " << djump << std::endl;
+        }
+    }
+
+    // for (auto f : mesh.boundary_facets()) {
+    // for (auto f : mesh.facets()) {
+        // std::cout << "Facet " << f << " :  ";
+        // auto facet = mesh.facet(f);
+        // auto [x, y] = facet.normal;
+        // if (facet.direction == ads::orientation::horizontal) {
+        //     std::cout <<  facet.span << " x {" << facet.position << "}";
+        // } else {
+        //     std::cout << "{" << facet.position << "} x " << facet.span;
+        // }
+        // std::cout << ",  n = (" << x << ", " << y << ") ";
+        // std::cout << ", dofs: " << space.facet_dof_count(f) << std::endl;
+        // for (auto [ix, iy] : space.dofs_on_facet(f)) {
+        //     std::cout << "   (" << ix << ", " << iy << ") -> " << space.facet_local_index({ix,iy}, f) <<  std::endl;
+        // }
+        // std::cout << std::endl;
+        // auto points = quad.coordinates(f);
+        // for (auto q : points.indices()) {
+        //     auto [X, w] = points.data(q);
+        //     auto [x, y] = X;
+        //     std::cout << "  " << q << "  -> (" << x << ", " << y << "), w = " << w << std::endl;
+        // }
+    // }
+
     auto t_before_matrix = std::chrono::steady_clock::now();
+
+    // auto matrix = std::unordered_map<ads::index_types::index, double>{};
 
     for (auto e : mesh.elements()) {
         auto points = quad.coordinates(e);
@@ -678,10 +1151,52 @@ int main() {
                 auto J    = space.global_index(j);
 
                 problem.add(J + 1, I + 1, M(jloc, iloc));
+                // matrix[{J,I}] += M(jloc, iloc);
             }
         }
     }
     auto t_after_matrix = std::chrono::steady_clock::now();
+
+    auto t_before_boundary = std::chrono::steady_clock::now();
+
+    auto s = 0.0;
+    for (auto f : mesh.facets()) {
+        auto facet = mesh.facet(f);
+        auto [nx, ny] = facet.normal;
+
+        auto points = quad.coordinates(f);
+
+        auto n = space.facet_dof_count(f);
+        auto M = ads::lin::tensor<double, 2>{{n, n}};
+
+        for (auto q : points.indices()) {
+            auto [x, w] = points.data(q);
+
+            for (auto i : space.dofs_on_facet(f)) {
+                for (auto j : space.dofs_on_facet(f)) {
+                    s += (nx*nx + ny*ny) * w;
+                }
+            }
+        }
+
+        for (auto i : space.dofs_on_facet(f)) {
+            auto iloc = space.facet_local_index(i, f);
+            auto I    = space.global_index(i);
+            for (auto j : space.dofs_on_facet(f)) {
+                auto jloc = space.facet_local_index(j, f);
+                auto J    = space.global_index(j);
+
+                auto val = M(jloc, iloc);
+                if (val != 0.0) {
+                    // problem.add(J + 1, I + 1, M(jloc, iloc));
+                    problem.add(J + 1, I + 1, val);
+                }
+            }
+        }
+    }
+
+    std::cout << "s = " << s << std::endl;
+    auto t_after_boundary = std::chrono::steady_clock::now();
 
     std::cout << "Non-zeros: " << problem.nonzero_entries() << std::endl;
     std::cout << "Computing RHS" << std::endl;
@@ -755,32 +1270,10 @@ int main() {
 
     std::cout << "error = " << err << std::endl;
     std::cout << "Matrix: " << std::setw(6) << diff(t_before_matrix, t_after_matrix) << " ms" << std::endl;
+    std::cout << "Bndry : " << std::setw(6) << diff(t_before_boundary, t_after_boundary) << " ms" << std::endl;
     std::cout << "RHS:    " << std::setw(6) << diff(t_before_rhs, t_after_rhs)       << " ms" << std::endl;
     std::cout << "Solver: " << std::setw(6) << diff(t_before_solver, t_after_solver) << " ms" << std::endl;
     std::cout << "Eval:   " << std::setw(6) << diff(t_before_eval, t_after_eval)     << " ms" << std::endl;
-
-
-    // auto quad = gauss_quad(space);
-
-    // for (auto e : mesh.elements()) {
-    //     auto eval = space.evaluator(e, quad.points(e), ders=2);
-    //     auto J = mesh.jacobian(e);
-    //     for (auto q : quad.points(e)) {
-    //         auto w = quad.weight(e, q);
-    //         for (auto i : space.dofs(e)) {
-    //             for (auto j : space.dofs(e)) {
-    //                 auto u = eval(j, q);
-    //                 auto v = eval(i, q);
-    //                 auto val = u.dx * v.dx + u.dy * v.dy;
-
-    //                 // possibly...
-    //                 auto ii = space.index(i);
-    //                 auto jj = space.index(j);
-    //                 M(ii, jj) += val * w * J;
-    //             }
-    //         }
-    //     }
-    // }
 
     // for (auto f : mesh.facets()) {
     //     auto eval = space.evaluator(f, quad.points(f), ders=2);
