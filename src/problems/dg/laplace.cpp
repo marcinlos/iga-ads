@@ -3,6 +3,7 @@
 #include <optional>
 #include <cassert>
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <algorithm>
 #include <type_traits>
@@ -476,10 +477,6 @@ namespace ads {
         const auto buffer = values.point_buffer(0);
 
         eval_basis_with_derivatives(span, x, space.basis(), buffer, ders, context);
-        std::cout << "x = " << x << ", span = " << span << std::endl;
-        for (int i = 0; i < dof_count; ++ i) {
-            std::cout << "values(0, " << i << ", 0) = " << values(0, i, 0) << std::endl;
-        }
 
         return values;
     }
@@ -525,7 +522,8 @@ namespace ads {
 
             return {std::move(vals_left), {}, left_last_loc, {}};
 
-        } else if (maybe_elem_right) {
+        } else { // maybe_elem_right
+            assert(maybe_elem_right && "No elements adjacent to specified face");
             const auto elem_right      = maybe_elem_right.value();
             const auto span_right      = space.span(elem_right);
             const auto right_first     = space.first_dof(elem_right);
@@ -534,9 +532,6 @@ namespace ads {
             auto vals_right = evaluate_basis_at_point(x, space, ders, span_right);
 
             return {{}, std::move(vals_right), {}, right_first_loc};
-
-        } else {
-            assert(false && "No elements adjacent to specified face");
         }
     }
 
@@ -666,6 +661,14 @@ namespace ads {
         , direction_{direction}
         { }
 
+        auto points() const noexcept -> const std::vector<double>& {
+            return points_.points();
+        }
+
+        auto position() const noexcept -> double {
+            return position_;
+        }
+
         auto indices() const noexcept -> point_range {
             return points_.indices();
         }
@@ -761,6 +764,7 @@ namespace ads {
         bspline_space space_y_;
 
         class evaluator;
+        class edge_evaluator;
 
     public:
         using point         = regular_mesh::point;
@@ -889,6 +893,20 @@ namespace ads {
             return evaluator{this, e, ders, std::move(data_x), std::move(data_y)};
         }
 
+        auto dof_evaluator(facet_index f, const edge_quadrature_points& points, int ders) const -> edge_evaluator {
+            const auto [fx, fy, dir] = f;
+            if (dir == orientation::horizontal) {
+                auto data_x = evaluate_basis(points.points(), space_x_, ders);
+                auto data_y = evaluate_basis(fy, space_y_, ders);
+                return edge_evaluator{this, f, ders, std::move(data_x), std::move(data_y)};
+            } else {
+                assert(dir == orientation::vertical && "Invalid edge orientation");
+                auto data_x = evaluate_basis(fx, space_x_, ders);
+                auto data_y = evaluate_basis(points.points(), space_y_, ders);
+                return edge_evaluator{this, f, ders, std::move(data_y), std::move(data_x)};
+            }
+        }
+
     private:
 
         class evaluator {
@@ -925,6 +943,55 @@ namespace ads {
                 const auto dy =  Bx * dBy;
 
                 return {v, dx, dy};
+            }
+        };
+
+        class edge_evaluator {
+        private:
+            const space*                   space_;
+            facet_index                    facet_;
+            int                            derivatives_;
+            bspline_basis_values           vals_interval_;
+            bspline_basis_values_on_vertex vals_point_;
+
+        public:
+            using point_index = edge_quadrature_points::point_index;
+
+            edge_evaluator(const space* space, facet_index facet, int derivatives,
+                           bspline_basis_values vals_interval,
+                           bspline_basis_values_on_vertex vals_point) noexcept
+            : space_{space}
+            , facet_{facet}
+            , derivatives_{derivatives}
+            , vals_interval_{std::move(vals_interval)}
+            , vals_point_{std::move(vals_point)} { }
+
+            auto operator ()(dof_index dof, point_index q) const noexcept -> value_type {
+                const auto [ix, iy] = space_->index_on_facet(dof, facet_);
+
+                if (facet_.dir == orientation::horizontal) {
+                    const auto  Bx = vals_interval_(q, ix, 0);
+                    const auto dBx = vals_interval_(q, ix, 1);
+                    const auto  By = vals_point_(iy, 0);
+                    const auto dBy = vals_point_(iy, 1);
+
+                    const auto v  =  Bx *  By;
+                    const auto dx = dBx *  By;
+                    const auto dy =  Bx * dBy;
+
+                    return {v, dx, dy};
+                } else {
+                    const auto  Bx = vals_point_(ix, 0);
+                    const auto dBx = vals_point_(ix, 1);
+                    const auto  By = vals_interval_(q, iy, 0);
+                    const auto dBy = vals_interval_(q, iy, 1);
+
+                    const auto v  =  Bx *  By;
+                    const auto dx = dBx *  By;
+                    const auto dy =  Bx * dBy;
+
+                    return {v, dx, dy};
+                }
             }
         };
 
@@ -1033,21 +1100,23 @@ namespace ads {
 }
 
 int main() {
-    auto elems = 5;
+    auto elems = 128;
     auto p     = 3;
-    auto c     = -1;
+    auto c     = 1;
+    auto h     = 1.0 / elems;
+    auto eta   = 1000000.0 / h;
 
     auto xs = ads::evenly_spaced(0.0, 1.0, elems);
-    auto ys = ads::evenly_spaced(0.0, 5.0, elems);
+    auto ys = ads::evenly_spaced(0.0, 1.0, elems);
 
     auto bx = ads::make_bspline_basis(xs, p, c);
     auto by = ads::make_bspline_basis(ys, p, c);
 
 
-    auto spans = ads::spans_for_elements(bx);
-    for (int i = 0; i < ads::as_signed(spans.size()); ++ i) {
-        std::cout << "element " << i << "  -> span " << spans[i] << std::endl;
-    }
+    // auto spans = ads::spans_for_elements(bx);
+    // for (int i = 0; i < ads::as_signed(spans.size()); ++ i) {
+    //     std::cout << "element " << i << "  -> span " << spans[i] << std::endl;
+    // }
 
     auto mesh = ads::regular_mesh{xs, ys};
     auto space = ads::space{&mesh, bx, by};
@@ -1064,33 +1133,33 @@ int main() {
         return std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count();
     };
 
-    const auto& xspace = space.space_x();
-    auto xmesh = ads::interval_mesh{xs};
+    // const auto& xspace = space.space_x();
+    // auto xmesh = ads::interval_mesh{xs};
 
-    for (auto f : xmesh.facets()) {
-        auto vals = evaluate_basis(f, xspace, 1);
-        auto [x, normal] = xmesh.facet(f);
-        std::cout << "Point " << x << ", n = " << normal << std::endl;
-        for (auto dof : xspace.dofs_on_facet(f)) {
-            auto i      = xspace.facet_local_index(dof, f);
-            auto val    = vals(i, 0);
-            auto left   = vals.left(i, 0);
-            auto right  = vals.right(i, 0);
-            auto avg    = vals.average(i, 0);
-            auto jump   = vals.jump(i, 0, normal);
-            auto dleft  = vals.left(i, 1);
-            auto dright = vals.right(i, 1);
-            auto dval   = vals(i, 1);
-            auto davg   = vals.average(i, 1);
-            auto djump  = vals.jump(i, 1, normal);
-            std::cout << "  DOF " << dof << " (local: " << i << ")" <<std::endl;
-            std::cout << "    val =   " << std::setw(5) << val << "    " << dval << std::endl;
-            std::cout << "    left =  " << std::setw(5) << left << "    " << dleft << std::endl;
-            std::cout << "    right = " << std::setw(5) << right << "    " << dright << std::endl;
-            std::cout << "    avg =   " << std::setw(5) << avg << "    " << davg << std::endl;
-            std::cout << "    jump =  " << std::setw(5) << jump << "    " << djump << std::endl;
-        }
-    }
+    // for (auto f : xmesh.facets()) {
+    //     auto vals = evaluate_basis(f, xspace, 1);
+    //     auto [x, normal] = xmesh.facet(f);
+    //     std::cout << "Point " << x << ", n = " << normal << std::endl;
+    //     for (auto dof : xspace.dofs_on_facet(f)) {
+    //         auto i      = xspace.facet_local_index(dof, f);
+    //         auto val    = vals(i, 0);
+    //         auto left   = vals.left(i, 0);
+    //         auto right  = vals.right(i, 0);
+    //         auto avg    = vals.average(i, 0);
+    //         auto jump   = vals.jump(i, 0, normal);
+    //         auto dleft  = vals.left(i, 1);
+    //         auto dright = vals.right(i, 1);
+    //         auto dval   = vals(i, 1);
+    //         auto davg   = vals.average(i, 1);
+    //         auto djump  = vals.jump(i, 1, normal);
+    //         std::cout << "  DOF " << dof << " (local: " << i << ")" <<std::endl;
+    //         std::cout << "    val =   " << std::setw(5) << val << "    " << dval << std::endl;
+    //         std::cout << "    left =  " << std::setw(5) << left << "    " << dleft << std::endl;
+    //         std::cout << "    right = " << std::setw(5) << right << "    " << dright << std::endl;
+    //         std::cout << "    avg =   " << std::setw(5) << avg << "    " << davg << std::endl;
+    //         std::cout << "    jump =  " << std::setw(5) << jump << "    " << djump << std::endl;
+    //     }
+    // }
 
     // for (auto f : mesh.boundary_facets()) {
     // for (auto f : mesh.facets()) {
@@ -1122,7 +1191,7 @@ int main() {
 
     for (auto e : mesh.elements()) {
         auto points = quad.coordinates(e);
-        auto eval   = space.dof_evaluator(e, points, 2);
+        auto eval   = space.dof_evaluator(e, points, 1);
 
         auto n = space.dof_count(e);
         auto M = ads::lin::tensor<double, 2>{{n, n}};
@@ -1137,8 +1206,10 @@ int main() {
 
                     auto iloc = space.local_index(i, e);
                     auto jloc = space.local_index(j, e);
-                    // M(jloc, iloc) += (u.dx * v.dx + u.dy * v.dy) * w;
-                    M(jloc, iloc) += u.val * v.val * w;
+
+                    auto form = u.dx * v.dx + u.dy * v.dy;
+
+                    M(jloc, iloc) += form * w;
                 }
             }
         }
@@ -1151,7 +1222,6 @@ int main() {
                 auto J    = space.global_index(j);
 
                 problem.add(J + 1, I + 1, M(jloc, iloc));
-                // matrix[{J,I}] += M(jloc, iloc);
             }
         }
     }
@@ -1159,12 +1229,12 @@ int main() {
 
     auto t_before_boundary = std::chrono::steady_clock::now();
 
-    auto s = 0.0;
-    for (auto f : mesh.facets()) {
+    for (auto f : mesh.boundary_facets()) {
         auto facet = mesh.facet(f);
         auto [nx, ny] = facet.normal;
 
         auto points = quad.coordinates(f);
+        auto eval   = space.dof_evaluator(f, points, 1);
 
         auto n = space.facet_dof_count(f);
         auto M = ads::lin::tensor<double, 2>{{n, n}};
@@ -1173,8 +1243,18 @@ int main() {
             auto [x, w] = points.data(q);
 
             for (auto i : space.dofs_on_facet(f)) {
+                auto u = eval(i, q);
                 for (auto j : space.dofs_on_facet(f)) {
-                    s += (nx*nx + ny*ny) * w;
+                    auto v = eval(j, q);
+
+                    auto iloc = space.facet_local_index(i, f);
+                    auto jloc = space.facet_local_index(j, f);
+
+                    auto form = - (v.dx * nx + v.dy * ny) * u.val
+                                - (u.dx * nx + u.dy * ny) * v.val
+                                + eta * u.val * v.val;
+
+                    M(jloc, iloc) += form * w;
                 }
             }
         }
@@ -1186,29 +1266,43 @@ int main() {
                 auto jloc = space.facet_local_index(j, f);
                 auto J    = space.global_index(j);
 
+                // problem.add(J + 1, I + 1, M(jloc, iloc));
                 auto val = M(jloc, iloc);
                 if (val != 0.0) {
-                    // problem.add(J + 1, I + 1, M(jloc, iloc));
                     problem.add(J + 1, I + 1, val);
                 }
             }
         }
     }
 
-    std::cout << "s = " << s << std::endl;
     auto t_after_boundary = std::chrono::steady_clock::now();
 
     std::cout << "Non-zeros: " << problem.nonzero_entries() << std::endl;
     std::cout << "Computing RHS" << std::endl;
 
-    auto func = [](double x, double y) {
-        return std::sin(M_PI * x) * std::sin(M_PI * y);
+#define SQ(x) ((x)*(x))
+    auto func = []([[maybe_unused]] double x, [[maybe_unused]] double y) {
+        // return 2 * M_PI * M_PI * std::sin(M_PI * x) * std::sin(M_PI * y);
+        // return -2 * M_PI * M_PI * (
+        //         std::cos(2 * M_PI * x) * SQ(std::sin(M_PI * y)) +
+        //         std::cos(2 * M_PI * y) * SQ(std::sin(M_PI * x)));
+        return 0.0;
+    };
+
+    auto g = []([[maybe_unused]] double x, [[maybe_unused]] double y) {
+        // return 1.0;
+        return x*x + y*y;
+    };
+
+    auto sol = [](double x, double y) {
+        return 1 + std::sin(M_PI * x) * std::sin(M_PI * y);
+        // return SQ(std::sin(M_PI * x) * std::sin(M_PI * y));
     };
 
     auto t_before_rhs = std::chrono::steady_clock::now();
     for (auto e : mesh.elements()) {
         auto points = quad.coordinates(e);
-        auto eval   = space.dof_evaluator(e, points, 2);
+        auto eval   = space.dof_evaluator(e, points, 1);
 
         auto n = space.dof_count(e);
         auto M = ads::lin::tensor<double, 1>{{n}};
@@ -1218,10 +1312,12 @@ int main() {
             auto [x, y] = X;
 
             for (auto j : space.dofs(e)) {
-                auto v = eval(j, q);
-
+                auto v    = eval(j, q);
                 auto jloc = space.local_index(j, e);
-                M(jloc) += v.val * func(x, y) * w;
+
+                auto form = v.val * func(x, y);
+
+                M(jloc) += form * w;
             }
         }
         for (auto j : space.dofs(e)) {
@@ -1232,26 +1328,51 @@ int main() {
     }
     auto t_after_rhs = std::chrono::steady_clock::now();
 
+    auto t_before_rhs_bnd = std::chrono::steady_clock::now();
+    for (auto f : mesh.boundary_facets()) {
+        auto facet = mesh.facet(f);
+        auto [nx, ny] = facet.normal;
+
+        auto points = quad.coordinates(f);
+        auto eval   = space.dof_evaluator(f, points, 1);
+
+        auto n = space.facet_dof_count(f);
+        auto M = ads::lin::tensor<double, 1>{{n}};
+
+        for (auto q : points.indices()) {
+            auto [X, w] = points.data(q);
+            auto [x, y] = X;
+            auto gval = g(x, y);
+
+            for (auto j : space.dofs_on_facet(f)) {
+                auto v    = eval(j, q);
+                auto jloc = space.facet_local_index(j, f);
+
+                auto form = - (v.dx * nx + v.dy * ny) * gval
+                            + eta * gval * v.val;
+
+                M(jloc) += form * w;
+            }
+        }
+        for (auto j : space.dofs_on_facet(f)) {
+            auto jloc = space.facet_local_index(j, f);
+            auto J    = space.global_index(j);
+            F.data()[J] += M(jloc);
+        }
+    }
+    auto t_after_rhs_bnd = std::chrono::steady_clock::now();
+
     std::cout << "Solving" << std::endl;
     auto t_before_solver = std::chrono::steady_clock::now();
     solver.solve(problem);
     auto t_after_solver = std::chrono::steady_clock::now();
 
-    std::cout << "Evaluating" << std::endl;
+    std::cout << "Computing error" << std::endl;
 
-    auto t_before_eval = std::chrono::steady_clock::now();
+    auto t_before_err = std::chrono::steady_clock::now();
 
     auto err = 0.0;
-    // for (auto e : mesh.elements()) {
-    //     auto [sx, sy] = mesh.element(e);
-    //     auto x = (sx.left + sx.right) / 2;
-    //     auto y = (sy.left + sy.right) / 2;
 
-    //     auto val = F({x, y});
-    //     auto exact = func(x, y);
-    //     auto d = val - exact;
-    //     err = std::max(err, std::abs(d));
-    // }
     for (auto e : mesh.elements()) {
         auto points = quad.coordinates(e);
         for (auto q : points.indices()) {
@@ -1259,39 +1380,34 @@ int main() {
             auto [x, y] = X;
 
             auto val   = F(X);
-            auto exact = func(x, y);
+            auto exact = sol(x, y);
             auto d = val - exact;
             err += d * d * w;
         }
     }
     err = std::sqrt(err);
 
-    auto t_after_eval = std::chrono::steady_clock::now();
+    auto t_after_err = std::chrono::steady_clock::now();
+
+    auto t_before_output = std::chrono::steady_clock::now();
+    {
+        auto out = std::ofstream{"result.data"};
+        for (auto x : ads::evenly_spaced(0.0, 1.0, 100)) {
+            for (auto y : ads::evenly_spaced(0.0, 1.0, 100)) {
+                auto val = F({x, y});
+                out << x << " " << y << " " << val << std::endl;
+            }
+        }
+    }
+    auto t_after_output = std::chrono::steady_clock::now();
 
     std::cout << "error = " << err << std::endl;
-    std::cout << "Matrix: " << std::setw(6) << diff(t_before_matrix, t_after_matrix) << " ms" << std::endl;
+    std::cout << "Matrix: " << std::setw(6) << diff(t_before_matrix, t_after_matrix)     << " ms" << std::endl;
     std::cout << "Bndry : " << std::setw(6) << diff(t_before_boundary, t_after_boundary) << " ms" << std::endl;
-    std::cout << "RHS:    " << std::setw(6) << diff(t_before_rhs, t_after_rhs)       << " ms" << std::endl;
-    std::cout << "Solver: " << std::setw(6) << diff(t_before_solver, t_after_solver) << " ms" << std::endl;
-    std::cout << "Eval:   " << std::setw(6) << diff(t_before_eval, t_after_eval)     << " ms" << std::endl;
-
-    // for (auto f : mesh.facets()) {
-    //     auto eval = space.evaluator(f, quad.points(f), ders=2);
-    //     auto J = mesh.jacobian(f);
-    //     for (auto q : quad.points(f)) {
-    //         auto w = quad.weight(f, q);
-    //         for (auto i : space.dofs(f)) {
-    //             for (auto j : space.dofs(f)) {
-    //                 auto u = eval(j, q);
-    //                 auto v = eval(i, q);
-
-    //                 // possibly...
-    //                 auto ii = space.index(i);
-    //                 auto jj = space.index(j);
-    //                 M(ii, jj) = h * jump(u).val * jump(v).val;
-    //             }
-    //         }
-    //     }
-    // }
+    std::cout << "RHS:    " << std::setw(6) << diff(t_before_rhs, t_after_rhs)           << " ms" << std::endl;
+    std::cout << "RHS bd: " << std::setw(6) << diff(t_before_rhs_bnd, t_after_rhs_bnd)   << " ms" << std::endl;
+    std::cout << "Solver: " << std::setw(6) << diff(t_before_solver, t_after_solver)     << " ms" << std::endl;
+    std::cout << "Error:  " << std::setw(6) << diff(t_before_err, t_after_err)           << " ms" << std::endl;
+    std::cout << "Output: " << std::setw(6) << diff(t_before_output, t_after_output)     << " ms" << std::endl;
 }
 
