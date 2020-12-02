@@ -63,6 +63,10 @@ target_link_libraries(ads PUBLIC ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 find_package(Boost REQUIRED)
 target_link_libraries(ads PUBLIC Boost::boost)
 
+# fmt
+find_package(fmt REQUIRED)
+target_link_libraries(ads PUBLIC fmt::fmt)
+
 # MUMPS
 if (USE_MUMPS)
   find_package(MUMPS)
