@@ -8,12 +8,13 @@ struct function_value_1d {
     double val;
     double dx;
 
-    function_value_1d(double val, double dx)
+    constexpr function_value_1d(double val, double dx) noexcept
     : val{ val }
     , dx{ dx }
     { }
 
-    function_value_1d(): function_value_1d{ 0, 0 }
+    constexpr function_value_1d() noexcept
+    : function_value_1d{ 0, 0 }
     { }
 
     function_value_1d& operator += (const function_value_1d& v) {

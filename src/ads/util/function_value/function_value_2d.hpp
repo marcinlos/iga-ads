@@ -15,12 +15,13 @@ struct function_value_2d {
     double val;
     double dx, dy;
 
-    function_value_2d(double val, double dx, double dy)
+    constexpr function_value_2d(double val, double dx, double dy) noexcept
     : val{ val }
     , dx{ dx }, dy{ dy }
     { }
 
-    function_value_2d(): function_value_2d{ 0, 0, 0 }
+    constexpr function_value_2d() noexcept
+    : function_value_2d{ 0, 0, 0 }
     { }
 
     function_value_2d& operator += (const function_value_2d& v) {

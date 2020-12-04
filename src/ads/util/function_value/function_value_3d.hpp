@@ -8,12 +8,13 @@ struct function_value_3d {
     double val;
     double dx, dy, dz;
 
-    function_value_3d(double val, double dx, double dy, double dz)
+    constexpr function_value_3d(double val, double dx, double dy, double dz) noexcept
     : val{ val }
     , dx{ dx }, dy{ dy }, dz{ dz }
     { }
 
-    function_value_3d(): function_value_3d{ 0, 0, 0, 0 }
+    constexpr function_value_3d() noexcept
+    : function_value_3d{ 0, 0, 0, 0 }
     { }
 
     function_value_3d& operator += (const function_value_3d& v) {
