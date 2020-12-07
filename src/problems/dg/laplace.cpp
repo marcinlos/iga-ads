@@ -3498,6 +3498,144 @@ public:
     }
 };
 
+class stokes3_type2 : private stokes_base<stokes3_type2> {
+private:
+    using base = stokes_base;
+    friend base;
+
+public:
+    using point = ads::regular_mesh3::point;
+    using base::p, base::vx, base::vy, base::vz, base::fx, base::fy, base::fz;
+
+    auto p(point X) const noexcept -> double {
+        const auto [x, y, z] = X;
+        const auto x2 = x * x;
+        return x2*(2*y - 1)*(2*y - 1)*(x + y - z)*(x + y - z) - 5./54;
+    }
+
+    auto vx(point X) const noexcept -> double {
+        const auto [x, y, z] = X;
+        const auto x2 = x * x;
+        const auto y2 = y * y;
+        const auto z2 = z * z;
+        const auto xm12 = (1 - x) * (1 - x);
+        const auto ym12 = (1 - y) * (1 - y);
+        const auto zm12 = (1 - z) * (1 - z);
+        return x2*y2*xm12*(2*y - 2) + 2*x2*y*xm12*ym12 - x2*z2*xm12*(2*z - 2) - 2*x2*z*xm12*zm12;
+    }
+
+    auto vy(point X) const noexcept -> double {
+        const auto [x, y, z] = X;
+        const auto x2 = x * x;
+        const auto y2 = y * y;
+        const auto z2 = z * z;
+        const auto xm12 = (1 - x) * (1 - x);
+        const auto ym12 = (1 - y) * (1 - y);
+        const auto zm12 = (1 - z) * (1 - z);
+        return -x2*y2*ym12*(2*x - 2) - 2*x*y2*xm12*ym12 + y2*z2*ym12*(2*z - 2) + 2*y2*z*ym12*zm12;
+    }
+
+    auto vz(point X) const noexcept -> double {
+        const auto [x, y, z] = X;
+        const auto x2 = x * x;
+        const auto y2 = y * y;
+        const auto z2 = z * z;
+        const auto xm12 = (1 - x) * (1 - x);
+        const auto ym12 = (1 - y) * (1 - y);
+        const auto zm12 = (1 - z) * (1 - z);
+        return x2*z2*zm12*(2*x - 2) + 2*x*z2*xm12*zm12 - y2*z2*zm12*(2*y - 2) - 2*y*z2*ym12*zm12;
+    }
+
+    auto fx(point X) const noexcept -> double {
+        const auto [x, y, z] = X;
+        const auto x2 = x * x;
+        const auto y2 = y * y;
+        const auto z2 = z * z;
+        const auto x3 = x2 * x;
+        const auto y3 = y2 * y;
+        const auto z3 = z2 * z;
+        const auto x4 = x3 * x;
+        return -24*x4*y + 24*x4*z + 48*x3*y - 48*x3*z - 48*x2*y3 + 72*x2*y2 - 48*x2*y + 48*x2*z3
+              - 72*x2*z2 + 48*x2*z + x2*(2*y - 1)*(2*y - 1)*(2*x + 2*y - 2*z) + 48*x*y3 - 72*x*y2
+              + 24*x*y - 48*x*z3 + 72*x*z2 - 24*x*z + 2*x*(2*y - 1)*(2*y - 1)*(x + y - z)*(x + y - z)
+              - 8*y3 + 12*y2 - 4*y + 8*z3- 12*z2 + 4*z;
+    }
+
+    auto fy(point X) const noexcept -> double {
+        const auto [x, y, z] = X;
+        const auto x2 = x * x;
+        const auto y2 = y * y;
+        const auto z2 = z * z;
+        const auto x3 = x2 * x;
+        const auto y3 = y2 * y;
+        const auto z3 = z2 * z;
+        const auto y4 = y3 * y;
+        return 48*x3*y2 - 48*x3*y + 8*x3 - 72*x2*y2 + 72*x2*y + x2*(2*y - 1)*(2*y - 1)*(2*x + 2*y - 2*z)
+             + x2*(8*y - 4)*(x + y - z)*(x + y - z) - 12*x2 + 24*x*y4 - 48*x*y3 + 48*x*y2 - 24*x*y + 4*x
+             - 24*y4*z + 48*y3*z - 48*y2*z3 + 72*y2*z2 - 48*y2*z + 48*y*z3 - 72*y*z2 + 24*y*z - 8*z3
+             + 12*z2 - 4*z;
+    }
+
+    auto fz(point X) const noexcept -> double {
+        const auto [x, y, z] = X;
+        const auto x2 = x * x;
+        const auto y2 = y * y;
+        const auto z2 = z * z;
+        const auto x3 = x2 * x;
+        const auto y3 = y2 * y;
+        const auto z3 = z2 * z;
+        const auto z4 = z3 * z;
+        return -48*x3*z2 + 48*x3*z - 8*x3 + 72*x2*z2 - 72*x2*z + x2*(2*y - 1)*(2*y - 1)*(-2*x - 2*y + 2*z)
+              + 12*x2 - 24*x*z4 + 48*x*z3 - 48*x*z2 + 24*x*z - 4*x + 48*y3*z2 - 48*y3*z + 8*y3 - 72*y2*z2
+              + 72*y2*z - 12*y2 + 24*y*z4 - 48*y*z3 + 48*y*z2 - 24*y*z + 4*y;
+    }
+};
+
+
+class stokes3_cavity : private stokes_base<stokes3_cavity> {
+private:
+    using base = stokes_base;
+    friend base;
+
+public:
+    using point = ads::regular_mesh3::point;
+    using base::p, base::vx, base::vy, base::vz, base::fx, base::fy, base::fz;
+
+    auto p(point /*X*/) const noexcept -> double {
+        return 0.0;
+    }
+
+    auto vx(point X) const noexcept -> double {
+        const auto [x, y, z] = X;
+        return std::abs(y - 1) < 1e-5;
+        // if (std::abs(y - 1) < 1e-5) {
+        //     return sin(pi * x) * sin(pi * z);
+        // } else {
+        //     return 0.0;
+        // }
+    }
+
+    auto vy(point /*X*/) const noexcept -> double {
+        return 0.0;
+    }
+
+    auto vz(point /*X*/) const noexcept -> double {
+        return 0.0;
+    }
+
+    auto fx(point /*X*/) const noexcept -> double {
+        return 0.0;
+    }
+
+    auto fy(point /*X*/) const noexcept -> double {
+        return 0.0;
+    }
+
+    auto fz(point /*X*/) const noexcept -> double {
+        return 0.0;
+    }
+};
+
 template <typename Vx, typename Vy, typename Vz, typename P>
 auto save_to_file3(const std::string& path, Vx&& vx, Vy&& vy, Vz&& vz, P&& pressure) -> void {
     constexpr auto res = 50;
@@ -3545,7 +3683,8 @@ void DG_stokes_3D() {
     auto c     = -1;
     auto eta   = 10.0 * (p + 1) * (p + 2);
 
-    auto stokes = stokes3_type1{};
+    // auto stokes = stokes3_type1{};
+    auto stokes = stokes3_cavity{};
 
     auto xs = ads::evenly_spaced(0.0, 1.0, elems);
     auto ys = ads::evenly_spaced(0.0, 1.0, elems);
@@ -3739,7 +3878,8 @@ void DGiGRM_stokes_3D() {
     auto p     = 4;
     auto eta   = 10.0 * (p + 1) * (p + 2);
 
-    auto stokes = stokes3_type1{};
+    // auto stokes = stokes3_type2{};
+    auto stokes = stokes3_cavity{};
 
     auto xs = ads::evenly_spaced(0.0, 1.0, elems);
     auto ys = ads::evenly_spaced(0.0, 1.0, elems);
