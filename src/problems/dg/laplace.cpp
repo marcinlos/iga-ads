@@ -2197,12 +2197,24 @@ void DG_stokes() {
     fmt::print("p  error = {:.6}\n", err_p);
     fmt::print("   error = {:.6}\n", err);
 
-    auto vf = integrate_facets(mesh.interior_facets(), mesh, quad, [&](auto x, const auto& edge) {
+    const auto vx_J = integrate_facets(mesh.interior_facets(), mesh, quad, [&](auto x, const auto& edge) {
+        const auto  h = length(edge.span);
+        const auto d = jump(sol_vx(x, edge));
+        return 1/h * d * d;
+    });
+    const auto vy_J = integrate_facets(mesh.interior_facets(), mesh, quad, [&](auto x, const auto& edge) {
+        const auto  h = length(edge.span);
+        const auto d = jump(sol_vy(x, edge));
+        return 1/h * d * d;
+    });
+    const auto r_P = integrate_facets(mesh.interior_facets(), mesh, quad, [&](auto x, const auto& edge) {
         const auto  h = length(edge.span);
         auto d = jump(sol_p(x, edge));
         return h * d * d;
     });
-    fmt::print("Pressure jump seminorm = {:.6}\n", std::sqrt(vf));
+    fmt::print("vx seminorm = {:.6}\n", std::sqrt(vx_J));
+    fmt::print("vy seminorm = {:.6}\n", std::sqrt(vy_J));
+    fmt::print("p  seminorm = {:.6}\n", std::sqrt(r_P));
 
     auto t_before_output = std::chrono::steady_clock::now();
     save_to_file("result.data", sol_vx, sol_vy, sol_p);
@@ -2422,11 +2434,11 @@ void DGiGRM_stokes() {
     }));
     auto res_norm = sum_norms(norm_r_vx, J_r_vx, norm_r_vy, J_r_vy, norm_r_p, q_r_p);
     fmt::print("||r_vx|| = {:.6}\n", norm_r_vx);
-    fmt::print(" |r_vx|  = {:.6}\n", J_r_vx);
     fmt::print("||r_vy|| = {:.6}\n", norm_r_vy);
-    fmt::print(" |r_vy|  = {:.6}\n", J_r_vy);
     fmt::print("||r_p||  = {:.6}\n", norm_r_p);
-    fmt::print(" |r_p|   = {:.6}\n", q_r_p);
+    fmt::print("|r_vx|   = {:.6}\n", J_r_vx);
+    fmt::print("|r_vy|   = {:.6}\n", J_r_vy);
+    fmt::print("|r_p|    = {:.6}\n", q_r_p);
     fmt::print("res norm = {:.6}\n", res_norm);
 
     auto val = alt_norm(mesh, quad, L2_2{}, [](auto X) {
