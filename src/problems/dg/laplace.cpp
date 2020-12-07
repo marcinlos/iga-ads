@@ -2513,13 +2513,10 @@ namespace ads {
             interval     span1;
             interval     span2;
             double       position;
+            double       diameter;
             orientation3 direction;
             facet_type   type;
             point        normal;
-
-            auto area() const noexcept -> double {
-                return length(span1) * length(span2);
-            }
         };
 
         using facet_data = face_data;
@@ -2622,14 +2619,16 @@ namespace ads {
                 const auto span_y        = mesh_y_.subinterval(iy);
                 const auto span_z        = mesh_z_.subinterval(iz);
                 const auto normal        = point{nx, 0, 0};
-                return {span_y, span_z, x, dir, type, normal};
+                const auto diam          = diameter(span_y, span_z);
+                return {span_y, span_z, x, diam, dir, type, normal};
             } else if (dir == orientation3::dir_y) {
                 // 1 - x, 2 - z
                 const auto span_x        = mesh_x_.subinterval(ix);
                 const auto [y, type, ny] = mesh_y_.facet(iy);
                 const auto span_z        = mesh_z_.subinterval(iz);
                 const auto normal        = point{0, ny, 0};
-                return {span_x, span_z, y, dir, type, normal};
+                const auto diam          = diameter(span_x, span_z);
+                return {span_x, span_z, y, diam, dir, type, normal};
             } else {
                 assert(dir == orientation3::dir_z && "Invalid face orientation");
                 // 1 - x, 2 - y
@@ -2637,9 +2636,15 @@ namespace ads {
                 const auto span_y        = mesh_y_.subinterval(iy);
                 const auto [z, type, nz] = mesh_z_.facet(iz);
                 const auto normal        = point{0, 0, nz};
-                return {span_x, span_y, z, dir, type, normal};
+                const auto diam          = diameter(span_x, span_y);
+                return {span_x, span_y, z, diam, dir, type, normal};
             }
         }
+
+    private:
+            auto diameter(interval a, interval b) const noexcept -> double {
+                return std::hypot(length(a), length(b));
+            }
     };
 
 
@@ -3380,7 +3385,7 @@ void DG_poisson_3D() {
     auto t_before_boundary = std::chrono::steady_clock::now();
     assemble_facets(mesh.facets(), space, quad, out, [eta](auto u, auto v, auto /*x*/, const auto& face) {
         const auto& n = face.normal;
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         return - dot(grad(avg(v)), n) * jump(u).val
                - dot(grad(avg(u)), n) * jump(v).val
                + eta/h * jump(u).val * jump(v).val;
@@ -3399,7 +3404,7 @@ void DG_poisson_3D() {
     auto t_before_rhs_bnd = std::chrono::steady_clock::now();
     assemble_rhs(mesh.boundary_facets(), space, quad, rhs, [eta,&poisson](auto v, auto x, const auto& face) {
         const auto& n = face.normal;
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         const auto  g = poisson.g(x);
         return - dot(grad(v), n) * g
                + eta/h * g * v.val;
@@ -3580,21 +3585,21 @@ void DG_stokes_3D() {
     auto t_before_boundary = std::chrono::steady_clock::now();
     assemble_facets(mesh.facets(), Vx, quad, M, [eta](auto ux, auto vx, auto /*x*/, const auto& face) {
         const auto& n = face.normal;
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         return - dot(grad(avg(vx)), n) * jump(ux).val
                - dot(grad(avg(ux)), n) * jump(vx).val
                + eta/h * jump(ux).val * jump(vx).val;
     });
     assemble_facets(mesh.facets(), Vy, quad, M, [eta](auto uy, auto vy, auto /*x*/, const auto& face) {
         const auto& n = face.normal;
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         return - dot(grad(avg(vy)), n) * jump(uy).val
                - dot(grad(avg(uy)), n) * jump(vy).val
                + eta/h * jump(uy).val * jump(vy).val;
     });
     assemble_facets(mesh.facets(), Vz, quad, M, [eta](auto uz, auto vz, auto /*x*/, const auto& face) {
         const auto& n = face.normal;
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         return - dot(grad(avg(vz)), n) * jump(uz).val
                - dot(grad(avg(uz)), n) * jump(vz).val
                + eta/h * jump(uz).val * jump(vz).val;
@@ -3630,7 +3635,7 @@ void DG_stokes_3D() {
         return - dot(u, n) * avg(q).val;
     });
     assemble_facets(mesh.interior_facets(), P, quad, M, [](auto p, auto q, auto /*x*/, const auto& face) {
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         return h * jump(p).val * jump(q).val;
     });
     auto t_after_boundary = std::chrono::steady_clock::now();
@@ -3647,21 +3652,21 @@ void DG_stokes_3D() {
     auto t_before_rhs_bnd = std::chrono::steady_clock::now();
     assemble_rhs(mesh.boundary_facets(), Vx, quad, rhs, [eta,&stokes](auto vx, auto x, const auto& face) {
         const auto& n = face.normal;
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         const auto  g = stokes.vx(x);
         return - dot(grad(vx), n) * g
                + eta/h * g * vx.val;
     });
     assemble_rhs(mesh.boundary_facets(), Vy, quad, rhs, [eta,&stokes](auto vy, auto x, const auto& face) {
         const auto& n = face.normal;
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         const auto  g = stokes.vy(x);
         return - dot(grad(vy), n) * g
                + eta/h * g * vy.val;
     });
     assemble_rhs(mesh.boundary_facets(), Vz, quad, rhs, [eta,&stokes](auto vz, auto x, const auto& face) {
         const auto& n = face.normal;
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         const auto  g = stokes.vz(x);
         return - dot(grad(vz), n) * g
                + eta/h * g * vz.val;
@@ -3696,7 +3701,7 @@ void DG_stokes_3D() {
     fmt::print("   error = {:.6}\n", err);
 
     auto vf = integrate_facets(mesh.interior_facets(), mesh, quad, [&](auto x, const auto& face) {
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         auto d = jump(sol_p(x, face));
         return h * d * d;
     });
@@ -3807,39 +3812,39 @@ void DGiGRM_stokes_3D() {
 
     auto t_before_boundary = std::chrono::steady_clock::now();
     assemble_facets(mesh.facets(), Wx, quad, G, [](auto ux, auto vx, auto /*x*/, const auto& face) {
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         return 1/h * jump(ux).val * jump(vx).val;
     });
     assemble_facets(mesh.facets(), Wy, quad, G, [](auto uy, auto vy, auto /*x*/, const auto& face) {
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         return 1/h * jump(uy).val * jump(vy).val;
     });
     assemble_facets(mesh.facets(), Wz, quad, G, [](auto uz, auto vz, auto /*x*/, const auto& face) {
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         return 1/h * jump(uz).val * jump(vz).val;
     });
     assemble_facets(mesh.interior_facets(), Q, quad, G, [](auto p, auto q, auto /*x*/, const auto& face) {
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         return h * jump(p).val * jump(q).val;
     });
 
     assemble_facets(mesh.facets(), Vx, Wx, quad, B, [eta](auto ux, auto vx, auto /*x*/, const auto& face) {
         const auto& n = face.normal;
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         return - dot(grad(avg(vx)), n) * jump(ux).val
                - dot(grad(avg(ux)), n) * jump(vx).val
                + eta/h * jump(ux).val * jump(vx).val;
     });
     assemble_facets(mesh.facets(), Vy, Wy, quad, B, [eta](auto uy, auto vy, auto /*x*/, const auto& face) {
         const auto& n = face.normal;
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         return - dot(grad(avg(vy)), n) * jump(uy).val
                - dot(grad(avg(uy)), n) * jump(vy).val
                + eta/h * jump(uy).val * jump(vy).val;
     });
     assemble_facets(mesh.facets(), Vz, Wz, quad, B, [eta](auto uz, auto vz, auto /*x*/, const auto& face) {
         const auto& n = face.normal;
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         return - dot(grad(avg(vz)), n) * jump(uz).val
                - dot(grad(avg(uz)), n) * jump(vz).val
                + eta/h * jump(uz).val * jump(vz).val;
@@ -3888,21 +3893,21 @@ void DGiGRM_stokes_3D() {
     auto t_before_rhs_bnd = std::chrono::steady_clock::now();
     assemble_rhs(mesh.boundary_facets(), Wx, quad, rhs, [eta,&stokes](auto vx, auto x, const auto& face) {
         const auto& n = face.normal;
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         const auto  g = stokes.vx(x);
         return - dot(grad(vx), n) * g
                + eta/h * g * vx.val;
     });
     assemble_rhs(mesh.boundary_facets(), Wy, quad, rhs, [eta,&stokes](auto vy, auto x, const auto& face) {
         const auto& n = face.normal;
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         const auto  g = stokes.vy(x);
         return - dot(grad(vy), n) * g
                + eta/h * g * vy.val;
     });
     assemble_rhs(mesh.boundary_facets(), Wz, quad, rhs, [eta,&stokes](auto vz, auto x, const auto& face) {
         const auto& n = face.normal;
-        const auto  h = face.area();
+        const auto  h = face.diameter;
         const auto  g = stokes.vz(x);
         return - dot(grad(vz), n) * g
                + eta/h * g * vz.val;
@@ -3943,25 +3948,25 @@ void DGiGRM_stokes_3D() {
 
     auto norm_r_vx = norm(mesh, quad, L2{}, r_vx);
     auto J_r_vx = std::sqrt(integrate_facets(mesh.facets(), mesh, quad, [&](auto x, const auto& face) {
-        const auto h = face.area();
+        const auto h = face.diameter;
         auto d = jump(r_vx(x, face));
         return 1/h * d * d;
     }));
     auto norm_r_vy = norm(mesh, quad, L2{}, r_vy);
     auto J_r_vy = std::sqrt(integrate_facets(mesh.facets(), mesh, quad, [&](auto x, const auto& face) {
-        const auto h = face.area();
+        const auto h = face.diameter;
         auto d = jump(r_vy(x, face));
         return 1/h * d * d;
     }));
     auto norm_r_vz = norm(mesh, quad, L2{}, r_vz);
     auto J_r_vz = std::sqrt(integrate_facets(mesh.facets(), mesh, quad, [&](auto x, const auto& face) {
-        const auto h = face.area();
+        const auto h = face.diameter;
         auto d = jump(r_vz(x, face));
         return 1/h * d * d;
     }));
     auto norm_r_p = norm(mesh, quad, L2{}, r_p);
     auto q_r_p = std::sqrt(integrate_facets(mesh.interior_facets(), mesh, quad, [&](auto x, const auto& face) {
-        const auto h = face.area();
+        const auto h = face.diameter;
         auto d = jump(r_p(x, face));
         return h * d * d;
     }));
