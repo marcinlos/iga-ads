@@ -3858,9 +3858,9 @@ void DG_stokes_3D() {
     });
     fmt::print("Pressure jump seminorm = {:.6}\n", std::sqrt(vf));
 
-    // auto t_before_output = std::chrono::steady_clock::now();
-    // save_to_file("result.data", sol_vx, sol_vy, sol_p);
-    // auto t_after_output = std::chrono::steady_clock::now();
+    auto t_before_output = std::chrono::steady_clock::now();
+    save_to_file3("result.vti", sol_vx, sol_vy, sol_vz, sol_p);
+    auto t_after_output = std::chrono::steady_clock::now();
 
     auto as_ms = [](auto d) { return std::chrono::duration_cast<std::chrono::milliseconds>(d); };
     fmt::print("Matrix:  {:>8%Q %q}\n", as_ms(t_after_matrix   - t_before_matrix));
@@ -3869,7 +3869,7 @@ void DG_stokes_3D() {
     fmt::print("RHS bd:  {:>8%Q %q}\n", as_ms(t_after_rhs_bnd  - t_before_rhs_bnd));
     fmt::print("Solver:  {:>8%Q %q}\n", as_ms(t_after_solver   - t_before_solver));
     fmt::print("Error:   {:>8%Q %q}\n", as_ms(t_after_err      - t_before_err));
-    // fmt::print("Output:  {:>8%Q %q}\n", as_ms(t_after_output   - t_before_output));
+    fmt::print("Output:  {:>8%Q %q}\n", as_ms(t_after_output   - t_before_output));
 }
 
 
@@ -4133,9 +4133,9 @@ void DGiGRM_stokes_3D() {
     fmt::print(" |r_p|   = {:.6}\n", q_r_p);
     fmt::print("res norm = {:.6}\n", res_norm);
 
-    // auto t_before_output = std::chrono::steady_clock::now();
-    // save_to_file("result.data", sol_vx, sol_vy, sol_p);
-    // auto t_after_output = std::chrono::steady_clock::now();
+    auto t_before_output = std::chrono::steady_clock::now();
+    save_to_file3("result.vti", sol_vx, sol_vy, sol_vz, [&](auto x) { return sol_p(x) - mean; });
+    auto t_after_output = std::chrono::steady_clock::now();
 
     auto as_ms = [](auto d) { return std::chrono::duration_cast<std::chrono::milliseconds>(d); };
     fmt::print("Matrix:  {:>8%Q %q}\n", as_ms(t_after_matrix   - t_before_matrix));
@@ -4144,5 +4144,5 @@ void DGiGRM_stokes_3D() {
     fmt::print("RHS bd:  {:>8%Q %q}\n", as_ms(t_after_rhs_bnd  - t_before_rhs_bnd));
     fmt::print("Solver:  {:>8%Q %q}\n", as_ms(t_after_solver   - t_before_solver));
     fmt::print("Error:   {:>8%Q %q}\n", as_ms(t_after_err      - t_before_err));
-    // fmt::print("Output:  {:>8%Q %q}\n", as_ms(t_after_output   - t_before_output));
+    fmt::print("Output:  {:>8%Q %q}\n", as_ms(t_after_output   - t_before_output));
 }
