@@ -18,8 +18,25 @@ find_package_handle_standard_args(MUMPS
 
 set(MUMPS_LIBRARIES ${MUMPS_LIBRARY})
 
+find_library(MUMPS_COMMON_LIBRARY
+  NAMES mumps_common
+  PATH_SUFFIXES lib lib64)
+
+if (MUMPS_COMMON_LIBRARY)
+  list(APPEND MUMPS_LIBRARIES ${MUMPS_COMMON_LIBRARY})
+endif()
+
+# Find scalapack
+find_library(MUMPS_SCALAPACK
+  NAMES scalapack
+  PATH_SUFFIXES lib lib64)
+
+if (MUMPS_SCALAPACK)
+  list(APPEND MUMPS_LIBRARIES ${MUMPS_SCALAPACK})
+endif()
+
 # Try to find ordering libraries
-set(ORDERING_LIBS pord metis parmetis scotch ptscotch)
+set(ORDERING_LIBS metis parmetis ptesmumps scotch ptscotch ptscotcherr pord)
 
 foreach (lib IN LISTS ORDERING_LIBS)
   find_library(MUMPS_${lib}_LIBRARY
@@ -31,14 +48,16 @@ foreach (lib IN LISTS ORDERING_LIBS)
   endif()
 endforeach()
 
+
+list(APPEND MUMPS_LIBRARIES gfortran)
+
+enable_language(Fortran)
+
 # Find MPI
-find_package(MPI)
-if (MPI_FOUND)
-  list(APPEND MUMPS_LIBRARIES MPI::MPI_CXX)
-endif()
+find_package(MPI REQUIRED)
+list(APPEND MUMPS_LIBRARIES MPI::MPI_CXX MPI::MPI_Fortran)
 
 # Try to enable OMP support to leverage MUMPS parallelism
-enable_language(Fortran)
 find_package(OpenMP)
 
 if (OpenMP_FOUND)
