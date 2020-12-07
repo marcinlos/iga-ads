@@ -2835,7 +2835,7 @@ namespace ads {
             auto pts1 = data_for_interval(face.span1);
             auto pts2 = data_for_interval(face.span2);
 
-            return{std::move(pts1), std::move(pts2), face.position, face.direction};
+            return {std::move(pts1), std::move(pts2), face.position, face.direction};
         }
 
     private:
