@@ -11,6 +11,7 @@
 #include <chrono>
 #include <mutex>
 #include <fmt/chrono.h>
+#include <fmt/os.h>
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/range/counting_range.hpp>
 
@@ -3479,6 +3480,47 @@ public:
         return 0.0;
     }
 };
+
+template <typename Vx, typename Vy, typename Vz, typename P>
+auto save_to_file3(const std::string& path, Vx&& vx, Vy&& vy, Vz&& vz, P&& pressure) -> void {
+    constexpr auto res = 50;
+    auto extent = fmt::format("0 {0} 0 {0} 0 {0}", res);
+
+    auto out = fmt::output_file(path);
+    out.print("<?xml version=\"1.0\"?>\n");
+    out.print("<VTKFile type=\"ImageData\" version=\"0.1\">\n");
+    out.print("  <ImageData WholeExtent=\"{}\" origin=\"0 0 0\" spacing=\"1 1 1\">\n", extent);
+    out.print("    <Piece Extent=\"{}\">\n", extent);
+    out.print("      <PointData Scalars=\"Pressure\" Vectors=\"Velocity\">\n", extent);
+
+    out.print("        <DataArray Name=\"Velocity\" type=\"Float32\" format=\"ascii\" NumberOfComponents=\"3\">\n");
+    for (auto z : ads::evenly_spaced(0.0, 1.0, res)) {
+        for (auto y : ads::evenly_spaced(0.0, 1.0, res)) {
+            for (auto x : ads::evenly_spaced(0.0, 1.0, res)) {
+                const auto X = ads::point3_t{x, y, z};
+                out.print("{:.7} {:.7} {:.7}\n", vx(X), vy(X), vz(X));
+            }
+        }
+    }
+    out.print("        </DataArray>\n");
+
+    out.print("        <DataArray Name=\"Pressure\" type=\"Float32\" format=\"ascii\" NumberOfComponents=\"1\">\n");
+    for (auto z : ads::evenly_spaced(0.0, 1.0, res)) {
+        for (auto y : ads::evenly_spaced(0.0, 1.0, res)) {
+            for (auto x : ads::evenly_spaced(0.0, 1.0, res)) {
+                const auto X = ads::point3_t{x, y, z};
+                out.print("{:.7}\n", pressure(X));
+            }
+        }
+    }
+    out.print("        </DataArray>\n");
+
+    out.print("      </PointData>\n");
+    out.print("    </Piece>\n");
+    out.print("  </ImageData>\n");
+    out.print("</VTKFile>\n");
+}
+
 
 void DG_stokes_3D() {
     auto elems = 4;
