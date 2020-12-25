@@ -1210,10 +1210,8 @@ auto assemble(const Space& space, const Quad& quad, Out out, Form&& form) -> voi
                 const auto iloc = space.local_index(i, e);
                 basis_vals[iloc] = eval(i, q);
             }
-            for (auto i : space.dofs(e)) {
-                for (auto j : space.dofs(e)) {
-                    const auto iloc = space.local_index(i, e);
-                    const auto jloc = space.local_index(j, e);
+            for (int iloc = 0; iloc < n; ++ iloc) {
+                for (int jloc = 0; jloc < n; ++ jloc) {
                     const auto& u = basis_vals[iloc];
                     const auto& v = basis_vals[jloc];
                     M(jloc, iloc) += form(u, v, x) * w;
@@ -1265,10 +1263,8 @@ auto assemble(const Trial& trial, const Test& test, const Quad& quad, Out out, F
                 const auto jloc = test.local_index(j, e);
                 test_vals[jloc] = eval_test(j, q);
             }
-            for (auto i : trial.dofs(e)) {
-                for (auto j : test.dofs(e)) {
-                    const auto iloc = trial.local_index(i, e);
-                    const auto jloc = test.local_index(j, e);
+            for (int iloc = 0; iloc < n_trial; ++ iloc) {
+                for (int jloc = 0; jloc < n_test; ++ jloc) {
                     const auto& u = trial_vals[iloc];
                     const auto& v = test_vals[jloc];
                     M(jloc, iloc) += form(u, v, x) * w;
@@ -1312,10 +1308,8 @@ auto assemble_facets(const Facets& facets, const Space& space, const Quad& quad,
                 const auto iloc = space.facet_local_index(i, f);
                 basis_vals[iloc] = eval(i, q, facet.normal);
             }
-            for (auto i : space.dofs_on_facet(f)) {
-                for (auto j : space.dofs_on_facet(f)) {
-                    const auto iloc = space.facet_local_index(i, f);
-                    const auto jloc = space.facet_local_index(j, f);
+            for (int iloc = 0; iloc < n; ++ iloc) {
+                for (int jloc = 0; jloc < n; ++ jloc) {
                     const auto& u = basis_vals[iloc];
                     const auto& v = basis_vals[jloc];
                     M(jloc, iloc) += form(u, v, x, facet) * w;
@@ -1370,10 +1364,8 @@ auto assemble_facets(const Facets& facets, const Trial& trial, const Test& test,
                 const auto jloc = test.facet_local_index(j, f);
                 test_vals[jloc] = eval_test(j, q, facet.normal);
             }
-            for (auto i : trial.dofs_on_facet(f)) {
-                for (auto j : test.dofs_on_facet(f)) {
-                    const auto iloc = trial.facet_local_index(i, f);
-                    const auto jloc = test.facet_local_index(j, f);
+            for (int iloc = 0; iloc < n_trial; ++ iloc) {
+                for (int jloc = 0; jloc < n_test; ++ jloc) {
                     const auto& u = trial_vals[iloc];
                     const auto& v = test_vals[jloc];
                     M(jloc, iloc) += form(u, v, x, facet) * w;
