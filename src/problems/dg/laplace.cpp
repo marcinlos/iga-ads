@@ -1738,6 +1738,7 @@ void DG_poisson();
 void DG_stokes();
 void DGiGRM_stokes();
 
+void poisson_3D();
 void DG_poisson_3D();
 void DG_stokes_3D();
 void DGiGRM_stokes_3D();
@@ -1748,6 +1749,7 @@ int main() {
     // DG_stokes();
     // DGiGRM_stokes();
 
+    // poisson_3D();
     // DG_poisson_3D();
     // DG_stokes_3D();
     DGiGRM_stokes_3D();
@@ -3339,6 +3341,104 @@ public:
         return x*x + 0.5 * y*y + 0.3 * z*z;
     }
 };
+
+void poisson_3D() {
+    auto elems = 32;
+    auto p     = 2;
+    auto c     = p - 1;
+    auto eta   = 10.0;
+
+    auto poisson = poisson3_type2{};
+
+    auto xs = ads::evenly_spaced(0.0, 1.0, elems);
+    auto ys = ads::evenly_spaced(0.0, 1.0, elems);
+    auto zs = ads::evenly_spaced(0.0, 1.0, elems);
+
+    auto bx = ads::make_bspline_basis(xs, p, c);
+    auto by = ads::make_bspline_basis(ys, p, c);
+    auto bz = ads::make_bspline_basis(zs, p, c);
+
+    auto mesh  = ads::regular_mesh3{xs, ys, zs};
+    auto quad  = ads::quadrature3{&mesh, std::max(p + 1, 2)};
+
+    auto space = ads::space3{&mesh, bx, by, bz};
+
+    auto n = space.dof_count();
+    fmt::print("DoFs: {}\n", n);
+
+    auto F       = std::vector<double>(n);
+    auto problem = mumps::problem{F.data(), n};
+    auto solver  = mumps::solver{};
+
+    auto out = [&problem](int row, int col, double val) {
+        if (val != 0) {
+            problem.add(row + 1, col + 1, val);
+        }
+    };
+    auto rhs = [&F](int J, double val) { F.data()[J] += val; };
+    using ads::dot;
+    using ads::grad;
+
+    auto t_before_matrix = std::chrono::steady_clock::now();
+    assemble(space, quad, out, [](auto u, auto v, auto /*x*/) {
+        return dot(grad(u), grad(v));
+    });
+    auto t_after_matrix = std::chrono::steady_clock::now();
+
+    auto t_before_boundary = std::chrono::steady_clock::now();
+    assemble_facets(mesh.boundary_facets(), space, quad, out, [eta](auto u, auto v, auto /*x*/, const auto& face) {
+        const auto& n = face.normal;
+        const auto  h = face.diameter;
+        return - dot(grad(avg(v)), n) * jump(u).val
+               - dot(grad(avg(u)), n) * jump(v).val
+               + eta/h * jump(u).val * jump(v).val;
+    });
+    auto t_after_boundary = std::chrono::steady_clock::now();
+
+    fmt::print("Non-zeros: {}\n", problem.nonzero_entries());
+    fmt::print("Computing RHS\n");
+
+    auto t_before_rhs = std::chrono::steady_clock::now();
+    assemble_rhs(space, quad, rhs, [&poisson](auto v, auto x) {
+        return v.val * poisson.f(x);
+    });
+    auto t_after_rhs = std::chrono::steady_clock::now();
+
+    auto t_before_rhs_bnd = std::chrono::steady_clock::now();
+    assemble_rhs(mesh.boundary_facets(), space, quad, rhs, [eta,&poisson](auto v, auto x, const auto& face) {
+        const auto& n = face.normal;
+        const auto  h = face.diameter;
+        const auto  g = poisson.g(x);
+        return - dot(grad(v), n) * g
+               + eta/h * g * v.val;
+    });
+    auto t_after_rhs_bnd = std::chrono::steady_clock::now();
+
+    fmt::print("Solving\n");
+    auto t_before_solver = std::chrono::steady_clock::now();
+    solver.solve(problem);
+    auto t_after_solver = std::chrono::steady_clock::now();
+
+    fmt::print("Computing error\n");
+
+    auto u = ads::bspline_function3(&space, F.data());
+
+    auto t_before_err = std::chrono::steady_clock::now();
+    auto err = error(mesh, quad, L2{}, u, poisson.u());
+    auto t_after_err = std::chrono::steady_clock::now();
+
+    fmt::print("error = {:.6}\n", err);
+
+    auto as_ms = [](auto d) { return std::chrono::duration_cast<std::chrono::milliseconds>(d); };
+    fmt::print("Matrix:  {:>8%Q %q}\n", as_ms(t_after_matrix   - t_before_matrix));
+    fmt::print("Bndry:   {:>8%Q %q}\n", as_ms(t_after_boundary - t_before_boundary));
+    fmt::print("RHS:     {:>8%Q %q}\n", as_ms(t_after_rhs      - t_before_rhs));
+    fmt::print("RHS bd:  {:>8%Q %q}\n", as_ms(t_after_rhs_bnd  - t_before_rhs_bnd));
+    fmt::print("Solver:  {:>8%Q %q}\n", as_ms(t_after_solver   - t_before_solver));
+    fmt::print("Error:   {:>8%Q %q}\n", as_ms(t_after_err      - t_before_err));
+    // fmt::print("Output:  {:>8%Q %q}\n", as_ms(t_after_output   - t_before_output));
+
+}
 
 void DG_poisson_3D() {
     auto elems = 8;
