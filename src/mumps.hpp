@@ -31,6 +31,12 @@ struct problem {
         return values_.size();
     }
 
+    void reserve(int entries) {
+        rows_.reserve(entries);
+        cols_.reserve(entries);
+        values_.reserve(entries);
+    }
+
     int dofs() const {
         return n;
     }
