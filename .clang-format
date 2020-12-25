@@ -1,0 +1,115 @@
+---
+Language:                                                Cpp
+IndentWidth:                                               4
+ColumnLimit:                                               0
+
+# This causes some undesirable line joining
+# ColumnLimit:                                             100
+
+AccessModifierOffset:                                     -4
+AlignAfterOpenBracket:                                 Align
+AlignConsecutiveAssignments:                            true
+AlignConsecutiveDeclarations:                           true
+AlignConsecutiveMacros:                                 true
+AlignEscapedNewlines:                                  Right
+AlignOperands:                                          true
+AlignTrailingComments:                                  true
+AllowAllArgumentsOnNextLine:                            true
+AllowAllParametersOfDeclarationOnNextLine:              true
+AllowShortBlocksOnASingleLine:                        Always
+AllowShortCaseLabelsOnASingleLine:                      true
+AllowShortFunctionsOnASingleLine:                     Inline
+AllowShortIfStatementsOnASingleLine:             WithoutElse
+AllowShortLambdasOnASingleLine:                          All
+AllowShortLoopsOnASingleLine:                          false
+AlwaysBreakAfterReturnType:                             None
+AlwaysBreakBeforeMultilineStrings:                     false
+AlwaysBreakTemplateDeclarations:                         Yes
+BinPackArguments:                                       true
+BinPackParameters:                                      true
+# BreakBeforeBraces:                                  Custom
+BreakBeforeBinaryOperators:                    NonAssignment
+BreakBeforeBraces:                                    Attach
+BreakBeforeTernaryOperators:                            true
+BreakConstructorInitializers:                    BeforeComma
+# BreakInheritanceList:                          BeforeComma
+BreakStringLiterals:                                    true
+CommentPragmas:                                 '^ NOFORMAT'
+CompactNamespaces:                                     false
+ConstructorInitializerAllOnOneLineOrOnePerLine:        false
+ConstructorInitializerIndentWidth:                         0
+ContinuationIndentWidth:                                   4
+Cpp11BracedListStyle:                                   true
+DeriveLineEnding:                                       true
+DerivePointerAlignment:                                false
+DisableFormat:                                         false
+FixNamespaceComments:                                   true
+ForEachMacros:                     ['RANGES_FOR', 'FOREACH']
+IncludeBlocks:                                       Regroup
+IncludeCategories:
+  - Regex:           '^<[a-z_]*\.h>'      # C standard headers
+    Priority:        1
+    SortPriority:    0
+  - Regex:           '^<[a-z_]*>'         # C++ standard headers
+    Priority:        2
+    SortPriority:    0
+  - Regex:           '^<.*>'              # library headers
+    Priority:        3
+    SortPriority:    0
+  - Regex:           '.*'                 # other
+    Priority:        4
+    SortPriority:    0
+IndentCaseLabels:                                      false
+IndentGotoLabels:                                       true
+IndentPPDirectives:                                AfterHash
+IndentWrappedFunctionNames:                            false
+KeepEmptyLinesAtTheStartOfBlocks:                       true
+MacroBlockBegin:                                          ''
+MacroBlockEnd:                                            ''
+MaxEmptyLinesToKeep:                                       2
+NamespaceIndentation:                                  Inner
+NamespaceMacros:                                          []
+PointerAlignment:                                       Left
+ReflowComments:                                         true
+SortIncludes:                                           true
+SortUsingDeclarations:                                  true
+SpaceAfterCStyleCast:                                   true
+SpaceAfterLogicalNot:                                  false
+SpaceAfterTemplateKeyword:                              true
+SpaceBeforeAssignmentOperators:                         true
+SpaceBeforeCpp11BracedList:                            false
+SpaceBeforeCtorInitializerColon:                        true
+SpaceBeforeInheritanceColon:                            true
+SpaceBeforeParens:                         ControlStatements
+SpaceBeforeRangeBasedForLoopColon:                      true
+SpaceBeforeSquareBrackets:                             false
+SpaceInEmptyBlock:                                      true
+SpaceInEmptyParentheses:                               false
+SpacesBeforeTrailingComments:                              2
+SpacesInAngles:                                        false
+SpacesInCStyleCastParentheses:                         false
+SpacesInConditionalStatement:                          false
+SpacesInContainerLiterals:                             false
+SpacesInParentheses:                                   false
+SpacesInSquareBrackets:                                false
+Standard:                                             Latest
+StatementMacros:                                          []
+TabWidth:                                                  4
+TypenameMacros:                                           []
+UseCRLF:                                               false
+UseTab:                                                Never
+
+
+# Not available in current version
+# --------------------------------
+# AlignConsecutiveBitFields:                              true
+# AlignOperands:                            AlignAfterOperator
+# AllowShortEnumsOnASingleLine:                          false
+# AttributeMacros:                                          []
+# BitFieldColonSpacing:                                   Both
+# BreakBeforeConceptDeclarations:                         true
+# IndentCaseBlocks:                                       true
+# IndentExternBlock:                                      true
+# IndentPragmas:                                          true
+# IndentRequires:                                         true
+# SpaceAroundPointerQualifiers                         Default
