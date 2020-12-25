@@ -2051,14 +2051,14 @@ public:
 
 
 void DG_stokes() {
-    auto elems = 32;
-    auto p     = 3;
+    auto elems = 16;
+    auto p     = 4;
     auto c     = -1;
     auto eta   = 10.0 * (p + 1) * (p + 2);
 
-    // auto stokes = stokes_cavity{};
+    auto stokes = stokes_cavity{};
     // auto stokes = stokes_polynomial{};
-    auto stokes = stokes_nonpoly{};
+    // auto stokes = stokes_nonpoly{};
 
     auto xs = ads::evenly_spaced(0.0, 1.0, elems);
     auto ys = ads::evenly_spaced(0.0, 1.0, elems);
@@ -2225,9 +2225,9 @@ void DG_stokes() {
 }
 
 void DGiGRM_stokes() {
-    auto elems = 64;
+    auto elems = 16;
     auto p     = 4;
-    auto eta   = 10.0 * (p + 1) * (p + 2);
+    auto eta   = 1.0 * (p + 1) * (p + 2);
 
     // auto stokes = stokes_cavity{};
     // auto stokes = stokes_polynomial{};
@@ -2237,7 +2237,7 @@ void DGiGRM_stokes() {
     auto ys = ads::evenly_spaced(0.0, 1.0, elems);
 
     auto mesh  = ads::regular_mesh{xs, ys};
-    auto quad  = ads::quadrature{&mesh, 5};
+    auto quad  = ads::quadrature{&mesh, std::max(p + 1, 2)};
 
     // Test
     auto p_test =  4;
@@ -2257,7 +2257,7 @@ void DGiGRM_stokes() {
 
     // Trial
     auto p_trial = 4;
-    auto c_trial = 0;   // >= 0
+    auto c_trial = 3;   // >= 0
 
     auto bx = ads::make_bspline_basis(xs, p_trial, c_trial);
     auto by = ads::make_bspline_basis(ys, p_trial, c_trial);
@@ -3770,8 +3770,8 @@ auto save_to_file3(const std::string& path, Vx&& vx, Vy&& vy, Vz&& vz, P&& press
 
 
 void DG_stokes_3D() {
-    auto elems = 4;
-    auto p     = 4;
+    auto elems = 20;
+    auto p     = 1;
     auto c     = -1;
     auto eta   = 10.0 * (p + 1) * (p + 2);
 
@@ -3966,12 +3966,14 @@ void DG_stokes_3D() {
 
 
 void DGiGRM_stokes_3D() {
+    // n=8, (2,-1) (2,1) works well
     auto elems = 4;
-    auto p     = 4;
-    auto eta   = 10.0 * (p + 1) * (p + 2);
+    auto p     = 2;
+    // auto eta   = 10.0 * (p + 1) * (p + 2);
+    auto eta   = 1.0 * (p + 1) * (p + 2);
 
-    // auto stokes = stokes3_type2{};
-    auto stokes = stokes3_cavity{};
+    auto stokes = stokes3_type2{};
+    // auto stokes = stokes3_cavity{};
 
     auto xs = ads::evenly_spaced(0.0, 1.0, elems);
     auto ys = ads::evenly_spaced(0.0, 1.0, elems);
@@ -3981,7 +3983,7 @@ void DGiGRM_stokes_3D() {
     auto quad  = ads::quadrature3{&mesh, std::max(p + 1, 2)};
 
     // Test
-    auto p_test =  4;
+    auto p_test =  p;
     auto c_test = -1;
 
     auto Bx = ads::make_bspline_basis(xs, p_test, c_test);
@@ -3999,8 +4001,8 @@ void DGiGRM_stokes_3D() {
     fmt::print("Test  DoFs: {:10L}\n", N);
 
     // Trial
-    auto p_trial = 4;
-    auto c_trial = 0;   // >= 0
+    auto p_trial = p;
+    auto c_trial = 1;   // >= 0
 
     auto bx = ads::make_bspline_basis(xs, p_trial, c_trial);
     auto by = ads::make_bspline_basis(ys, p_trial, c_trial);
