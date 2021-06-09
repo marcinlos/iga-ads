@@ -61,12 +61,12 @@ private:
     double h;
     double gamma;
 
-    double peclet = 1e6;
+    double peclet = 1e30;
     double epsilon = 1 / peclet;
 
     point_type c_diff{{ epsilon, epsilon }};
 
-    // double b = 1;
+    double b = 1;
 
     // double angle = 0;
     // double angle = M_PI / 6;
@@ -155,10 +155,10 @@ private:
         // }
     }
 
-    point_type beta(point_type /*x*/) const {
-        return {1, 0};
-        // double r = b / std::sqrt(x[0] * x[0] + x[1] * x[1]);
-        // return { - r * x[1], r * x[0] };
+    point_type beta(point_type x) const {
+        // return {1, 0};
+        double r = b / std::sqrt(x[0] * x[0] + x[1] * x[1]);
+        return { - r * x[1], r * x[0] };
     }
 
     value_type eval_basis_at(point_type p, index_type e, index_type dof, const dimension& x, const dimension& y) const {
@@ -486,9 +486,9 @@ private:
         // zero_bc(u, Ux, Uy);
 
         dirichlet_bc(u, boundary::left, Ux, Uy, [&](double t) {
-            // double tt = std::abs(t);
-            // return 0.5 * (std::tanh(b / epsilon * (tt < 0.5 ? tt - 0.35 : 0.65 - tt)) + 1);
-            return std::sin(M_PI * t);
+            double tt = std::abs(t);
+            return 0.5 * (std::tanh(b / epsilon * (tt < 0.5 ? tt - 0.35 : 0.65 - tt)) + 1);
+            // return std::sin(M_PI * t);
         });
 
 
