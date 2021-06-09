@@ -163,6 +163,10 @@ if (NOT SKIP_PROBLEMS)
       src/problems/maxwell/main.cpp)
     target_link_libraries(maxwell PRIVATE clara::clara)
 
+    define_problem(maxwell_head
+      src/problems/maxwell/main_head.cpp)
+    target_link_libraries(maxwell_head PRIVATE clara::clara)
+
     define_problem(error
       src/tools/error.cpp)
 
