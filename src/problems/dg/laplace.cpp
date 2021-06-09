@@ -1786,7 +1786,7 @@ void DG_poisson() {
             problem.add(row + 1, col + 1, val);
         }
     };
-    auto rhs = [&F](int J, double val) { F.data()[J] += val; };
+    auto rhs = [&F](int J, double val) { F[J] += val; };
     using ads::dot;
     using ads::grad;
 
@@ -3375,7 +3375,7 @@ void poisson_3D() {
             problem.add(row + 1, col + 1, val);
         }
     };
-    auto rhs = [&F](int J, double val) { F.data()[J] += val; };
+    auto rhs = [&F](int J, double val) { F[J] += val; };
     using ads::dot;
     using ads::grad;
 
@@ -3473,7 +3473,7 @@ void DG_poisson_3D() {
             problem.add(row + 1, col + 1, val);
         }
     };
-    auto rhs = [&F](int J, double val) { F.data()[J] += val; };
+    auto rhs = [&F](int J, double val) { F[J] += val; };
     using ads::dot;
     using ads::grad;
 
