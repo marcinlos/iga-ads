@@ -57,6 +57,10 @@ struct problem {
         return rhs_;
     }
 
+    void rhs(double* data) {
+        rhs_ = data;
+    }
+
 private:
     std::vector<int> rows_;
     std::vector<int> cols_;
