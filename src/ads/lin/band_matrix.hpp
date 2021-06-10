@@ -9,8 +9,7 @@
 #include "ads/lin/dense_matrix.hpp"
 
 
-namespace ads {
-namespace lin {
+namespace ads::lin {
 
 class band_matrix {
 private:
@@ -125,7 +124,6 @@ inline void to_dense(const band_matrix& M, dense_matrix& out) {
 
 
 
-}
 }
 
 #endif /* ADS_LIN_BANDED_MATRIX_HPP_ */

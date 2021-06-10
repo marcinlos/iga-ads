@@ -6,8 +6,7 @@
 #include "ads/output/output_base.hpp"
 #include "ads/output/raw.hpp"
 
-namespace ads {
-namespace output {
+namespace ads::output {
 
 
 template <std::size_t Dim>
@@ -58,7 +57,6 @@ struct gnuplot_printer<2> : output_base {
     }
 };
 
-}
 }
 
 #endif /* ADS_OUTPUT_GNUPLOT_HPP_ */

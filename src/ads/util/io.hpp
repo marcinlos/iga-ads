@@ -3,8 +3,7 @@
 
 #include <ostream>
 
-namespace ads {
-namespace util {
+namespace ads::util {
 
 struct stream_state_saver {
     std::ios_base& os;
@@ -23,7 +22,6 @@ struct stream_state_saver {
     }
 };
 
-}
 }
 
 

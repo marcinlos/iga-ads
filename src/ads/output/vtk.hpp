@@ -10,8 +10,7 @@
 #include "ads/util/io.hpp"
 
 
-namespace ads {
-namespace output {
+namespace ads::output {
 
 namespace impl {
 
@@ -117,7 +116,6 @@ private:
 };
 
 
-}
 }
 
 

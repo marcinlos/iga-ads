@@ -6,8 +6,7 @@
 #include "ads/output/output_format.hpp"
 #include "ads/output/output_base.hpp"
 
-namespace ads {
-namespace output {
+namespace ads::output {
 
 struct raw_printer : output_base {
 
@@ -28,7 +27,6 @@ struct raw_printer : output_base {
 
 };
 
-}
 }
 
 #endif /* ADS_OUTPUT_RAW_HPP_ */

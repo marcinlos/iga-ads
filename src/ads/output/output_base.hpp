@@ -3,8 +3,7 @@
 
 #include "ads/output/output_format.hpp"
 
-namespace ads {
-namespace output {
+namespace ads::output {
 
 
 struct output_base {
@@ -39,7 +38,6 @@ struct output_base {
 };
 
 
-}
 }
 
 

@@ -6,8 +6,7 @@
 #include "ads/lin/tensor/view.hpp"
 
 
-namespace ads {
-namespace lin {
+namespace ads::lin {
 
 
 namespace impl {
@@ -83,7 +82,6 @@ tensor_view<T, Rank> cyclic_transpose(const tensor_base<T, Rank, Impl>& a, doubl
 
 
 
-}
 }
 
 

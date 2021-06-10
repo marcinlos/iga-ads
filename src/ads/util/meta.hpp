@@ -3,8 +3,7 @@
 
 #include <type_traits>
 
-namespace ads {
-namespace util {
+namespace ads::util {
 
 template <typename...>
 struct and_;
@@ -25,7 +24,6 @@ template <template <typename...> class Pred, typename... Types>
 struct all_ : and_<Pred<Types>...>
 { };
 
-}
 }
 
 #endif /* ADS_UTIL_META_HPP_ */

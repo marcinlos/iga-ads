@@ -7,8 +7,7 @@
 #include "ads/lin/lapack.hpp"
 
 
-namespace ads {
-namespace lin {
+namespace ads::lin {
 
 class dense_matrix {
 private:
@@ -80,7 +79,6 @@ inline void multiply(const dense_matrix& A, const dense_matrix& B, dense_matrix&
 
 
 
-}
 }
 
 #endif /* ADS_LIN_DENSE_MATRIX_HPP_ */

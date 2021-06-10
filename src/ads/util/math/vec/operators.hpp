@@ -4,8 +4,7 @@
 #include "ads/util/math/vec/vec_fwd.hpp"
 
 
-namespace ads {
-namespace math {
+namespace ads::math {
 
 
 template <std::size_t D>
@@ -38,7 +37,6 @@ vec<D> operator / (vec<D> u, double a) {
     return u;
 }
 
-}
 }
 
 #endif /* ADS_UTIL_MATH_VEC_OPERATORS_HPP_ */

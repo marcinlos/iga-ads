@@ -3,15 +3,11 @@
 
 #include "ads/lin/tensor/tensor.hpp"
 
-namespace ads {
-namespace lin {
-
+namespace ads::lin {
 
 using vector = tensor<double, 1>;
 using matrix = tensor<double, 2>;
 
-
-}
 }
 
 

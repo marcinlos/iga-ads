@@ -6,8 +6,7 @@
 #include <boost/range.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 
-namespace ads {
-namespace util {
+namespace ads::util {
 
 namespace impl {
 
@@ -159,7 +158,6 @@ product_range(boost::iterator_range<Iter> rx, boost::iterator_range<Iter> ry, bo
 }
 
 
-}
 }
 
 

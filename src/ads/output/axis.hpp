@@ -6,8 +6,7 @@
 #include "ads/bspline/bspline.hpp"
 #include "ads/output/range.hpp"
 
-namespace ads {
-namespace output {
+namespace ads::output {
 
 
 struct axis {
@@ -40,7 +39,6 @@ struct axis {
     }
 };
 
-}
 }
 
 

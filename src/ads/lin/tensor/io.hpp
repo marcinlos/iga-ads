@@ -7,8 +7,7 @@
 #include "ads/lin/tensor/base.hpp"
 
 
-namespace ads {
-namespace lin {
+namespace ads::lin {
 
 namespace impl {
 
@@ -72,7 +71,6 @@ std::ostream& operator <<(std::ostream& os, const tensor_base<T, Rank, Impl>& t)
     return os;
 }
 
-}
 }
 
 

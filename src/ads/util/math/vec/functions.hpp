@@ -7,8 +7,7 @@
 #include "ads/util/math/vec/vec_3d.hpp"
 
 
-namespace ads {
-namespace math {
+namespace ads::math {
 
 
 template <std::size_t D>
@@ -48,7 +47,6 @@ vec<D> normalized(vec<D> u) {
 
 
 
-}
 }
 
 

@@ -5,8 +5,7 @@
 #include "ads/lin/tensor/base.hpp"
 
 
-namespace ads {
-namespace lin {
+namespace ads::lin {
 
 namespace impl {
 
@@ -57,7 +56,6 @@ void for_each_multiindex(F&& fun, const lin::tensor_base<T, Rank, Impl>& t) {
 
 
 
-}
 }
 
 

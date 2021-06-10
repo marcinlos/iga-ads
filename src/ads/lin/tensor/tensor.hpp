@@ -5,8 +5,7 @@
 #include "ads/lin/tensor/base.hpp"
 
 
-namespace ads {
-namespace lin {
+namespace ads::lin {
 
 namespace impl {
 
@@ -55,7 +54,6 @@ void zero(tensor<T, Rank>& tensor) {
     tensor.fill_with_zeros();
 }
 
-}
 }
 
 

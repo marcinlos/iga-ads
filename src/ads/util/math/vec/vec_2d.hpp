@@ -4,8 +4,7 @@
 #include "ads/util/math/vec/vec_fwd.hpp"
 
 
-namespace ads {
-namespace math {
+namespace ads::math {
 
 template <>
 struct vec<2> {
@@ -52,7 +51,6 @@ struct vec<2> {
 };
 
 
-}
 }
 
 

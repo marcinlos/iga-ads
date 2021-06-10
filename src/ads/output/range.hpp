@@ -4,8 +4,7 @@
 #include <iterator>
 #include <type_traits>
 
-namespace ads {
-namespace output {
+namespace ads::output {
 
 template <typename RangeIter>
 struct range {
@@ -57,7 +56,6 @@ auto from_container(const Cont& cont) -> range<decltype(begin(cont))> {
 }
 
 
-}
 }
 
 #endif /* ADS_OUTPUT_RANGE_HPP_ */

@@ -1,11 +1,8 @@
 #include "ads/bspline/bspline.hpp"
 #include "ads/util.hpp"
-#include <iostream>
 #include <vector>
-#include <algorithm>
 
-namespace ads {
-namespace bspline {
+namespace ads::bspline {
 
 basis create_basis(double a, double b, int p, int elements) {
     int points = elements + 1;
@@ -194,5 +191,4 @@ std::vector<std::pair<int, int>> elements_supporting_dofs(const basis& b) {
 
 }
 
-}
 }

@@ -4,8 +4,7 @@
 #include <tuple>
 #include "ads/output/range.hpp"
 
-namespace ads {
-namespace output {
+namespace ads::output {
 
 
 template <typename... RangeIters>
@@ -105,7 +104,6 @@ auto dims(const grid<RangeIters...>& grid) {
 }
 
 
-}
 }
 
 

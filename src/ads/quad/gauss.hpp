@@ -5,9 +5,7 @@
 #include <cstddef>
 
 
-namespace ads {
-namespace quad {
-namespace gauss {
+namespace ads::quad::gauss {
 
 template <std::size_t N>
 struct gauss_data;
@@ -4800,8 +4798,6 @@ struct gauss_data<64> {
     };
 };
 
-}
-}
 }
 
 #endif /* ADS_QUAD_GAUSS_TABLES_HPP_ */

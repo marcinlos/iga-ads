@@ -5,8 +5,7 @@
 #include "ads/util/multi_array.hpp"
 
 
-namespace ads {
-namespace lin {
+namespace ads::lin {
 
 template <typename T, std::size_t Rank, typename Impl>
 struct tensor_base : multi_array_base<T, Rank, tensor_base<T, Rank, Impl>, reverse_ordering> {
@@ -54,7 +53,6 @@ private:
 };
 
 
-}
 }
 
 

@@ -4,8 +4,7 @@
 #include "ads/lin/tensor/base.hpp"
 
 
-namespace ads {
-namespace lin {
+namespace ads::lin {
 
 template <typename T, std::size_t Rank>
 struct tensor_view : tensor_base<T, Rank, tensor_view<T, Rank>> {
@@ -39,7 +38,6 @@ tensor_view<T, sizeof...(Sizes)> as_tensor(T* data, Sizes... sizes) {
     return { data, sz };
 }
 
-}
 }
 
 

@@ -2,8 +2,7 @@
 #define ADS_UTIL_MATH_VEC_VEC_3D_HPP_
 
 
-namespace ads {
-namespace math {
+namespace ads::math {
 
 
 template <>
@@ -54,7 +53,6 @@ struct vec<3> {
 };
 
 
-}
 }
 
 

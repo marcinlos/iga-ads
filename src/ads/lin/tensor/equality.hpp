@@ -6,8 +6,7 @@
 #include "ads/lin/tensor/base.hpp"
 
 
-namespace ads {
-namespace lin {
+namespace ads::lin {
 
 namespace impl {
 
@@ -79,7 +78,6 @@ inline bool operator ==(const tensor_base<T, Rank, Impl1>& a, const tensor_base<
 
 
 
-}
 }
 
 

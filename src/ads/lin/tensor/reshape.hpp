@@ -6,8 +6,7 @@
 #include "ads/lin/tensor/view.hpp"
 
 
-namespace ads {
-namespace lin {
+namespace ads::lin {
 
 template <typename T, std::size_t Rank, typename Impl, typename... Sizes>
 tensor_view<T, sizeof...(Sizes)> reshape(tensor_base<T, Rank, Impl>& tensor, Sizes... sizes) {
@@ -24,7 +23,6 @@ tensor_view<T, sizeof...(Sizes)> reshape(const tensor_base<T, Rank, Impl>& tenso
 }
 
 
-}
 }
 
 

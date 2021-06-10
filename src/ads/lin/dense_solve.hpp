@@ -8,8 +8,7 @@
 #include "ads/lin/lapack.hpp"
 
 
-namespace ads {
-namespace lin {
+namespace ads::lin {
 
 
 inline void factorize(dense_matrix& a, solver_ctx& ctx) {
@@ -26,7 +25,6 @@ inline void solve_with_factorized(const dense_matrix& a, Rhs& b, solver_ctx& ctx
 }
 
 
-}
 }
 
 #endif /* ADS_LIN_DENSE_SOLVE_HPP_ */

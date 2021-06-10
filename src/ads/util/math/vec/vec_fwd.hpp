@@ -4,13 +4,11 @@
 #include <cstddef>
 
 
-namespace ads {
-namespace math {
+namespace ads::math {
 
 template <std::size_t Dim>
 struct vec;
 
-}
 }
 
 

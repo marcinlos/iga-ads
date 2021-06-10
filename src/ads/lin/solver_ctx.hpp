@@ -5,8 +5,7 @@
 #include "ads/lin/band_matrix.hpp"
 #include "ads/lin/dense_matrix.hpp"
 
-namespace ads {
-namespace lin {
+namespace ads::lin {
 
 struct solver_ctx {
     std::vector<int> pivot_vector;
@@ -31,7 +30,6 @@ struct solver_ctx {
     }
 };
 
-}
 }
 
 #endif /* ADS_LIN_SOLVER_CTX_HPP_ */

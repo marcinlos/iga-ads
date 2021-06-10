@@ -7,8 +7,7 @@
 #include "ads/lin/solver_ctx.hpp"
 #include "ads/lin/lapack.hpp"
 
-namespace ads {
-namespace lin {
+namespace ads::lin {
 
 inline void factorize(band_matrix& a, solver_ctx& ctx) {
     dgbtrf_(&a.rows, &a.cols, &a.kl, &a.ku, a.full_buffer(), &ctx.lda, ctx.pivot(), &ctx.info);
@@ -29,7 +28,6 @@ inline void solve(band_matrix& a, Rhs& b, solver_ctx& ctx) {
 }
 
 
-}
 }
 
 #endif /* ADS_LIN_BAND_SOLVE_HPP_ */

@@ -1,9 +1,7 @@
 
 #include "ads/quad/gauss.hpp"
 
-namespace ads {
-namespace quad {
-namespace gauss {
+namespace ads::quad::gauss {
 
 constexpr double gauss_data<2>::X[];
 constexpr double gauss_data<3>::X[];
@@ -272,6 +270,4 @@ const double* Ws[] = {
     gauss_data<64>::W,
 };
 
-}
-}
 }

@@ -4,8 +4,7 @@
 #include <vector>
 #include "ads/util/multi_array.hpp"
 
-namespace ads {
-namespace bspline {
+namespace ads::bspline {
 
 using knot_vector = std::vector<double>;
 
@@ -189,7 +188,6 @@ std::vector<int> first_nonzero_dofs(const basis& b);
 std::vector<std::pair<int, int>> elements_supporting_dofs(const basis& b);
 
 
-}
 }
 
 #endif /* ADS_SPLINE_HPP_ */

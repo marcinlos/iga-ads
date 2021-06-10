@@ -5,8 +5,7 @@
 #include "ads/bspline/bspline.hpp"
 #include "ads/util/function_value.hpp"
 
-namespace ads {
-namespace bspline {
+namespace ads::bspline {
 
 
 template <std::size_t N, typename U>
@@ -239,7 +238,6 @@ function_value_3d eval_ders(double x, double y, double z, const U& u, const basi
     return { value, dx, dy, dz };
 }
 
-}
 }
 
 #endif /* ADS_BSPLINE_EVAL_HPP_ */

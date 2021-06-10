@@ -4,8 +4,7 @@
 
 #include <iostream>
 
-namespace ads {
-namespace output {
+namespace ads::output {
 
 struct output_format {
 private:
@@ -60,7 +59,6 @@ inline output_format fixed_format(std::streamsize precision, std::streamsize wid
     return fmt;
 }
 
-}
 }
 
 #endif /* ADS_OUTPUT_OUTPUT_FORMAT_HPP_ */
