@@ -2,9 +2,10 @@
 #define PROBLEMS_ELASTICITY_POURIA_HPP_
 
 #include <cmath>
-#include "ads/simulation.hpp"
+
 #include "ads/executor/galois.hpp"
 #include "ads/output_manager.hpp"
+#include "ads/simulation.hpp"
 
 
 namespace problems {

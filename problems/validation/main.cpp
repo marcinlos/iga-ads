@@ -1,8 +1,8 @@
 #include "validation.hpp"
 
+
 using namespace ads;
 using namespace ads::problems;
-
 
 int main(int argc, char* argv[]) {
     if (argc < 4) {

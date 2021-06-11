@@ -1,5 +1,6 @@
 #include "erikkson.hpp"
 
+
 using namespace ads;
 
 bspline::basis create_basis(double a, double b, int p, int elements, int repeated_nodes, bool adapt) {

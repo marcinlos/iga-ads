@@ -1,4 +1,5 @@
-// #include "problems/pollution/pollution_dpg_2d.hpp"
+#include <cstdlib>
+
 #include "pollution_dpg_v2_2d.hpp"
 
 

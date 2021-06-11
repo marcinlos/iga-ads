@@ -1,8 +1,8 @@
 #include "heat_3d.hpp"
 
+
 using namespace ads;
 using namespace ads::problems;
-
 
 int main() {
     dim_config dim{ 2, 12 };

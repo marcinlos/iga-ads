@@ -8,8 +8,7 @@
 #include "ads/solver/mumps.hpp"
 
 
-namespace ads {
-namespace problems {
+namespace ads::problems {
 
 class stokes_split : public simulation_2d {
 private:
@@ -440,7 +439,6 @@ private:
     }
 };
 
-} // problems
 } // ads
 
 #endif /* ADS_PROBLEMS_STOKES_STOKES_HPP */

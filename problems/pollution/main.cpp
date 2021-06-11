@@ -1,8 +1,9 @@
-// #include "problems/pollution/pollution_3d.hpp"
+#include <cstdlib>
+
 #include "pollution_2d.hpp"
 
-using namespace ads;
 
+using namespace ads;
 
 int main(int argc, char* argv[]) {
     if (argc != 3) {

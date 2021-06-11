@@ -1,8 +1,6 @@
 #include "elasticity_pouria.hpp"
 
-#include "ads/executor/galois.hpp"
-#include "ads/executor/sequential.hpp"
-#include "ads/simulation.hpp"
+#include <cstdlib>
 
 
 using namespace ads;

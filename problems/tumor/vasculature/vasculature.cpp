@@ -1,8 +1,7 @@
 #include "vasculature.hpp"
 
 
-namespace tumor {
-namespace vasc {
+namespace tumor::vasc {
 
     vasculature::vasculature(std::vector<node_ptr> roots, config cfg)
     : cfg{ cfg }
@@ -43,5 +42,4 @@ namespace vasc {
         }
     }
 
-}
 }

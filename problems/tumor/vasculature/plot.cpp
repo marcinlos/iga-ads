@@ -1,15 +1,13 @@
 #include "plot.hpp"
 
-#include <fstream>
-
 #include "ads/output/gnuplot.hpp"
 #include "ads/output/grid.hpp"
 #include "ads/output/range.hpp"
 #include "ads/output_manager.hpp"
 #include "ads/util.hpp"
 
-namespace tumor {
-namespace vasc {
+
+namespace tumor::vasc {
 
     void plot(std::ostream& os, const val_array& v) {
         auto s = v.sizes();
@@ -28,5 +26,4 @@ namespace vasc {
         plot(os, v);
     }
 
-}
 }

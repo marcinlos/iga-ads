@@ -5,8 +5,7 @@
 #include "ads/simulation.hpp"
 
 
-namespace ads {
-namespace problems {
+namespace ads::problems {
 
 
 class heat_1d : public simulation_1d {
@@ -98,7 +97,6 @@ private:
 
 
 
-}
 }
 
 

@@ -1,7 +1,6 @@
 #ifndef PROBLEMS_ERIKKSON_POLLUTION_ROTATION_HPP_
 #define PROBLEMS_ERIKKSON_POLLUTION_ROTATION_HPP_
 
-
 #include <galois/Timer.h>
 
 #include "ads/executor/galois.hpp"

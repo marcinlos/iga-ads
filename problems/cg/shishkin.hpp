@@ -1,9 +1,10 @@
 #ifndef PROBLEMS_CG_SHISHKIN_HPP
 #define PROBLEMS_CG_SHISHKIN_HPP
 
+#include <cmath>
+
 #include "ads/bspline/bspline.hpp"
 #include "ads/util.hpp"
-#include <cmath>
 
 
 inline double shishkin_const(int n, double eps) {

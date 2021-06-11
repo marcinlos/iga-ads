@@ -5,10 +5,6 @@
 #include "erikkson_supg_weak.hpp"
 #include "pollution_rotation.hpp"
 
-// #include "problems/erikkson/erikkson_quanling.hpp"
-// #include "problems/erikkson/pollution_cg.hpp"
-#include "erikkson_mumps_split.hpp"
-
 
 using namespace ads;
 

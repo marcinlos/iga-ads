@@ -6,6 +6,7 @@
 #include "../erikkson/solution.hpp"
 #include "ads/util/function_value/function_value_2d.hpp"
 
+
 using point = std::array<double, 2>;
 using value = ads::function_value_2d;
 

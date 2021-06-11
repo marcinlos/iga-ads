@@ -1,10 +1,8 @@
-#include <iostream>
-
 #include "flow.hpp"
+
 
 using namespace ads;
 using namespace ads::problems;
-
 
 int main() {
     dim_config dim{ 2, 20 };

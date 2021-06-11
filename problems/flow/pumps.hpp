@@ -6,8 +6,8 @@
 #include "ads/util.hpp"
 #include "geometry.hpp"
 
-namespace ads {
-namespace problems {
+
+namespace ads::problems {
 
 struct pumps {
     std::vector<ads::vec3d> sources;
@@ -45,7 +45,6 @@ struct pumps {
     }
 };
 
-}
 }
 
 #endif /* ADS_PROBLEMS_FLOW_PUMPS_HPP_ */

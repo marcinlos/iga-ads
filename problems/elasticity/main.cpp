@@ -1,7 +1,5 @@
-#include "ads/executor/galois.hpp"
-#include "ads/executor/sequential.hpp"
-#include "ads/simulation.hpp"
-#include "elasticity.hpp"
+#include <cstdlib>
+
 #include "implicit.hpp"
 
 

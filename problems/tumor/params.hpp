@@ -3,8 +3,8 @@
 
 #include "skin.hpp"
 
-namespace tumor {
 
+namespace tumor {
 
 struct params {
     double c_b_norm = 1; // normal concentration of tumor cells

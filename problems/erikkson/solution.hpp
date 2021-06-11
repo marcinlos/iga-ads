@@ -2,7 +2,9 @@
 #define PROBLEMS_ERIKKSON_SOLUTION_HPP_
 
 #include <cmath>
+
 #include "ads/util/function_value.hpp"
+
 
 namespace ads {
 

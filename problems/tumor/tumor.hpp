@@ -1,7 +1,6 @@
 #ifndef ADS_PROBLEMS_TUMOR_TUMOR_HPP_
 #define ADS_PROBLEMS_TUMOR_TUMOR_HPP_
 
-
 #include <cmath>
 
 #include <boost/format.hpp>
@@ -13,6 +12,7 @@
 #include "skin.hpp"
 #include "state.hpp"
 #include "vasculature.hpp"
+
 
 namespace bsp = ads::bspline;
 

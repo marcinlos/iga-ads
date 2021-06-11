@@ -1,7 +1,6 @@
 #include "shishkin.hpp"
 
 
-
 ads::bspline::basis create_basis(double a, double b, int p, int elements, int repeated_nodes, bool adapt, double d) {
     int points = elements + 1;
     int r = repeated_nodes + 1;

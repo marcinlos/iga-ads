@@ -7,7 +7,6 @@
 
 using namespace ads;
 
-
 int main(int argc, char* argv[]) {
     if (argc != 26) {
         std::cerr << "Usage: stokes <N> <p_trial> <C_trial> <p_test> <C_test>" << std::endl;

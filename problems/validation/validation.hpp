@@ -1,15 +1,12 @@
 #ifndef ADS_PROBLEMS_VALIDATION_HPP_
 #define ADS_PROBLEMS_VALIDATION_HPP_
 
-
-#include "ads/simulation.hpp"
-#include "ads/output_manager.hpp"
 #include "ads/executor/galois.hpp"
+#include "ads/output_manager.hpp"
+#include "ads/simulation.hpp"
 
 
-namespace ads {
-namespace problems {
-
+namespace ads::problems {
 
 class validation : public simulation_2d {
 private:
@@ -139,7 +136,6 @@ private:
     }
 };
 
-}
 }
 
 #endif /* ADS_PROBLEMS_VALIDATION_HPP_ */

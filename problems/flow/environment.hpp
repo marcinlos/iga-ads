@@ -7,8 +7,7 @@
 #include "geometry.hpp"
 
 
-namespace ads {
-namespace problems {
+namespace ads::problems {
 
 using ads::vec3d;
 
@@ -118,7 +117,6 @@ public:
 
 };
 
-}
 }
 
 #endif /* ADS_PROBLEMS_FLOW_ENVIRONMENT_HPP_ */

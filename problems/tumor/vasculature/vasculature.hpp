@@ -14,8 +14,7 @@
 #include "rasterizer.hpp"
 
 
-namespace tumor {
-namespace vasc {
+namespace tumor::vasc {
 
 class vasculature {
 
@@ -228,7 +227,6 @@ public:
 };
 
 
-}
 }
 
 

@@ -5,14 +5,13 @@
 
 #include "defs.hpp"
 
-namespace tumor {
-namespace vasc {
+
+namespace tumor::vasc {
 
 void plot(std::ostream& os, const val_array& v);
 
 void plot(const std::string& file, const val_array& v);
 
-}
 }
 
 #endif /* PROBLEMS_TUMOR_VASCULATURE_PLOT_HPP_ */

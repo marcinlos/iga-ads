@@ -1,7 +1,9 @@
 #include "coupled.hpp"
 
-using namespace ads;
+#include <cstdlib>
 
+
+using namespace ads;
 
 int main(int argc, char* argv[]) {
 

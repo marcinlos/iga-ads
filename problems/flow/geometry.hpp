@@ -1,9 +1,11 @@
 #ifndef PROBLEMS_FLOW_GEOMETRY_HPP_
 #define PROBLEMS_FLOW_GEOMETRY_HPP_
 
-#include <ostream>
 #include <cmath>
+#include <ostream>
+
 #include "ads/util.hpp"
+
 
 namespace ads {
 

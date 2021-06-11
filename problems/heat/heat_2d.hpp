@@ -1,16 +1,14 @@
 #ifndef ADS_PROBLEMS_HEAT_HEAT_2D_HPP_
 #define ADS_PROBLEMS_HEAT_HEAT_2D_HPP_
 
-
-#include "ads/simulation.hpp"
-#include "ads/output_manager.hpp"
-#include "ads/executor/galois.hpp"
-
 #include <galois/Timer.h>
 
+#include "ads/executor/galois.hpp"
+#include "ads/output_manager.hpp"
+#include "ads/simulation.hpp"
 
-namespace ads {
-namespace problems {
+
+namespace ads::problems {
 
 
 class heat_2d : public simulation_2d {
@@ -116,7 +114,6 @@ private:
     }
 };
 
-}
 }
 
 

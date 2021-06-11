@@ -1,8 +1,8 @@
 #ifndef PROBLEMS_TUMOR_VASCULATURE_CONFIG_HPP_
 #define PROBLEMS_TUMOR_VASCULATURE_CONFIG_HPP_
 
-namespace tumor {
-namespace vasc {
+
+namespace tumor::vasc {
 
 struct config {
     double init_stability = 0.5;
@@ -27,7 +27,6 @@ struct config {
 };
 
 
-}
 }
 
 #endif /* PROBLEMS_TUMOR_VASCULATURE_CONFIG_HPP_ */

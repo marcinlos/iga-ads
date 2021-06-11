@@ -1,7 +1,6 @@
 #ifndef PROBLEMS_ERIKKSON_POLLUTION_CG_HPP_
 #define PROBLEMS_ERIKKSON_POLLUTION_CG_HPP_
 
-
 #include "ads/executor/galois.hpp"
 #include "ads/lin/dense_matrix.hpp"
 #include "ads/lin/dense_solve.hpp"

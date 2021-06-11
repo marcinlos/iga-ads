@@ -8,9 +8,7 @@
 #include "defs.hpp"
 #include "vasculature.hpp"
 
-namespace tumor {
-namespace vasc {
-
+namespace tumor::vasc {
 
 class random_vasculature {
 private:
@@ -182,8 +180,5 @@ private:
 };
 
 }
-}
-
-
 
 #endif /* PROBLEMS_TUMOR_VASCULATURE_GENERATOR_HPP_ */

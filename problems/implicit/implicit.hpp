@@ -1,9 +1,9 @@
 #ifndef PROBLEMS_IMPLICIT_HPP_
 #define PROBLEMS_IMPLICIT_HPP_
 
-#include "ads/simulation.hpp"
-#include "ads/output_manager.hpp"
 #include "ads/executor/galois.hpp"
+#include "ads/output_manager.hpp"
+#include "ads/simulation.hpp"
 
 
 namespace ads {

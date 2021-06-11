@@ -1,11 +1,10 @@
-
 #include <clara.hpp>
 
 #include "maxwell_galerkin.hpp"
 
+
 using namespace ads;
 using namespace clara;
-
 
 int main(int argc, char* argv[]) {
     int n;

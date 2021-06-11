@@ -2,10 +2,11 @@
 #define MUMPS_HPP_
 
 #include <dmumps_c.h>
-#include <vector>
+#include <mpi.h>
+
 #include <cstring>
 #include <iostream>
-#include <mpi.h>
+#include <vector>
 
 
 namespace ads::mumps {

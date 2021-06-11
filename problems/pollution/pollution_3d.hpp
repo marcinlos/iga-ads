@@ -1,9 +1,9 @@
 #ifndef PROBLEMS_POLLLUTION_3D_HPP_
 #define PROBLEMS_POLLLUTION_3D_HPP_
 
-#include "ads/simulation.hpp"
-#include "ads/output_manager.hpp"
 #include "ads/executor/galois.hpp"
+#include "ads/output_manager.hpp"
+#include "ads/simulation.hpp"
 
 
 namespace ads {

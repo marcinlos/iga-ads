@@ -10,9 +10,7 @@
 #include "pumps.hpp"
 
 
-namespace ads {
-namespace problems {
-
+namespace ads::problems {
 
 class flow : public simulation_3d {
 private:
@@ -135,7 +133,6 @@ private:
     }
 };
 
-}
 }
 
 #endif /* ADS_PROBLEMS_FLOW_FLOW_HPP_ */

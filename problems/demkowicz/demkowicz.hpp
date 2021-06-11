@@ -1,11 +1,11 @@
 #ifndef PROBLEMS_DEMKOWICZ_DEMKOWICZ_HPP_
 #define PROBLEMS_DEMKOWICZ_DEMKOWICZ_HPP_
 
-#include "ads/simulation.hpp"
-#include "ads/output_manager.hpp"
 #include "ads/executor/galois.hpp"
 #include "ads/lin/dense_matrix.hpp"
 #include "ads/lin/dense_solve.hpp"
+#include "ads/output_manager.hpp"
+#include "ads/simulation.hpp"
 
 
 namespace ads {

@@ -1,10 +1,11 @@
 #ifndef ADS_PROBLEMS_TUMOR_3D_RASTERIZER_HPP
 #define ADS_PROBLEMS_TUMOR_3D_RASTERIZER_HPP
 
-
 #include <iostream>
+
 #include "ads/lin/tensor.hpp"
 #include "ads/util/math/vec.hpp"
+
 
 namespace tumor {
 

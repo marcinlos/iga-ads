@@ -1,13 +1,10 @@
 #ifndef PROBLEMS_TUMOR_VASCULATURE_RASTERIZER_HPP_
 #define PROBLEMS_TUMOR_VASCULATURE_RASTERIZER_HPP_
 
-
 #include "defs.hpp"
 
 
-namespace tumor {
-namespace vasc {
-
+namespace tumor::vasc {
 
 inline int octant(vector a) {
     if (a.x > 0) {
@@ -97,7 +94,5 @@ void draw_segment(vector a, vector b, Array& v, Value val) {
 }
 
 }
-}
-
 
 #endif /* PROBLEMS_TUMOR_VASCULATURE_RASTERIZER_HPP_ */

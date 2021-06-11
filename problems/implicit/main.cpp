@@ -1,7 +1,9 @@
+#include <cstdlib>
+
 #include "implicit.hpp"
 
-using namespace ads;
 
+using namespace ads;
 
 int main(int argc, char* argv[]) {
 

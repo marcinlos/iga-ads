@@ -1,5 +1,5 @@
-#include <cmath>
 #include <array>
+#include <cmath>
 
 #include "ads/util/function_value.hpp"
 
