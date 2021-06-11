@@ -10,7 +10,7 @@ struct output_base {
 
     output_format format;
 
-    output_base(const output_format& format)
+    explicit output_base(const output_format& format)
     : format { format }
     { }
 
@@ -31,7 +31,6 @@ struct output_base {
         print_row(os, values...);
     }
 
-    template <typename... Values>
     void print_row(std::ostream& os) const {
         os << '\n';
     }

@@ -1,7 +1,6 @@
 #include <catch2/catch.hpp>
 #include "ads/bspline/bspline.hpp"
 #include "ads/util.hpp"
-#include <iomanip>
 #include <numeric>
 
 
@@ -18,7 +17,7 @@ TEST_CASE("B-spline evaluation", "[splines]") {
 
     SECTION("Partition of unity property holds") {
         const int N = 100;
-        double y[N + 1][dofs] = {0};
+        double y[N + 1][dofs] = {};
 
         for (int i = 0; i <= N; ++ i) {
             double x = ads::lerp(i, N, a, b);
@@ -38,7 +37,7 @@ TEST_CASE("B-spline evaluation", "[splines]") {
     SECTION("Computing derivatives") {
         const int d = 2;
         const int N = 100;
-        double y[N + 1][d + 1][dofs] = {0};
+        double y[N + 1][d + 1][dofs] = {};
 
         for (int i = 0; i <= N; ++ i) {
             double x = ads::lerp(i, N, a, b);

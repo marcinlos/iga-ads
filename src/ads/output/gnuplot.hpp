@@ -17,7 +17,7 @@ struct gnuplot_printer<1> : output_base {
 
     static constexpr std::size_t Dim = 1;
 
-    gnuplot_printer(const output_format& format)
+    explicit gnuplot_printer(const output_format& format)
     : output_base { format }
     { }
 
@@ -39,7 +39,7 @@ struct gnuplot_printer<2> : output_base {
 
     static constexpr std::size_t Dim = 2;
 
-    gnuplot_printer(const output_format& format)
+    explicit gnuplot_printer(const output_format& format)
     : output_base { format }
     { }
 

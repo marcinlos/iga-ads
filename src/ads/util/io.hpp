@@ -10,7 +10,7 @@ struct stream_state_saver {
     std::streamsize orig_precision;
     std::ios::fmtflags orig_flags;
 
-    stream_state_saver(std::ostream& os)
+    explicit stream_state_saver(std::ostream& os)
     : os(os)
     , orig_precision(os.precision())
     , orig_flags(os.flags())

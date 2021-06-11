@@ -4800,4 +4800,4 @@ struct gauss_data<64> {
 
 }
 
-#endif /* ADS_QUAD_GAUSS_TABLES_HPP_ */
+#endif /* ADS_QUAD_GAUSS_HPP_ */

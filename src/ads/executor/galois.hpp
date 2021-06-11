@@ -36,7 +36,7 @@ public:
         }, galois::no_stats());
     }
 
-    galois_executor(int threads);
+    explicit galois_executor(int threads);
 
     void thread_count(int threads);
 };

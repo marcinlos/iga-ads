@@ -27,7 +27,7 @@ class diff_computer2d : public simulation_2d {
     }
 
 public:
-    diff_computer2d(const ads::config_2d& cfg): simulation_2d(cfg) { }
+    explicit diff_computer2d(const ads::config_2d& cfg): simulation_2d(cfg) { }
 
     double error_L2(const std::string& path1, const std::string& path2) {
         auto u = read_solution(path1);
@@ -103,7 +103,7 @@ class diff_computer3d : public simulation_3d {
     }
 
 public:
-    diff_computer3d(const ads::config_3d& cfg): simulation_3d(cfg) { }
+    explicit diff_computer3d(const ads::config_3d& cfg): simulation_3d(cfg) { }
 
     double error_L2(const std::string& path1, const std::string& path2) {
         auto a = read_solution(path1);

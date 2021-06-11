@@ -141,7 +141,7 @@ protected:
     }
 
     vector_type element_rhs() const {
-        return {local_shape()};
+        return vector_type{local_shape()};
     }
 
     void update_global_rhs(vector_type& global, const vector_type& local, index_type e) const {
@@ -153,7 +153,7 @@ protected:
 
 
 public:
-    simulation_2d(const config_2d& config);
+    explicit simulation_2d(const config_2d& config);
 
     simulation_2d(dimension x, dimension y, const timesteps_config& steps);
 };

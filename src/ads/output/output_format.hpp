@@ -14,7 +14,7 @@ private:
     std::ios_base::fmtflags mask_ = static_cast<std::ios_base::fmtflags>(0);
 
 public:
-    output_format(std::streamsize precision, std::streamsize width)
+    output_format(std::streamsize precision, std::streamsize width) noexcept
     : precision_ { precision }
     , width_ { width }
     { }
@@ -53,7 +53,7 @@ public:
     }
 };
 
-inline output_format fixed_format(std::streamsize precision, std::streamsize width) {
+inline output_format fixed_format(std::streamsize precision, std::streamsize width) noexcept {
     output_format fmt { precision, width };
     fmt.flags(std::ios_base::fixed, std::ios_base::floatfield);
     return fmt;

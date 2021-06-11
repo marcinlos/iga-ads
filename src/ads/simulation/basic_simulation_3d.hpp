@@ -389,8 +389,8 @@ protected:
                 auto y = eval(Y, e, q, Ux, Uy, Uz);
                 auto z = eval(Z, e, q, Ux, Uy, Uz);
 
-                auto val = x.dx + y.dy + z.dz;
-                val += val * val * w * J;
+                auto v = x.dx + y.dy + z.dz;
+                val += v * v * w * J;
             }
         }
         return std::sqrt(val);
@@ -401,4 +401,4 @@ protected:
 }
 
 
-#endif // ADS_SIMULATION_BASIC_SIMULATION_2D_HPP_
+#endif // ADS_SIMULATION_BASIC_SIMULATION_3D_HPP_

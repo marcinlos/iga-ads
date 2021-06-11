@@ -18,10 +18,9 @@ template <
 struct multi_array_base: private Order<Rank> {
 public:
     using Ordering = Order<Rank>;
-    using Self = multi_array_base<T, Rank, Array>;
     using size_array = typename Ordering::size_array;
 
-    multi_array_base(const size_array& sizes)
+    explicit multi_array_base(const size_array& sizes)
     : Ordering { sizes }
     { }
 

@@ -12,7 +12,7 @@ struct raw_printer : output_base {
 
     using Base = output_base;
 
-    raw_printer(const output_format& format)
+    explicit raw_printer(const output_format& format)
     : Base { format }
     { }
 

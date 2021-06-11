@@ -31,7 +31,7 @@ private:
     std::vector<T> buffer_;
 
 public:
-    tensor(const size_array& sizes)
+    explicit tensor(const size_array& sizes)
     : Base { sizes }
     , buffer_(impl::product(sizes))
     { }

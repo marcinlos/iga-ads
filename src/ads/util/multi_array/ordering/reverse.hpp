@@ -18,7 +18,7 @@ struct reverse_ordering_indexer_: reverse_ordering_indexer_<I - 1, Rank> {
     using Base = reverse_ordering_indexer_<I - 1, Rank>;
     using size_array = typename Base::size_array;
 
-    reverse_ordering_indexer_(size_array sizes)
+    explicit reverse_ordering_indexer_(size_array sizes)
     : Base { sizes }
     { }
 
@@ -46,7 +46,7 @@ struct reverse_ordering_indexer_<0, Rank> {
 
     size_array sizes;
 
-    reverse_ordering_indexer_(size_array sizes)
+    explicit reverse_ordering_indexer_(size_array sizes)
     : sizes(sizes)
     { }
 
@@ -69,7 +69,7 @@ struct reverse_ordering : private impl::reverse_ordering_indexer_<Rank, Rank> {
     using Indexer = impl::reverse_ordering_indexer_<Rank, Rank>;
     using size_array = std::array<std::size_t, Rank>;
 
-    reverse_ordering(size_array sizes)
+    explicit reverse_ordering(size_array sizes)
     : Indexer { sizes }
     { }
 

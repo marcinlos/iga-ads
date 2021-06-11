@@ -101,11 +101,11 @@ public:
     using output_manager_base::to_file;
 
     template <typename Solution>
-    void evaluate(const Solution& sol, value_array& vals) {
+    void evaluate(const Solution& sol, value_array& out) {
         for (std::size_t i = 0; i < x.size(); ++ i) {
         for (std::size_t j = 0; j < y.size(); ++ j) {
         for (std::size_t k = 0; k < z.size(); ++ k) {
-            vals(i, j, k) = bspline::eval(x[i], y[j], z[k], sol, x.basis, y.basis, z.basis, x.ctx, y.ctx, z.ctx);
+            out(i, j, k) = bspline::eval(x[i], y[j], z[k], sol, x.basis, y.basis, z.basis, x.ctx, y.ctx, z.ctx);
         }
         }
         }
@@ -113,9 +113,9 @@ public:
 
     template <typename Solution>
     value_array evaluate(const Solution& sol) {
-        value_array vals{{ x.size(), y.size(), z.size() }};
-        evaluate(sol, vals);
-        return vals;
+        value_array out{{ x.size(), y.size(), z.size() }};
+        evaluate(sol, out);
+        return out;
     }
 
     template <typename Solution>

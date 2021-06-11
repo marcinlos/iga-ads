@@ -17,7 +17,7 @@ namespace impl {
 template <typename... Iters>
 struct vtk_print_helper : output_base {
 
-    vtk_print_helper(const output_format& format)
+    explicit vtk_print_helper(const output_format& format)
     : output_base { format }
     { }
 
@@ -35,7 +35,7 @@ struct vtk_print_helper : output_base {
 
 struct vtk : output_base {
 
-    vtk(const output_format& format)
+    explicit vtk(const output_format& format)
     : output_base { format }
     { }
 

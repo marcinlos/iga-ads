@@ -97,7 +97,7 @@ public:
     , AUUy{ Uy.dofs(), Uy.dofs() }
     , u{{ Ux.dofs(), Uy.dofs() }}
     , u_prev{{ Ux.dofs(), Uy.dofs() }}
-    , r{ {{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy}
+    , r{ vector_type{{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy}
     , u_buffer{{ Ux.dofs(), Uy.dofs() }}
     , full_rhs(Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs())
     , h{ element_diam(Ux, Uy) }

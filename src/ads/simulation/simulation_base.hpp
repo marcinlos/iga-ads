@@ -23,7 +23,7 @@ private:
     virtual void after_step(int /*iter*/, double /*t*/) { }
 
 public:
-    simulation_base(const timesteps_config& steps);
+    explicit simulation_base(const timesteps_config& steps);
 
     virtual ~simulation_base() = 0;
 

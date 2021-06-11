@@ -17,11 +17,11 @@ struct solver_ctx {
     , lda(lda)
     { }
 
-    solver_ctx(const band_matrix& a)
+    explicit solver_ctx(const band_matrix& a)
     : solver_ctx(a.rows, 2 * a.kl +  a.ku + 1)
     { }
 
-    solver_ctx(const dense_matrix& a)
+    explicit solver_ctx(const dense_matrix& a)
     : solver_ctx(a.rows(), a.rows())
     { }
 

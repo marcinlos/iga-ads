@@ -92,7 +92,7 @@ public:
     basis_eval_array ndu;
     basis_eval_array a;
 
-    basis_eval_ctx(int p)
+    explicit basis_eval_ctx(int p)
     : buffer((p + 1) * (2 + (p + 1) + 2))
     , right_offset(p + 1)
     , ndu(buffer.data() + 2 * (p + 1), p + 1)
@@ -114,7 +114,7 @@ private:
     std::vector<double> buffer_;
 public:
 
-    eval_ctx(int p)
+    explicit eval_ctx(int p)
     : basis_eval_ctx(p)
     , buffer_(p + 1)
     { }
@@ -140,7 +140,7 @@ public:
         }
     }
 
-    eval_ders_ctx(eval_ders_ctx&& other)
+    eval_ders_ctx(eval_ders_ctx&& other) noexcept
     : basis_eval_ctx(std::move(other))
     , buffer_(std::move(other.buffer_))
     , ders(other.ders)

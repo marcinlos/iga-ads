@@ -74,7 +74,7 @@ void cyclic_transpose(const tensor_base<T, Rank, Impl1>& a, tensor_base<S, Rank,
 
 
 template <typename T, std::size_t Rank, typename Impl>
-tensor_view<T, Rank> cyclic_transpose(const tensor_base<T, Rank, Impl>& a, double* out) {
+tensor_view<T, Rank> cyclic_transpose(const tensor_base<T, Rank, Impl>& a, T* out) {
     tensor_view<T, Rank> view { out, impl::cyclic_transpose_sizes(a.sizes()) };
     impl::cyclic_transpose_helper<T, T, Rank, Impl, decltype(view), 0>::do_transpose(a, view);
     return view;

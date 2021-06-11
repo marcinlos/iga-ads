@@ -14,7 +14,7 @@ struct grid {
 
     std::tuple<range<RangeIters>...> ranges;
 
-    grid(range<RangeIters>... ranges)
+    explicit grid(range<RangeIters>... ranges)
     : ranges { ranges... }
     { }
 
@@ -88,7 +88,7 @@ struct size_array_helper<Rank, Rank> {
 
 template <typename... RangeIters>
 grid<RangeIters...> make_grid(const range<RangeIters>&... ranges) {
-    return { ranges... };
+    return grid<RangeIters...>{ ranges... };
 }
 
 template <typename... Conts>

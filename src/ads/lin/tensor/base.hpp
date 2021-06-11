@@ -19,7 +19,7 @@ protected:
 
 public:
 
-    tensor_base(const size_array& sizes)
+    explicit tensor_base(const size_array& sizes)
     : Base { sizes }
     { }
 

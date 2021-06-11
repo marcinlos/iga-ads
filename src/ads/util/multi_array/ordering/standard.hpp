@@ -20,7 +20,7 @@ struct standard_ordering_indexer_ : standard_ordering_indexer_<I + 1, Rank> {
     using Base = standard_ordering_indexer_<I + 1, Rank>;
     using size_array = typename Base::size_array;
 
-    standard_ordering_indexer_(size_array sizes)
+    explicit standard_ordering_indexer_(size_array sizes)
     : Base { sizes }
     { }
 
@@ -47,7 +47,7 @@ struct standard_ordering_indexer_<Rank, Rank> {
 
     size_array sizes;
 
-    standard_ordering_indexer_(size_array sizes)
+    explicit standard_ordering_indexer_(size_array sizes)
     : sizes(sizes)
     { }
 
@@ -70,7 +70,7 @@ struct standard_ordering : private impl::standard_ordering_indexer_<0, Rank> {
     using Indexer = impl::standard_ordering_indexer_<0, Rank>;
     using size_array = std::array<std::size_t, Rank>;
 
-    standard_ordering(size_array sizes)
+    explicit standard_ordering(size_array sizes)
     : Indexer { sizes }
     { }
 

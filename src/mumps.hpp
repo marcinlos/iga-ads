@@ -17,7 +17,7 @@ struct problem {
     : rhs_{ rhs }, n{ n }
     { }
 
-    problem(std::vector<double>& rhs)
+    explicit problem(std::vector<double>& rhs)
     : rhs_{ rhs.data() }, n{ rhs.size() }
     { }
 
@@ -240,6 +240,8 @@ private:
         case -13:
             os << "Problem of workspace allocation (size = " << info2 << ")";
             break;
+        default:
+            os << "Problem code: " << info1;
         }
     }
 

@@ -117,7 +117,7 @@ public:
     , AUUx{ Ux.dofs(), Ux.dofs() }
     , AUUy{ Uy.dofs(), Uy.dofs() }
     , u{{ Ux.dofs(), Uy.dofs() }}
-    , r{ {{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy}
+    , r{ vector_type{{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy}
     , u_buffer{{ Ux.dofs(), Uy.dofs() }}
     , full_rhs(Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs())
     , output{ Ux.B, Uy.B, 500 }
@@ -281,7 +281,7 @@ private:
                 u(i, j) = u_rhs(i, j);
             }
         }
-        r = residuum{ {{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy };
+        r = residuum{ vector_type{{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy };
         for (auto i = 0; i < Vx.dofs(); ++ i) {
             for (auto j = 0; j < Vy.dofs(); ++ j) {
                 r.data(i, j) = r_rhs(i, j);
