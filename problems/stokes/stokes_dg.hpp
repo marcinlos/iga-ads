@@ -7,7 +7,7 @@
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
 #include "ads/simulation/utils.hpp"
-#include "mumps.hpp"
+#include "ads/solver/mumps.hpp"
 #include "space_set.hpp"
 
 

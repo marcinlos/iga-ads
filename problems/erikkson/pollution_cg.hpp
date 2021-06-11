@@ -2,15 +2,13 @@
 #define PROBLEMS_ERIKKSON_POLLUTION_CG_HPP_
 
 
-#include "ads/simulation.hpp"
-#include "ads/output_manager.hpp"
 #include "ads/executor/galois.hpp"
-#include "ads/lin/tensor/view.hpp"
-#include "mumps.hpp"
-
-
 #include "ads/lin/dense_matrix.hpp"
 #include "ads/lin/dense_solve.hpp"
+#include "ads/lin/tensor/view.hpp"
+#include "ads/output_manager.hpp"
+#include "ads/simulation.hpp"
+#include "ads/solver/mumps.hpp"
 
 
 namespace ads {

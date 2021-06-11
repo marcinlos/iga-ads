@@ -9,8 +9,8 @@
 #include "ads/lin/dense_solve.hpp"
 #include "ads/lin/tensor/view.hpp"
 #include "ads/output_manager.hpp"
+#include "ads/solver/mumps.hpp"
 #include "erikkson_base.hpp"
-#include "mumps.hpp"
 #include "solution.hpp"
 
 

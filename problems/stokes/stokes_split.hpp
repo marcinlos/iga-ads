@@ -1,11 +1,11 @@
 #ifndef ADS_PROBLEMS_STOKES_STOKES_HPP
 #define ADS_PROBLEMS_STOKES_STOKES_HPP
 
-#include "ads/simulation.hpp"
-#include "ads/output_manager.hpp"
 #include "ads/executor/galois.hpp"
 #include "ads/lin/tensor/view.hpp"
-#include "mumps.hpp"
+#include "ads/output_manager.hpp"
+#include "ads/simulation.hpp"
+#include "ads/solver/mumps.hpp"
 
 
 namespace ads {

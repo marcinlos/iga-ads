@@ -7,8 +7,8 @@
 #include "ads/lin/tensor/view.hpp"
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
+#include "ads/solver/mumps.hpp"
 #include "erikkson_base.hpp"
-#include "mumps.hpp"
 
 
 namespace ads {

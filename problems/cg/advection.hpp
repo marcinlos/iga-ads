@@ -10,7 +10,7 @@
 #include "ads/lin/dense_solve.hpp"
 #include "ads/lin/tensor/view.hpp"
 #include "ads/output_manager.hpp"
-#include "mumps.hpp"
+#include "ads/solver/mumps.hpp"
 
 
 namespace ads {

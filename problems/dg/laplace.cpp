@@ -1,30 +1,31 @@
-#include <vector>
-#include <tuple>
-#include <optional>
+#include <algorithm>
 #include <cassert>
+#include <chrono>
 #include <cmath>
-#include <iostream>
 #include <fstream>
 #include <iomanip>
-#include <algorithm>
-#include <type_traits>
-#include <chrono>
+#include <iostream>
 #include <mutex>
-#include <fmt/chrono.h>
-#include <fmt/os.h>
+#include <optional>
+#include <tuple>
+#include <type_traits>
+#include <vector>
+
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/range/counting_range.hpp>
+#include <fmt/chrono.h>
+#include <fmt/os.h>
 
-#include "ads/util.hpp"
-#include "ads/util/iter/product.hpp"
 #include "ads/bspline/bspline.hpp"
 #include "ads/bspline/eval.hpp"
-#include "ads/quad/gauss.hpp"
-#include "ads/lin/tensor.hpp"
-#include "ads/util/function_value.hpp"
-#include "mumps.hpp"
 #include "ads/executor/galois.hpp"
 #include "ads/executor/sequential.hpp"
+#include "ads/lin/tensor.hpp"
+#include "ads/quad/gauss.hpp"
+#include "ads/solver/mumps.hpp"
+#include "ads/util.hpp"
+#include "ads/util/function_value.hpp"
+#include "ads/util/iter/product.hpp"
 
 
 namespace ads {
@@ -1778,8 +1779,8 @@ void DG_poisson() {
     fmt::print("DoFs: {}\n", n);
 
     auto F       = std::vector<double>(n);
-    auto problem = mumps::problem{F.data(), n};
-    auto solver  = mumps::solver{};
+    auto problem = ads::mumps::problem{F.data(), n};
+    auto solver  = ads::mumps::solver{};
 
     auto out = [&problem](int row, int col, double val) {
         if (val != 0) {
@@ -2079,8 +2080,8 @@ void DG_stokes() {
     fmt::print("DoFs: {}\n", n);
 
     auto F       = std::vector<double>(n);
-    auto problem = mumps::problem{F.data(), n};
-    auto solver  = mumps::solver{};
+    auto problem = ads::mumps::problem{F.data(), n};
+    auto solver  = ads::mumps::solver{};
 
     auto M = [&problem](int row, int col, double val) {
         if (val != 0) {
@@ -2273,8 +2274,8 @@ void DGiGRM_stokes() {
     fmt::print("Total:      {:10L}\n", N + n);
 
     auto F       = std::vector<double>(N + n);
-    auto problem = mumps::problem{F.data(), F.size()};
-    auto solver  = mumps::solver{};
+    auto problem = ads::mumps::problem{F.data(), F.size()};
+    auto solver  = ads::mumps::solver{};
 
     auto G = [&problem](int row, int col, double val) {
         if (val != 0) {
@@ -3367,8 +3368,8 @@ void poisson_3D() {
     fmt::print("DoFs: {}\n", n);
 
     auto F       = std::vector<double>(n);
-    auto problem = mumps::problem{F.data(), n};
-    auto solver  = mumps::solver{};
+    auto problem = ads::mumps::problem{F.data(), n};
+    auto solver  = ads::mumps::solver{};
 
     auto out = [&problem](int row, int col, double val) {
         if (val != 0) {
@@ -3465,8 +3466,8 @@ void DG_poisson_3D() {
     fmt::print("DoFs: {}\n", n);
 
     auto F       = std::vector<double>(n);
-    auto problem = mumps::problem{F.data(), n};
-    auto solver  = mumps::solver{};
+    auto problem = ads::mumps::problem{F.data(), n};
+    auto solver  = ads::mumps::solver{};
 
     auto out = [&problem](int row, int col, double val) {
         if (val != 0) {
@@ -3800,8 +3801,8 @@ void DG_stokes_3D() {
     fmt::print("DoFs: {}\n", n);
 
     auto F       = std::vector<double>(n);
-    auto problem = mumps::problem{F.data(), n};
-    auto solver  = mumps::solver{};
+    auto problem = ads::mumps::problem{F.data(), n};
+    auto solver  = ads::mumps::solver{};
 
     auto M = [&problem](int row, int col, double val) {
         if (val != 0) {
@@ -4020,8 +4021,8 @@ void DGiGRM_stokes_3D() {
     fmt::print("Total:      {:10L}\n", N + n);
 
     auto F       = std::vector<double>(N + n);
-    auto problem = mumps::problem{F.data(), N + n};
-    auto solver  = mumps::solver{};
+    auto problem = ads::mumps::problem{F.data(), N + n};
+    auto solver  = ads::mumps::solver{};
 
     auto G = [&problem](int row, int col, double val) {
         if (val != 0) {

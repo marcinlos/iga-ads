@@ -7,7 +7,7 @@
 #include "ads/form_matrix.hpp"
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
-#include "mumps.hpp"
+#include "ads/solver/mumps.hpp"
 #include "problems.hpp"
 #include "state.hpp"
 

@@ -8,7 +8,7 @@
 #include <mpi.h>
 
 
-namespace mumps {
+namespace ads::mumps {
 
 
 struct problem {
