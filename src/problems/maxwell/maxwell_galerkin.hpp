@@ -407,8 +407,8 @@ private:
         auto H3_err_H1 = errorH1(now.H3, UH3x, UH3y, UH3z, problem.H3_at(tt));
         auto H_err_H1 = std::sqrt(H1_err_H1 * H1_err_H1 + H2_err_H1 * H2_err_H1 + H3_err_H1 * H3_err_H1);
 
-        auto rot_H = norm_rot(now.H1, now.H2, now.H1, Vx, Vy, Vz);
-        auto div_H = norm_div(now.H1, now.H2, now.H1, Vx, Vy, Vz);
+        auto rot_H = norm_rot(now.H1, now.H2, now.H3, Vx, Vy, Vz);
+        auto div_H = norm_div(now.H1, now.H2, now.H3, Vx, Vy, Vz);
         auto H_err_rot = error_rot(now.H1, now.H2, now.H3,
                 UH1x, UH1y, UH1z, UH2x, UH2y, UH2z, UH3x, UH3y, UH3z,
                 problem.H1_at(tt), problem.H2_at(tt), problem.H3_at(tt));

@@ -528,8 +528,8 @@ private:
         auto H3_norm_H1 = normH1(now.H3, UH3x, UH3y, UH3z);
         auto H_norm_H1 = std::sqrt(H1_norm_H1 * H1_norm_H1 + H2_norm_H1 * H2_norm_H1 + H3_norm_H1 * H3_norm_H1);
 
-        auto rot_H = norm_rot(now.H1, now.H2, now.H1, Vx, Vy, Vz);
-        auto div_H = norm_div(now.H1, now.H2, now.H1, Vx, Vy, Vz);
+        auto rot_H = norm_rot(now.H1, now.H2, now.H3, Vx, Vy, Vz);
+        auto div_H = norm_div(now.H1, now.H2, now.H3, Vx, Vy, Vz);
 
         std::cout << "After step " << i << ", t = " << tt << std::endl;
         std::cout << "  |E|     = " << E_norm_L2 << "  " << E_norm_H1 << std::endl;
