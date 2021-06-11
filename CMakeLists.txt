@@ -9,7 +9,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/Modules/")
 
 # Default to Release build
-if(NOT CMAKE_BUILD_TYPE)
+if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "No build type selected, default to Release")
   set(CMAKE_BUILD_TYPE "Release")
 endif()
@@ -81,123 +81,18 @@ if (USE_GALOIS)
 endif()
 
 
-# --------------------------------------------------------------------
 # Tests
-# --------------------------------------------------------------------
 if (COMPILE_TESTS)
   include(CTest)
   add_subdirectory(test)
 endif()
 
-# --------------------------------------------------------------------
 # Problems
-# --------------------------------------------------------------------
-
-function(define_problem name)
-  add_executable(${name} ${ARGN})
-  target_link_libraries(${name} PRIVATE ads project_options)
-endfunction()
-
 if (NOT SKIP_PROBLEMS)
-
-  if (USE_GALOIS)
-    define_problem(heat_2d
-      src/problems/heat/heat_2d.cpp)
-
-    define_problem(flow
-      src/problems/flow/main.cpp)
-
-    define_problem(linear_elasticity
-      src/problems/elasticity/main.cpp)
-
-    define_problem(elasticity_victor
-      src/problems/elasticity/victor.cpp)
-
-    define_problem(elasticity_pouria
-    src/problems/elasticity/elasticity_pouria.cpp)
-
-    define_problem(stokes_split
-      src/problems/stokes/main_split.cpp)
-
-    define_problem(validation
-      src/problems/validation/main.cpp)
-
-    define_problem(pollution
-      src/problems/pollution/main.cpp)
-
-    define_problem(pollution_dpg
-      src/problems/pollution/dpg.cpp)
-
-    define_problem(pollution_dpg_3d
-      src/problems/pollution/dpg3d.cpp)
-
-    define_problem(victor
-      src/problems/victor/main.cpp)
-
-    define_problem(erikkson
-      src/problems/erikkson/main.cpp)
-
-    define_problem(erikkson_mumps
-      src/problems/erikkson/main_mumps.cpp)
-
-    define_problem(erikkson_nonstationary
-      src/problems/erikkson/main_nonstationary.cpp)
-
-    define_problem(stokes
-      src/problems/stokes/main.cpp)
-
-    define_problem(stokes_dg
-      src/problems/stokes/main_dg.cpp)
-
-    define_problem(stokes_nonstationary
-      src/problems/stokes/main_nonstationary.cpp)
-
-    define_problem(stokes_projection
-      src/problems/stokes/main_projection.cpp)
-
-    define_problem(demkowicz
-      src/problems/demkowicz/main.cpp)
-
-    define_problem(cg
-      src/problems/cg/main.cpp
-      src/problems/cg/shishkin.cpp)
-    target_link_libraries(cg PRIVATE clara::clara)
-
-    define_problem(maxwell
-      src/problems/maxwell/main.cpp)
-    target_link_libraries(maxwell PRIVATE clara::clara)
-
-    define_problem(maxwell_head
-      src/problems/maxwell/main_head.cpp)
-    target_link_libraries(maxwell_head PRIVATE clara::clara)
-
-    define_problem(error
-      src/tools/error.cpp)
-
-    define_problem(tumor
-      src/problems/tumor/vasculature/plot.cpp
-      src/problems/tumor/vasculature/vasculature.cpp
-      src/problems/tumor/tumor.cpp
-      src/problems/tumor.cpp)
-
-    define_problem(tumor_3d
-      src/problems/tumor/3d/main.cpp)
-
-  endif()
-
-  define_problem(heat_1d
-      src/problems/heat/heat_1d.cpp)
-
-  define_problem(heat_3d
-    src/problems/heat/heat_3d.cpp)
-
-  define_problem(implicit
-    src/problems/implicit/main.cpp)
-
-  define_problem(coupled
-    src/problems/implicit/coupled.cpp)
-
-  define_problem(dg_laplace
-    src/problems/dg/laplace.cpp)
-
+  add_subdirectory(problems)
 endif()
+
+# Tools
+add_executable(error src/tools/error.cpp)
+target_link_libraries(error PRIVATE ads project_options)
+
