@@ -1,5 +1,6 @@
 #include "ads/simulation/simulation_2d.hpp"
 
+
 namespace ads {
 
     simulation_2d::simulation_2d(const config_2d& config)

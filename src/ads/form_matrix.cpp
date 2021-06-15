@@ -1,5 +1,6 @@
 #include "ads/form_matrix.hpp"
 
+
 namespace ads {
 
     void gram_matrix_1d(lin::band_matrix& M, const basis_data& d) {

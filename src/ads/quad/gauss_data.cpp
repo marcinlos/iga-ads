@@ -1,5 +1,5 @@
-
 #include "ads/quad/gauss.hpp"
+
 
 namespace ads::quad::gauss {
 

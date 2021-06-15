@@ -1,6 +1,7 @@
 #include "ads/bspline/bspline.hpp"
+
 #include "ads/util.hpp"
-#include <vector>
+
 
 namespace ads::bspline {
 

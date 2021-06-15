@@ -1,4 +1,5 @@
 #include "ads/basis_data.hpp"
+
 #include "ads/quad/gauss.hpp"
 #include "ads/util.hpp"
 

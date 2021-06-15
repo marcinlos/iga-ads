@@ -46,7 +46,7 @@ add_library(ads
   src/ads/simulation/simulation_3d.cpp)
 
 target_link_libraries(ads PRIVATE project_options)
-target_include_directories(ads PUBLIC ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(ads PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 # --------------------------------------------------------------------
 # Libraries
