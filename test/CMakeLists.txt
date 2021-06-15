@@ -6,8 +6,8 @@ add_executable(suite
     ads/bspline/bspline_test.cpp
     ads/bspline/eval_test.cpp
     ads/util/multi_array_test.cpp
-    ads/lin/banded_solver_test.cpp
-    ads/lin/dense_solver_test.cpp
+        ads/lin/band_solve_test.cpp
+        ads/lin/dense_solve_test.cpp
     ads/lin/tensor_test.cpp
     main.cpp
     )

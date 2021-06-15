@@ -1,7 +1,9 @@
+#include <numeric>
+
 #include <catch2/catch.hpp>
+
 #include "ads/bspline/bspline.hpp"
 #include "ads/util.hpp"
-#include <numeric>
 
 
 using namespace ads::bspline;

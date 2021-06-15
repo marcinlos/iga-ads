@@ -1,6 +1,8 @@
-#include <catch2/catch.hpp>
 #include "ads/lin/tensor.hpp"
+
 #include <iostream>
+
+#include <catch2/catch.hpp>
 
 
 using namespace ads::lin;

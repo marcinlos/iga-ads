@@ -1,8 +1,11 @@
-#include <algorithm>
-#include <catch2/catch.hpp>
-#include "ads/lin/tensor.hpp"
-#include "ads/lin/dense_matrix.hpp"
 #include "ads/lin/dense_solve.hpp"
+
+#include <algorithm>
+
+#include <catch2/catch.hpp>
+
+#include "ads/lin/dense_matrix.hpp"
+#include "ads/lin/tensor.hpp"
 
 
 using namespace ads::lin;
