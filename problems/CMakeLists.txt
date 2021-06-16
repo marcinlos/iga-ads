@@ -1,103 +1,124 @@
 
-function(define_problem name)
-  add_executable(${name} ${ARGN})
-  target_link_libraries(${name} PRIVATE ads project_options)
-endfunction()
-
-if (USE_GALOIS)
-  define_problem(heat_2d
-    heat/heat_2d.cpp)
-
-  define_problem(flow
-    flow/main.cpp)
-
-  define_problem(linear_elasticity
-    elasticity/main.cpp)
-
-  define_problem(elasticity_victor
-    elasticity/victor.cpp)
-
-  define_problem(elasticity_pouria
-    elasticity/elasticity_pouria.cpp)
-
-  define_problem(stokes_split
-    stokes/main_split.cpp)
-
-  define_problem(validation
-    validation/main.cpp)
-
-  define_problem(pollution
-    pollution/main.cpp)
-
-  define_problem(pollution_dpg
-    pollution/dpg.cpp)
-
-  define_problem(pollution_dpg_3d
-    pollution/dpg3d.cpp)
-
-  define_problem(victor
-    victor/main.cpp)
-
-  define_problem(erikkson
-    erikkson/main.cpp)
-
-  define_problem(erikkson_mumps
-    erikkson/main_mumps.cpp)
-
-  define_problem(erikkson_nonstationary
-    erikkson/main_nonstationary.cpp)
-
-  define_problem(stokes
-    stokes/main.cpp)
-
-  define_problem(stokes_dg
-    stokes/main_dg.cpp)
-
-  define_problem(stokes_nonstationary
-    stokes/main_nonstationary.cpp)
-
-  define_problem(stokes_projection
-    stokes/main_projection.cpp)
-
-  define_problem(demkowicz
-    demkowicz/main.cpp)
-
-  define_problem(cg
-    cg/main.cpp
-    cg/shishkin.cpp)
-  target_link_libraries(cg PRIVATE clara::clara)
-
-  define_problem(maxwell
-    maxwell/main.cpp)
-  target_link_libraries(maxwell PRIVATE clara::clara)
-
-  define_problem(maxwell_head
-    maxwell/main_head.cpp)
-  target_link_libraries(maxwell_head PRIVATE clara::clara)
-
-  define_problem(tumor
-    tumor/vasculature/plot.cpp
-    tumor/vasculature/vasculature.cpp
-    tumor/tumor.cpp
-          tumor/tumor_main.cpp)
-
-  define_problem(tumor_3d
-    tumor/3d/main.cpp)
-
-endif()
-
-define_problem(heat_1d
+add_program(heat_1d
+  SRC
   heat/heat_1d.cpp)
 
-define_problem(heat_3d
+add_program(heat_2d GALOIS
+  SRC
+  heat/heat_2d.cpp)
+
+add_program(heat_3d
+  SRC
   heat/heat_3d.cpp)
 
-define_problem(implicit
+add_program(flow GALOIS
+  SRC
+  flow/main.cpp)
+
+add_program(linear_elasticity GALOIS
+  SRC
+  elasticity/main.cpp)
+
+add_program(elasticity_victor GALOIS
+  SRC
+  elasticity/victor.cpp)
+
+add_program(elasticity_pouria GALOIS
+  SRC
+  elasticity/elasticity_pouria.cpp)
+
+add_program(stokes_split MUMPS GALOIS
+  SRC
+  stokes/main_split.cpp)
+
+add_program(validation GALOIS
+  SRC
+  validation/main.cpp)
+
+add_program(pollution GALOIS
+  SRC
+  pollution/main.cpp)
+
+add_program(pollution_dpg GALOIS
+  SRC
+  pollution/dpg.cpp)
+
+add_program(pollution_dpg_3d GALOIS
+  SRC
+  pollution/dpg3d.cpp)
+
+add_program(victor GALOIS
+  SRC
+  victor/main.cpp)
+
+add_program(erikkson GALOIS
+  SRC
+  erikkson/main.cpp)
+
+add_program(erikkson_mumps MUMPS GALOIS
+  SRC
+  erikkson/main_mumps.cpp)
+
+add_program(erikkson_nonstationary MUMPS GALOIS
+  SRC
+  erikkson/main_nonstationary.cpp)
+
+add_program(stokes MUMPS GALOIS
+  SRC
+  stokes/main.cpp)
+
+add_program(stokes_dg MUMPS GALOIS
+  SRC
+  stokes/main_dg.cpp)
+
+add_program(stokes_nonstationary MUMPS GALOIS
+  SRC
+  stokes/main_nonstationary.cpp)
+
+add_program(stokes_projection MUMPS GALOIS
+  SRC
+  stokes/main_projection.cpp)
+
+add_program(demkowicz GALOIS
+  SRC
+  demkowicz/main.cpp)
+
+add_program(cg MUMPS GALOIS
+  SRC
+  cg/main.cpp
+  cg/shishkin.cpp
+  LIBS clara::clara)
+
+add_program(maxwell GALOIS
+  SRC
+  maxwell/main.cpp
+  LIBS clara::clara)
+
+add_program(maxwell_head MUMPS GALOIS
+  SRC
+  maxwell/main_head.cpp
+  LIBS clara::clara)
+
+add_program(tumor GALOIS
+  SRC
+  tumor/vasculature/plot.cpp
+  tumor/vasculature/vasculature.cpp
+  tumor/tumor.cpp
+  tumor/tumor_main.cpp)
+
+add_program(tumor_3d GALOIS
+  SRC
+  tumor/3d/main.cpp)
+
+add_program(implicit GALOIS
+  SRC
   implicit/main.cpp)
 
-define_problem(coupled
+add_program(coupled GALOIS
+  SRC
   implicit/coupled.cpp)
 
-define_problem(dg_laplace
+add_program(dg_laplace MUMPS GALOIS
+  SRC
   dg/laplace.cpp)
 

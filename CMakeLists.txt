@@ -80,6 +80,8 @@ if (USE_GALOIS)
   target_sources(ads PRIVATE src/ads/executor/galois.cpp)
 endif()
 
+# Helper for defining programs using ads
+include(cmake/AddProgram.cmake)
 
 # Tests
 if (COMPILE_TESTS)
@@ -93,6 +95,5 @@ if (NOT SKIP_PROBLEMS)
 endif()
 
 # Tools
-add_executable(error src/tools/error.cpp)
-target_link_libraries(error PRIVATE ads project_options)
+add_program(error GALOIS SRC src/tools/error.cpp)
 
