@@ -27,10 +27,7 @@ add_library(project_options INTERFACE)
 include(cmake/Warnings.cmake)
 
 # Sanitizers
-# Enable address sanitizer
-add_compile_options("$<$<CONFIG:Debug>:-fsanitize=address,undefined;-fno-omit-frame-pointer>")
-add_link_options("$<$<CONFIG:Debug>:-fsanitize=address,undefined>")
-
+include(cmake/Sanitizers.cmake)
 
 # Target library definition
 add_library(ads
