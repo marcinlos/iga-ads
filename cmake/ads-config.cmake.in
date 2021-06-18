@@ -1,0 +1,23 @@
+include(CMakeFindDependencyMacro)
+
+set(ADS_USE_GALOIS @ADS_USE_GALOIS@)
+set(ADS_USE_MUMPS @ADS_USE_MUMPS@)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/Modules")
+
+find_dependency(BLAS)
+find_dependency(LAPACK)
+
+find_dependency(Boost)
+find_dependency(fmt)
+
+if (ADS_USE_GALOIS)
+  find_dependency(Galois 6.0)
+endif()
+
+if (ADS_USE_MUMPS)
+  find_dependency(MUMPS)
+endif()
+
+
+include("${CMAKE_CURRENT_LIST_DIR}/ads-targets.cmake")
