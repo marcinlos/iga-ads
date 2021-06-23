@@ -51,6 +51,7 @@ target_sources(ads
 )
 
 target_link_libraries(ads PRIVATE project-options)
+target_link_libraries(ads PRIVATE project-warnings)
 
 target_include_directories(ads
   PUBLIC
@@ -114,7 +115,7 @@ add_subdirectory(tools)
 # --------------------------------------------------------------------
 
 install(
-  TARGETS ads project-options
+  TARGETS ads project-options project-warnings
   EXPORT ads-targets
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}

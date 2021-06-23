@@ -1,4 +1,7 @@
 
+# Library for propagating warning settings
+add_library(project-warnings INTERFACE)
+
 set(COMMON_WARNINGS
   -Wall -Wextra -Wpedantic
   -Wnon-virtual-dtor
@@ -29,4 +32,4 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(ADS_WARNINGS ${CLANG_WARNINGS})
 endif()
 
-target_compile_options(project-options INTERFACE ${ADS_WARNINGS})
+target_compile_options(project-warnings INTERFACE ${ADS_WARNINGS})
