@@ -1,0 +1,53 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 19,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "hidden": true
+    }, {
+      "name": "with-libs",
+      "hidden": true,
+      "cacheVariables": {
+        "ADS_USE_GALOIS": "ON",
+        "ADS_USE_MUMPS": "ON"
+      }
+    }, {
+      "name": "debug",
+      "inherits": "base",
+      "hidden": true,
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    }, {
+      "name": "release",
+      "inherits": "base",
+      "hidden": true,
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    }, {
+      "name": "basic-debug",
+      "inherits": "debug",
+      "displayName": "Basic (debug)",
+      "description": "Basic build with no optional libraries"
+    }, {
+      "name": "basic-release",
+      "inherits": "release",
+      "displayName": "Basic (release)",
+      "description": "Basic build with no optional libraries"
+    }, {
+      "name": "standard-debug",
+      "inherits": ["debug", "with-libs"],
+      "displayName": "Standard (debug)",
+      "description": "Standard build with Galois and MUMPS (debug)"
+    }, {
+      "name": "standard-release",
+      "inherits": ["release", "with-libs"],
+      "displayName": "Standard (release)",
+      "description": "Standard build with Galois and MUMPS (release)"
+    }
+  ]
+}
