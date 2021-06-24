@@ -24,6 +24,7 @@ include(GNUInstallDirs)
 
 # Imaginary library to propagate settings
 add_library(project-options INTERFACE)
+target_compile_features(project-options INTERFACE cxx_std_17)
 
 # Compiler warning options
 include(cmake/Warnings.cmake)
@@ -34,8 +35,6 @@ include(cmake/Sanitizers.cmake)
 # Target library definition
 add_library(ads)
 add_library(ads::ads ALIAS ads)
-
-target_compile_features(ads INTERFACE cxx_std_17)
 
 target_sources(ads
   PRIVATE
@@ -50,7 +49,7 @@ target_sources(ads
     src/ads/simulation/simulation_3d.cpp
 )
 
-target_link_libraries(ads PRIVATE project-options)
+target_link_libraries(ads PUBLIC project-options)
 target_link_libraries(ads PRIVATE project-warnings)
 
 target_include_directories(ads
