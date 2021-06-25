@@ -34,12 +34,16 @@ include(cmake/Warnings.cmake)
 # Sanitizers
 include(cmake/Sanitizers.cmake)
 
+# Version information
+include(cmake/Version.cmake)
+
 # Target library definition
 add_library(ads)
 add_library(ads::ads ALIAS ads)
 
 target_sources(ads
   PRIVATE
+    "${CMAKE_CURRENT_BINARY_DIR}/ads/version.cpp"
     src/ads/form_matrix.cpp
     src/ads/bspline/bspline.cpp
     src/ads/quad/gauss_data.cpp
@@ -53,9 +57,6 @@ target_sources(ads
 
 target_link_libraries(ads PUBLIC project-options)
 target_link_libraries(ads PRIVATE project-warnings)
-
-configure_file(src/ads/version.cpp.in ads/version.cpp @ONLY)
-target_sources(ads PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/ads/version.cpp")
 
 target_include_directories(ads
   PUBLIC

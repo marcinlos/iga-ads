@@ -9,7 +9,8 @@ auto version() -> version_info {
         "@ADS_VERSION@"sv,
         @ADS_VERSION_MAJOR@,
         @ADS_VERSION_MINOR@,
-        @ADS_VERSION_PATCH@
+        @ADS_VERSION_PATCH@,
+        "@ADS_GIT_COMMIT@"sv
     };
 }
 

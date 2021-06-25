@@ -11,6 +11,7 @@ struct version_info {
     int major;
     int minor;
     int patch;
+    std::string_view commit;
 };
 
 auto version() -> version_info;
