@@ -1,0 +1,16 @@
+#include "ads/config.hpp"
+
+
+namespace ads {
+
+auto version() -> version_info {
+    using namespace std::literals;
+    return {
+        "@ADS_VERSION@"sv,
+        @ADS_VERSION_MAJOR@,
+        @ADS_VERSION_MINOR@,
+        @ADS_VERSION_PATCH@
+    };
+}
+
+}

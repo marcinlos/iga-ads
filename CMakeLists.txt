@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
-project(ADS LANGUAGES CXX)
+project(ADS
+  VERSION 0.1.0
+  LANGUAGES CXX)
 
 # We use C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -51,6 +53,9 @@ target_sources(ads
 
 target_link_libraries(ads PUBLIC project-options)
 target_link_libraries(ads PRIVATE project-warnings)
+
+configure_file(src/ads/version.cpp.in ads/version.cpp @ONLY)
+target_sources(ads PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/ads/version.cpp")
 
 target_include_directories(ads
   PUBLIC
