@@ -1,9 +1,16 @@
-*.swp
-*build*/
-.idea/
-.cproject
-.project
-.settings
+# Editor files
+*.sw[a-p]
+*~
+\#*\#
 
-# local CMake presets
+# Build directory
+/*build*/
+
+# IDE files
+/.idea/
+/.cproject
+/.project
+/.settings/
+
+# Local CMake presets
 /CMakeUserPresets.json
