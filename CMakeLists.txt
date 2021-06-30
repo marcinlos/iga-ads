@@ -79,7 +79,7 @@ find_package(Boost 1.58.0 REQUIRED)
 target_link_libraries(ads PUBLIC Boost::boost)
 
 # fmt
-find_package(fmt REQUIRED)
+find_package(fmt 7.1 REQUIRED)
 target_link_libraries(ads PUBLIC fmt::fmt)
 
 # MUMPS
