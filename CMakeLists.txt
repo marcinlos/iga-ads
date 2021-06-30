@@ -75,7 +75,7 @@ find_package(LAPACK REQUIRED)
 target_link_libraries(ads PUBLIC ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 
 # Boost
-find_package(Boost REQUIRED)
+find_package(Boost 1.58.0 REQUIRED)
 target_link_libraries(ads PUBLIC Boost::boost)
 
 # fmt
