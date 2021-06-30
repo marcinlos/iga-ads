@@ -17,8 +17,8 @@ private:
     vector_type u, u_prev;
 
     output_manager<2> output;
-    galois::StatTimer integration_timer{"integration"};
     galois_executor executor{1};
+    galois::StatTimer integration_timer{"integration"};
 
 public:
     heat_2d(const config_2d& config)
