@@ -11,6 +11,10 @@ add_program(heat_3d
   SRC
   heat/heat_3d.cpp)
 
+add_program(scalability GALOIS
+  SRC
+  scalability/main.cpp)
+
 add_program(flow GALOIS
   SRC
   flow/main.cpp)
