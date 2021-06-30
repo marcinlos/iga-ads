@@ -67,7 +67,7 @@ target_include_directories(ads
 # Libraries
 # --------------------------------------------------------------------
 
-add_subdirectory(libs)
+add_subdirectory(external)
 
 # Numerical libraries
 find_package(BLAS REQUIRED)
