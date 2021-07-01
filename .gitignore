@@ -14,3 +14,6 @@
 
 # Local CMake presets
 /CMakeUserPresets.json
+
+# python
+__pycache__/
