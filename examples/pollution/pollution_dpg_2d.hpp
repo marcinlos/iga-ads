@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
+// SPDX-License-Identifier: MIT
+
 #ifndef PROBLEMS_POLLUTION_DPG_2D_HPP_
 #define PROBLEMS_POLLUTION_DPG_2D_HPP_
 
