@@ -42,7 +42,7 @@ public:
             double localL2 = 0;
             double J = jacobian(e);
             for (auto q : quad_points()) {
-                double w = weigth(q);
+                double w = weight(q);
 
                 auto uval = eval_fun(u, e, q);
                 auto vval = eval_fun(v, e, q);
@@ -66,7 +66,7 @@ public:
             double localH1 = 0;
             double J = jacobian(e);
             for (auto q : quad_points()) {
-                double w = weigth(q);
+                double w = weight(q);
 
                 auto uval = eval_fun(u, e, q);
                 auto vval = eval_fun(v, e, q);
@@ -118,7 +118,7 @@ public:
             double localL2 = 0;
             double J = jacobian(e);
             for (auto q : quad_points()) {
-                double w = weigth(q);
+                double w = weight(q);
 
                 auto ex = eval_fun(a.ux, e, q) - eval_fun(b.ux, e, q);
                 auto ey = eval_fun(a.uy, e, q) - eval_fun(b.uy, e, q);
@@ -143,7 +143,7 @@ public:
             double localH1 = 0;
             double J = jacobian(e);
             for (auto q : quad_points()) {
-                double w = weigth(q);
+                double w = weight(q);
 
                 auto ex = eval_fun(a.ux, e, q) - eval_fun(b.ux, e, q);
                 auto ey = eval_fun(a.uy, e, q) - eval_fun(b.uy, e, q);

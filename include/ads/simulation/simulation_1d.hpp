@@ -71,7 +71,7 @@ protected:
         return x.basis.J[e];
     }
 
-    double weigth(index_type q) const {
+    double weight(index_type q) const {
         return x.basis.w[q];
     }
 

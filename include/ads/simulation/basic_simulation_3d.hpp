@@ -140,7 +140,7 @@ protected:
         return x.basis.J[e[0]] * y.basis.J[e[1]] * z.basis.J[e[2]];
     }
 
-    double weigth(index_type q, const dimension& x, const dimension& y, const dimension& z) const {
+    double weight(index_type q, const dimension& x, const dimension& y, const dimension& z) const {
         return x.basis.w[q[0]] * y.basis.w[q[1]] * z.basis.w[q[2]];
     }
 
@@ -218,7 +218,7 @@ protected:
         for (auto e : elements(Ux, Uy, Uz)) {
             double J = jacobian(e, Ux, Uy, Uz);
             for (auto q : quad_points(Ux, Uy, Uz)) {
-                double w = weigth(q, Ux, Uy, Uz);
+                double w = weight(q, Ux, Uy, Uz);
                 auto x = point(e, q, Ux, Uy, Uz);
                 auto d = fun(x);
                 val += norm(d) * w * J;
@@ -246,7 +246,7 @@ protected:
         for (auto e : elements(Ux, Uy, Uz)) {
             double J = jacobian(e, Ux, Uy, Uz);
             for (auto q : quad_points(Ux, Uy, Uz)) {
-                double w = weigth(q, Ux, Uy, Uz);
+                double w = weight(q, Ux, Uy, Uz);
                 value_type uu = eval(u, e, q, Ux, Uy, Uz);
                 val += norm(uu) * w * J;
             }
@@ -273,7 +273,7 @@ protected:
         for (auto e : elements(Ux, Uy, Uz)) {
             double J = jacobian(e, Ux, Uy, Uz);
             for (auto q : quad_points(Ux, Uy, Uz)) {
-                double w = weigth(q, Ux, Uy, Uz);
+                double w = weight(q, Ux, Uy, Uz);
                 auto x = point(e, q, Ux, Uy, Uz);
                 value_type uu = eval(u, e, q, Ux, Uy, Uz);
 
@@ -293,7 +293,7 @@ protected:
         for (auto e : elements(Ux, Uy, Uz)) {
             double J = jacobian(e, Ux, Uy, Uz);
             for (auto q : quad_points(Ux, Uy, Uz)) {
-                double w = weigth(q, Ux, Uy, Uz);
+                double w = weight(q, Ux, Uy, Uz);
                 auto x = point(e, q, Ux, Uy, Uz);
                 value_type uu = eval(u, e, q, Ux, Uy, Uz);
                 auto fx = fun(x);
@@ -337,7 +337,7 @@ protected:
         for (auto e : elements(Ux, Uy, Uz)) {
             double J = jacobian(e, Ux, Uy, Uz);
             for (auto q : quad_points(Ux, Uy, Uz)) {
-                double w = weigth(q, Ux, Uy, Uz);
+                double w = weight(q, Ux, Uy, Uz);
                 auto x = eval(X, e, q, Ux, Uy, Uz);
                 auto y = eval(Y, e, q, Ux, Uy, Uz);
                 auto z = eval(Z, e, q, Ux, Uy, Uz);
@@ -364,7 +364,7 @@ protected:
             double J = jacobian(e, U1x, U1y, U1z);
             for (auto q : quad_points(U1x, U1y, U1z)) {
                 auto p = point(e, q, U1x, U2y, U3z);
-                double w = weigth(q, U1x, U2y, U3z);
+                double w = weight(q, U1x, U2y, U3z);
                 auto x = eval(X, e, q, U1x, U1y, U1z) - fx(p);
                 auto y = eval(Y, e, q, U2x, U2y, U2z) - fy(p);
                 auto z = eval(Z, e, q, U3x, U3y, U3z) - fz(p);
@@ -387,7 +387,7 @@ protected:
         for (auto e : elements(Ux, Uy, Uz)) {
             double J = jacobian(e, Ux, Uy, Uz);
             for (auto q : quad_points(Ux, Uy, Uz)) {
-                double w = weigth(q, Ux, Uy, Uz);
+                double w = weight(q, Ux, Uy, Uz);
                 auto x = eval(X, e, q, Ux, Uy, Uz);
                 auto y = eval(Y, e, q, Ux, Uy, Uz);
                 auto z = eval(Z, e, q, Ux, Uy, Uz);

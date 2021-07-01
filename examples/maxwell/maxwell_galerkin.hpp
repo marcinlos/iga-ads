@@ -317,7 +317,7 @@ private:
 
             auto J = jacobian(e, Vx, Vy, Vz);
             for (auto q : quad_points(Vx, Vy, Vz)) {
-                auto W = weigth(q, Vx, Vy, Vz);
+                auto W = weight(q, Vx, Vy, Vz);
 
                 using vec = std::array<value_type, 3>;
 

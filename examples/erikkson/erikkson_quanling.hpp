@@ -577,7 +577,7 @@ private:
 
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Vy)) {
-                double W = weigth(q);
+                double W = weight(q);
                 double WJ = W * J;
                 // auto x = point(e, q);
                 value_type uu = eval(u, e, q, Ux, Uy);
@@ -639,7 +639,7 @@ private:
         for (auto e : elements(Ux, Ux)) {
             double J = jacobian(e);
             for (auto q : quad_points(Ux, Ux)) {
-                double w = weigth(q);
+                double w = weight(q);
                 auto x = point(e, q);
                 value_type uu = eval(u, e, q, Ux, Uy);
 
@@ -655,7 +655,7 @@ private:
         for (auto e : elements(Ux, Ux)) {
             double J = jacobian(e);
             for (auto q : quad_points(Ux, Ux)) {
-                double w = weigth(q);
+                double w = weight(q);
                 auto x = point(e, q);
                 value_type uu = eval(u, e, q, Ux, Uy);
 

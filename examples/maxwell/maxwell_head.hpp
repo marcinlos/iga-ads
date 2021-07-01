@@ -169,7 +169,7 @@ private:
             auto loc = buffer_type{shape_loc};
 
             for (auto q : quad_points(Vx, Vy, Vz)) {
-                auto W = weigth(q, Vx, Vy, Vz);
+                auto W = weight(q, Vx, Vy, Vz);
                 auto x = point(e, q, Vx, Vy, Vz);
                 double eps = problem.eps(x);
                 double mu  = problem.mu(x);
@@ -461,7 +461,7 @@ private:
 
             auto J = jacobian(e, Vx, Vy, Vz);
             for (auto q : quad_points(Vx, Vy, Vz)) {
-                auto W = weigth(q, Vx, Vy, Vz);
+                auto W = weight(q, Vx, Vy, Vz);
                 auto x = point(e, q, Vx, Vy, Vz);
 
                 using vec = std::array<value_type, 3>;

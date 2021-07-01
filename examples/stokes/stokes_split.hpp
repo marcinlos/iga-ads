@@ -369,7 +369,7 @@ private:
 
             double J = jacobian(e);
             for (auto q : quad_points()) {
-                double w = weigth(q);
+                double w = weight(q);
                 for (auto a : dofs_on_element(e)) {
                     auto aa = dof_global_to_local(e, a);
                     value_type v = eval_basis(e, q, a);
@@ -397,7 +397,7 @@ private:
 
             double J = jacobian(e);
             for (auto q : quad_points()) {
-                double w = weigth(q);
+                double w = weight(q);
                 for (auto a : dofs_on_element(e)) {
                     auto aa = dof_global_to_local(e, a);
                     value_type v = eval_basis(e, q, a);
@@ -420,7 +420,7 @@ private:
         for (auto e : elements()) {
             double J = jacobian(e);
             for (auto q : quad_points()) {
-                double w = weigth(q);
+                double w = weight(q);
                 value_type vx = eval_fun(u, e, q);
                 E += vx.val * w * J;
             }
@@ -433,7 +433,7 @@ private:
         for (auto e : elements()) {
             double J = jacobian(e);
             for (auto q : quad_points()) {
-                double w = weigth(q);
+                double w = weight(q);
                 value_type vx = eval_fun(u, e, q);
                 E += vx.val * vx.val * w * J;
             }

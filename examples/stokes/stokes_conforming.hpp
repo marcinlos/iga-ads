@@ -197,7 +197,7 @@ public:
 
             double J = jacobian(e, Ux, Uy);
             for (auto q : quad_points(Ux, Uy)) {
-                double w = weigth(q);
+                double w = weight(q);
                 value_type ww = eval_basis(e, q, i, Ux, Uy);
                 value_type uu = eval_basis(e, q, j, Vx, Vy);
 
@@ -575,7 +575,7 @@ public:
 
             double J = jacobian(e);
             for (auto q : quad_points(test.Px, test.Py)) {
-                double W = weigth(q);
+                double W = weight(q);
                 auto x = point(e, q);
                 auto F = forcing(x);
                 for (auto a : dofs_on_element(e, test.U1x, test.U1y)) {
@@ -691,7 +691,7 @@ public:
         for (auto e : elements(space.Px, space.Px)) {
             double J = jacobian(e, space.Px, space.Py);
             for (auto q : quad_points(space.Px, space.Py)) {
-                double w = weigth(q, space.Px, space.Py);
+                double w = weight(q, space.Px, space.Py);
                 auto x = point(e, q, space.Px, space.Py);
                 value_type div = divergence(u, v, e, q, space);
 

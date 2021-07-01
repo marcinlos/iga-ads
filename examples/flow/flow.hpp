@@ -83,7 +83,7 @@ private:
 
             double J = jacobian(e);
             for (auto q : quad_points()) {
-                double w = weigth(q);
+                double w = weight(q);
                 auto x = point(e, q);
 
                 double mi = 10;
@@ -108,7 +108,7 @@ private:
         for (auto e : elements()) {
             double J = jacobian(e);
             for (auto q : quad_points()) {
-                double w = weigth(q);
+                double w = weight(q);
                 value_type a = eval_fun(u, e, q);
                 E += a.val * a.val * w * J;
             }

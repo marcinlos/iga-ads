@@ -99,7 +99,7 @@ private:
 
                     double J = jacobian(e, x, y);
                     for (auto q : quad_points(x, y)) {
-                        double w = weigth(q, x, y);
+                        double w = weight(q, x, y);
                         auto pt = point(e, q, x, y);
                         value_type ww = eval_basis(e, q, a, x, y);
                         value_type uu = eval_basis(e, q, b, x, y);
@@ -216,7 +216,7 @@ private:
 
             double J = jacobian(e, x, y);
             for (auto q : quad_points(x, y)) {
-                double w = weigth(q, x, y);
+                double w = weight(q, x, y);
                 auto xx = point(e, q);
 
                 for (auto a : dofs_on_element(e, x, y)) {

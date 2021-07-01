@@ -547,7 +547,7 @@ private:
 
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Uy)) {
-                double w = weigth(q);
+                double w = weight(q);
                 value_type u = eval(u_prev, e, q, Ux, Uy);
 
                 for (auto a : dofs_on_element(e, Vx, Uy)) {
@@ -576,7 +576,7 @@ private:
 
             double J = jacobian(e);
             for (auto q : quad_points(Ux, Vy)) {
-                double w = weigth(q);
+                double w = weight(q);
                 value_type u = eval(u_prev, e, q, Ux, Uy);
 
                 for (auto a : dofs_on_element(e, Ux, Vy)) {
@@ -621,7 +621,7 @@ private:
         for (auto e : elements(Ux, Ux)) {
             double J = jacobian(e);
             for (auto q : quad_points(Ux, Ux)) {
-                double w = weigth(q);
+                double w = weight(q);
                 auto x = point(e, q);
                 value_type u = eval(u_prev, e, q, Ux, Uy);
 
@@ -637,7 +637,7 @@ private:
         for (auto e : elements(Ux, Ux)) {
             double J = jacobian(e);
             for (auto q : quad_points(Ux, Ux)) {
-                double w = weigth(q);
+                double w = weight(q);
                 auto x = point(e, q);
                 value_type u = eval(u_prev, e, q, Ux, Uy);
 

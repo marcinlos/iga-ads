@@ -343,7 +343,7 @@ namespace tumor {
 
             double J = jacobian(e);
             for (auto q : quad_points()) {
-                double w = weigth(q);
+                double w = weight(q);
                 auto x = point(e, q);
 
                 value_type b = ensure_positive(eval_fun(s.b, e, q));

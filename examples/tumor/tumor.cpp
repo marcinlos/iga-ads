@@ -67,7 +67,7 @@ namespace tumor {
 
             double J = jacobian(e);
             for (auto q : quad_points()) {
-                double w = weigth(q);
+                double w = weight(q);
                 auto x = point(e, q);
                 for (auto a : dofs_on_element(e)) {
                     auto aa = dof_global_to_local(e, a);

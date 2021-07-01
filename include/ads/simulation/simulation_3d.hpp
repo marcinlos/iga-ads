@@ -33,7 +33,7 @@ public:
     using basic_simulation_3d::update_global_rhs;
     using basic_simulation_3d::dofs;
     using basic_simulation_3d::jacobian;
-    using basic_simulation_3d::weigth;
+    using basic_simulation_3d::weight;
     using basic_simulation_3d::point;
 
 
@@ -89,7 +89,7 @@ public:
         return x.basis.J[e[0]] * y.basis.J[e[1]] * z.basis.J[e[2]];
     }
 
-    double weigth(index_type q) const {
+    double weight(index_type q) const {
         return x.basis.w[q[0]] * y.basis.w[q[1]] * z.basis.w[q[2]];
     }
 

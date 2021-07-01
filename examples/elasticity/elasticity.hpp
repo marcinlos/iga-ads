@@ -73,7 +73,7 @@ namespace problems {
             double J = jacobian(e);
             for (auto q : quad_points()) {
                 auto x = point(e, q);
-                double w = weigth(q);
+                double w = weight(q);
                 value_type ux = eval_fun(prev.ux, e, q);
                 value_type uy = eval_fun(prev.uy, e, q);
                 value_type uz = eval_fun(prev.uz, e, q);
@@ -127,7 +127,7 @@ namespace problems {
             for (auto e : elements()) {
                 double J = jacobian(e);
                 for (auto q : quad_points()) {
-                    double w = weigth(q);
+                    double w = weight(q);
                     value_type vx = eval_fun(now.vx, e, q);
                     value_type vy = eval_fun(now.vy, e, q);
                     value_type vz = eval_fun(now.vz, e, q);
@@ -142,7 +142,7 @@ namespace problems {
             for (auto e : elements()) {
                 double J = jacobian(e);
                 for (auto q : quad_points()) {
-                    double w = weigth(q);
+                    double w = weight(q);
                     value_type ux = eval_fun(now.ux, e, q);
                     value_type uy = eval_fun(now.uy, e, q);
                     value_type uz = eval_fun(now.uz, e, q);
@@ -171,7 +171,7 @@ namespace problems {
             for (auto e : elements()) {
                 double J = jacobian(e);
                 for (auto q : quad_points()) {
-                    double w = weigth(q);
+                    double w = weight(q);
                     value_type ux = eval_fun(now.ux, e, q);
                     value_type uy = eval_fun(now.uy, e, q);
                     value_type uz = eval_fun(now.uz, e, q);
@@ -200,7 +200,7 @@ namespace problems {
             for (auto e : elements()) {
                 double J = jacobian(e);
                 for (auto q : quad_points()) {
-                    double w = weigth(q);
+                    double w = weight(q);
                     value_type ux = eval_fun(now.ux, e, q);
                     value_type uy = eval_fun(now.uy, e, q);
                     value_type uz = eval_fun(now.uz, e, q);
@@ -232,7 +232,7 @@ namespace problems {
             for (auto e : elements()) {
                 double J = jacobian(e);
                 for (auto q : quad_points()) {
-                    double w = weigth(q);
+                    double w = weight(q);
                     value_type vx = eval_fun(now.vx, e, q);
                     E += w * J * vx.val;
                 }

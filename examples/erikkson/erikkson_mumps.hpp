@@ -243,7 +243,7 @@ private:
 
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Vy)) {
-                double w = weigth(q);
+                double w = weight(q);
                 auto x = point(e, q);
                 // value_type uu = eval(u, e, q, Ux, Uy);
 

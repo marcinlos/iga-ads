@@ -33,7 +33,7 @@ protected:
     using basic_simulation_2d::update_global_rhs;
     using basic_simulation_2d::dofs;
     using basic_simulation_2d::jacobian;
-    using basic_simulation_2d::weigth;
+    using basic_simulation_2d::weight;
     using basic_simulation_2d::point;
 
 
@@ -98,7 +98,7 @@ protected:
         return x.basis.J[e[0]] * y.basis.J[e[1]];
     }
 
-    double weigth(index_type q) const {
+    double weight(index_type q) const {
         return x.basis.w[q[0]] * y.basis.w[q[1]];
     }
 
