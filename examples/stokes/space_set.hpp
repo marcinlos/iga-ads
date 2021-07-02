@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_STOKES_SPACE_SET_HPP_
-#define PROBLEMS_STOKES_SPACE_SET_HPP_
+#ifndef STOKES_SPACE_SET_HPP
+#define STOKES_SPACE_SET_HPP
 
 #include "ads/simulation.hpp"
 
@@ -24,4 +24,4 @@ inline int total_dimension(const space_set& s) {
 
 }
 
-#endif /* PROBLEMS_STOKES_SPACE_SET_HPP_ */
+#endif // STOKES_SPACE_SET_HPP

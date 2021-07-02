@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_OUTPUT_RANGE_HPP_
-#define ADS_OUTPUT_RANGE_HPP_
+#ifndef ADS_OUTPUT_RANGE_HPP
+#define ADS_OUTPUT_RANGE_HPP
 
 #include <iterator>
 #include <type_traits>
@@ -61,4 +61,4 @@ auto from_container(const Cont& cont) -> range<decltype(begin(cont))> {
 
 }
 
-#endif /* ADS_OUTPUT_RANGE_HPP_ */
+#endif // ADS_OUTPUT_RANGE_HPP

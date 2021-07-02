@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_UTIL_MULTI_ARRAY_ORDERING_REVERSE_HPP_
-#define ADS_UTIL_MULTI_ARRAY_ORDERING_REVERSE_HPP_
+#ifndef ADS_UTIL_MULTI_ARRAY_ORDERING_REVERSE_HPP
+#define ADS_UTIL_MULTI_ARRAY_ORDERING_REVERSE_HPP
 
 #include <cassert>
 #include <cstddef>
@@ -99,4 +99,4 @@ struct reverse_ordering : private impl::reverse_ordering_indexer_<Rank, Rank> {
 
 }
 
-#endif /* ADS_UTIL_MULTI_ARRAY_ORDERING_REVERSE_HPP_ */
+#endif // ADS_UTIL_MULTI_ARRAY_ORDERING_REVERSE_HPP

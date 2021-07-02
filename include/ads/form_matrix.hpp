@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_FORM_MATRIX_HPP_
-#define ADS_FORM_MATRIX_HPP_
+#ifndef ADS_FORM_MATRIX_HPP
+#define ADS_FORM_MATRIX_HPP
 
 #include "ads/basis_data.hpp"
 #include "ads/lin/band_matrix.hpp"
@@ -51,4 +51,4 @@ void form_matrix(lin::band_matrix& M, const basis_data& d, Form&& form) {
 
 }
 
-#endif /* ADS_FORM_MATRIX_HPP_ */
+#endif // ADS_FORM_MATRIX_HPP

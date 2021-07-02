@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_ELASTICITY_ELASTICITY_HPP_
-#define PROBLEMS_ELASTICITY_ELASTICITY_HPP_
+#ifndef ELASTICITY_ELASTICITY_HPP
+#define ELASTICITY_ELASTICITY_HPP
 
 #include <cmath>
 
@@ -309,4 +309,4 @@ namespace problems {
 
 
 
-#endif /* PROBLEMS_ELASTICITY_ELASTICITY_HPP_ */
+#endif // ELASTICITY_ELASTICITY_HPP

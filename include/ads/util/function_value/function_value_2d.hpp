@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_UTIL_FUNCTION_VALUE_FUNCTION_VALUE_2D_HPP_
-#define ADS_UTIL_FUNCTION_VALUE_FUNCTION_VALUE_2D_HPP_
+#ifndef ADS_UTIL_FUNCTION_VALUE_FUNCTION_VALUE_2D_HPP
+#define ADS_UTIL_FUNCTION_VALUE_FUNCTION_VALUE_2D_HPP
 
 
 namespace ads {
@@ -80,4 +80,4 @@ inline function_value_2d operator / (function_value_2d u, double a) {
 
 }
 
-#endif /* ADS_UTIL_FUNCTION_VALUE_FUNCTION_VALUE_2D_HPP_ */
+#endif // ADS_UTIL_FUNCTION_VALUE_FUNCTION_VALUE_2D_HPP

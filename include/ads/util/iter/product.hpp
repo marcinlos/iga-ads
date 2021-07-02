@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_UTIL_ITER_PRODUCT_HPP_
-#define ADS_UTIL_ITER_PRODUCT_HPP_
+#ifndef ADS_UTIL_ITER_PRODUCT_HPP
+#define ADS_UTIL_ITER_PRODUCT_HPP
 
 #include <iterator>
 #include <tuple>
@@ -164,4 +164,4 @@ product_range(boost::iterator_range<Iter> rx, boost::iterator_range<Iter> ry, bo
 
 }
 
-#endif /* ADS_UTIL_ITER_PRODUCT_HPP_ */
+#endif // ADS_UTIL_ITER_PRODUCT_HPP

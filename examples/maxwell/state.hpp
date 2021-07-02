@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_MAXWELL_STATE_HPP_
-#define PROBLEMS_MAXWELL_STATE_HPP_
+#ifndef MAXWELL_STATE_HPP
+#define MAXWELL_STATE_HPP
 
 #include "ads/lin/tensor.hpp"
 
@@ -42,4 +42,4 @@ struct state {
 
 }
 
-#endif // ifndef PROBLEMS_MAXWELL_STATE_HPP_
+#endif // MAXWELL_STATE_HPP

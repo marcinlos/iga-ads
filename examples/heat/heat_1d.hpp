@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_PROBLEMS_HEAT_HEAT_1D_HPP_
-#define ADS_PROBLEMS_HEAT_HEAT_1D_HPP_
+#ifndef HEAT_HEAT_1D_HPP
+#define HEAT_HEAT_1D_HPP
 
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
@@ -104,4 +104,4 @@ private:
 
 
 
-#endif /* ADS_PROBLEMS_HEAT_HEAT_1D_HPP_ */
+#endif // HEAT_HEAT_1D_HPP

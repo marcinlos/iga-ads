@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_SPLINE_HPP_
-#define ADS_SPLINE_HPP_
+#ifndef ADS_BSPLINE_BSPLINE_HPP
+#define ADS_BSPLINE_BSPLINE_HPP
 
 #include <vector>
 
@@ -194,4 +194,4 @@ std::vector<std::pair<int, int>> elements_supporting_dofs(const basis& b);
 
 }
 
-#endif /* ADS_SPLINE_HPP_ */
+#endif // ADS_BSPLINE_BSPLINE_HPP

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_PROBLEMS_SCALABILITY_TEST_3D_HPP_
-#define ADS_PROBLEMS_SCALABILITY_TEST_3D_HPP_
+#ifndef SCALABILITY_TEST3D_HPP
+#define SCALABILITY_TEST3D_HPP
 
 #include "ads/simulation.hpp"
 #include "ads/executor/galois.hpp"
@@ -113,4 +113,4 @@ private:
 
 
 
-#endif /* ADS_PROBLEMS_SCALABILITY_TEST_3D_HPP_ */
+#endif // SCALABILITY_TEST3D_HPP

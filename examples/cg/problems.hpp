@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_CG_PROBLEMS_HPP
-#define PROBLEMS_CG_PROBLEMS_HPP
+#ifndef CG_PROBLEMS_HPP
+#define CG_PROBLEMS_HPP
 
 #include <array>
 
@@ -64,4 +64,4 @@ struct problem1 {
 };
 
 
-#endif // PROBLEMS_CG_PROBLEMS_HPP
+#endif // CG_PROBLEMS_HPP

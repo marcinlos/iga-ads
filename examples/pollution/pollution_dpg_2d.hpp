@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_POLLUTION_DPG_2D_HPP_
-#define PROBLEMS_POLLUTION_DPG_2D_HPP_
+#ifndef POLLUTION_POLLUTION_DPG_2D_HPP
+#define POLLUTION_POLLUTION_DPG_2D_HPP
 
 #include "ads/executor/galois.hpp"
 #include "ads/lin/dense_matrix.hpp"
@@ -475,4 +475,4 @@ private:
 
 
 
-#endif /* PROBLEMS_POLLUTION_DPG_2D_HPP_ */
+#endif // POLLUTION_POLLUTION_DPG_2D_HPP

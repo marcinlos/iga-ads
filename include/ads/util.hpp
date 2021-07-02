@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_UTIL_HPP_
-#define ADS_UTIL_HPP_
+#ifndef ADS_UTIL_HPP
+#define ADS_UTIL_HPP
 
 #include <vector>
 
@@ -36,4 +36,4 @@ inline std::vector<Num> linspace(Num a, Num b, std::size_t n) {
 
 }
 
-#endif /* ADS_UTIL_HPP_ */
+#endif // ADS_UTIL_HPP

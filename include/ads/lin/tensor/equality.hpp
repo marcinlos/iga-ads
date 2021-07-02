@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_LIN_TENSOR_EQUALITY_HPP_
-#define ADS_LIN_TENSOR_EQUALITY_HPP_
+#ifndef ADS_LIN_TENSOR_EQUALITY_HPP
+#define ADS_LIN_TENSOR_EQUALITY_HPP
 
 #include <cmath>
 #include <cstddef>
@@ -81,4 +81,4 @@ inline bool operator ==(const tensor_base<T, Rank, Impl1>& a, const tensor_base<
 
 }
 
-#endif /* ADS_LIN_TENSOR_EQUALITY_HPP_ */
+#endif // ADS_LIN_TENSOR_EQUALITY_HPP

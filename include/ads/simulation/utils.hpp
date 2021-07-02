@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_SIMULATION_UTILS_HPP_
-#define ADS_SIMULATION_UTILS_HPP_
+#ifndef ADS_SIMULATION_UTILS_HPP
+#define ADS_SIMULATION_UTILS_HPP
 
 #include "ads/simulation/dimension.hpp"
 
@@ -19,4 +19,4 @@ inline double max_element_size(const dimension& U) {
 
 }
 
-#endif // ADS_SIMULATION_UTILS_HPP_
+#endif // ADS_SIMULATION_UTILS_HPP

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_FLOW_GEOMETRY_HPP_
-#define PROBLEMS_FLOW_GEOMETRY_HPP_
+#ifndef FLOW_GEOMETRY_HPP
+#define FLOW_GEOMETRY_HPP
 
 #include <cmath>
 #include <ostream>
@@ -76,5 +76,4 @@ inline double dist_from_segment(const vec3d& p, const vec3d& a, const vec3d& b) 
 }
 
 
-#endif /* PROBLEMS_FLOW_GEOMETRY_HPP_
- */
+#endif // FLOW_GEOMETRY_HPP

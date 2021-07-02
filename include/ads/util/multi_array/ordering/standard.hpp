@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_UTIL_MULTI_ARRAY_ORDERING_STANDARD_HPP_
-#define ADS_UTIL_MULTI_ARRAY_ORDERING_STANDARD_HPP_
+#ifndef ADS_UTIL_MULTI_ARRAY_ORDERING_STANDARD_HPP
+#define ADS_UTIL_MULTI_ARRAY_ORDERING_STANDARD_HPP
 
 #include <array>
 #include <cassert>
@@ -100,4 +100,4 @@ struct standard_ordering : private impl::standard_ordering_indexer_<0, Rank> {
 
 }
 
-#endif /* ADS_UTIL_MULTI_ARRAY_ORDERING_STANDARD_HPP_ */
+#endif // ADS_UTIL_MULTI_ARRAY_ORDERING_STANDARD_HPP

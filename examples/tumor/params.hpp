@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_TUMOR_PARAMS_HPP_
-#define PROBLEMS_TUMOR_PARAMS_HPP_
+#ifndef TUMOR_PARAMS_HPP
+#define TUMOR_PARAMS_HPP
 
 #include "skin.hpp"
 
@@ -42,4 +42,4 @@ struct params {
 
 }
 
-#endif /* PROBLEMS_TUMOR_PARAMS_HPP_ */
+#endif // TUMOR_PARAMS_HPP

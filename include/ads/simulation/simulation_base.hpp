@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_SIMULATION_SIMULATION_BASE_HPP_
-#define ADS_SIMULATION_SIMULATION_BASE_HPP_
+#ifndef ADS_SIMULATION_SIMULATION_BASE_HPP
+#define ADS_SIMULATION_SIMULATION_BASE_HPP
 
 #include "ads/simulation/config.hpp"
 
@@ -36,4 +36,4 @@ inline simulation_base::~simulation_base() = default;
 
 }
 
-#endif /* ADS_SIMULATION_SIMULATION_BASE_HPP_ */
+#endif // ADS_SIMULATION_SIMULATION_BASE_HPP

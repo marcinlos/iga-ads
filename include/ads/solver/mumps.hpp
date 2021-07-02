@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef MUMPS_HPP_
-#define MUMPS_HPP_
+#ifndef ADS_SOLVER_MUMPS_HPP
+#define ADS_SOLVER_MUMPS_HPP
 
 #include <dmumps_c.h>
 #include <mpi.h>
@@ -296,4 +296,4 @@ private:
 
 }
 
-#endif /* MUMPS_HPP_ */
+#endif // ADS_SOLVER_MUMPS_HPP

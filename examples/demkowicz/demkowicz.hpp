@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_DEMKOWICZ_DEMKOWICZ_HPP_
-#define PROBLEMS_DEMKOWICZ_DEMKOWICZ_HPP_
+#ifndef DEMKOWICZ_DEMKOWICZ_HPP
+#define DEMKOWICZ_DEMKOWICZ_HPP
 
 #include "ads/executor/galois.hpp"
 #include "ads/lin/dense_matrix.hpp"
@@ -653,4 +653,4 @@ private:
 
 
 
-#endif /* PROBLEMS_DEMKOWICZ_DEMKOWICZ_HPP_ */
+#endif // DEMKOWICZ_DEMKOWICZ_HPP

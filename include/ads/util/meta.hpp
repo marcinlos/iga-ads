@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_UTIL_META_HPP_
-#define ADS_UTIL_META_HPP_
+#ifndef ADS_UTIL_META_HPP
+#define ADS_UTIL_META_HPP
 
 #include <type_traits>
 
@@ -30,4 +30,4 @@ struct all_ : and_<Pred<Types>...>
 
 }
 
-#endif /* ADS_UTIL_META_HPP_ */
+#endif // ADS_UTIL_META_HPP

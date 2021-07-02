@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_ERIKKSON_ERIKKSON_MUMPS_HPP_
-#define PROBLEMS_ERIKKSON_ERIKKSON_MUMPS_HPP_
+#ifndef ERIKKSON_ERIKKSON_MUMPS_HPP
+#define ERIKKSON_ERIKKSON_MUMPS_HPP
 
 #include <galois/Timer.h>
 
@@ -295,4 +295,4 @@ private:
 
 
 
-#endif /* ADS_PROBLEMS_ERIKKSON_ERIKKSON_MUMPS_HPP */
+#endif // ERIKKSON_ERIKKSON_MUMPS_HPP

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_SIMULATION_SIMULATION_3D_HPP_
-#define ADS_SIMULATION_SIMULATION_3D_HPP_
+#ifndef ADS_SIMULATION_SIMULATION_3D_HPP
+#define ADS_SIMULATION_SIMULATION_3D_HPP
 
 #include <array>
 #include <cstddef>
@@ -161,4 +161,4 @@ public:
 
 }
 
-#endif /* ADS_SIMULATION_SIMULATION_3D_HPP_ */
+#endif // ADS_SIMULATION_SIMULATION_3D_HPP

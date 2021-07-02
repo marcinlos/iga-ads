@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_EXECUTOR_SEQUENTIAL_HPP_
-#define ADS_EXECUTOR_SEQUENTIAL_HPP_
+#ifndef ADS_EXECUTOR_SEQUENTIAL_HPP
+#define ADS_EXECUTOR_SEQUENTIAL_HPP
 
 #include <algorithm>
 
@@ -29,4 +29,4 @@ public:
 
 }
 
-#endif /* ADS_EXECUTOR_SEQUENTIAL_HPP_ */
+#endif // ADS_EXECUTOR_SEQUENTIAL_HPP

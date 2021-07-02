@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_LIN_DENSE_MATRIX_HPP_
-#define ADS_LIN_DENSE_MATRIX_HPP_
+#ifndef ADS_LIN_DENSE_MATRIX_HPP
+#define ADS_LIN_DENSE_MATRIX_HPP
 
 #include <iomanip>
 #include <iostream>
@@ -83,4 +83,4 @@ inline void multiply(const dense_matrix& A, const dense_matrix& B, dense_matrix&
 
 }
 
-#endif /* ADS_LIN_DENSE_MATRIX_HPP_ */
+#endif // ADS_LIN_DENSE_MATRIX_HPP

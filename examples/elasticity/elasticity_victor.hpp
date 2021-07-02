@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_ELASTICITY_ELASTICITY_VICTOR_HPP_
-#define PROBLEMS_ELASTICITY_ELASTICITY_VICTOR_HPP_
+#ifndef ELASTICITY_ELASTICITY_VICTOR_HPP
+#define ELASTICITY_ELASTICITY_VICTOR_HPP
 
 #include <cmath>
 
@@ -600,4 +600,4 @@ private:
 
 
 
-#endif /* PROBLEMS_ELASTICITY_ELASTICITY_VICTOR_HPP_ */
+#endif // ELASTICITY_ELASTICITY_VICTOR_HPP

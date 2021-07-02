@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_IMPLICIT_HPP_
-#define PROBLEMS_IMPLICIT_HPP_
+#ifndef IMPLICIT_IMPLICIT_HPP
+#define IMPLICIT_IMPLICIT_HPP
 
 #include "ads/executor/galois.hpp"
 #include "ads/output_manager.hpp"
@@ -216,4 +216,4 @@ private:
 
 }
 
-#endif /* PROBLEMS_IMPLICIT_HPP_*/
+#endif // IMPLICIT_IMPLICIT_HPP

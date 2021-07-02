@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_LIN_TENSOR_VIEW_HPP_
-#define ADS_LIN_TENSOR_VIEW_HPP_
+#ifndef ADS_LIN_TENSOR_VIEW_HPP
+#define ADS_LIN_TENSOR_VIEW_HPP
 
 #include "ads/lin/tensor/base.hpp"
 
@@ -43,4 +43,4 @@ tensor_view<T, sizeof...(Sizes)> as_tensor(T* data, Sizes... sizes) {
 
 }
 
-#endif /* ADS_LIN_TENSOR_VIEW_HPP_ */
+#endif // ADS_LIN_TENSOR_VIEW_HPP

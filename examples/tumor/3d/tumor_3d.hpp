@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_PROBLEMS_TUMOR_3D_TUMOR_3D_HPP
-#define ADS_PROBLEMS_TUMOR_3D_TUMOR_3D_HPP
+#ifndef TUMOR_3D_TUMOR_3D_HPP
+#define TUMOR_3D_TUMOR_3D_HPP
 
 #include <algorithm>
 
@@ -479,4 +479,4 @@ namespace tumor {
 }
 
 
-#endif /* ADS_PROBLEMS_TUMOR_3D_TUMOR_3D_HPP */
+#endif // TUMOR_3D_TUMOR_3D_HPP

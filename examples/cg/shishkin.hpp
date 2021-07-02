@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_CG_SHISHKIN_HPP
-#define PROBLEMS_CG_SHISHKIN_HPP
+#ifndef CG_SHISHKIN_HPP
+#define CG_SHISHKIN_HPP
 
 #include <cmath>
 
@@ -16,4 +16,4 @@ inline double shishkin_const(int n, double eps) {
 
 ads::bspline::basis create_basis(double a, double b, int p, int elements, int repeated_nodes, bool adapt, double d);
 
-#endif // PROBLEMS_CG_SHISHKIN_HPP
+#endif // CG_SHISHKIN_HPP

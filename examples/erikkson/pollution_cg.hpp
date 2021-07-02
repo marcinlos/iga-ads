@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_ERIKKSON_POLLUTION_CG_HPP_
-#define PROBLEMS_ERIKKSON_POLLUTION_CG_HPP_
+#ifndef ERIKKSON_POLLUTION_CG_HPP
+#define ERIKKSON_POLLUTION_CG_HPP
 
 #include "ads/executor/galois.hpp"
 #include "ads/lin/dense_matrix.hpp"
@@ -730,4 +730,4 @@ private:
 
 
 
-#endif /* ADS_PROBLEMS_ERIKKSON_POLLUTION_CG_HPP */
+#endif // ERIKKSON_POLLUTION_CG_HPP

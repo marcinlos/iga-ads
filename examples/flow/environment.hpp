@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_PROBLEMS_FLOW_ENVIRONMENT_HPP_
-#define ADS_PROBLEMS_FLOW_ENVIRONMENT_HPP_
+#ifndef FLOW_ENVIRONMENT_HPP
+#define FLOW_ENVIRONMENT_HPP
 
 #include <random>
 
@@ -122,4 +122,4 @@ public:
 
 }
 
-#endif /* ADS_PROBLEMS_FLOW_ENVIRONMENT_HPP_ */
+#endif // FLOW_ENVIRONMENT_HPP

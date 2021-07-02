@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_MAXWELL_MAXWELL_HEAD_HPP_
-#define PROBLEMS_MAXWELL_MAXWELL_HEAD_HPP_
+#ifndef MAXWELL_MAXWELL_HEAD_HPP
+#define MAXWELL_MAXWELL_HEAD_HPP
 
 #include <cstdint>
 
@@ -549,4 +549,4 @@ private:
 
 }
 
-#endif // ifndef PROBLEMS_MAXWELL_MAXWELL_HEAD_HPP_
+#endif // MAXWELL_MAXWELL_HEAD_HPP

@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_PROJECTION_HPP_
-#define ADS_PROJECTION_HPP_
+#ifndef ADS_PROJECTION_HPP
+#define ADS_PROJECTION_HPP
 
 #include "ads/basis_data.hpp"
 
@@ -164,4 +164,4 @@ void compute_projection(Rhs& u, const basis_data& d1, const basis_data& d2, cons
 
 }
 
-#endif /* ADS_PROJECTION_HPP_ */
+#endif // ADS_PROJECTION_HPP

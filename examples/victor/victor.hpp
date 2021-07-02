@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_VICTOR_VICTOR_HPP_
-#define PROBLEMS_VICTOR_VICTOR_HPP_
+#ifndef VICTOR_VICTOR_HPP
+#define VICTOR_VICTOR_HPP
 
 #include "ads/executor/galois.hpp"
 #include "ads/lin/dense_matrix.hpp"
@@ -578,4 +578,4 @@ private:
 
 
 
-#endif /* PROBLEMS_VICTOR_VICTOR_HPP_*/
+#endif // VICTOR_VICTOR_HPP

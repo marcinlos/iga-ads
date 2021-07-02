@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_EXECUTOR_GALOIS_HPP_
-#define ADS_EXECUTOR_GALOIS_HPP_
+#ifndef ADS_EXECUTOR_GALOIS_HPP
+#define ADS_EXECUTOR_GALOIS_HPP
 
 #include <iterator>
 
@@ -48,4 +48,4 @@ public:
 
 }
 
-#endif /* ADS_EXECUTOR_GALOIS_HPP_*/
+#endif // ADS_EXECUTOR_GALOIS_HPP

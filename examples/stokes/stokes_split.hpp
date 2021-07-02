@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_PROBLEMS_STOKES_STOKES_HPP
-#define ADS_PROBLEMS_STOKES_STOKES_HPP
+#ifndef STOKES_STOKES_SPLIT_HPP
+#define STOKES_STOKES_SPLIT_HPP
 
 #include "ads/executor/galois.hpp"
 #include "ads/lin/tensor/view.hpp"
@@ -444,4 +444,4 @@ private:
 
 } // ads
 
-#endif /* ADS_PROBLEMS_STOKES_STOKES_HPP */
+#endif // STOKES_STOKES_SPLIT_HPP

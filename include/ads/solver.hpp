@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_SOLVER_HPP_
-#define ADS_SOLVER_HPP_
+#ifndef ADS_SOLVER_HPP
+#define ADS_SOLVER_HPP
 
 #include "ads/lin/band_matrix.hpp"
 #include "ads/lin/band_solve.hpp"
@@ -69,4 +69,4 @@ void ads_solve(Rhs& rhs, Rhs& buf, const std::array<dim_data, D>& dims) {
 
 }
 
-#endif /* ADS_SOLVER_HPP_ */
+#endif // ADS_SOLVER_HPP

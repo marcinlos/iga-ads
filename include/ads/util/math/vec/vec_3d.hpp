@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_UTIL_MATH_VEC_VEC_3D_HPP_
-#define ADS_UTIL_MATH_VEC_VEC_3D_HPP_
+#ifndef ADS_UTIL_MATH_VEC_VEC_3D_HPP
+#define ADS_UTIL_MATH_VEC_VEC_3D_HPP
 
 
 namespace ads::math {
@@ -56,4 +56,4 @@ struct vec<3> {
 
 }
 
-#endif /* ADS_UTIL_MATH_VEC_VEC_3D_HPP_ */
+#endif // ADS_UTIL_MATH_VEC_VEC_3D_HPP

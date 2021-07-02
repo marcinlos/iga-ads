@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_PROBLEMS_VALIDATION_HPP_
-#define ADS_PROBLEMS_VALIDATION_HPP_
+#ifndef VALIDATION_VALIDATION_HPP
+#define VALIDATION_VALIDATION_HPP
 
 #include "ads/executor/galois.hpp"
 #include "ads/output_manager.hpp"
@@ -141,4 +141,4 @@ private:
 
 }
 
-#endif /* ADS_PROBLEMS_VALIDATION_HPP_ */
+#endif // VALIDATION_VALIDATION_HPP

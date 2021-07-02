@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_UTIL_MULTI_ARRAY_BASE_HPP_
-#define ADS_UTIL_MULTI_ARRAY_BASE_HPP_
+#ifndef ADS_UTIL_MULTI_ARRAY_BASE_HPP
+#define ADS_UTIL_MULTI_ARRAY_BASE_HPP
 
 #include <cstddef>
 #include <type_traits>
@@ -64,4 +64,4 @@ private:
 
 }
 
-#endif /* ADS_UTIL_MULTI_ARRAY_BASE_HPP_ */
+#endif // ADS_UTIL_MULTI_ARRAY_BASE_HPP

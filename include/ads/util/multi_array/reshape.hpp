@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_UTIL_MULTI_ARRAY_RESHAPE_HPP_
-#define ADS_UTIL_MULTI_ARRAY_RESHAPE_HPP_
+#ifndef ADS_UTIL_MULTI_ARRAY_RESHAPE_HPP
+#define ADS_UTIL_MULTI_ARRAY_RESHAPE_HPP
 
 #include "ads/util/multi_array/wrapper.hpp"
 
@@ -24,4 +24,4 @@ multi_array_wrapper<T, DestDim, Buffer, DestOrder> reshape(multi_array_wrapper<T
 
 }
 
-#endif /* ADS_UTIL_MULTI_ARRAY_RESHAPE_HPP_ */
+#endif // ADS_UTIL_MULTI_ARRAY_RESHAPE_HPP

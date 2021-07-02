@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_LIN_DENSE_SOLVE_HPP_
-#define ADS_LIN_DENSE_SOLVE_HPP_
+#ifndef ADS_LIN_DENSE_SOLVE_HPP
+#define ADS_LIN_DENSE_SOLVE_HPP
 
 #include <iostream>
 
@@ -28,4 +28,4 @@ inline void solve_with_factorized(const dense_matrix& a, Rhs& b, solver_ctx& ctx
 
 }
 
-#endif /* ADS_LIN_DENSE_SOLVE_HPP_ */
+#endif // ADS_LIN_DENSE_SOLVE_HPP

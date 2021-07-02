@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef ADS_PROBLEMS_FLOW_PUMPS_HPP_
-#define ADS_PROBLEMS_FLOW_PUMPS_HPP_
+#ifndef FLOW_PUMPS_HPP
+#define FLOW_PUMPS_HPP
 
 #include <vector>
 
@@ -50,4 +50,4 @@ struct pumps {
 
 }
 
-#endif /* ADS_PROBLEMS_FLOW_PUMPS_HPP_ */
+#endif // FLOW_PUMPS_HPP

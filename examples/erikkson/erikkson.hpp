@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef PROBLEMS_ERIKKSON_ERIKKSON_HPP_
-#define PROBLEMS_ERIKKSON_ERIKKSON_HPP_
+#ifndef ERIKKSON_ERIKKSON_HPP
+#define ERIKKSON_ERIKKSON_HPP
 
 #include "ads/executor/galois.hpp"
 #include "ads/lin/dense_matrix.hpp"
@@ -774,4 +774,4 @@ private:
 
 
 
-#endif /* PROBLEMS_ERIKKSON_ERIKKSON_HPP_ */
+#endif // ERIKKSON_ERIKKSON_HPP
