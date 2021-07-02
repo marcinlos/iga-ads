@@ -10,9 +10,8 @@ Header format:
 """
 
 import sys
-from pathlib import Path
 import argparse
-from util import project_dir, read_lines, write_lines, for_each_source
+from util import relative_to_project, read_lines, write_lines, for_each_source
 
 
 def license_header(year_from, year_to, holder, license_type):
@@ -41,12 +40,11 @@ def check_license_headers():
     exit code.
     """
     invalid = []
-    root = project_dir()
 
     def check(path):
         lines = read_lines(path)
         if not has_license(lines):
-            relpath = Path(path).relative_to(root)
+            relpath = relative_to_project(path)
             invalid.append(relpath)
 
     for_each_source(check)

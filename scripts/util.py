@@ -17,6 +17,12 @@ def project_dir():
     return script.parents[1]
 
 
+def relative_to_project(path):
+    """Return path relative to the root directory of the project."""
+    root = project_dir()
+    return Path(path).relative_to(root)
+
+
 def source_roots():
     """
     Return the list of absolute paths of root directories containing
