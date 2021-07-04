@@ -141,10 +141,19 @@ install(
   COMPONENT ads-devel
 )
 
+include(CMakePackageConfigHelpers)
+
 configure_file(cmake/ads-config.cmake.in ads-config.cmake @ONLY)
 
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/ads-config-version.cmake"
+  COMPATIBILITY SameMajorVersion
+)
+
 install(
-  FILES "${CMAKE_CURRENT_BINARY_DIR}/ads-config.cmake"
+  FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/ads-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/ads-config-version.cmake"
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/ads"
   COMPONENT ads-devel
 )
