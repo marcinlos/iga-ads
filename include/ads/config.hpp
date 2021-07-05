@@ -10,11 +10,12 @@
 namespace ads {
 
 struct version_info {
+    std::string_view core;
+    std::string_view commit;
     std::string_view full;
     int major;
     int minor;
     int patch;
-    std::string_view commit;
 };
 
 auto version() -> version_info;

@@ -10,10 +10,11 @@ auto version() -> version_info {
     using namespace std::literals;
     return {
         "@ADS_VERSION@"sv,
+        "@ADS_GIT_COMMIT@"sv,
+        "@ADS_VERSION_FULL@"sv,
         @ADS_VERSION_MAJOR@,
         @ADS_VERSION_MINOR@,
         @ADS_VERSION_PATCH@,
-        "@ADS_GIT_COMMIT@"sv
     };
 }
 
