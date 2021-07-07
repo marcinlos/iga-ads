@@ -16,13 +16,14 @@
 *.json text
 
 # Other
-LICENSE         text
-.pylintrc       text
-.flake8         text
-.gitignore      text
-.gitattributes  text
-.clang-tidy     text
-.clang-format   text
+LICENSE                  text
+.pylintrc                text
+.flake8                  text
+.gitignore               text
+.gitattributes           text
+.git-blame-ignore-revs   text
+.clang-tidy              text
+.clang-format            text
 
 # Fallback
 * text=auto
