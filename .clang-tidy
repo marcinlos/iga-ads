@@ -25,7 +25,7 @@ Checks: |
 
     modernize-*,
     -modernize-use-nodiscard,
-    -modernize-use-trailing-return-types,
+    -modernize-use-trailing-return-type,
 
     readability-*,
     # requires further thought,
