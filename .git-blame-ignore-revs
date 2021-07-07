@@ -1,0 +1,9 @@
+# Commits to ignore in git blame (git >= 2.23)
+#
+# Usage: git blame --ignore-revs-file .git-blame-ignore-revs
+#
+# Permanent: git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+# Wed Jul 7 20:39:16 2021 +0200
+# Run clang-format on the entire codebase
+a3b39f86a12bac78de8d1b37de427f30f3590a9b
