@@ -8,7 +8,6 @@
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
 
-
 namespace ads {
 
 class pollution_2d : public simulation_2d {
@@ -24,42 +23,39 @@ private:
 
     int save_every = 1;
 
-    double ambient = 1e-6; // g/m^3
+    double ambient = 1e-6;  // g/m^3
     double Vd = 0.1;
-    point_type c_diff{{ 20, 20 }}; // m/s^2
+    point_type c_diff{{20, 20}};  // m/s^2
 
     double wind_angle = 2 * M_PI / 4;
-    double wind_speed = 5; // m/s
+    double wind_speed = 5;  // m/s
 
-    point_type wind{{ wind_speed * cos(wind_angle), wind_speed * sin(wind_angle) }};
+    point_type wind{{wind_speed * cos(wind_angle), wind_speed* sin(wind_angle)}};
 
     double absorbed = 0.0;
 
-
 public:
     pollution_2d(const config_2d& config)
-    : Base{ config }
-    , u{ shape() }
-    , u_prev{ shape() }
-    , output{ x.B, y.B, 400 }
+    : Base{config}
+    , u{shape()}
+    , u_prev{shape()}
+    , output{x.B, y.B, 400}
     , Kx{x.p, x.p, x.B.dofs()}
     , Ky{y.p, y.p, y.B.dofs()}
-    , Kx_ctx{ Kx }
-    , Ky_ctx{ Ky }
-    {
+    , Kx_ctx{Kx}
+    , Ky_ctx{Ky} {
         matrix(Kx, x.basis, steps.dt / 2, c_diff[0], wind[0]);
         matrix(Ky, y.basis, steps.dt / 2, c_diff[1], wind[1]);
     }
 
 private:
-
     void diffusion_matrix(lin::band_matrix& M, const basis_data& d, double h, double diffusion) {
-        for (element_id e = 0; e < d.elements; ++ e) {
-            for (int q = 0; q < d.quad_order; ++ q) {
+        for (element_id e = 0; e < d.elements; ++e) {
+            for (int q = 0; q < d.quad_order; ++q) {
                 int first = d.first_dof(e);
                 int last = d.last_dof(e);
-                for (int a = 0; a + first <= last; ++ a) {
-                    for (int b = 0; b + first <= last; ++ b) {
+                for (int a = 0; a + first <= last; ++a) {
+                    for (int b = 0; b + first <= last; ++b) {
                         int ia = a + first;
                         int ib = b + first;
                         auto da = d.b[e][q][1][a];
@@ -73,12 +69,12 @@ private:
     }
 
     void advection_matrix(lin::band_matrix& M, const basis_data& d, double h, double advection) {
-        for (element_id e = 0; e < d.elements; ++ e) {
-            for (int q = 0; q < d.quad_order; ++ q) {
+        for (element_id e = 0; e < d.elements; ++e) {
+            for (int q = 0; q < d.quad_order; ++q) {
                 int first = d.first_dof(e);
                 int last = d.last_dof(e);
-                for (int a = 0; a + first <= last; ++ a) {
-                    for (int b = 0; b + first <= last; ++ b) {
+                for (int a = 0; a + first <= last; ++a) {
+                    for (int b = 0; b + first <= last; ++b) {
                         int ia = a + first;
                         int ib = b + first;
                         auto va = d.b[e][q][0][a];
@@ -92,18 +88,19 @@ private:
         }
     }
 
-    void advection_matrix_conv_by_parts(lin::band_matrix& M, const basis_data& d, double h, double advection) {
-        for (element_id e = 0; e < d.elements; ++ e) {
-            for (int q = 0; q < d.quad_order; ++ q) {
+    void advection_matrix_conv_by_parts(lin::band_matrix& M, const basis_data& d, double h,
+                                        double advection) {
+        for (element_id e = 0; e < d.elements; ++e) {
+            for (int q = 0; q < d.quad_order; ++q) {
                 int first = d.first_dof(e);
                 int last = d.last_dof(e);
-                for (int a = 0; a + first <= last; ++ a) {
-                    for (int b = 0; b + first <= last; ++ b) {
+                for (int a = 0; a + first <= last; ++a) {
+                    for (int b = 0; b + first <= last; ++b) {
                         int ia = a + first;
                         int ib = b + first;
                         auto da = d.b[e][q][1][a];
                         auto vb = d.b[e][q][0][b];
-                        auto adv = - advection * h * da * vb;
+                        auto adv = -advection * h * da * vb;
 
                         M(ia, ib) += adv * d.w[q] * d.J[e];
                     }
@@ -112,7 +109,8 @@ private:
         }
     }
 
-    void matrix(lin::band_matrix& K, const basis_data& d, double h, double diffusion, double advection) {
+    void matrix(lin::band_matrix& K, const basis_data& d, double h, double diffusion,
+                double advection) {
         gram_matrix_1d(K, d);
         diffusion_matrix(K, d, h, diffusion);
         advection_matrix(K, d, h, advection);
@@ -122,7 +120,7 @@ private:
         double dx = (x - 3000) / 25;
         double dy = (y - 400) / 25;
         double r2 = std::min((dx * dx + dy * dy), 1.0);
-        return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1); // g/m^3
+        return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);  // g/m^3
     };
 
     void impose_bc(vector_type& /*v*/) const {
@@ -147,13 +145,11 @@ private:
         //     }
         // }
         // v(0, 0) = ambient;
-
-
     }
 
     void fix_dof(int k, const dimension& dim, lin::band_matrix& K) {
         int last = dim.dofs() - 1;
-        for (int i = clamp(k - dim.p, 0, last); i <= clamp(k + dim.p, 0, last); ++ i) {
+        for (int i = clamp(k - dim.p, 0, last); i <= clamp(k + dim.p, 0, last); ++i) {
             K(k, i) = 0;
         }
         K(k, k) = 1;
@@ -217,17 +213,14 @@ private:
         }
 
         auto s = t / 150;
-        auto phase = sin(s) + 0.5 * sin(2.3*s);
+        auto phase = sin(s) + 0.5 * sin(2.3 * s);
         wind_angle = M_PI / 3 * phase + 1.5 * M_PI / 4;
 
-        wind = { wind_speed * cos(wind_angle), wind_speed * sin(wind_angle) };
+        wind = {wind_speed * cos(wind_angle), wind_speed * sin(wind_angle)};
         prepare_implicit_matrices();
-
     }
 
-    double grad_dot(point_type a, value_type u) const {
-        return a[0] * u.dx + a[1] * u.dy;
-    }
+    double grad_dot(point_type a, value_type u) const { return a[0] * u.dx + a[1] * u.dy; }
 
     point_type local_wind(double /*x*/, double /*y*/) const {
         // auto dx = x - 2500;
@@ -243,28 +236,29 @@ private:
         if (e[0] == x.B.elements() - 1) {
             double absorbed_loc = 0.0;
             double J = y.basis.J[e[1]];
-            for (int q = 0; q < y.basis.quad_order; ++ q) {
+            for (int q = 0; q < y.basis.quad_order; ++q) {
                 double w = y.basis.w[q];
                 int first = y.basis.first_dof(e[1]);
                 int last = y.basis.last_dof(e[1]);
 
                 double u = 0.0;
-                for (int a = 0; a + first <= last; ++ a) {
+                for (int a = 0; a + first <= last; ++a) {
                     auto B = y.basis.b[e[1]][q][0][a];
                     double c = u_prev(x.basis.last_dof(e[0]), a + first);
                     u += c * B;
                 }
 
-                for (int a = 0; a + first <= last; ++ a) {
+                for (int a = 0; a + first <= last; ++a) {
                     auto B = y.basis.b[e[1]][q][0][a];
                     auto aa = dof_global_to_local(e, {x.basis.last_dof(e[0]), a + first});
-                    auto prod = - Vd * u * B;
+                    auto prod = -Vd * u * B;
 
                     U(aa[0], aa[1]) += h * prod * w * J;
                 }
-                absorbed_loc += h * Vd * u * w * J;;
+                absorbed_loc += h * Vd * u * w * J;
+                ;
             }
-            executor.synchronized([&]{ absorbed += absorbed_loc; });
+            executor.synchronized([&] { absorbed += absorbed_loc; });
         }
     }
 
@@ -293,16 +287,14 @@ private:
 
                     double gradient_prod = u.dy * v.dy;
                     double e = emission(x[0], x[1]) * v.val;
-                    double val = u.val * v.val + h * (- conv_term - c_diff[1] * gradient_prod + e);
+                    double val = u.val * v.val + h * (-conv_term - c_diff[1] * gradient_prod + e);
 
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
             // boundary_integral(e, U, h);
 
-            executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e);
-            });
+            executor.synchronized([&]() { update_global_rhs(rhs, U, e); });
         });
     }
 
@@ -331,15 +323,13 @@ private:
 
                     double gradient_prod = u.dx * v.dx;
                     double e = emission(x[0], x[1]) * v.val;
-                    double val = u.val * v.val + h * (- conv_term - c_diff[0] * gradient_prod + e);
+                    double val = u.val * v.val + h * (-conv_term - c_diff[0] * gradient_prod + e);
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
             // boundary_integral(e, U, h);
 
-            executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e);
-            });
+            executor.synchronized([&] { update_global_rhs(rhs, U, e); });
         });
     }
 
@@ -360,12 +350,12 @@ private:
 
         using namespace std;
 
-        total /= 1000; // g -> kg
-        emission_rate /= 1000; // g -> kg
+        total /= 1000;          // g -> kg
+        emission_rate /= 1000;  // g -> kg
 
-        auto emitted = t * emission_rate; // kg
-        auto area = 5000.0 * 5000.0; // m^2
-        auto initial = area * ambient / 1000; // kg
+        auto emitted = t * emission_rate;      // kg
+        auto area = 5000.0 * 5000.0;           // m^2
+        auto initial = area * ambient / 1000;  // kg
         auto absorbed_kg = absorbed / 1000;
         auto loss = initial + emitted - total - absorbed_kg;
         auto loss_percent = 100 * loss / emitted;
@@ -373,13 +363,11 @@ private:
         std::cout << "Step " << (iter + 1) << ":"
                   << "  total " << setw(8) << setprecision(5) << total << " kg "
                   << "  absorbed " << setw(8) << setprecision(5) << absorbed_kg << " kg "
-                  << "  (loss "
-                  << setw(6) << loss << " kg,  "
-                  << setw(5) << loss_percent << "%"
-                  << ")" << std::endl;
+                  << "  (loss " << setw(6) << loss << " kg,  " << setw(5) << loss_percent << "%)"
+                  << std::endl;
     }
 };
 
-}
+}  // namespace ads
 
-#endif // POLLUTION_POLLUTION_2D_HPP
+#endif  // POLLUTION_POLLUTION_2D_HPP

@@ -12,7 +12,6 @@
 #include "erikkson_base.hpp"
 #include "solution.hpp"
 
-
 namespace ads {
 
 class erikkson : public erikkson_base {
@@ -26,7 +25,7 @@ private:
     dimension& Vy;
     lin::dense_matrix Kx_x, Kx_y, Ky_x, Ky_y;
 
-    lin::dense_matrix Kx_x_nf, Kx_y_nf, Ky_x_nf, Ky_y_nf; // non-factorized copies
+    lin::dense_matrix Kx_x_nf, Kx_y_nf, Ky_x_nf, Ky_y_nf;  // non-factorized copies
 
     lin::solver_ctx Kxx_ctx, Kxy_ctx, Kyx_ctx, Kyy_ctx;
 
@@ -48,7 +47,7 @@ private:
     // double peclet = 10;
     double epsilon = 1 / peclet;
 
-    point_type c_diff{{ epsilon, epsilon }};
+    point_type c_diff{{epsilon, epsilon}};
 
     // CHANGE
     // double angle = 0;
@@ -57,17 +56,18 @@ private:
     // double len = 1;
 
     // point_type beta{{ len * cos(angle), len * sin(angle) }};
-    point_type beta{{ 1, 1 }};
+    point_type beta{{1, 1}};
 
     output_manager<2> output;
 
 public:
-    erikkson(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, const timesteps_config& steps)
+    erikkson(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y,
+             const timesteps_config& steps)
     : Base{std::move(test_x), std::move(test_y), steps}
-    , Ux{ std::move(trial_x) }
-    , Uy{ std::move(trial_y) }
-    , Vx{ x }
-    , Vy{ y }
+    , Ux{std::move(trial_x)}
+    , Uy{std::move(trial_y)}
+    , Vx{x}
+    , Vy{y}
     , Kx_x{Ux.dofs(), Ux.dofs()}
     , Kx_y{Uy.dofs(), Uy.dofs()}
     , Ky_x{Ux.dofs(), Ux.dofs()}
@@ -76,38 +76,37 @@ public:
     , Kx_y_nf{Uy.dofs(), Uy.dofs()}
     , Ky_x_nf{Ux.dofs(), Ux.dofs()}
     , Ky_y_nf{Uy.dofs(), Uy.dofs()}
-    , Kxx_ctx{ Kx_x }
-    , Kxy_ctx{ Kx_y }
-    , Kyx_ctx{ Ky_x }
-    , Kyy_ctx{ Ky_y }
+    , Kxx_ctx{Kx_x}
+    , Kxy_ctx{Kx_y}
+    , Kyx_ctx{Ky_x}
+    , Kyy_ctx{Ky_y}
     , Ax{Vx.p, Vx.p, Vx.dofs()}
     , Ay{y.p, Vy.p, Vy.dofs()}
-    , Ax_ctx{ Ax }
-    , Ay_ctx{ Ay }
+    , Ax_ctx{Ax}
+    , Ay_ctx{Ay}
     , MUx{Ux.p, Ux.p, Ux.dofs(), Ux.dofs(), 0}
     , MUy{Uy.p, Uy.p, Uy.dofs(), Uy.dofs(), 0}
-    , MUVx{ Vx.p, Ux.p, Vx.dofs(), Ux.dofs() }
-    , MUVy{ Vy.p, Uy.p, Vy.dofs(), Uy.dofs() }
-    , Bx{ Vx.dofs(), Ux.dofs() }
-    , By{ Vy.dofs(), Uy.dofs() }
-    , Tx{ Vx.dofs(), Ux.dofs() }
-    , Ty{ Vy.dofs(), Uy.dofs() }
-    , u{{ Ux.dofs(), Uy.dofs() }}
-    , u_prev{{ Ux.dofs(), Uy.dofs() }}
-    , u_buffer{{ Ux.dofs(), Uy.dofs() }}
-    , rhs1{{ Vx.dofs(), Uy.dofs() }}, rhs2{{ Ux.dofs(), Vy.dofs() }}
-    , output{ Ux.B, Uy.B, 500 }
-    { }
+    , MUVx{Vx.p, Ux.p, Vx.dofs(), Ux.dofs()}
+    , MUVy{Vy.p, Uy.p, Vy.dofs(), Uy.dofs()}
+    , Bx{Vx.dofs(), Ux.dofs()}
+    , By{Vy.dofs(), Uy.dofs()}
+    , Tx{Vx.dofs(), Ux.dofs()}
+    , Ty{Vy.dofs(), Uy.dofs()}
+    , u{{Ux.dofs(), Uy.dofs()}}
+    , u_prev{{Ux.dofs(), Uy.dofs()}}
+    , u_buffer{{Ux.dofs(), Uy.dofs()}}
+    , rhs1{{Vx.dofs(), Uy.dofs()}}
+    , rhs2{{Ux.dofs(), Vy.dofs()}}
+    , output{Ux.B, Uy.B, 500} { }
 
 private:
-
     void prod_V(lin::band_matrix& M, const basis_data& bV) const {
-        for (element_id e = 0; e < bV.elements; ++ e) {
-            for (int q = 0; q < bV.quad_order; ++ q) {
+        for (element_id e = 0; e < bV.elements; ++e) {
+            for (int q = 0; q < bV.quad_order; ++q) {
                 auto first = bV.first_dof(e);
-                auto last  = bV.last_dof(e);
-                for (int a = 0; a + first <= last; ++ a) {
-                    for (int b = 0; b + first <= last; ++ b) {
+                auto last = bV.last_dof(e);
+                for (int a = 0; a + first <= last; ++a) {
+                    for (int b = 0; b + first <= last; ++b) {
                         int ia = a + first;
                         int ib = b + first;
                         auto va = bV.b[e][q][0][a];
@@ -123,10 +122,10 @@ private:
     }
 
     void mass_matrix(lin::dense_matrix& M, const basis_data& bU, const basis_data& bV) {
-        for (element_id e = 0; e < bV.elements; ++ e) {
-            for (int q = 0; q < bV.quad_order; ++ q) {
-                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++ a) {
-                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++ b) {
+        for (element_id e = 0; e < bV.elements; ++e) {
+            for (int q = 0; q < bV.quad_order; ++q) {
+                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++a) {
+                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++b) {
                         int ia = a + bV.first_dof(e);
                         int ib = b + bU.first_dof(e);
                         auto va = bV.b[e][q][0][a];
@@ -141,10 +140,10 @@ private:
 
     void diffusion_matrix(lin::dense_matrix& M, const basis_data& bU, const basis_data& bV,
                           double h, double diffusion) {
-        for (element_id e = 0; e < bV.elements; ++ e) {
-            for (int q = 0; q < bV.quad_order; ++ q) {
-                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++ a) {
-                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++ b) {
+        for (element_id e = 0; e < bV.elements; ++e) {
+            for (int q = 0; q < bV.quad_order; ++q) {
+                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++a) {
+                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++b) {
                         int ia = a + bV.first_dof(e);
                         int ib = b + bU.first_dof(e);
                         auto da = bV.b[e][q][1][a];
@@ -159,10 +158,10 @@ private:
 
     void advection_matrix(lin::dense_matrix& M, const basis_data& bU, const basis_data& bV,
                           double h, double advection) {
-        for (element_id e = 0; e < bV.elements; ++ e) {
-            for (int q = 0; q < bV.quad_order; ++ q) {
-                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++ a) {
-                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++ b) {
+        for (element_id e = 0; e < bV.elements; ++e) {
+            for (int q = 0; q < bV.quad_order; ++q) {
+                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++a) {
+                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++b) {
                         int ia = a + bV.first_dof(e);
                         int ib = b + bU.first_dof(e);
                         auto va = bV.b[e][q][0][a];
@@ -177,14 +176,14 @@ private:
 
     void fix_dof(int k, const dimension& dim, lin::dense_matrix& K) {
         int last = dim.dofs() - 1;
-        for (int i = clamp(k - dim.p, 0, last); i <= clamp(k + dim.p, 0, last); ++ i) {
+        for (int i = clamp(k - dim.p, 0, last); i <= clamp(k + dim.p, 0, last); ++i) {
             K(k, i) = 0;
         }
         K(k, k) = 1;
     }
 
-    void matrix(lin::dense_matrix& B, const basis_data& bU, const basis_data& bV,
-                double h, double diffusion, double advection) {
+    void matrix(lin::dense_matrix& B, const basis_data& bU, const basis_data& bV, double h,
+                double diffusion, double advection) {
         mass_matrix(B, bU, bV);
         diffusion_matrix(B, bU, bV, h, diffusion);
         advection_matrix(B, bU, bV, h, advection);
@@ -251,12 +250,10 @@ private:
         fix_dof(Uy.dofs() - 1, Uy, Kx_y);
         fix_dof(Uy.dofs() - 1, Uy, Ky_y);
 
-
         fix_dof(0, Ux, Ky_x);
         fix_dof(0, Ux, Kx_x);
         fix_dof(Ux.dofs() - 1, Ux, Ky_x);
         fix_dof(Ux.dofs() - 1, Ux, Kx_x);
-
 
         Kx_x_nf = Kx_x;
         Kx_y_nf = Kx_y;
@@ -267,7 +264,6 @@ private:
         lin::factorize(Kx_y, Kxy_ctx);
         lin::factorize(Ky_x, Kyx_ctx);
         lin::factorize(Ky_y, Kyy_ctx);
-
     }
 
     void prepare_matrices() {
@@ -296,10 +292,10 @@ private:
         compute_rhs_x(t);
         ads_solve(rhs1, buffer, dim_data{Ax, Ax_ctx}, Uy.data());
 
-        vector_type rhsx1   {{ Ux.dofs(), Uy.dofs() }};
-        vector_type rhsx1_t {{ Uy.dofs(), Ux.dofs() }};
+        vector_type rhsx1{{Ux.dofs(), Uy.dofs()}};
+        vector_type rhsx1_t{{Uy.dofs(), Ux.dofs()}};
 
-        vector_type u_t     {{ Uy.dofs(), Ux.dofs() }};
+        vector_type u_t{{Uy.dofs(), Ux.dofs()}};
 
         // u = (Bx * MUVy)' rhs
         // =>
@@ -313,43 +309,34 @@ private:
         multiply(MUy, rhsx1_t, u_t, Ux.dofs(), "T");
         lin::cyclic_transpose(u_t, u);
 
-
-
-        lin::band_matrix MUx_loc{ Ux.p, Ux.p, Ux.dofs() };
+        lin::band_matrix MUx_loc{Ux.p, Ux.p, Ux.dofs()};
         gram_matrix_1d(MUx_loc, Ux.basis);
-        lin::solver_ctx ctx_x{ MUx_loc };
+        lin::solver_ctx ctx_x{MUx_loc};
         lin::factorize(MUx_loc, ctx_x);
 
-        lin::band_matrix MUy_loc{ Uy.p, Uy.p, Uy.dofs() };
+        lin::band_matrix MUy_loc{Uy.p, Uy.p, Uy.dofs()};
         gram_matrix_1d(MUy_loc, Uy.basis);
-        lin::solver_ctx ctx_y{ MUy_loc };
+        lin::solver_ctx ctx_y{MUy_loc};
         lin::factorize(MUy_loc, ctx_y);
 
-
         // CHANGE
-        lin::vector buf_y0{{ Ux.dofs() }};
-        compute_projection(buf_y0, Ux.basis, [&](double /*t*/) {
-            return 0;
-        });
+        lin::vector buf_y0{{Ux.dofs()}};
+        compute_projection(buf_y0, Ux.basis, [&](double /*t*/) { return 0; });
         lin::solve_with_factorized(MUx_loc, buf_y0, ctx_x);
 
-        lin::vector buf_y1{{ Ux.dofs() }};
-        compute_projection(buf_y1, Ux.basis, [&](double /*t*/) {
-            return 0;
-        });
+        lin::vector buf_y1{{Ux.dofs()}};
+        compute_projection(buf_y1, Ux.basis, [&](double /*t*/) { return 0; });
         lin::solve_with_factorized(MUx_loc, buf_y1, ctx_x);
 
-        lin::vector buf_x0{{ Uy.dofs() }};
+        lin::vector buf_x0{{Uy.dofs()}};
         compute_projection(buf_x0, Uy.basis, [&](double /*t*/) {
             // return std::sin(M_PI * t);
             return 0;
         });
         lin::solve_with_factorized(MUy_loc, buf_x0, ctx_y);
 
-        lin::vector buf_x1{{ Uy.dofs() }};
-        compute_projection(buf_x1, Uy.basis, [&](double /*t*/) {
-            return 0;
-        });
+        lin::vector buf_x1{{Uy.dofs()}};
+        compute_projection(buf_x1, Uy.basis, [&](double /*t*/) { return 0; });
         lin::solve_with_factorized(MUy_loc, buf_x1, ctx_y);
 
         // lin::vector buf_y0{{ Ux.dofs() }};
@@ -376,38 +363,37 @@ private:
         // });
         // lin::solve_with_factorized(MUy_loc, buf_x1, ctx_y);
 
-        for (int i = 0; i < Ux.dofs(); ++ i) {
+        for (int i = 0; i < Ux.dofs(); ++i) {
             double val = 0;
-            for (int j = 0; j < Ux.dofs(); ++ j) {
+            for (int j = 0; j < Ux.dofs(); ++j) {
                 val += buf_y0(j) * Kx_x_nf(i, j);
             }
             u(i, 0) = val;
         }
 
-        for (int i = 0; i < Ux.dofs(); ++ i) {
+        for (int i = 0; i < Ux.dofs(); ++i) {
             double val = 0;
-            for (int j = 0; j < Ux.dofs(); ++ j) {
+            for (int j = 0; j < Ux.dofs(); ++j) {
                 val += buf_y1(j) * Kx_x_nf(i, j);
             }
             u(i, Uy.dofs() - 1) = val;
         }
 
-        for (int i = 0; i < Uy.dofs(); ++ i) {
+        for (int i = 0; i < Uy.dofs(); ++i) {
             double val = 0;
-            for (int j = 0; j < Uy.dofs(); ++ j) {
+            for (int j = 0; j < Uy.dofs(); ++j) {
                 val += buf_x0(j) * Kx_y_nf(i, j);
             }
             u(0, i) = val;
         }
 
-        for (int i = 0; i < Uy.dofs(); ++ i) {
+        for (int i = 0; i < Uy.dofs(); ++i) {
             double val = 0;
-            for (int j = 0; j < Uy.dofs(); ++ j) {
+            for (int j = 0; j < Uy.dofs(); ++j) {
                 val += buf_x1(j) * Kx_y_nf(i, j);
             }
             u(Ux.dofs() - 1, i) = val;
         }
-
 
         // ads_solve(u, u_buffer, dim_data{Kx_x, Kxx_ctx}, dim_data{Kx_y, Kxy_ctx});
         lin::solve_with_factorized(Kx_x, u, Kxx_ctx);
@@ -421,8 +407,8 @@ private:
         compute_rhs_y(t);
         ads_solve(rhs2, buffer, Ux.data(), dim_data{Ay, Ay_ctx});
 
-        vector_type rhsx2   {{ Ux.dofs(), Vy.dofs() }};
-        vector_type rhsx2_t {{ Vy.dofs(), Ux.dofs() }};
+        vector_type rhsx2{{Ux.dofs(), Vy.dofs()}};
+        vector_type rhsx2_t{{Vy.dofs(), Ux.dofs()}};
         // u = (MUVx * By)' rhs
 
         multiply(MUx, rhs2, rhsx2, Vy.dofs(), "T");
@@ -430,36 +416,33 @@ private:
         multiply(By, rhsx2_t, u_t, Ux.dofs(), "T");
         lin::cyclic_transpose(u_t, u);
 
-
-
-
-        for (int i = 0; i < Ux.dofs(); ++ i) {
+        for (int i = 0; i < Ux.dofs(); ++i) {
             double val = 0;
-            for (int j = 0; j < Ux.dofs(); ++ j) {
+            for (int j = 0; j < Ux.dofs(); ++j) {
                 val += buf_y0(j) * Ky_x_nf(i, j);
             }
             u(i, 0) = val;
         }
 
-        for (int i = 0; i < Ux.dofs(); ++ i) {
+        for (int i = 0; i < Ux.dofs(); ++i) {
             double val = 0;
-            for (int j = 0; j < Ux.dofs(); ++ j) {
+            for (int j = 0; j < Ux.dofs(); ++j) {
                 val += buf_y1(j) * Ky_x_nf(i, j);
             }
             u(i, Uy.dofs() - 1) = val;
         }
 
-        for (int i = 0; i < Uy.dofs(); ++ i) {
+        for (int i = 0; i < Uy.dofs(); ++i) {
             double val = 0;
-            for (int j = 0; j < Uy.dofs(); ++ j) {
+            for (int j = 0; j < Uy.dofs(); ++j) {
                 val += buf_x0(j) * Ky_y_nf(i, j);
             }
             u(0, i) = val;
         }
 
-        for (int i = 0; i < Uy.dofs(); ++ i) {
+        for (int i = 0; i < Uy.dofs(); ++i) {
             double val = 0;
-            for (int j = 0; j < Uy.dofs(); ++ j) {
+            for (int j = 0; j < Uy.dofs(); ++j) {
                 val += buf_x1(j) * Ky_y_nf(i, j);
             }
             u(Ux.dofs() - 1, i) = val;
@@ -468,7 +451,6 @@ private:
         u(Ux.dofs() - 1, 0) = 0;
         u(Ux.dofs() - 1, Uy.dofs() - 1) = 0;
         u(0, Uy.dofs() - 1) = 0;
-
 
         // ads_solve(u, u_buffer, dim_data{Ky_x, Kyx_ctx}, dim_data{Ky_y, Kyy_ctx});
         lin::solve_with_factorized(Ky_x, u, Kyx_ctx);
@@ -479,7 +461,8 @@ private:
 
     void after_step(int iter, double t) override {
         if ((iter + 1) % save_every == 0) {
-            // std::cout << "Step " << (iter + 1) << " : " << errorL2(t) << " " << errorH1(t) << std::endl;
+            // std::cout << "Step " << (iter + 1) << " : " << errorL2(t) << " " << errorH1(t) <<
+            // std::endl;
             std::cout << iter << " " << errorL2(t) << " " << errorH1(t) << std::endl;
 
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
@@ -495,8 +478,8 @@ private:
         // std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
 
         std::ofstream sol("solution.data");
-        for (int i = 0; i < Ux.dofs(); ++ i) {
-            for (int j = 0; j < Uy.dofs(); ++ j) {
+        for (int i = 0; i < Ux.dofs(); ++i) {
+            for (int j = 0; j < Uy.dofs(); ++j) {
                 sol << i << " " << j << " " << u(i, j) << std::endl;
             }
         }
@@ -504,7 +487,7 @@ private:
 
     void plot_middle(const char* filename) {
         std::ofstream out{filename};
-        bspline::eval_ctx ctx_x{ Ux.B.degree }, ctx_y{ Uy.B.degree };
+        bspline::eval_ctx ctx_x{Ux.B.degree}, ctx_y{Uy.B.degree};
 
         auto print = [&](double xx) {
             auto val = bspline::eval(xx, 0.5, u, Ux.B, Uy.B, ctx_x, ctx_y);
@@ -523,29 +506,29 @@ private:
         print(1);
     }
 
-    double grad_dot(point_type a, value_type u) const {
-        return a[0] * u.dx + a[1] * u.dy;
-    }
+    double grad_dot(point_type a, value_type u) const { return a[0] * u.dx + a[1] * u.dy; }
 
-    value_type eval_basis(index_type e, index_type q, index_type a, const dimension& x, const dimension& y) const  {
+    value_type eval_basis(index_type e, index_type q, index_type a, const dimension& x,
+                          const dimension& y) const {
         auto loc = dof_global_to_local(e, a, x, y);
 
         const auto& bx = x.basis;
         const auto& by = y.basis;
 
-        double B1  = bx.b[e[0]][q[0]][0][loc[0]];
-        double B2  = by.b[e[1]][q[1]][0][loc[1]];
+        double B1 = bx.b[e[0]][q[0]][0][loc[0]];
+        double B2 = by.b[e[1]][q[1]][0][loc[1]];
         double dB1 = bx.b[e[0]][q[0]][1][loc[0]];
         double dB2 = by.b[e[1]][q[1]][1][loc[1]];
 
         double v = B1 * B2;
-        double dxv = dB1 *  B2;
-        double dyv =  B1 * dB2;
+        double dxv = dB1 * B2;
+        double dyv = B1 * dB2;
 
-        return { v, dxv, dyv };
+        return {v, dxv, dyv};
     }
 
-    value_type eval(const vector_type& v, index_type e, index_type q, const dimension& x, const dimension& y) const {
+    value_type eval(const vector_type& v, index_type e, index_type q, const dimension& x,
+                    const dimension& y) const {
         value_type u{};
         for (auto b : dofs_on_element(e, x, y)) {
             double c = v(b[0], b[1]);
@@ -571,10 +554,11 @@ private:
         return util::product_range<index_type>(rx, ry);
     }
 
-    index_type dof_global_to_local(index_type e, index_type a, const dimension& x, const dimension& y) const {
+    index_type dof_global_to_local(index_type e, index_type a, const dimension& x,
+                                   const dimension& y) const {
         const auto& bx = x.basis;
         const auto& by = y.basis;
-        return {{ a[0] - bx.first_dof(e[0]), a[1] - by.first_dof(e[1]) }};
+        return {{a[0] - bx.first_dof(e[0]), a[1] - by.first_dof(e[1])}};
     }
 
     void update_global_rhs(vector_type& global, const vector_type& local, index_type e,
@@ -585,7 +569,8 @@ private:
         }
     }
 
-    double eval_basis_mixed_deriv(index_type e, index_type q, index_type a, const dimension& x, const dimension& y) const  {
+    double eval_basis_mixed_deriv(index_type e, index_type q, index_type a, const dimension& x,
+                                  const dimension& y) const {
         auto loc = dof_global_to_local(e, a, x, y);
 
         const auto& bx = x.basis;
@@ -596,7 +581,8 @@ private:
         return dB1 * dB2;
     }
 
-    double eval_mixed_deriv(const vector_type& v, index_type e, index_type q, const dimension& x, const dimension& y) const {
+    double eval_mixed_deriv(const vector_type& v, index_type e, index_type q, const dimension& x,
+                            const dimension& y) const {
         double u = 0;
         for (auto b : dofs_on_element(e, x, y)) {
             double c = v(b[0], b[1]);
@@ -618,7 +604,7 @@ private:
         zero(rhs1);
 
         executor.for_each(elements(Vx, Uy), [&](index_type e) {
-            auto U = vector_type{{ Vx.basis.dofs_per_element(), Uy.basis.dofs_per_element() }};
+            auto U = vector_type{{Vx.basis.dofs_per_element(), Uy.basis.dofs_per_element()}};
             auto h = 0.5 * steps.dt;
 
             double J = jacobian(e);
@@ -642,16 +628,14 @@ private:
 
                     double gradient_prod = u.dy * v.dy;
                     double val = u.val * v.val
-                        - h * (conv_term + c_diff[1] * gradient_prod)
-                        // + h*h * quad_term
-                        + h * v.val * forcing(x[0], x[1], t);
+                               - h * (conv_term + c_diff[1] * gradient_prod)
+                               // + h*h * quad_term
+                               + h * v.val * forcing(x[0], x[1], t);
 
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
-            executor.synchronized([&]() {
-                update_global_rhs(rhs1, U, e, Vx, Uy);
-            });
+            executor.synchronized([&]() { update_global_rhs(rhs1, U, e, Vx, Uy); });
         });
     }
 
@@ -659,7 +643,7 @@ private:
         zero(rhs2);
 
         executor.for_each(elements(Ux, Vy), [&](index_type e) {
-            auto U = vector_type{{ Ux.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
+            auto U = vector_type{{Ux.basis.dofs_per_element(), Vy.basis.dofs_per_element()}};
             auto h = 0.5 * steps.dt;
 
             double J = jacobian(e);
@@ -679,17 +663,13 @@ private:
                     //     + h * (- conv_term - c_diff[0] * gradient_prod)
                     //     + h * v.val * forcing(x[0], x[1], t);
 
-                    double val = u.val * v.val
-                        - h * (conv_term + c_diff[0] * gradient_prod)
-                        + h * v.val * forcing(x[0], x[1], t + h);
+                    double val = u.val * v.val - h * (conv_term + c_diff[0] * gradient_prod)
+                               + h * v.val * forcing(x[0], x[1], t + h);
 
                     U(aa[0], aa[1]) += val * w * J;
-
                 }
             }
-            executor.synchronized([&]() {
-                update_global_rhs(rhs2, U, e, Ux, Vy);
-            });
+            executor.synchronized([&]() { update_global_rhs(rhs2, U, e, Ux, Vy); });
         });
     }
 
@@ -700,8 +680,6 @@ private:
 
     //     return value_type{ s(t)*s(x)*s(y), pi*s(t)*c(x)*s(y), pi*s(t)*s(x)*c(y) };
     // }
-
-
 
     // value_type exact(double x, double y, double eps) const {
     //     using std::exp;
@@ -770,8 +748,6 @@ private:
     // }
 };
 
-}
+}  // namespace ads
 
-
-
-#endif // ERIKKSON_ERIKKSON_HPP
+#endif  // ERIKKSON_ERIKKSON_HPP

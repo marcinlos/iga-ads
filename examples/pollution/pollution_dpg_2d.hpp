@@ -10,7 +10,6 @@
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
 
-
 namespace ads {
 
 class pollution_dpg_2d : public simulation_2d {
@@ -38,14 +37,14 @@ private:
 
     int save_every = 1;
 
-    double ambient = 1e-6; // g/m^3
+    double ambient = 1e-6;  // g/m^3
     // double Vd = 0.1;
-    point_type c_diff{{ 20, 20 }}; // m/s^2
+    point_type c_diff{{20, 20}};  // m/s^2
 
     double wind_angle = 2 * M_PI / 4;
-    double wind_speed = 5; // m/s
+    double wind_speed = 5;  // m/s
 
-    point_type wind{{ wind_speed * cos(wind_angle), wind_speed * sin(wind_angle) }};
+    point_type wind{{wind_speed * cos(wind_angle), wind_speed* sin(wind_angle)}};
 
     double absorbed = 0.0;
 
@@ -53,43 +52,41 @@ private:
 
 public:
     pollution_dpg_2d(const config_2d& config, int k)
-    : Base{ higher_order(config, k) }
-    , Ux{ config.x, config.derivatives }
-    , Uy{ config.y, config.derivatives }
+    : Base{higher_order(config, k)}
+    , Ux{config.x, config.derivatives}
+    , Uy{config.y, config.derivatives}
     , Kx_x{Ux.B.dofs(), Ux.B.dofs()}
     , Kx_y{Uy.B.dofs(), Uy.B.dofs()}
     , Ky_x{Ux.B.dofs(), Ux.B.dofs()}
     , Ky_y{Uy.B.dofs(), Uy.B.dofs()}
-    , Kxx_ctx{ Kx_x }
-    , Kxy_ctx{ Kx_y }
-    , Kyx_ctx{ Ky_x }
-    , Kyy_ctx{ Ky_y }
+    , Kxx_ctx{Kx_x}
+    , Kxy_ctx{Kx_y}
+    , Kyx_ctx{Ky_x}
+    , Kyy_ctx{Ky_y}
     , Ax{x.p, x.p, x.B.dofs()}
     , Ay{y.p, y.p, y.B.dofs()}
-    , Ax_ctx{ Ax }
-    , Ay_ctx{ Ay }
+    , Ax_ctx{Ax}
+    , Ay_ctx{Ay}
     , MVx{x.p, x.p, x.B.dofs()}
     , MVy{y.p, y.p, y.B.dofs()}
-    , MVx_ctx{ MVx }
-    , MVy_ctx{ MVy }
-    , MUVx{ x.p, Ux.p, x.B.dofs(), Ux.B.dofs() }
-    , MUVy{ y.p, Uy.p, y.B.dofs(), Uy.B.dofs() }
-    , Bx{ x.p, Ux.p, x.B.dofs(), Ux.B.dofs() }
-    , By{ y.p, Uy.p, y.B.dofs(), Uy.B.dofs() }
-    , Tx{ x.B.dofs(), Ux.B.dofs() }
-    , Ty{ y.B.dofs(), Uy.B.dofs() }
-    , u{{ Ux.B.dofs(), Uy.B.dofs() }}
-    , u_prev{{ Ux.B.dofs(), Uy.B.dofs() }}
-    , u_buffer{{ Ux.B.dofs(), Uy.B.dofs() }}
-    , rhs{ shape() }
-    , output{ Ux.B, Uy.B, 400 }
-    {
+    , MVx_ctx{MVx}
+    , MVy_ctx{MVy}
+    , MUVx{x.p, Ux.p, x.B.dofs(), Ux.B.dofs()}
+    , MUVy{y.p, Uy.p, y.B.dofs(), Uy.B.dofs()}
+    , Bx{x.p, Ux.p, x.B.dofs(), Ux.B.dofs()}
+    , By{y.p, Uy.p, y.B.dofs(), Uy.B.dofs()}
+    , Tx{x.B.dofs(), Ux.B.dofs()}
+    , Ty{y.B.dofs(), Uy.B.dofs()}
+    , u{{Ux.B.dofs(), Uy.B.dofs()}}
+    , u_prev{{Ux.B.dofs(), Uy.B.dofs()}}
+    , u_buffer{{Ux.B.dofs(), Uy.B.dofs()}}
+    , rhs{shape()}
+    , output{Ux.B, Uy.B, 400} {
         // matrix(Kx, x.basis, steps.dt / 2, c_diff[0], wind[0]);
         // matrix(Ky, y.basis, steps.dt / 2, c_diff[1], wind[1]);
     }
 
 private:
-
     static dim_config higher_order(dim_config cfg, int k) {
         cfg.p += k;
         return cfg;
@@ -102,12 +99,12 @@ private:
     }
 
     void prod_V(lin::band_matrix& M, const basis_data& bV) const {
-        for (element_id e = 0; e < bV.elements; ++ e) {
-            for (int q = 0; q < bV.quad_order; ++ q) {
+        for (element_id e = 0; e < bV.elements; ++e) {
+            for (int q = 0; q < bV.quad_order; ++q) {
                 auto first = bV.first_dof(e);
-                auto last  = bV.last_dof(e);
-                for (int a = 0; a + first <= last; ++ a) {
-                    for (int b = 0; b + first <= last; ++ b) {
+                auto last = bV.last_dof(e);
+                for (int a = 0; a + first <= last; ++a) {
+                    for (int b = 0; b + first <= last; ++b) {
                         int ia = a + first;
                         int ib = b + first;
                         auto va = bV.b[e][q][0][a];
@@ -123,10 +120,10 @@ private:
     }
 
     void mass_matrix(lin::band_matrix& M, const basis_data& bU, const basis_data& bV) {
-        for (element_id e = 0; e < bV.elements; ++ e) {
-            for (int q = 0; q < bV.quad_order; ++ q) {
-                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++ a) {
-                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++ b) {
+        for (element_id e = 0; e < bV.elements; ++e) {
+            for (int q = 0; q < bV.quad_order; ++q) {
+                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++a) {
+                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++b) {
                         int ia = a + bV.first_dof(e);
                         int ib = b + bU.first_dof(e);
                         auto va = bV.b[e][q][0][a];
@@ -139,12 +136,12 @@ private:
         }
     }
 
-    void diffusion_matrix(lin::band_matrix& M, const basis_data& bU, const basis_data& bV,
-                          double h, double diffusion) {
-        for (element_id e = 0; e < bV.elements; ++ e) {
-            for (int q = 0; q < bV.quad_order; ++ q) {
-                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++ a) {
-                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++ b) {
+    void diffusion_matrix(lin::band_matrix& M, const basis_data& bU, const basis_data& bV, double h,
+                          double diffusion) {
+        for (element_id e = 0; e < bV.elements; ++e) {
+            for (int q = 0; q < bV.quad_order; ++q) {
+                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++a) {
+                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++b) {
                         int ia = a + bV.first_dof(e);
                         int ib = b + bU.first_dof(e);
                         auto da = bV.b[e][q][1][a];
@@ -157,12 +154,12 @@ private:
         }
     }
 
-    void advection_matrix(lin::band_matrix& M, const basis_data& bU, const basis_data& bV,
-                          double h, double advection) {
-        for (element_id e = 0; e < bV.elements; ++ e) {
-            for (int q = 0; q < bV.quad_order; ++ q) {
-                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++ a) {
-                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++ b) {
+    void advection_matrix(lin::band_matrix& M, const basis_data& bU, const basis_data& bV, double h,
+                          double advection) {
+        for (element_id e = 0; e < bV.elements; ++e) {
+            for (int q = 0; q < bV.quad_order; ++q) {
+                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++a) {
+                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++b) {
                         int ia = a + bV.first_dof(e);
                         int ib = b + bU.first_dof(e);
                         auto va = bV.b[e][q][0][a];
@@ -175,8 +172,8 @@ private:
         }
     }
 
-    void matrix(lin::band_matrix& B, const basis_data& bU, const basis_data& bV,
-                double h, double diffusion, double advection) {
+    void matrix(lin::band_matrix& B, const basis_data& bU, const basis_data& bV, double h,
+                double diffusion, double advection) {
         mass_matrix(B, bU, bV);
         diffusion_matrix(B, bU, bV, h, diffusion);
         advection_matrix(B, bU, bV, h, advection);
@@ -186,7 +183,7 @@ private:
         double dx = (x - 3000) / 25;
         double dy = (y - 400) / 25;
         double r2 = std::min((dx * dx + dy * dy), 1.0);
-        return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1); // g/m^3
+        return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);  // g/m^3
     };
 
     void prepare_implicit_matrices() {
@@ -272,9 +269,9 @@ private:
         compute_rhs_x();
         ads_solve(rhs, buffer, dim_data{Ax, Ax_ctx}, dim_data{MVy, MVy_ctx});
 
-        vector_type rhsx{{ Ux.dofs(), y.dofs() }};
-        vector_type rhsx_t{{ y.dofs(), Ux.dofs() }};
-        vector_type u_t{{ Uy.dofs(), Ux.dofs() }};
+        vector_type rhsx{{Ux.dofs(), y.dofs()}};
+        vector_type rhsx_t{{y.dofs(), Ux.dofs()}};
+        vector_type u_t{{Uy.dofs(), Ux.dofs()}};
 
         // u = (Bx * MUVy)' rhs
         // =>
@@ -318,47 +315,45 @@ private:
         if ((iter + 1) % save_every == 0) {
             std::cout << "Step " << iter << std::endl;
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
-        //     analyze(iter, t + 0.5 * steps.dt);
+            //     analyze(iter, t + 0.5 * steps.dt);
         }
 
         auto s = t / 150;
-        auto phase = sin(s) + 0.5 * sin(2.3*s);
+        auto phase = sin(s) + 0.5 * sin(2.3 * s);
         wind_angle = M_PI / 3 * phase + 1.5 * M_PI / 4;
 
-        wind = { wind_speed * cos(wind_angle), wind_speed * sin(wind_angle) };
+        wind = {wind_speed * cos(wind_angle), wind_speed * sin(wind_angle)};
         prepare_implicit_matrices();
-
     }
 
-    double grad_dot(point_type a, value_type u) const {
-        return a[0] * u.dx + a[1] * u.dy;
-    }
+    double grad_dot(point_type a, value_type u) const { return a[0] * u.dx + a[1] * u.dy; }
 
     index_type dof_global_to_local_U(index_type e, index_type a) const {
         const auto& bx = Ux.basis;
         const auto& by = Uy.basis;
-        return {{ a[0] - bx.first_dof(e[0]), a[1] - by.first_dof(e[1]) }};
+        return {{a[0] - bx.first_dof(e[0]), a[1] - by.first_dof(e[1])}};
     }
 
-    value_type eval_basis_U(index_type e, index_type q, index_type a) const  {
+    value_type eval_basis_U(index_type e, index_type q, index_type a) const {
         auto loc = dof_global_to_local_U(e, a);
 
         const auto& bx = Ux.basis;
         const auto& by = Uy.basis;
 
-        double B1  = bx.b[e[0]][q[0]][0][loc[0]];
-        double B2  = by.b[e[1]][q[1]][0][loc[1]];
+        double B1 = bx.b[e[0]][q[0]][0][loc[0]];
+        double B2 = by.b[e[1]][q[1]][0][loc[1]];
         double dB1 = bx.b[e[0]][q[0]][1][loc[0]];
         double dB2 = by.b[e[1]][q[1]][1][loc[1]];
 
         double v = B1 * B2;
-        double dxv = dB1 *  B2;
-        double dyv =  B1 * dB2;
+        double dxv = dB1 * B2;
+        double dyv = B1 * dB2;
 
-        return { v, dxv, dyv };
+        return {v, dxv, dyv};
     }
 
-    value_type eval(const vector_type& v, index_type e, index_type q, const basis_data& bx, const basis_data& by) const {
+    value_type eval(const vector_type& v, index_type e, index_type q, const basis_data& bx,
+                    const basis_data& by) const {
         auto rx = bx.dof_range(e[0]);
         auto ry = by.dof_range(e[1]);
         auto dofs = util::product_range<index_type>(rx, ry);
@@ -392,14 +387,12 @@ private:
 
                     double gradient_prod = u.dy * v.dy;
                     double e = emission(x[0], x[1]) * v.val;
-                    double val = u.val * v.val + h * (- conv_term - c_diff[1] * gradient_prod + e);
+                    double val = u.val * v.val + h * (-conv_term - c_diff[1] * gradient_prod + e);
 
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
-            executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e);
-            });
+            executor.synchronized([&]() { update_global_rhs(rhs, U, e); });
         });
     }
 
@@ -424,13 +417,11 @@ private:
 
                     double gradient_prod = u.dx * v.dx;
                     double e = emission(x[0], x[1]) * v.val;
-                    double val = u.val * v.val + h * (- conv_term - c_diff[0] * gradient_prod + e);
+                    double val = u.val * v.val + h * (-conv_term - c_diff[0] * gradient_prod + e);
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
-            executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e);
-            });
+            executor.synchronized([&] { update_global_rhs(rhs, U, e); });
         });
     }
 
@@ -451,12 +442,12 @@ private:
 
         using namespace std;
 
-        total /= 1000; // g -> kg
-        emission_rate /= 1000; // g -> kg
+        total /= 1000;          // g -> kg
+        emission_rate /= 1000;  // g -> kg
 
-        auto emitted = t * emission_rate; // kg
-        auto area = 5000.0 * 5000.0; // m^2
-        auto initial = area * ambient / 1000; // kg
+        auto emitted = t * emission_rate;      // kg
+        auto area = 5000.0 * 5000.0;           // m^2
+        auto initial = area * ambient / 1000;  // kg
         auto absorbed_kg = absorbed / 1000;
         auto loss = initial + emitted - total - absorbed_kg;
         auto loss_percent = 100 * loss / emitted;
@@ -464,15 +455,11 @@ private:
         std::cout << "Step " << (iter + 1) << ":"
                   << "  total " << setw(8) << setprecision(5) << total << " kg "
                   << "  absorbed " << setw(8) << setprecision(5) << absorbed_kg << " kg "
-                  << "  (loss "
-                  << setw(6) << loss << " kg,  "
-                  << setw(5) << loss_percent << "%"
-                  << ")" << std::endl;
+                  << "  (loss " << setw(6) << loss << " kg,  " << setw(5) << loss_percent << "%)"
+                  << std::endl;
     }
 };
 
-}
+}  // namespace ads
 
-
-
-#endif // POLLUTION_POLLUTION_DPG_2D_HPP
+#endif  // POLLUTION_POLLUTION_DPG_2D_HPP

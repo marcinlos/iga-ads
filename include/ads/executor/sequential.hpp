@@ -4,8 +4,8 @@
 #ifndef ADS_EXECUTOR_SEQUENTIAL_HPP
 #define ADS_EXECUTOR_SEQUENTIAL_HPP
 
-#include <algorithm>
-
+#include <iterator>
+#include <utility>
 
 namespace ads {
 
@@ -17,16 +17,14 @@ public:
     }
 
     template <typename Range, typename Fun>
-    void for_each(Range range, Fun fun) const {
+    void for_each(Range range, Fun&& fun) const {
         using std::begin;
         using std::end;
 
-        std::for_each(begin(range), end(range), [&fun](auto&& item) {
-            fun(item);
-        });
+        std::for_each(begin(range), end(range), std::forward<Fun>(fun));
     }
 };
 
-}
+}  // namespace ads
 
-#endif // ADS_EXECUTOR_SEQUENTIAL_HPP
+#endif  // ADS_EXECUTOR_SEQUENTIAL_HPP

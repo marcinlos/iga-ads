@@ -12,7 +12,6 @@
 #include "ads/simulation/utils.hpp"
 #include "solution.hpp"
 
-
 namespace ads {
 
 class erikkson_base : public simulation_2d {
@@ -41,10 +40,10 @@ protected:
         for_boundary_dofs(Ux, Uy, [&](index_type i) { u(i[0], i[1]) = 0; });
     }
 
-    void plot_horizontal(const char* filename, double y0, const vector_type& u,
-                         const dimension& Ux, const dimension& Uy) const {
+    void plot_horizontal(const char* filename, double y0, const vector_type& u, const dimension& Ux,
+                         const dimension& Uy) const {
         std::ofstream out{filename};
-        bspline::eval_ctx ctx_x{ Ux.B.degree }, ctx_y{ Uy.B.degree };
+        bspline::eval_ctx ctx_x{Ux.B.degree}, ctx_y{Uy.B.degree};
 
         auto print = [&](double xx) {
             auto val = bspline::eval(xx, y0, u, Ux.B, Uy.B, ctx_x, ctx_y);
@@ -63,10 +62,10 @@ protected:
         print(Ux.b);
     }
 
-    void plot_vertical(const char* filename, double x0, const vector_type& u,
-                         const dimension& Ux, const dimension& Uy) const {
+    void plot_vertical(const char* filename, double x0, const vector_type& u, const dimension& Ux,
+                       const dimension& Uy) const {
         std::ofstream out{filename};
-        bspline::eval_ctx ctx_x{ Ux.B.degree }, ctx_y{ Uy.B.degree };
+        bspline::eval_ctx ctx_x{Ux.B.degree}, ctx_y{Uy.B.degree};
 
         auto print = [&](double yy) {
             auto val = bspline::eval(x0, yy, u, Ux.B, Uy.B, ctx_x, ctx_y);
@@ -85,11 +84,13 @@ protected:
         print(Uy.b);
     }
 
-    void plot_middle(const char* filename, const vector_type& u, const dimension& Ux, const dimension& Uy) const {
+    void plot_middle(const char* filename, const vector_type& u, const dimension& Ux,
+                     const dimension& Uy) const {
         plot_horizontal(filename, 0.5, u, Ux, Uy);
     }
 
-    void print_solution(const char* filename, const vector_type& u, const dimension& Ux, const dimension& Uy) const {
+    void print_solution(const char* filename, const vector_type& u, const dimension& Ux,
+                        const dimension& Uy) const {
         std::ofstream out{filename};
         for (auto dof : dofs(Ux, Uy)) {
             out << dof[0] << " " << dof[1] << " " << u(dof[0], dof[1]) << std::endl;
@@ -105,6 +106,6 @@ protected:
     }
 };
 
-}
+}  // namespace ads
 
-#endif // ERIKKSON_ERIKKSON_BASE_HPP
+#endif  // ERIKKSON_ERIKKSON_BASE_HPP

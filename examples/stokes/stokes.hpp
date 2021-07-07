@@ -13,7 +13,6 @@
 #include "ads/solver/mumps.hpp"
 #include "space_set.hpp"
 
-
 namespace ads {
 
 class stokes : public simulation_2d {
@@ -32,15 +31,14 @@ private:
 
 public:
     stokes(space_set trial, space_set test, space_set ref, const timesteps_config& steps)
-    : Base{ trial.U1x, trial.U1y, steps }
-    , trial{ std::move(trial) }
-    , test{ std::move(test) }
-    , ref{ std::move(ref) }
-    , h{ element_diam(this->trial.Px, this->trial.Py) }
-    , outputU1{ this->trial.U1x.B, this->trial.U1y.B, 500 }
-    , outputU2{ this->trial.U2x.B, this->trial.U2y.B, 500 }
-    , outputP{ this->trial.Px.B, this->trial.Py.B, 500 }
-    { }
+    : Base{trial.U1x, trial.U1y, steps}
+    , trial{std::move(trial)}
+    , test{std::move(test)}
+    , ref{std::move(ref)}
+    , h{element_diam(this->trial.Px, this->trial.Py)}
+    , outputU1{this->trial.U1x.B, this->trial.U1y.B, 500}
+    , outputU2{this->trial.U2x.B, this->trial.U2y.B, 500}
+    , outputP{this->trial.Px.B, this->trial.Py.B, 500} { }
 
     double element_diam(const dimension& Ux, const dimension& Uy) const {
         return std::sqrt(max_element_size(Ux) * max_element_size(Uy));
@@ -64,22 +62,22 @@ public:
 
     std::array<value_type, 2> exact_v(point_type p) const {
         auto f = [](double x, double y) {
-            return x*x * (1 - x) * (1 - x) * (2 * y - 6 * y*y + 4 * y*y*y);
+            return x * x * (1 - x) * (1 - x) * (2 * y - 6 * y * y + 4 * y * y * y);
         };
 
         auto dfx = [](double x, double y) {
-            return (4 * x*x*x - 6 * x*x + 2 * x) * (2 * y - 6 * y*y + 4 * y*y*y);
+            return (4 * x * x * x - 6 * x * x + 2 * x) * (2 * y - 6 * y * y + 4 * y * y * y);
         };
 
         auto dfy = [](double x, double y) {
-            return x*x * (1 - x) * (1 - x) * (2 - 12 * y + 12 * y*y);
+            return x * x * (1 - x) * (1 - x) * (2 - 12 * y + 12 * y * y);
         };
 
         double x = p[0], y = p[1];
         value_type vx = {f(x, y), dfx(x, y), dfy(x, y)};
         value_type vy = {-f(y, x), -dfy(y, x), -dfx(y, x)};
 
-        return { vx ,vy };
+        return {vx, vy};
     }
 
     value_type exact_div(point_type p) const {
@@ -87,18 +85,18 @@ public:
         auto div = v[0].dx + v[1].dy;
 
         auto dfxy = [](double x, double y) {
-            return (4 * x*x*x - 6 * x*x + 2 * x) * (2 - 12 * y + 12 * y*y);
+            return (4 * x * x * x - 6 * x * x + 2 * x) * (2 - 12 * y + 12 * y * y);
         };
 
         auto dfxx = [](double x, double y) {
-            return (12 * x*x - 12 * x + 2) * (2 * y - 6 * y*y + 4 * y*y*y);
+            return (12 * x * x - 12 * x + 2) * (2 * y - 6 * y * y + 4 * y * y * y);
         };
 
         double x = p[0], y = p[1];
         double dx = dfxx(x, y) - dfxy(y, x);
         double dy = dfxy(x, y) - dfxx(y, x);
 
-        return { div, dx, dy };
+        return {div, dx, dy};
     }
 
     void output_exact() {
@@ -108,11 +106,13 @@ public:
 
         auto Ux = trial.U1x;
         auto Uy = trial.U1y;
-        auto buffer = vector_type{{ Ux.dofs(), Uy.dofs() }};
+        auto buffer = vector_type{{Ux.dofs(), Uy.dofs()}};
 
         auto project = [&](auto fun) {
-            vector_type rhs{{ Ux.dofs(), Uy.dofs() }};
-            compute_projection(rhs, Ux.basis, Uy.basis, [&](double x, double y) { return fun({x, y}); });
+            vector_type rhs{{Ux.dofs(), Uy.dofs()}};
+            compute_projection(rhs, Ux.basis, Uy.basis, [&](double x, double y) {
+                return fun({x, y});
+            });
             ads_solve(rhs, buffer, Ux.data(), Uy.data());
             return rhs;
         };
@@ -144,16 +144,16 @@ public:
         double divH1 = div_errorH1(vx, vy, trial.U1x, trial.U1y, div) * 100;
 
         std::cout.precision(3);
-        std::cout << "vx  : L2 = " << vxL2   << "%, H1 = " << vxH1   << "%" << std::endl;
-        std::cout << "vy  : L2 = " << vyL2   << "%, H1 = " << vyH1   << "%" << std::endl;
-        std::cout << "v   : L2 = " << vL2    << "%, H1 = " << vH1    << "%" << std::endl;
-        std::cout << "p   : L2 = " << pL2    << "%, H1 = " << pH1    << "%" << std::endl;
-        std::cout << "div : L2 = " << divL2  << ", H1 = " << divH1  << std::endl;
+        std::cout << "vx  : L2 = " << vxL2 << "%, H1 = " << vxH1 << "%" << std::endl;
+        std::cout << "vy  : L2 = " << vyL2 << "%, H1 = " << vyH1 << "%" << std::endl;
+        std::cout << "v   : L2 = " << vL2 << "%, H1 = " << vH1 << "%" << std::endl;
+        std::cout << "p   : L2 = " << pL2 << "%, H1 = " << pH1 << "%" << std::endl;
+        std::cout << "div : L2 = " << divL2 << ", H1 = " << divH1 << std::endl;
     }
 
     void print_error(const vector_view& vx, const vector_view& vy, const vector_view& p,
-                     const vector_type& ref_vx, const vector_type& ref_vy, const vector_type& ref_p) const {
-
+                     const vector_type& ref_vx, const vector_type& ref_vy,
+                     const vector_type& ref_p) const {
         auto cU1x = bspline::eval_ders_ctx{ref.U1x.p, 1};
         auto cU1y = bspline::eval_ders_ctx{ref.U1y.p, 1};
         auto cU2x = bspline::eval_ders_ctx{ref.U2x.p, 1};
@@ -161,9 +161,15 @@ public:
         auto cPx = bspline::eval_ders_ctx{ref.Px.p, 1};
         auto cPy = bspline::eval_ders_ctx{ref.Py.p, 1};
 
-        auto e_vx = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_vx, ref.U1x.B, ref.U1y.B, cU1x, cU1y); };
-        auto e_vy = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_vy, ref.U2x.B, ref.U2y.B, cU2x, cU2y); };
-        auto e_p = [&,this](point_type x) { return eval_ders(x[0], x[1], ref_p, ref.Px.B, ref.Py.B, cPx, cPy); };
+        auto e_vx = [&, this](point_type x) {
+            return eval_ders(x[0], x[1], ref_vx, ref.U1x.B, ref.U1y.B, cU1x, cU1y);
+        };
+        auto e_vy = [&, this](point_type x) {
+            return eval_ders(x[0], x[1], ref_vy, ref.U2x.B, ref.U2y.B, cU2x, cU2y);
+        };
+        auto e_p = [&, this](point_type x) {
+            return eval_ders(x[0], x[1], ref_p, ref.Px.B, ref.Py.B, cPx, cPy);
+        };
         auto div = [](point_type /*x*/) { return value_type{}; };
 
         double vxL2 = error_relative_L2(vx, trial.U1x, trial.U1y, e_vx) * 100;
@@ -182,55 +188,48 @@ public:
         double divH1 = div_errorH1(vx, vy, trial.Px, trial.Py, div) * 100;
 
         std::cout.precision(3);
-        std::cout << "vx  : L2 = " << vxL2   << "%, H1 = " << vxH1   << "%" << std::endl;
-        std::cout << "vy  : L2 = " << vyL2   << "%, H1 = " << vyH1   << "%" << std::endl;
-        std::cout << "v   : L2 = " << vL2    << "%, H1 = " << vH1    << "%" << std::endl;
-        std::cout << "p   : L2 = " << pL2    << "%, H1 = " << pH1    << "%" << std::endl;
-        std::cout << "div : L2 = " << divL2  << ", H1 = " << divH1  << std::endl;
+        std::cout << "vx  : L2 = " << vxL2 << "%, H1 = " << vxH1 << "%" << std::endl;
+        std::cout << "vy  : L2 = " << vyL2 << "%, H1 = " << vyH1 << "%" << std::endl;
+        std::cout << "v   : L2 = " << vL2 << "%, H1 = " << vH1 << "%" << std::endl;
+        std::cout << "p   : L2 = " << pL2 << "%, H1 = " << pH1 << "%" << std::endl;
+        std::cout << "div : L2 = " << divL2 << ", H1 = " << divH1 << std::endl;
     }
-
-
 
     point_type forcing(point_type p) const {
         double x = p[0], y = p[1];
 
-        auto fx =
-            (12 - 24 * y) * x*x*x*x +
-            (-24 + 48 * y) * x*x*x +
-            (-48 * y + 72 * y*y - 48 * y*y*y + 12) * x*x +
-            (-2 + 24*y - 72 * y*y + 48 * y*y*y) * x +
-            1 - 4 * y + 12 * y*y - 8 * y*y*y;
+        auto fx = (12 - 24 * y) * x * x * x * x                         //
+                + (-24 + 48 * y) * x * x * x                            //
+                + (-48 * y + 72 * y * y - 48 * y * y * y + 12) * x * x  //
+                + (-2 + 24 * y - 72 * y * y + 48 * y * y * y) * x       //
+                + 1 - 4 * y + 12 * y * y - 8 * y * y * y;
 
-        auto fy =
-            (8 - 48 * y + 48 * y*y) * x*x*x +
-            (-12 + 72 * y - 72 * y*y) * x*x +
-            (4 - 24 * y + 48 * y*y - 48 * y*y*y + 24 * y*y*y*y) * x -
-            12 * y*y + 24 * y*y*y - 12 * y*y*y*y;
+        auto fy = (8 - 48 * y + 48 * y * y) * x * x * x                                //
+                + (-12 + 72 * y - 72 * y * y) * x * x                                  //
+                + (4 - 24 * y + 48 * y * y - 48 * y * y * y + 24 * y * y * y * y) * x  //
+                - 12 * y * y + 24 * y * y * y - 12 * y * y * y * y;
 
-        return { fx, fy };
+        return {fx, fy};
         // return { 0, 0 };
     }
 
     auto shifted(int n, int k, mumps::problem& problem) const {
-        return [&problem,n,k](int i, int j, double val) {
-            problem.add(n + i, k + j, val);
-        };
+        return [&problem, n, k](int i, int j, double val) { problem.add(n + i, k + j, val); };
     }
 
     bool overlap(int a, const dimension& U, int b, const dimension& V) const {
         auto ar = U.basis.element_ranges[a];
         auto br = V.basis.element_ranges[b];
-        return (ar.first >= br.first && ar.first <= br.second) || (br.first >= ar.first && br.first <= ar.second);
+        return (ar.first >= br.first && ar.first <= br.second)
+            || (br.first >= ar.first && br.first <= ar.second);
     }
 
-    bool overlap(index_type a, const dimension& Ux, const dimension& Uy,
-                 index_type b, const dimension& Vx, const dimension& Vy) const {
+    bool overlap(index_type a, const dimension& Ux, const dimension& Uy, index_type b,
+                 const dimension& Vx, const dimension& Vy) const {
         return overlap(a[0], Ux, b[0], Vx) && overlap(a[1], Uy, b[1], Vy);
     }
 
-    bool is_pressure_fixed(index_type dof) const {
-        return dof[0] == 0 && dof[1] == 0;
-    }
+    bool is_pressure_fixed(index_type dof) const { return dof[0] == 0 && dof[1] == 0; }
 
     void assemble_matrix(mumps::problem& problem) const {
         auto dU1 = trial.U1x.dofs() * trial.U1y.dofs();
@@ -257,9 +256,11 @@ public:
             for (auto j : overlapping_dofs(i, test.U1x, test.U1y)) {
                 int ii = linear_index(i, test.U1x, test.U1y) + 1;
                 int jj = linear_index(j, test.U1x, test.U1y) + 1;
-                auto eval = [&](auto form) { return integrate(i, j, test.U1x, test.U1y, test.U1x, test.U1y, form); };
+                auto eval = [&](auto form) {
+                    return integrate(i, j, test.U1x, test.U1y, test.U1x, test.U1y, form);
+                };
 
-                if (! is_boundary(i, test.U1x, test.U1y) && ! is_boundary(j, test.U1x, test.U1y)) {
+                if (!is_boundary(i, test.U1x, test.U1y) && !is_boundary(j, test.U1x, test.U1y)) {
                     double value = eval([](auto u, auto v) { return u.dx * v.dx + u.dy * v.dy; });
                     test_vx(ii, jj, value);
                 }
@@ -270,9 +271,11 @@ public:
             for (auto j : overlapping_dofs(i, test.U2x, test.U2y)) {
                 int ii = linear_index(i, test.U2x, test.U2y) + 1;
                 int jj = linear_index(j, test.U2x, test.U2y) + 1;
-                auto eval = [&](auto form) { return integrate(i, j, test.U2x, test.U2y, test.U2x, test.U2y, form); };
+                auto eval = [&](auto form) {
+                    return integrate(i, j, test.U2x, test.U2y, test.U2x, test.U2y, form);
+                };
 
-                if (! is_boundary(i, test.U2x, test.U2y) && ! is_boundary(j, test.U2x, test.U2y)) {
+                if (!is_boundary(i, test.U2x, test.U2y) && !is_boundary(j, test.U2x, test.U2y)) {
                     double value = eval([](auto u, auto v) { return u.dx * v.dx + u.dy * v.dy; });
                     test_vy(ii, jj, value);
                 }
@@ -283,9 +286,11 @@ public:
             for (auto j : overlapping_dofs(i, test.Px, test.Py)) {
                 int ii = linear_index(i, test.Px, test.Py) + 1;
                 int jj = linear_index(j, test.Px, test.Py) + 1;
-                auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, test.Px, test.Py, form); };
+                auto eval = [&](auto form) {
+                    return integrate(i, j, test.Px, test.Py, test.Px, test.Py, form);
+                };
 
-                if (! is_pressure_fixed(i) && ! is_pressure_fixed(j)) {
+                if (!is_pressure_fixed(i) && !is_pressure_fixed(j)) {
                     double value = eval([](auto p, auto q) { return p.val * q.val; });
                     test_p(ii, jj, value);
                 }
@@ -323,7 +328,8 @@ public:
         // vx, ux -> (\/vx, \/ux)
         for (auto i : dofs(test.U1x, test.U1y)) {
             for (auto j : dofs(trial.U1x, trial.U1y)) {
-                if (! overlap(i, test.U1x, test.U1y, j, trial.U1x, trial.U1y)) continue;
+                if (!overlap(i, test.U1x, test.U1y, j, trial.U1x, trial.U1y))
+                    continue;
 
                 int ii = linear_index(i, test.U1x, test.U1y) + 1;
                 int jj = linear_index(j, trial.U1x, trial.U1y) + 1;
@@ -331,7 +337,9 @@ public:
                 bool bd_i = is_boundary(i, test.U1x, test.U1y);
                 bool bd_j = is_boundary(j, trial.U1x, trial.U1y);
 
-                auto eval = [&](auto form) { return integrate(i, j, test.U1x, test.U1y, trial.U1x, trial.U1y, form); };
+                auto eval = [&](auto form) {
+                    return integrate(i, j, test.U1x, test.U1y, trial.U1x, trial.U1y, form);
+                };
                 double value = eval([](auto v, auto u) { return v.dx * u.dx + v.dy * u.dy; });
 
                 put(ii, jj, 0, 0, value, bd_i, bd_j);
@@ -340,7 +348,8 @@ public:
         // vy, uy -> (\/vy, \/uy)
         for (auto i : dofs(test.U2x, test.U2y)) {
             for (auto j : dofs(trial.U2x, trial.U2y)) {
-                if (! overlap(i, test.U2x, test.U2y, j, trial.U2x, trial.U2y)) continue;
+                if (!overlap(i, test.U2x, test.U2y, j, trial.U2x, trial.U2y))
+                    continue;
 
                 int ii = linear_index(i, test.U2x, test.U2y) + 1;
                 int jj = linear_index(j, trial.U2x, trial.U2y) + 1;
@@ -348,7 +357,9 @@ public:
                 bool bd_i = is_boundary(i, test.U2x, test.U2y);
                 bool bd_j = is_boundary(j, trial.U2x, trial.U2y);
 
-                auto eval = [&](auto form) { return integrate(i, j, test.U2x, test.U2y, trial.U2x, trial.U2y, form); };
+                auto eval = [&](auto form) {
+                    return integrate(i, j, test.U2x, test.U2y, trial.U2x, trial.U2y, form);
+                };
                 double value = eval([](auto v, auto u) { return v.dx * u.dx + v.dy * u.dy; });
 
                 put(ii, jj, DU1, dU1, value, bd_i, bd_j);
@@ -357,7 +368,8 @@ public:
         // q, ux -> (q, ux,x)
         for (auto i : dofs(test.Px, test.Py)) {
             for (auto j : dofs(trial.U1x, trial.U1y)) {
-                if (! overlap(i, test.Px, test.Py, j, trial.U1x, trial.U1y)) continue;
+                if (!overlap(i, test.Px, test.Py, j, trial.U1x, trial.U1y))
+                    continue;
 
                 int ii = linear_index(i, test.Px, test.Py) + 1;
                 int jj = linear_index(j, trial.U1x, trial.U1y) + 1;
@@ -365,7 +377,9 @@ public:
                 bool fixed_i = is_pressure_fixed(i);
                 bool bd_j = is_boundary(j, trial.U1x, trial.U1y);
 
-                auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, trial.U1x, trial.U1y, form); };
+                auto eval = [&](auto form) {
+                    return integrate(i, j, test.Px, test.Py, trial.U1x, trial.U1y, form);
+                };
                 double value = eval([](auto q, auto u) { return q.val * u.dx; });
                 put(ii, jj, DU1 + DU2, 0, value, fixed_i, bd_j);
             }
@@ -373,7 +387,8 @@ public:
         // q, uy -> (q, uy,y)
         for (auto i : dofs(test.Px, test.Py)) {
             for (auto j : dofs(trial.U2x, trial.U2y)) {
-                if (! overlap(i, test.Px, test.Py, j, trial.U2x, trial.U2y)) continue;
+                if (!overlap(i, test.Px, test.Py, j, trial.U2x, trial.U2y))
+                    continue;
 
                 int ii = linear_index(i, test.Px, test.Py) + 1;
                 int jj = linear_index(j, trial.U2x, trial.U2y) + 1;
@@ -381,7 +396,9 @@ public:
                 bool fixed_i = is_pressure_fixed(i);
                 bool bd_j = is_boundary(j, trial.U2x, trial.U2y);
 
-                auto eval = [&](auto form) { return integrate(i, j, test.Px, test.Py, trial.U2x, trial.U2y, form); };
+                auto eval = [&](auto form) {
+                    return integrate(i, j, test.Px, test.Py, trial.U2x, trial.U2y, form);
+                };
                 double value = eval([](auto q, auto u) { return q.val * u.dy; });
                 put(ii, jj, DU1 + DU2, dU1, value, fixed_i, bd_j);
             }
@@ -389,7 +406,8 @@ public:
         // vx, p -> - (vx,x, p)
         for (auto i : dofs(test.U1x, test.U1y)) {
             for (auto j : dofs(trial.Px, trial.Py)) {
-                if (! overlap(i, test.U1x, test.U1y, j, trial.Px, trial.Py)) continue;
+                if (!overlap(i, test.U1x, test.U1y, j, trial.Px, trial.Py))
+                    continue;
 
                 int ii = linear_index(i, test.U1x, test.U1y) + 1;
                 int jj = linear_index(j, trial.Px, trial.Py) + 1;
@@ -397,7 +415,9 @@ public:
                 bool bd_i = is_boundary(i, test.U1x, test.U1y);
                 bool fixed_j = is_pressure_fixed(j);
 
-                auto eval = [&](auto form) { return integrate(i, j, test.U1x, test.U1y, trial.Px, trial.Py, form); };
+                auto eval = [&](auto form) {
+                    return integrate(i, j, test.U1x, test.U1y, trial.Px, trial.Py, form);
+                };
                 double value = eval([](auto v, auto p) { return -v.dx * p.val; });
                 put(ii, jj, 0, dU1 + dU2, value, bd_i, fixed_j);
             }
@@ -405,7 +425,8 @@ public:
         // vy, p ->  - (vy,y, p)
         for (auto i : dofs(test.U2x, test.U2y)) {
             for (auto j : dofs(trial.Px, trial.Py)) {
-                if (! overlap(i, test.U2x, test.U2y, j, trial.Px, trial.Py)) continue;
+                if (!overlap(i, test.U2x, test.U2y, j, trial.Px, trial.Py))
+                    continue;
 
                 int ii = linear_index(i, test.U2x, test.U2y) + 1;
                 int jj = linear_index(j, trial.Px, trial.Py) + 1;
@@ -413,7 +434,9 @@ public:
                 bool bd_i = is_boundary(i, test.U2x, test.U2y);
                 bool fixed_j = is_pressure_fixed(j);
 
-                auto eval = [&](auto form) { return integrate(i, j, test.U2x, test.U2y, trial.Px, trial.Py, form); };
+                auto eval = [&](auto form) {
+                    return integrate(i, j, test.U2x, test.U2y, trial.Px, trial.Py, form);
+                };
                 double value = eval([](auto v, auto p) { return -v.dy * p.val; });
                 put(ii, jj, DU1, dU1 + dU2, value, bd_i, fixed_j);
             }
@@ -433,13 +456,12 @@ public:
 
     void compute_rhs(vector_view& vx, vector_view& vy, vector_view& /*p*/) const {
         using shape = std::array<std::size_t, 2>;
-        auto u1_shape = shape{ test.U1x.basis.dofs_per_element(), test.U1y.basis.dofs_per_element() };
-        auto u2_shape = shape{ test.U2x.basis.dofs_per_element(), test.U2y.basis.dofs_per_element() };
-
+        auto u1_shape = shape{test.U1x.basis.dofs_per_element(), test.U1y.basis.dofs_per_element()};
+        auto u2_shape = shape{test.U2x.basis.dofs_per_element(), test.U2y.basis.dofs_per_element()};
 
         executor.for_each(elements(trial.Px, trial.Py), [&](index_type e) {
-            auto vx_loc = vector_type{ u1_shape };
-            auto vy_loc = vector_type{ u2_shape };
+            auto vx_loc = vector_type{u1_shape};
+            auto vy_loc = vector_type{u2_shape};
 
             double J = jacobian(e);
             for (auto q : quad_points(trial.Px, trial.Py)) {
@@ -469,7 +491,6 @@ public:
         });
     }
 
-
     void apply_bc(vector_view& Rvx, vector_view& Rvy, vector_view& Rp) {
         zero_bc(Rvx, trial.U1x, trial.U1y);
 
@@ -482,7 +503,7 @@ public:
 
         zero_bc(Rvy, trial.U2x, trial.U2y);
 
-        Rp(0, 0) = 0; // fix pressure at a point
+        Rp(0, 0) = 0;  // fix pressure at a point
     }
 
     void step(int /*iter*/, double /*t*/) override {
@@ -506,7 +527,6 @@ public:
         vector_view vy{vx.data() + dU1, {trial.U2x.dofs(), trial.U2y.dofs()}};
         vector_view p{vy.data() + dU2, {trial.Px.dofs(), trial.Py.dofs()}};
 
-
         mumps::problem problem(rhs.data(), rhs.size());
 
         std::cout << "Assembling matrix" << std::endl;
@@ -516,13 +536,13 @@ public:
         compute_rhs(Rvx, Rvy, Rp);
         apply_bc(vx, vy, p);
 
-
         std::cout << "Solving" << std::endl;
         solver_timer.start();
         solver.solve(problem);
         solver_timer.stop();
 
-        std::cout << "  solver time:       " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
+        std::cout << "  solver time:       " << static_cast<double>(solver_timer.get()) << " ms"
+                  << std::endl;
         std::cout << "  assembly    FLOPS: " << solver.flops_assembly() << std::endl;
         std::cout << "  elimination FLOPS: " << solver.flops_elimination() << std::endl;
 
@@ -545,8 +565,9 @@ public:
         // print_error(vx, vy, p, ref_vx, ref_vy, ref_p);
     }
 
-    vector_type read_solution(const char* filename, const dimension& Ux, const dimension& Uy) const {
-        auto sol = vector_type{{ Ux.dofs(), Uy.dofs() }};
+    vector_type read_solution(const char* filename, const dimension& Ux,
+                              const dimension& Uy) const {
+        auto sol = vector_type{{Ux.dofs(), Uy.dofs()}};
         std::ifstream in{filename};
         while (in) {
             index_type dof;
@@ -557,10 +578,12 @@ public:
     }
 
     template <typename V>
-    void print_solution(const char* filename, const V& u, const dimension& Ux, const dimension& Uy) const {
+    void print_solution(const char* filename, const V& u, const dimension& Ux,
+                        const dimension& Uy) const {
         std::ofstream out{filename};
         for (auto dof : dofs(Ux, Uy)) {
-            out << dof[0] << " " << dof[1] << " " << std::setprecision(16) << u(dof[0], dof[1]) << std::endl;
+            out << dof[0] << " " << dof[1] << " " << std::setprecision(16) << u(dof[0], dof[1])
+                << std::endl;
         }
     }
 
@@ -570,19 +593,22 @@ public:
     }
 
     template <typename Sol, typename Fun>
-    double div_errorL2(const Sol& u, const Sol& v, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+    double div_errorL2(const Sol& u, const Sol& v, const dimension& Ux, const dimension& Uy,
+                       Fun&& fun) const {
         auto L2 = [](value_type a) { return a.val * a.val; };
         return div_error(u, v, Ux, Uy, L2, fun);
     }
 
     template <typename Sol, typename Fun>
-    double div_errorH1(const Sol& u, const Sol& v, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+    double div_errorH1(const Sol& u, const Sol& v, const dimension& Ux, const dimension& Uy,
+                       Fun&& fun) const {
         auto H1 = [](value_type a) { return a.val * a.val + a.dx * a.dx + a.dy * a.dy; };
         return div_error(u, v, Ux, Uy, H1, fun);
     }
 
     template <typename Sol, typename Fun, typename Norm>
-    double div_error(const Sol& u, const Sol& v, const dimension& Ux, const dimension& Uy, Norm&& norm, Fun&& fun) const {
+    double div_error(const Sol& u, const Sol& v, const dimension& Ux, const dimension& Uy,
+                     Norm&& norm, Fun&& fun) const {
         double error = 0;
 
         for (auto e : elements(Ux, Ux)) {
@@ -612,15 +638,15 @@ public:
             const auto& bx = x.basis;
             const auto& by = y.basis;
 
-            double B1  = bx.b[e[0]][q[0]][0][loc[0]];
-            double B2  = by.b[e[1]][q[1]][0][loc[1]];
+            double B1 = bx.b[e[0]][q[0]][0][loc[0]];
+            double B2 = by.b[e[1]][q[1]][0][loc[1]];
             double dB1 = bx.b[e[0]][q[0]][1][loc[0]];
             double dB2 = by.b[e[1]][q[1]][1][loc[1]];
             double ddB1 = bx.b[e[0]][q[0]][2][loc[0]];
             double ddB2 = by.b[e[1]][q[1]][2][loc[1]];
 
-            double dx = dB1 *  B2;
-            double dy =  B1 * dB2;
+            double dx = dB1 * B2;
+            double dy = B1 * dB2;
             double dxx = ddB1 * B2;
             double dyy = B1 * ddB2;
             double dxy = dB1 * dB2;
@@ -638,7 +664,8 @@ public:
         double val = 0;
 
         for (auto e : elements_supporting_dof(i, Ux, Uy)) {
-            if (! supported_in(j, e, Vx, Vy)) continue;
+            if (!supported_in(j, e, Vx, Vy))
+                continue;
 
             double J = jacobian(e, Ux, Uy);
             for (auto q : quad_points(Ux, Uy)) {
@@ -652,9 +679,8 @@ public:
         }
         return val;
     }
-
 };
 
-}
+}  // namespace ads
 
-#endif // STOKES_STOKES_HPP
+#endif  // STOKES_STOKES_HPP

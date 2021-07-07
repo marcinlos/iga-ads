@@ -11,18 +11,16 @@
 #include <iostream>
 #include <vector>
 
-
 namespace ads::mumps {
 
 struct problem {
-
     problem(double* rhs, int n)
-    : rhs_{ rhs }, n{ n }
-    { }
+    : rhs_{rhs}
+    , n{n} { }
 
     explicit problem(std::vector<double>& rhs)
-    : rhs_{ rhs.data() }, n{ rhs.size() }
-    { }
+    : rhs_{rhs.data()}
+    , n{rhs.size()} { }
 
     void add(int row, int col, double value) {
         rows_.push_back(row);
@@ -30,9 +28,7 @@ struct problem {
         values_.push_back(value);
     }
 
-    int nonzero_entries() const {
-        return values_.size();
-    }
+    int nonzero_entries() const { return values_.size(); }
 
     void reserve(int entries) {
         rows_.reserve(entries);
@@ -40,29 +36,17 @@ struct problem {
         values_.reserve(entries);
     }
 
-    int dofs() const {
-        return n;
-    }
+    int dofs() const { return n; }
 
-    int* irn() {
-        return rows_.data();
-    }
+    int* irn() { return rows_.data(); }
 
-    int* jcn() {
-        return cols_.data();
-    }
+    int* jcn() { return cols_.data(); }
 
-    double* a() {
-        return values_.data();
-    }
+    double* a() { return values_.data(); }
 
-    double* rhs() {
-        return rhs_;
-    }
+    double* rhs() { return rhs_; }
 
-    void rhs(double* data) {
-        rhs_ = data;
-    }
+    void rhs(double* data) { rhs_ = data; }
 
 private:
     std::vector<int> rows_;
@@ -72,37 +56,23 @@ private:
     int n;
 };
 
-
 class solver {
 private:
     DMUMPS_STRUC_C id{};
 
-    int& icntl(int idx) {
-        return id.icntl[idx - 1];
-    }
+    int& icntl(int idx) { return id.icntl[idx - 1]; }
 
-    double& cntl(int idx) {
-        return id.cntl[idx - 1];
-    }
+    double& cntl(int idx) { return id.cntl[idx - 1]; }
 
-    int info(int idx) const {
-        return id.info[idx - 1];
-    }
+    int info(int idx) const { return id.info[idx - 1]; }
 
-    double rinfo(int idx) const {
-        return id.rinfo[idx - 1];
-    }
+    double rinfo(int idx) const { return id.rinfo[idx - 1]; }
 
-    int infog(int idx) const {
-        return id.infog[idx - 1];
-    }
+    int infog(int idx) const { return id.infog[idx - 1]; }
 
-    double rinfog(int idx) const {
-        return id.rinfog[idx - 1];
-    }
+    double rinfog(int idx) const { return id.rinfog[idx - 1]; }
 
 public:
-
     solver() {
         int argc = 0;
         char** argv = nullptr;
@@ -136,7 +106,7 @@ public:
         // out-of-core
         // icntl(22) = 1;
 
-        //streams
+        // streams
         icntl(1) = 3;
         icntl(2) = 3;
         icntl(3) = 3;
@@ -177,13 +147,9 @@ public:
         solve_();
     }
 
-    double flops_assembly() const {
-        return rinfog(2);
-    }
+    double flops_assembly() const { return rinfog(2); }
 
-    double flops_elimination() const {
-        return rinfog(3);
-    }
+    double flops_elimination() const { return rinfog(3); }
 
     ~solver() {
         id.job = -2;
@@ -225,26 +191,15 @@ private:
 
     void report_error(std::ostream& os, int info1, int info2) const {
         switch (info1) {
-        case -6:
-            os << "Matrix singular in structure (rank = " << info2 << ")";
-            break;
-        case -7:
-            os << "Problem of integer workspace allocation (size = " << info2 << ")";
-            break;
-        case -8:
-            os << "Main internal integer workarray is too small";
-            break;
+        case -6: os << "Matrix singular in structure (rank = " << info2 << ")"; break;
+        case -7: os << "Problem of integer workspace allocation (size = " << info2 << ")"; break;
+        case -8: os << "Main internal integer workarray is too small"; break;
         case -9:
             os << "Main internal real/complex workarray is too small (missing = " << info2 << ")";
             break;
-        case -10:
-            os << "Numerically singular matrix";
-            break;
-        case -13:
-            os << "Problem of workspace allocation (size = " << info2 << ")";
-            break;
-        default:
-            os << "Problem code: " << info1;
+        case -10: os << "Numerically singular matrix"; break;
+        case -13: os << "Problem of workspace allocation (size = " << info2 << ")"; break;
+        default: os << "Problem code: " << info1;
         }
     }
 
@@ -270,30 +225,31 @@ private:
         os << "INFO:" << std::endl;
         os << "  Success:                                      " << info(1) << std::endl;
         auto real_store = handle_neg(info(3));
-        os << "  Size of the real space to store factors:      " << real_store
-                                                                 << " (" << as_MB(real_store) << " MB)" << std::endl;
+        os << "  Size of the real space to store factors:      " << real_store << " ("
+           << as_MB(real_store) << " MB)" << std::endl;
         os << "  Size of the integer space to store factors:   " << info(4) << std::endl;
         os << "  Estimated maximum front size:                 " << info(5) << std::endl;
         os << "  Number of nodes in a tree:                    " << info(6) << std::endl;
         os << "  Size of the integer space to factorize:       " << info(7) << std::endl;
         auto real_factor = handle_neg(info(8));
-        os << "  Size of the real space to factorize:          " << real_factor
-                                                                 << " (" << as_MB(real_factor) << " MB)" << std::endl;
+        os << "  Size of the real space to factorize:          " << real_factor << " ("
+           << as_MB(real_factor) << " MB)" << std::endl;
         os << "  Total memory needed:                          " << info(15) << " MB" << std::endl;
         os << "  Total memory needed (OoC):                    " << info(17) << " MB" << std::endl;
         os << "  Size of the integer space to factorize (OoC): " << info(19) << std::endl;
         auto real_factor_ooc = handle_neg(info(20));
-        os << "  Size of the real space to factorize (OoC):    " << real_factor_ooc
-                                                                 << " (" << as_MB(real_factor_ooc) << " MB)" << std::endl;
-        os << "  Estimated number of entries in factors:       " << handle_neg(info(24)) << std::endl;
+        os << "  Size of the real space to factorize (OoC):    " << real_factor_ooc << " ("
+           << as_MB(real_factor_ooc) << " MB)" << std::endl;
+        os << "  Estimated number of entries in factors:       " << handle_neg(info(24))
+           << std::endl;
         auto low_real_factor = handle_neg(info(29));
-        os << "  Size of the real space to factorize (low-r):  " << low_real_factor
-                                                                 << " (" << as_MB(low_real_factor) << " MB)" << std::endl;
+        os << "  Size of the real space to factorize (low-r):  " << low_real_factor << " ("
+           << as_MB(low_real_factor) << " MB)" << std::endl;
         os << "  Total memory needed (low-rank):               " << info(30) << " MB" << std::endl;
         os << "  Total memory needed (low-rank, OoC):          " << info(31) << " MB" << std::endl;
     }
 };
 
-}
+}  // namespace ads::mumps
 
-#endif // ADS_SOLVER_MUMPS_HPP
+#endif  // ADS_SOLVER_MUMPS_HPP

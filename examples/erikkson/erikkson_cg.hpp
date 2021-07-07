@@ -13,7 +13,6 @@
 #include "erikkson_base.hpp"
 #include "solution.hpp"
 
-
 namespace ads {
 
 class erikkson_CG : public erikkson_base {
@@ -26,14 +25,12 @@ private:
     dimension& Vx;
     dimension& Vy;
 
-
     // New stuff
     lin::band_matrix MVx, MVy;
     lin::band_matrix MUx, MUy;
 
     lin::band_matrix KVx, KVy;
     lin::band_matrix KUx, KUy;
-
 
     lin::dense_matrix MUVx, MUVy;
     lin::dense_matrix KUVx, KUVy;
@@ -61,7 +58,7 @@ private:
     double peclet = 1e2;
     double epsilon = 1 / peclet;
 
-    point_type c_diff{{ epsilon, epsilon }};
+    point_type c_diff{{epsilon, epsilon}};
 
     // double angle = 0;
     // double angle = M_PI / 6;
@@ -69,7 +66,7 @@ private:
     // double len = 1;
 
     // point_type beta{{ len * cos(angle), len * sin(angle) }};
-    point_type beta{{ 1, 1 }};
+    point_type beta{{1, 1}};
     // point_type beta{{ 1, 0 }};
 
     mumps::solver solver;
@@ -77,12 +74,13 @@ private:
     output_manager<2> output;
 
 public:
-    erikkson_CG(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, const timesteps_config& steps)
+    erikkson_CG(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y,
+                const timesteps_config& steps)
     : Base{std::move(test_x), std::move(test_y), steps}
-    , Ux{ std::move(trial_x) }
-    , Uy{ std::move(trial_y) }
-    , Vx{ x }
-    , Vy{ y }
+    , Ux{std::move(trial_x)}
+    , Uy{std::move(trial_y)}
+    , Vx{x}
+    , Vy{y}
     , MVx{Vx.p, Vx.p, Vx.dofs(), Vx.dofs(), 0}
     , MVy{Vy.p, Vy.p, Vy.dofs(), Vy.dofs(), 0}
     , MUx{Ux.p, Ux.p, Ux.dofs(), Ux.dofs(), 0}
@@ -91,29 +89,27 @@ public:
     , KVy{Vy.p, Vy.p, Vy.dofs(), Vy.dofs(), 0}
     , KUx{Ux.p, Ux.p, Ux.dofs(), Ux.dofs(), 0}
     , KUy{Uy.p, Uy.p, Uy.dofs(), Uy.dofs(), 0}
-    , MUVx{ Vx.dofs(), Ux.dofs() }
-    , MUVy{ Vy.dofs(), Uy.dofs() }
-    , KUVx{ Vx.dofs(), Ux.dofs() }
-    , KUVy{ Vy.dofs(), Uy.dofs() }
-    , AUVx{ Vx.dofs(), Ux.dofs() }
-    , AUVy{ Vy.dofs(), Uy.dofs() }
-    , MUUx{ Ux.dofs(), Ux.dofs() }
-    , MUUy{ Uy.dofs(), Uy.dofs() }
-    , KUUx{ Ux.dofs(), Ux.dofs() }
-    , KUUy{ Uy.dofs(), Uy.dofs() }
-    , AUUx{ Ux.dofs(), Ux.dofs() }
-    , AUUy{ Uy.dofs(), Uy.dofs() }
-    , u{{ Ux.dofs(), Uy.dofs() }}
-    , u_prev{{ Ux.dofs(), Uy.dofs() }}
-    , r{ vector_type{{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy}
-    , u_buffer{{ Ux.dofs(), Uy.dofs() }}
+    , MUVx{Vx.dofs(), Ux.dofs()}
+    , MUVy{Vy.dofs(), Uy.dofs()}
+    , KUVx{Vx.dofs(), Ux.dofs()}
+    , KUVy{Vy.dofs(), Uy.dofs()}
+    , AUVx{Vx.dofs(), Ux.dofs()}
+    , AUVy{Vy.dofs(), Uy.dofs()}
+    , MUUx{Ux.dofs(), Ux.dofs()}
+    , MUUy{Uy.dofs(), Uy.dofs()}
+    , KUUx{Ux.dofs(), Ux.dofs()}
+    , KUUy{Uy.dofs(), Uy.dofs()}
+    , AUUx{Ux.dofs(), Ux.dofs()}
+    , AUUy{Uy.dofs(), Uy.dofs()}
+    , u{{Ux.dofs(), Uy.dofs()}}
+    , u_prev{{Ux.dofs(), Uy.dofs()}}
+    , r{vector_type{{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy}
+    , u_buffer{{Ux.dofs(), Uy.dofs()}}
     , full_rhs(Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs())
-    , h{ element_diam(Ux, Uy) }
-    , output{ Ux.B, Uy.B, 500 }
-    { }
+    , h{element_diam(Ux, Uy)}
+    , output{Ux.B, Uy.B, 500} { }
 
 private:
-
     double element_diam(const dimension& Ux, const dimension& Uy) const {
         return std::sqrt(max_element_size(Ux) * max_element_size(Uy));
     }
@@ -126,7 +122,8 @@ private:
         dense_matrix_ref MUVx, MUVy, KUVx, KUVy, AUVx, AUVy;
     };
 
-    void assemble_problem(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& M) {
+    void assemble_problem(mumps::problem& problem, const dimension& Vx, const dimension& Vy,
+                          const matrix_set& M) {
         auto N = Vx.dofs() * Vy.dofs();
         auto hh = h * h;
 
@@ -136,7 +133,8 @@ private:
                 int ii = linear_index(i, Vx, Vy) + 1;
                 int jj = linear_index(j, Vx, Vy) + 1;
 
-                double val = kron(MVx, MVy, i, j) + hh * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
+                double val =
+                    kron(MVx, MVy, i, j) + hh * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
                 // val += hh * hh * kron(M.KVx, M.KVy, i, j);
 
                 problem.add(ii, jj, val);
@@ -148,11 +146,13 @@ private:
             for (auto j : dofs(Ux, Uy)) {
                 double val = 0;
                 // val += kron(M.MUVx, M.MUVy, i, j);
-                val += /*steps.dt */ (c_diff[0] * kron(M.KUVx, M.MUVy, i, j) + beta[0] * kron(M.AUVx, M.MUVy, i, j));
-                val += /*steps.dt */ (c_diff[1] * kron(M.MUVx, M.KUVy, i, j) + beta[1] * kron(M.MUVx, M.AUVy, i, j));
+                val += /*steps.dt */ (c_diff[0] * kron(M.KUVx, M.MUVy, i, j)
+                                      + beta[0] * kron(M.AUVx, M.MUVy, i, j));
+                val += /*steps.dt */ (c_diff[1] * kron(M.MUVx, M.KUVy, i, j)
+                                      + beta[1] * kron(M.MUVx, M.AUVy, i, j));
 
                 if (val != 0) {
-                    if (! is_boundary(i, Vx, Vy) && ! is_boundary(j, Ux, Uy)) {
+                    if (!is_boundary(i, Vx, Vy) && !is_boundary(j, Ux, Uy)) {
                         int ii = linear_index(i, Vx, Vy) + 1;
                         int jj = linear_index(j, Ux, Uy) + 1;
 
@@ -185,13 +185,14 @@ private:
         // bool bottom = y < 0.5, top = !bottom;
 
         // if ((bottom && left) || (top && right)) {
-            // return 1 / eta;
+        // return 1 / eta;
         // } else {
-            // return eta;
+        // return eta;
         // }
     }
 
-    void assemble_problem2(mumps::problem& problem, const dimension& Vx, const dimension& Vy, const matrix_set& /*M*/) {
+    void assemble_problem2(mumps::problem& problem, const dimension& Vx, const dimension& Vy,
+                           const matrix_set& /*M*/) {
         auto N = Vx.dofs() * Vy.dofs();
         auto hh = h * h;
 
@@ -201,7 +202,8 @@ private:
                 int ii = linear_index(i, Vx, Vy) + 1;
                 int jj = linear_index(j, Vx, Vy) + 1;
 
-                double val = kron(MVx, MVy, i, j) + hh * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
+                double val =
+                    kron(MVx, MVy, i, j) + hh * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
                 // val += hh * hh * kron(M.KVx, M.KVy, i, j);
 
                 problem.add(ii, jj, val);
@@ -211,10 +213,10 @@ private:
         // B, B^T
         for (auto i : internal_dofs(Vx, Vy)) {
             for (auto j : internal_dofs(Ux, Uy)) {
-
                 double val = 0;
                 for (auto e : elements_supporting_dof(i, Vx, Vy)) {
-                    if (! supported_in(j, e, Ux, Uy)) continue;
+                    if (!supported_in(j, e, Ux, Uy))
+                        continue;
 
                     double J = jacobian(e, x, y);
                     for (auto q : quad_points(Vx, Vy)) {
@@ -224,8 +226,9 @@ private:
                         value_type uu = eval_basis(e, q, j, Ux, Uy);
 
                         auto diff = diffusion(x[0], x[1]);
-                        double bwu = 0;//uu.val * ww.val;
-                        bwu += /*steps.dt */ (diff * grad_dot(uu, ww) + beta[0] * uu.dx * ww.val + beta[1] * uu.dy * ww.val);
+                        double bwu = 0;  // uu.val * ww.val;
+                        bwu += /*steps.dt */ (diff * grad_dot(uu, ww) + beta[0] * uu.dx * ww.val
+                                              + beta[1] * uu.dy * ww.val);
 
                         val += bwu * w * J;
                     }
@@ -254,16 +257,15 @@ private:
         });
     }
 
-
     matrix_set matrices(bool x_refined, bool y_refined) {
         if (x_refined && y_refined) {
-            return { MVx, MVy, KVx, KVy, MUVx, MUVy, KUVx, KUVy, AUVx, AUVy };
+            return {MVx, MVy, KVx, KVy, MUVx, MUVy, KUVx, KUVy, AUVx, AUVy};
         } else if (x_refined) {
-            return { MVx, MUy, KVx, KUy, MUVx, MUUy, KUVx, KUUy, AUVx, AUUy };
+            return {MVx, MUy, KVx, KUy, MUVx, MUUy, KUVx, KUUy, AUVx, AUUy};
         } else if (y_refined) {
-            return { MUx, MVy, KUx, KVy, MUUx, MUVy, KUUx, KUVy, AUUx, AUVy };
+            return {MUx, MVy, KUx, KVy, MUUx, MUVy, KUUx, KUVy, AUUx, AUVy};
         } else {
-            return { MUx, MUy, KUx, KUy, MUUx, MUUy, KUUx, KUUy, AUUx, AUUy };
+            return {MUx, MUy, KUx, KUy, MUUx, MUUy, KUUx, KUUy, AUUx, AUUy};
         }
     }
 
@@ -280,7 +282,6 @@ private:
         gram_matrix_1d(MUVx, Ux.basis, Vx.basis);
         gram_matrix_1d(MUVy, Uy.basis, Vy.basis);
 
-
         stiffness_matrix_1d(KVx, Vx.basis);
         stiffness_matrix_1d(KVy, Vy.basis);
 
@@ -292,7 +293,6 @@ private:
 
         stiffness_matrix_1d(KUUx, Ux.basis, Ux.basis);
         stiffness_matrix_1d(KUUy, Uy.basis, Uy.basis);
-
 
         advection_matrix_1d(AUVx, Ux.basis, Vx.basis);
         advection_matrix_1d(AUVy, Uy.basis, Vy.basis);
@@ -320,7 +320,8 @@ private:
         output.to_file(u, "out_0.data");
     }
 
-    void add_solution(const vector_view& u_rhs, const vector_view& r_rhs, const dimension& Vx, const dimension& Vy) {
+    void add_solution(const vector_view& u_rhs, const vector_view& r_rhs, const dimension& Vx,
+                      const dimension& Vy) {
         for (auto i : dofs(Ux, Uy)) {
             u(i[0], i[1]) += u_rhs(i[0], i[1]);
         }
@@ -368,9 +369,9 @@ private:
 
         // bool x_rhs = xrhs[iter % sizeof(xrhs)];
         // bool y_rhs = !x_rhs;
-        // std::cout << iter << ": x " << (x_rhs ? "rhs" : "lhs") << ", y " << (y_rhs ? "rhs" : "lhs") << std::endl;
-        // substep(x_rhs, y_rhs, true, true);
-        // substep(x_rhs, y_rhs, !x_rhs, !y_rhs);
+        // std::cout << iter << ": x " << (x_rhs ? "rhs" : "lhs") << ", y " << (y_rhs ? "rhs" :
+        // "lhs") << std::endl; substep(x_rhs, y_rhs, true, true); substep(x_rhs, y_rhs, !x_rhs,
+        // !y_rhs);
 
         using std::swap;
         swap(u, u_prev);
@@ -378,7 +379,7 @@ private:
 
         std::cout << "Step " << (iter + 1) << std::endl;
         constexpr auto max_iters = 1;
-        for (int i = 1; ; ++ i) {
+        for (int i = 1;; ++i) {
             auto norm = substep(true, true, t);
             std::cout << "  substep " << i << ": |eta| = " << norm << std::endl;
             if (norm < 1e-7 || i >= max_iters) {
@@ -389,7 +390,8 @@ private:
 
     void after_step(int iter, double t) override {
         if ((iter + 1) % save_every == 0) {
-            std::cout << "Step " << (iter + 1) << " : " << errorL2(t) << " " << errorH1(t) << std::endl;
+            std::cout << "Step " << (iter + 1) << " : " << errorL2(t) << " " << errorH1(t)
+                      << std::endl;
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
     }
@@ -401,10 +403,11 @@ private:
         print_solution("solution.data", u, Ux, Uy);
     }
 
-    void compute_rhs(const dimension& Vx, const dimension& Vy, vector_view& r_rhs, vector_view& u_rhs) {
+    void compute_rhs(const dimension& Vx, const dimension& Vy, vector_view& r_rhs,
+                     vector_view& u_rhs) {
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
-            auto R = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
-            auto U = vector_type{{ Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element() }};
+            auto R = vector_type{{Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element()}};
+            auto U = vector_type{{Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element()}};
 
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Vy)) {
@@ -453,11 +456,11 @@ private:
         });
     }
 
-    void compute_rhs_nonstationary(const dimension& Vx, const dimension& Vy, vector_view& r_rhs, vector_view& u_rhs,
-                                   double t) {
+    void compute_rhs_nonstationary(const dimension& Vx, const dimension& Vy, vector_view& r_rhs,
+                                   vector_view& u_rhs, double t) {
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
-            auto R = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
-            auto U = vector_type{{ Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element() }};
+            auto R = vector_type{{Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element()}};
+            auto U = vector_type{{Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element()}};
 
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Vy)) {
@@ -525,8 +528,6 @@ private:
     }
 };
 
-}
+}  // namespace ads
 
-
-
-#endif // ERIKKSON_ERIKKSON_CG_HPP
+#endif  // ERIKKSON_ERIKKSON_CG_HPP

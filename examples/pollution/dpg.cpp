@@ -5,9 +5,7 @@
 
 #include "pollution_dpg_v2_2d.hpp"
 
-
 using namespace ads;
-
 
 int main(int argc, char* argv[]) {
     if (argc != 5) {
@@ -22,10 +20,9 @@ int main(int argc, char* argv[]) {
     // dim_config dim{ p, n, 0, 5000, p + k + 1 };
     // dim_config dim{ p, n, 0, 5000, p + 1, k }; // obie przestrzenie z separatorami
     // dim_config dim{ p, n, 0, 1 }; // enrichment separatorami
-    dim_config dim{ p, n, 0.0, 1.0, sep};
+    dim_config dim{p, n, 0.0, 1.0, sep};
 
-
-    timesteps_config steps{ 3000, 0.5*1e-2 };
+    timesteps_config steps{3000, 0.5 * 1e-2};
 
     int ders = 1;
 

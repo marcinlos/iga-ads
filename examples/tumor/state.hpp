@@ -6,12 +6,10 @@
 
 #include "ads/lin/tensor.hpp"
 
-
 namespace tumor {
 
 template <std::size_t Dim>
 struct state {
-
     using field = ads::lin::tensor<double, Dim>;
 
     field b;
@@ -21,19 +19,19 @@ struct state {
     field M, A;
 
     state(std::array<std::size_t, Dim> shape)
-    : b{ shape }
-    , c{ shape }
-    , o{ shape }
-    , M{ shape }, A{ shape }
-    { }
+    : b{shape}
+    , c{shape}
+    , o{shape}
+    , M{shape}
+    , A{shape} { }
 
     void clear() {
-        for (field* x : { &b, &c, &o, &M, &A }) {
+        for (field* x : {&b, &c, &o, &M, &A}) {
             zero(*x);
         }
     }
 };
 
-}
+}  // namespace tumor
 
-#endif // TUMOR_STATE_HPP
+#endif  // TUMOR_STATE_HPP

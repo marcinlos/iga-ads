@@ -16,7 +16,6 @@
 #include "state.hpp"
 #include "vasculature.hpp"
 
-
 namespace bsp = ads::bspline;
 
 namespace tumor {
@@ -45,20 +44,17 @@ private:
     ads::bspline::eval_ders_ctx ydctx;
 
 public:
-    tumor_2d(const ads::config_2d& config, const params& params, int save_every, vasc::vasculature vasculature);
+    tumor_2d(const ads::config_2d& config, const params& params, int save_every,
+             vasc::vasculature vasculature);
 
 private:
-
     struct constant {
         double value;
 
         constant(double v)
-        : value{ v }
-        { }
+        : value{v} { }
 
-        double operator ()(double, double) const {
-            return value;
-        }
+        double operator()(double, double) const { return value; }
     };
 
     double init_tumor(double x, double y) {
@@ -81,18 +77,18 @@ private:
     }
 
     void apply_boundary_conditions(vector_type& v) {
-        for (int i = 0; i < y.dofs(); ++ i) {
+        for (int i = 0; i < y.dofs(); ++i) {
             v(0, i) = 0;
             v(x.dofs() - 1, i) = 0;
         }
-        for (int i = 0; i < x.dofs(); ++ i) {
+        for (int i = 0; i < x.dofs(); ++i) {
             v(i, 0) = 0;
             v(i, y.dofs() - 1) = 0;
         }
     }
 
     point_type normalize(point_type p) const {
-        return { (p[0] - x.a) / (x.b - x.a), (p[1] - y.a) / (y.b - y.a) };
+        return {(p[0] - x.a) / (x.b - x.a), (p[1] - y.a) / (y.b - y.a)};
     }
 
     void prepare_matrices() {
@@ -143,11 +139,9 @@ private:
 
     void update_vasculature(int iter);
 
-    double& val(vector_type& v, index_type idx) {
-        return v(idx[0], idx[1]);
-    }
+    double& val(vector_type& v, index_type idx) { return v(idx[0], idx[1]); }
 };
 
-}
+}  // namespace tumor
 
-#endif // TUMOR_TUMOR_HPP
+#endif  // TUMOR_TUMOR_HPP

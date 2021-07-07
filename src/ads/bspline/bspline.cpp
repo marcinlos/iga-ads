@@ -5,12 +5,11 @@
 
 #include "ads/util.hpp"
 
-
 namespace ads::bspline {
 
 basis create_basis(double a, double b, int p, int elements) {
     int points = elements + 1;
-    int knot_size = points + 2 * p; // clamped B-spline
+    int knot_size = points + 2 * p;  // clamped B-spline
     knot_vector knot(knot_size);
 
     for (int i = 0; i < p; ++i) {
@@ -36,24 +35,23 @@ basis create_basis(double a, double b, int p, int elements, int repeated_nodes) 
     }
 
     for (int i = 1; i < points - 1; ++i) {
-        for (int j = 0; j < r; ++ j) {
+        for (int j = 0; j < r; ++j) {
             knot[p + 1 + (i - 1) * r + j] = lerp(i, elements, a, b);
         }
     }
     return {std::move(knot), p};
 }
 
-
 basis create_basis_C0(double a, double b, int p, int elements) {
     int points = elements + 1;
-    int knot_size = p * points + 2; // clamped B-spline with C^0 separators
+    int knot_size = p * points + 2;  // clamped B-spline with C^0 separators
     knot_vector knot(knot_size);
 
     knot[0] = a;
     knot[knot_size - 1] = b;
 
     for (int i = 0; i < points; ++i) {
-        for (int j = 0; j < p; ++ j) {
+        for (int j = 0; j < p; ++j) {
             knot[1 + i * p + j] = lerp(i, elements, a, b);
         }
     }
@@ -82,7 +80,6 @@ int find_span(double x, const basis& b) {
     return idx;
 }
 
-
 void eval_basis(int i, double x, const basis& b, double* out, basis_eval_ctx& ctx) {
     auto left = ctx.left();
     auto right = ctx.right();
@@ -102,20 +99,20 @@ void eval_basis(int i, double x, const basis& b, double* out, basis_eval_ctx& ct
     }
 }
 
-
-void eval_basis_with_derivatives(int i, double x, const basis& b, double** out, int der, basis_eval_ctx& ctx) {
+void eval_basis_with_derivatives(int i, double x, const basis& b, double** out, int der,
+                                 basis_eval_ctx& ctx) {
     auto& ndu = ctx.ndu;
     auto& a = ctx.a;
     auto left = ctx.left();
     auto right = ctx.right();
 
     ndu(0, 0) = 1;
-    for (int j = 1; j <= b.degree; ++ j) {
+    for (int j = 1; j <= b.degree; ++j) {
         left[j] = x - b.knot[i + 1 - j];
         right[j] = b.knot[i + j] - x;
         double saved = 0;
 
-        for (int r = 0; r < j; ++ r) {
+        for (int r = 0; r < j; ++r) {
             ndu(j, r) = right[r + 1] + left[j - r];
             double tmp = ndu(r, j - 1) / ndu(j, r);
 
@@ -124,13 +121,13 @@ void eval_basis_with_derivatives(int i, double x, const basis& b, double** out, 
         }
         ndu(j, j) = saved;
     }
-    for (int j = 0; j <= b.degree; ++ j) {
+    for (int j = 0; j <= b.degree; ++j) {
         out[0][j] = ndu(j, b.degree);
     }
-    for (int r = 0; r <= b.degree; ++ r) {
+    for (int r = 0; r <= b.degree; ++r) {
         int s1 = 0, s2 = 1;
         a(0, 0) = 1;
-        for (int k = 1; k <= der; ++ k) {
+        for (int k = 1; k <= der; ++k) {
             double d = 0;
             int rk = r - k, pk = b.degree - k;
             if (r >= k) {
@@ -139,7 +136,7 @@ void eval_basis_with_derivatives(int i, double x, const basis& b, double** out, 
             }
             int j1 = (rk >= -1) ? 1 : -rk;
             int j2 = (r - 1 <= pk) ? k - 1 : b.degree - r;
-            for (int j = j1; j <= j2; ++ j) {
+            for (int j = j1; j <= j2; ++j) {
                 a(s2, j) = (a(s1, j) - a(s1, j - 1)) / ndu(pk + 1, rk + j);
                 d += a(s2, j) * ndu(rk + j, pk);
             }
@@ -152,8 +149,8 @@ void eval_basis_with_derivatives(int i, double x, const basis& b, double** out, 
         }
     }
     int r = b.degree;
-    for (int k = 1; k <= der; ++ k) {
-        for (int j = 0; j <= b.degree; ++ j) {
+    for (int k = 1; k <= der; ++k) {
+        for (int j = 0; j <= b.degree; ++j) {
             out[k][j] *= r;
         }
         r *= (b.degree - k);
@@ -164,9 +161,9 @@ std::vector<int> first_nonzero_dofs(const basis& b) {
     std::vector<int> dofs(b.elements());
     int p = b.degree;
     int e = 0;
-    for (std::size_t i = p; i + 1 < b.knot_size() - p; ++ i) {
+    for (std::size_t i = p; i + 1 < b.knot_size() - p; ++i) {
         if (b.knot[i] != b.knot[i + 1]) {
-            dofs[e ++] = i - p;
+            dofs[e++] = i - p;
         }
     }
     return dofs;
@@ -177,22 +174,21 @@ std::vector<std::pair<int, int>> elements_supporting_dofs(const basis& b) {
     int p = b.degree;
     int e = 0;
 
-    for (int i = 0; i < b.dofs(); ++ i) {
+    for (int i = 0; i < b.dofs(); ++i) {
         auto ee = e - 1;
-        for (int j = 0; j < p + 1; ++ j) {
+        for (int j = 0; j < p + 1; ++j) {
             if (b.knot[i + j] != b.knot[i + j + 1]) {
-                ++ ee;
+                ++ee;
             }
         }
         ranges[i].first = e;
         ranges[i].second = ee;
         if (b.knot[i] != b.knot[i + 1]) {
-            ++ e;
+            ++e;
         }
     }
 
     return ranges;
-
 }
 
-}
+}  // namespace ads::bspline

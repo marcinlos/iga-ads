@@ -4,12 +4,10 @@
 #ifndef SCALABILITY_TEST2D_HPP
 #define SCALABILITY_TEST2D_HPP
 
-#include "ads/simulation.hpp"
 #include "ads/executor/galois.hpp"
+#include "ads/simulation.hpp"
 
-namespace ads {
-namespace problems {
-
+namespace ads::problems {
 
 class scalability_2d : public simulation_2d {
 private:
@@ -21,11 +19,10 @@ private:
 
 public:
     scalability_2d(const config_2d& config, int threads)
-    : Base{ config }
-    , u{ shape() }
-    , u_prev{ shape() }
-    , executor{threads}
-    { }
+    : Base{config}
+    , u{shape()}
+    , u_prev{shape()}
+    , executor{threads} { }
 
     double init_state(double x, double y) {
         double dx = x - 0.5;
@@ -35,9 +32,7 @@ public:
     };
 
 private:
-    void solve(vector_type& v) {
-        Base::solve(v);
-    }
+    void solve(vector_type& v) { Base::solve(v); }
 
     void prepare_matrices() {
         x.fix_left();
@@ -46,8 +41,8 @@ private:
 
     void before() override {
         prepare_matrices();
-        for (int i = 0; i < x.dofs(); ++ i) {
-            for (int j = 0; j < y.dofs(); ++ j) {
+        for (int i = 0; i < x.dofs(); ++i) {
+            for (int j = 0; j < y.dofs(); ++j) {
                 u(i, j) = 1;
             }
         }
@@ -68,7 +63,7 @@ private:
         double dx = x - 0.5;
         double dy = y - 0.5;
         double r = std::sqrt(dx * dx + dy * dy);
-        return std::exp(- r) + 1 + std::cos(M_PI * x) * std::cos(M_PI * y);
+        return std::exp(-r) + 1 + std::cos(M_PI * x) * std::cos(M_PI * y);
     }
 
     void compute_rhs() {
@@ -96,9 +91,7 @@ private:
                 }
             }
 
-            executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e);
-            });
+            executor.synchronized([&]() { update_global_rhs(rhs, U, e); });
         });
         integration_timer.stop();
     }
@@ -106,14 +99,10 @@ private:
     virtual void after() override {
         auto total = static_cast<double>(integration_timer.get());
         auto avg = total / steps.step_count;
-        std::cout << "{ 'integration' : " << avg  << "}" << std::endl;
+        std::cout << "{ 'integration' : " << avg << "}" << std::endl;
     }
 };
 
-}
-}
+}  // namespace ads::problems
 
-
-
-
-#endif // SCALABILITY_TEST2D_HPP
+#endif  // SCALABILITY_TEST2D_HPP

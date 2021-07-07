@@ -7,12 +7,10 @@
 #include <iterator>
 #include <type_traits>
 
-
 namespace ads::output {
 
 template <typename RangeIter>
 struct range {
-
     using iterator = RangeIter;
     using iter_traits = std::iterator_traits<iterator>;
     using value_type = typename iter_traits::value_type;
@@ -26,19 +24,15 @@ struct range {
         return distance(begin, end);
     }
 
-    value_type operator [](std::size_t i) const {
-        return begin[i];
-    }
+    value_type operator[](std::size_t i) const { return begin[i]; }
 
-    reference operator [](std::size_t i) {
-        return begin[i];
-    }
+    reference operator[](std::size_t i) { return begin[i]; }
 
 private:
     using iterator_category = typename iter_traits::iterator_category;
 
     static_assert(std::is_same<iterator_category, std::random_access_iterator_tag>::value,
-            "Range can be constructed only from random access iterators");
+                  "Range can be constructed only from random access iterators");
 };
 
 template <typename RangeIter>
@@ -51,14 +45,13 @@ RangeIter end(const range<RangeIter>& r) {
     return r.end;
 }
 
-
 template <typename Cont>
 auto from_container(const Cont& cont) -> range<decltype(begin(cont))> {
     using std::begin;
     using std::end;
-    return range<decltype(begin(cont))> { begin(cont), end(cont) };
+    return range<decltype(begin(cont))>{begin(cont), end(cont)};
 }
 
-}
+}  // namespace ads::output
 
-#endif // ADS_OUTPUT_RANGE_HPP
+#endif  // ADS_OUTPUT_RANGE_HPP

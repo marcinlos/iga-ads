@@ -10,7 +10,6 @@
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
 
-
 namespace problems {
 
 class elasticity_victor : public ads::simulation_3d {
@@ -23,10 +22,15 @@ class elasticity_victor : public ads::simulation_3d {
         vector_type ax, ay, az;
 
         state(std::array<std::size_t, 3> shape)
-            : ux{ shape }, uy{ shape }, uz{ shape }
-            , vx{ shape }, vy{ shape }, vz{ shape }
-            , ax{ shape }, ay{ shape }, az{ shape }
-            { }
+        : ux{shape}
+        , uy{shape}
+        , uz{shape}
+        , vx{shape}
+        , vy{shape}
+        , vz{shape}
+        , ax{shape}
+        , ay{shape}
+        , az{shape} { }
     };
 
     state now, prev;
@@ -59,31 +63,30 @@ class elasticity_victor : public ads::simulation_3d {
 
 public:
     elasticity_victor(const ads::config_3d& config, int save_every)
-        : Base{ config }
-        , now{ shape() }, prev{ shape() }
-        , energy{ shape() }
-        , output{ x.B, y.B, z.B, 50 }
-        , Kx{x.p, x.p, x.B.dofs()}
-        , Ky{y.p, y.p, y.B.dofs()}
-        , Kz{z.p, z.p, z.B.dofs()}
-        , save_every{save_every}
-        {
-            auto dt = steps.dt / 3;
-            double hh = 0.5 * dt * dt;
-            matrix(Kx, x.basis, hh / rho);
-            matrix(Ky, y.basis, hh / rho);
-            matrix(Kz, z.basis, hh / rho);
-        }
+    : Base{config}
+    , now{shape()}
+    , prev{shape()}
+    , energy{shape()}
+    , output{x.B, y.B, z.B, 50}
+    , Kx{x.p, x.p, x.B.dofs()}
+    , Ky{y.p, y.p, y.B.dofs()}
+    , Kz{z.p, z.p, z.B.dofs()}
+    , save_every{save_every} {
+        auto dt = steps.dt / 3;
+        double hh = 0.5 * dt * dt;
+        matrix(Kx, x.basis, hh / rho);
+        matrix(Ky, y.basis, hh / rho);
+        matrix(Kz, z.basis, hh / rho);
+    }
 
 private:
-
     void matrix(ads::lin::band_matrix& K, const ads::basis_data& d, double h) {
-        for (ads::element_id e = 0; e < d.elements; ++ e) {
-            for (int q = 0; q < d.quad_order; ++ q) {
+        for (ads::element_id e = 0; e < d.elements; ++e) {
+            for (int q = 0; q < d.quad_order; ++q) {
                 int first = d.first_dof(e);
                 int last = d.last_dof(e);
-                for (int a = 0; a + first <= last; ++ a) {
-                    for (int b = 0; b + first <= last; ++ b) {
+                for (int a = 0; a + first <= last; ++a) {
+                    for (int b = 0; b + first <= last; ++b) {
                         int ia = a + first;
                         int ib = b + first;
                         auto va = d.b[e][q][0][a];
@@ -98,9 +101,9 @@ private:
     }
 
     void add(vector_type& left, const vector_type& right, double a) const {
-        for (auto ix = 0; ix < x.dofs(); ++ ix) {
-            for (auto iy = 0; iy < y.dofs(); ++ iy) {
-                for (auto iz = 0; iz < z.dofs(); ++ iz) {
+        for (auto ix = 0; ix < x.dofs(); ++ix) {
+            for (auto iy = 0; iy < y.dofs(); ++iy) {
+                for (auto iz = 0; iz < z.dofs(); ++iz) {
                     left(ix, iy, iz) += a * right(ix, iy, iz);
                 }
             }
@@ -115,7 +118,7 @@ private:
     }
 
     state local_contribution_x(index_type e, double t) const {
-        auto local = state{ local_shape() };
+        auto local = state{local_shape()};
         double dt = steps.dt / 3.0;
 
         double J = jacobian(e);
@@ -140,9 +143,12 @@ private:
                 value_type b = eval_basis(e, q, a);
 
                 double tt = 0.5 * dt * dt;
-                auto dax = - tt * (ax.dy * b.dy + ax.dz * b.dz) - mi * grad_dot(ux, b) - dt * grad_dot(vx, b) +  F[0] * b.val;
-                auto day = - tt * (ay.dy * b.dy + ay.dz * b.dz) - mi * grad_dot(uy, b) - dt * grad_dot(vy, b) +  F[1] * b.val;
-                auto daz = - tt * (az.dy * b.dy + az.dz * b.dz) - mi * grad_dot(uz, b) - dt * grad_dot(vz, b) +  F[2] * b.val;
+                auto dax = -tt * (ax.dy * b.dy + ax.dz * b.dz) - mi * grad_dot(ux, b)
+                         - dt * grad_dot(vx, b) + F[0] * b.val;
+                auto day = -tt * (ay.dy * b.dy + ay.dz * b.dz) - mi * grad_dot(uy, b)
+                         - dt * grad_dot(vy, b) + F[1] * b.val;
+                auto daz = -tt * (az.dy * b.dy + az.dz * b.dz) - mi * grad_dot(uz, b)
+                         - dt * grad_dot(vz, b) + F[2] * b.val;
 
                 // Version 1
                 // dax -= (mi + lambda) * (ux.dx * b.dx + uy.dx * b.dy + uz.dx * b.dz);
@@ -165,7 +171,7 @@ private:
     }
 
     state local_contribution_y(index_type e, double t) const {
-        auto local = state{ local_shape() };
+        auto local = state{local_shape()};
         double dt = steps.dt / 3.0;
 
         double J = jacobian(e);
@@ -190,9 +196,12 @@ private:
                 value_type b = eval_basis(e, q, a);
 
                 double tt = 0.5 * dt * dt;
-                auto dax = - tt * (ax.dx * b.dx + ax.dz * b.dz) - mi * grad_dot(ux, b) - dt * grad_dot(vx, b) +  F[0] * b.val;
-                auto day = - tt * (ay.dx * b.dx + ay.dz * b.dz) - mi * grad_dot(uy, b) - dt * grad_dot(vy, b) +  F[1] * b.val;
-                auto daz = - tt * (az.dx * b.dx + az.dz * b.dz) - mi * grad_dot(uz, b) - dt * grad_dot(vz, b) +  F[2] * b.val;
+                auto dax = -tt * (ax.dx * b.dx + ax.dz * b.dz) - mi * grad_dot(ux, b)
+                         - dt * grad_dot(vx, b) + F[0] * b.val;
+                auto day = -tt * (ay.dx * b.dx + ay.dz * b.dz) - mi * grad_dot(uy, b)
+                         - dt * grad_dot(vy, b) + F[1] * b.val;
+                auto daz = -tt * (az.dx * b.dx + az.dz * b.dz) - mi * grad_dot(uz, b)
+                         - dt * grad_dot(vz, b) + F[2] * b.val;
 
                 // Version 1
                 // dax -= (mi + lambda) * (ux.dx * b.dx + uy.dx * b.dy + uz.dx * b.dz);
@@ -215,7 +224,7 @@ private:
     }
 
     state local_contribution_z(index_type e, double t) const {
-        auto local = state{ local_shape() };
+        auto local = state{local_shape()};
         double dt = steps.dt / 3.0;
 
         double J = jacobian(e);
@@ -240,9 +249,12 @@ private:
                 value_type b = eval_basis(e, q, a);
 
                 double tt = 0.5 * dt * dt;
-                auto dax = - tt * (ax.dx * b.dx + ax.dy * b.dy) - mi * grad_dot(ux, b) - dt * grad_dot(vx, b) +  F[0] * b.val;
-                auto day = - tt * (ay.dx * b.dx + ay.dy * b.dy) - mi * grad_dot(uy, b) - dt * grad_dot(vy, b) +  F[1] * b.val;
-                auto daz = - tt * (az.dx * b.dx + az.dy * b.dy) - mi * grad_dot(uz, b) - dt * grad_dot(vz, b) +  F[2] * b.val;
+                auto dax = -tt * (ax.dx * b.dx + ax.dy * b.dy) - mi * grad_dot(ux, b)
+                         - dt * grad_dot(vx, b) + F[0] * b.val;
+                auto day = -tt * (ay.dx * b.dx + ay.dy * b.dy) - mi * grad_dot(uy, b)
+                         - dt * grad_dot(vy, b) + F[1] * b.val;
+                auto daz = -tt * (az.dx * b.dx + az.dy * b.dy) - mi * grad_dot(uz, b)
+                         - dt * grad_dot(vz, b) + F[2] * b.val;
 
                 // Version 1
                 // dax -= (mi + lambda) * (ux.dx * b.dx + uy.dx * b.dy + uz.dx * b.dz);
@@ -265,7 +277,7 @@ private:
     }
 
     state local_contribution_truncated(index_type e, double t) const {
-        auto local = state{ local_shape() };
+        auto local = state{local_shape()};
         double dt = steps.dt / 3.0;
 
         double J = jacobian(e);
@@ -290,9 +302,9 @@ private:
                 value_type b = eval_basis(e, q, a);
 
                 // double tt = 0.5 * dt * dt;
-                auto dax = - mi * grad_dot(ux, b) - dt * grad_dot(vx, b) +  F[0] * b.val;
-                auto day = - mi * grad_dot(uy, b) - dt * grad_dot(vy, b) +  F[1] * b.val;
-                auto daz = - mi * grad_dot(uz, b) - dt * grad_dot(vz, b) +  F[2] * b.val;
+                auto dax = -mi * grad_dot(ux, b) - dt * grad_dot(vx, b) + F[0] * b.val;
+                auto day = -mi * grad_dot(uy, b) - dt * grad_dot(vy, b) + F[1] * b.val;
+                auto daz = -mi * grad_dot(uz, b) - dt * grad_dot(vz, b) + F[2] * b.val;
 
                 auto aa = dof_global_to_local(e, a);
                 ref(local.ax, aa) += dax / rho * w * J;
@@ -321,7 +333,7 @@ private:
                 value_type vz = eval_fun(now.vz, e, q);
                 Eloc += w * J * 0.5 * (vx.val * vx.val + vy.val * vy.val + vz.val * vz.val);
             }
-            executor.synchronized([&] { E += Eloc;  });
+            executor.synchronized([&] { E += Eloc; });
         });
         return E;
     }
@@ -338,21 +350,21 @@ private:
                 value_type uz = eval_fun(now.uz, e, q);
 
                 tensor eps = {
-                    {         ux.dx,         0.5 * (ux.dy + uy.dx), 0.5 * (ux.dz + uz.dx) },
-                    { 0.5 * (ux.dy + uy.dx),         uy.dy,         0.5 * (uy.dz + uz.dy) },
-                    { 0.5 * (ux.dz + uz.dx), 0.5 * (uy.dz + uz.dy),         uz.dz         }
+                    {ux.dx, 0.5 * (ux.dy + uy.dx), 0.5 * (ux.dz + uz.dx)},
+                    {0.5 * (ux.dy + uy.dx), uy.dy, 0.5 * (uy.dz + uz.dy)},
+                    {0.5 * (ux.dz + uz.dx), 0.5 * (uy.dz + uz.dy), uz.dz},
                 };
                 tensor s{};
                 stress_tensor(s, eps);
                 double U = 0;
-                for (int i = 0; i < 3; ++ i) {
-                    for (int j = 0; j < 3; ++ j) {
+                for (int i = 0; i < 3; ++i) {
+                    for (int j = 0; j < 3; ++j) {
                         U += 0.5 * s[i][j] * eps[i][j];
                     }
                 }
                 Eloc += w * J * U;
             }
-            executor.synchronized([&] { E += Eloc;  });
+            executor.synchronized([&] { E += Eloc; });
         });
         return E;
     }
@@ -369,15 +381,15 @@ private:
                 value_type uz = eval_fun(now.uz, e, q);
 
                 tensor eps = {
-                    {         ux.dx,         0.5 * (ux.dy + uy.dx), 0.5 * (ux.dz + uz.dx) },
-                    { 0.5 * (ux.dy + uy.dx),         uy.dy,         0.5 * (uy.dz + uz.dy) },
-                    { 0.5 * (ux.dz + uz.dx), 0.5 * (uy.dz + uz.dy),         uz.dz         }
+                    {ux.dx, 0.5 * (ux.dy + uy.dx), 0.5 * (ux.dz + uz.dx)},
+                    {0.5 * (ux.dy + uy.dx), uy.dy, 0.5 * (uy.dz + uz.dy)},
+                    {0.5 * (ux.dz + uz.dx), 0.5 * (uy.dz + uz.dy), uz.dz},
                 };
                 tensor s{};
                 stress_tensor(s, eps);
                 double U = 0;
-                for (int i = 0; i < 3; ++ i) {
-                    for (int j = 0; j < 3; ++ j) {
+                for (int i = 0; i < 3; ++i) {
+                    for (int j = 0; j < 3; ++j) {
                         U += 0.5 * s[i][j] * eps[i][j];
                     }
                 }
@@ -387,9 +399,7 @@ private:
                     Eloc(aa[0], aa[1], aa[2]) += w * J * v.val * U;
                 }
             }
-            executor.synchronized([&]() {
-                update_global_rhs(energy, Eloc, e);
-            });
+            executor.synchronized([&]() { update_global_rhs(energy, Eloc, e); });
         });
         solve(energy);
     }
@@ -410,8 +420,8 @@ private:
     void stress_tensor(tensor& s, const tensor& eps) const {
         double tr = eps[0][0] + eps[1][1] + eps[2][2];
 
-        for (int i = 0; i < 3; ++ i) {
-            for (int j = 0; j < 3; ++ j) {
+        for (int i = 0; i < 3; ++i) {
+            for (int j = 0; j < 3; ++j) {
                 s[i][j] = 2 * mi * eps[i][j];
             }
             s[i][i] += lambda * tr;
@@ -424,7 +434,7 @@ private:
         double tt = t / t0;
         double f = tt < 1 ? pow(tt * (1 - tt), 2) : 0;
         double r = pow(x[0] - 1, 2) + pow(x[1] - 1, 2) + pow(x[2] - 1, 2);
-        double a = - 1 * f * std::exp(- 10 * r);
+        double a = -1 * f * std::exp(-10 * r);
         return {a, a, a};
     }
 
@@ -478,7 +488,6 @@ private:
         add(now.vx, now.ax, dt * gamma);
         add(now.vy, now.ay, dt * gamma);
         add(now.vz, now.az, dt * gamma);
-
     }
 
     void step_split(int /*iter*/, double t) {
@@ -487,9 +496,7 @@ private:
         for_all(now, [](vector_type& a) { zero(a); });
         executor.for_each(elements(), [&](index_type e) {
             auto local = local_contribution_x(e, t);
-            executor.synchronized([&] {
-                apply_local_contribution(local, e);
-            });
+            executor.synchronized([&] { apply_local_contribution(local, e); });
         });
 
         ads_solve(now.ax, buffer, ads::dim_data{Kx, x.ctx}, y.data(), z.data());
@@ -502,9 +509,7 @@ private:
         for_all(now, [](vector_type& a) { zero(a); });
         executor.for_each(elements(), [&](index_type e) {
             auto local = local_contribution_y(e, t);
-            executor.synchronized([&] {
-                apply_local_contribution(local, e);
-            });
+            executor.synchronized([&] { apply_local_contribution(local, e); });
         });
 
         ads_solve(now.ax, buffer, x.data(), ads::dim_data{Ky, y.ctx}, z.data());
@@ -517,9 +522,7 @@ private:
         for_all(now, [](vector_type& a) { zero(a); });
         executor.for_each(elements(), [&](index_type e) {
             auto local = local_contribution_z(e, t);
-            executor.synchronized([&] {
-                apply_local_contribution(local, e);
-            });
+            executor.synchronized([&] { apply_local_contribution(local, e); });
         });
 
         ads_solve(now.ax, buffer, x.data(), y.data(), ads::dim_data{Kz, z.ctx});
@@ -534,9 +537,7 @@ private:
         for_all(now, [](vector_type& a) { zero(a); });
         executor.for_each(elements(), [&](index_type e) {
             auto local = local_contribution_truncated(e, t);
-            executor.synchronized([&] {
-                apply_local_contribution(local, e);
-            });
+            executor.synchronized([&] { apply_local_contribution(local, e); });
         });
 
         auto data_x = ads::dim_data{Kx, x.ctx};
@@ -571,7 +572,8 @@ private:
             //                output.evaluate(now.uy),
             //                output.evaluate(now.uz),
             //                output.evaluate(energy));
-            // std::cout << iter << " " << t << " " << Ek << " " << Ep << " " << Ek + Ep << std::endl;
+            // std::cout << iter << " " << t << " " << Ek << " " << Ep << " " << Ek + Ep <<
+            // std::endl;
 
             // std::cout << "Step " << iter << ", t = " << t << std::endl;
             // int num = iter / save_every;
@@ -590,14 +592,8 @@ private:
         }
     }
 
-
-    double& ref(vector_type& v, index_type idx) const {
-        return v(idx[0], idx[1], idx[2]);
-    }
+    double& ref(vector_type& v, index_type idx) const { return v(idx[0], idx[1], idx[2]); }
 };
-}
+}  // namespace problems
 
-
-
-
-#endif // ELASTICITY_ELASTICITY_VICTOR_HPP
+#endif  // ELASTICITY_ELASTICITY_VICTOR_HPP

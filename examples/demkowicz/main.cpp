@@ -3,10 +3,10 @@
 
 #include "demkowicz.hpp"
 
-
 using namespace ads;
 
-bspline::basis create_basis(double a, double b, int p, int elements, int repeated_nodes, bool adapt) {
+bspline::basis create_basis(double a, double b, int p, int elements, int repeated_nodes,
+                            bool adapt) {
     int points = elements + 1;
     int r = repeated_nodes + 1;
     int knot_size = 2 * (p + 1) + (points - 2) * r;
@@ -18,13 +18,13 @@ bspline::basis create_basis(double a, double b, int p, int elements, int repeate
     }
 
     auto x0 = 0.5;
-    auto y0 = 0.99;//1 - 1e-5;
+    auto y0 = 0.99;  // 1 - 1e-5;
 
     for (int i = 1; i < points - 1; ++i) {
         auto t = lerp(i, elements, 0.0, 1.0);
 
         auto s = adapt ? (t < x0 ? t / x0 * y0 : (t - x0) / (1 - x0) * (1 - y0) + y0) : t;
-        for (int j = 0; j < r; ++ j) {
+        for (int j = 0; j < r; ++j) {
             knot[p + 1 + (i - 1) * r + j] = lerp(s, a, b);
         }
     }
@@ -34,7 +34,9 @@ bspline::basis create_basis(double a, double b, int p, int elements, int repeate
 
 int main(int argc, char* argv[]) {
     if (argc != 8) {
-        std::cerr << "Usage: demkowicz <N> <adaptations> <p_trial> <C_trial> <p_test> <C_test> <steps>" << std::endl;
+        std::cerr
+            << "Usage: demkowicz <N> <adaptations> <p_trial> <C_trial> <p_test> <C_test> <steps>"
+            << std::endl;
         std::exit(1);
     }
     int n = std::atoi(argv[1]);
@@ -46,37 +48,36 @@ int main(int argc, char* argv[]) {
     int nsteps = std::atoi(argv[7]);
 
     int quad = std::max(p_trial, p_test) + 1;
-    dim_config trial{ p_trial, n, 0.0, 1.0, quad, p_trial - 1 - C_trial};
-    dim_config test { p_test,  n, 0.0, 1.0, quad, p_test  - 1 - C_test };
+    dim_config trial{p_trial, n, 0.0, 1.0, quad, p_trial - 1 - C_trial};
+    dim_config test{p_test, n, 0.0, 1.0, quad, p_test - 1 - C_test};
 
     std::cout << "adaptations: " << std::boolalpha << adapt << std::endl;
 
-
-    timesteps_config steps{ nsteps, 0.5*1e-2 };
+    timesteps_config steps{nsteps, 0.5 * 1e-2};
     int ders = 1;
 
     auto trial_basis_x = create_basis(0, 1, p_trial, n, p_trial - 1 - C_trial, adapt);
     // auto trial_basis_x = create_adapted_basis(0, 1, p_trial, p_trial - 1 - C_trial);
 
-    auto dtrial_x = dimension{ trial_basis_x, quad, ders };
+    auto dtrial_x = dimension{trial_basis_x, quad, ders};
 
     auto trial_basis_y = bspline::create_basis(0, 1, p_trial, n, p_trial - 1 - C_trial);
-    auto dtrial_y = dimension{ trial_basis_y, quad, ders };
+    auto dtrial_y = dimension{trial_basis_y, quad, ders};
 
     auto test_basis_x = create_basis(0, 1, p_test, n, p_test - 1 - C_test, adapt);
     // auto test_basis_x = create_adapted_basis(0, 1, p_test, p_test - 1 - C_test);
 
-    auto dtest_x = dimension{ test_basis_x, quad, ders };
+    auto dtest_x = dimension{test_basis_x, quad, ders};
 
     auto test_basis_y = bspline::create_basis(0, 1, p_test, n, p_test - 1 - C_test);
-    auto dtest_y = dimension{ test_basis_y, quad, ders };
+    auto dtest_y = dimension{test_basis_y, quad, ders};
 
     auto trial_dim = dtrial_x.B.dofs();
     auto test_dim = dtest_x.B.dofs();
 
     if (trial_dim > test_dim) {
-        std::cerr << "Dimension of the trial space greater than that of test space ("
-                  << trial_dim << " > " << test_dim << ")" << std::endl;
+        std::cerr << "Dimension of the trial space greater than that of test space (" << trial_dim
+                  << " > " << test_dim << ")" << std::endl;
         std::exit(1);
     }
 

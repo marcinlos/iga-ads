@@ -3,7 +3,6 @@
 
 #include "validation.hpp"
 
-
 using namespace ads;
 using namespace ads::problems;
 
@@ -25,8 +24,8 @@ int main(int argc, char* argv[]) {
     nsteps /= 10;
     // nsteps += 1;
 
-    dim_config dim{ p, n };
-    timesteps_config steps{ nsteps, dt };
+    dim_config dim{p, n};
+    timesteps_config steps{nsteps, dt};
     int ders = 1;
 
     config_2d c{dim, dim, steps, ders};

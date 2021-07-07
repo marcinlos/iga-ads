@@ -7,9 +7,7 @@
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
 
-
 namespace ads::problems {
-
 
 class heat_1d : public simulation_1d {
 private:
@@ -23,8 +21,7 @@ public:
     : Base{config}
     , u{shape()}
     , u_prev{shape()}
-    , output{x.B, 1000}
-    { }
+    , output{x.B, 1000} { }
 
 private:
     void solve(vector_type& v) {
@@ -75,16 +72,15 @@ private:
         auto& rhs = u;
 
         zero(rhs);
-        for (element_id e = 0; e < bx.elements; ++ e) {
+        for (element_id e = 0; e < bx.elements; ++e) {
             double J = bx.J[e];
             int first = bx.first_dof(e);
             int last = bx.last_dof(e);
 
-            for (int q = 0; q < bx.quad_order; ++ q) {
+            for (int q = 0; q < bx.quad_order; ++q) {
                 double w = bx.w[q];
 
-                for (int a = first; a <= last; ++ a) {
-
+                for (int a = first; a <= last; ++a) {
                     value_type v = eval_basis(e, q, a);
                     value_type u = eval_fun(u_prev, e, q);
 
@@ -95,13 +91,8 @@ private:
             }
         }
     }
-
 };
 
+}  // namespace ads::problems
 
-
-}
-
-
-
-#endif // HEAT_HEAT_1D_HPP
+#endif  // HEAT_HEAT_1D_HPP

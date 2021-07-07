@@ -9,7 +9,6 @@
 
 #include "ads/util.hpp"
 
-
 namespace ads {
 
 struct vec3d {
@@ -18,19 +17,19 @@ struct vec3d {
     double z;
 };
 
-inline std::ostream& operator << (std::ostream& os, const vec3d& v) {
+inline std::ostream& operator<<(std::ostream& os, const vec3d& v) {
     return os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
 }
 
-inline vec3d operator - (const vec3d& a, const vec3d& b) {
+inline vec3d operator-(const vec3d& a, const vec3d& b) {
     return {a.x - b.x, a.y - b.y, a.z - b.z};
 }
 
-inline vec3d operator + (const vec3d& b, const vec3d& a) {
+inline vec3d operator+(const vec3d& b, const vec3d& a) {
     return {a.x + b.x, a.y + b.y, a.z + b.z};
 }
 
-inline vec3d operator * (double c, const vec3d& a) {
+inline vec3d operator*(double c, const vec3d& a) {
     return {c * a.x, c * a.y, c * a.z};
 }
 
@@ -46,10 +45,11 @@ inline double len(const vec3d& a) {
     return std::sqrt(len_sq(a));
 }
 
-
 inline double falloff(double r, double R, double t) {
-    if (t < r) return 1.0;
-    if (t > R) return 0.0;
+    if (t < r)
+        return 1.0;
+    if (t > R)
+        return 0.0;
     double h = (t - r) / (R - r);
     return std::pow((h - 1) * (h + 1), 2);
 }
@@ -63,7 +63,6 @@ inline double bump(double r, double R, double x, double y, double z) {
     return falloff(r / 2, R / 2, t);
 }
 
-
 inline double dist_from_segment(const vec3d& p, const vec3d& a, const vec3d& b) {
     auto s = b - a;
     double proj = dot(p - a, s) / len_sq(s);
@@ -71,9 +70,6 @@ inline double dist_from_segment(const vec3d& p, const vec3d& a, const vec3d& b) 
     return len(p - closest);
 }
 
+}  // namespace ads
 
-
-}
-
-
-#endif // FLOW_GEOMETRY_HPP
+#endif  // FLOW_GEOMETRY_HPP

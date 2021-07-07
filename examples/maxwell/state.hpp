@@ -6,7 +6,6 @@
 
 #include "ads/lin/tensor.hpp"
 
-
 namespace ads {
 
 struct state {
@@ -26,8 +25,7 @@ struct state {
     , E3{shape}
     , H1{shape}
     , H2{shape}
-    , H3{shape}
-    { }
+    , H3{shape} { }
 
     void clear() {
         zero(E1);
@@ -40,6 +38,6 @@ struct state {
     }
 };
 
-}
+}  // namespace ads
 
-#endif // MAXWELL_STATE_HPP
+#endif  // MAXWELL_STATE_HPP

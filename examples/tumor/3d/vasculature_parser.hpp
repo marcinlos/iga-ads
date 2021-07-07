@@ -10,35 +10,37 @@
 
 #include "vasculature.hpp"
 
-
 namespace tumor {
 
-    void normalize_positions(std::vector<vessels::point_type>& points) {
-        auto inf = std::numeric_limits<double>::infinity();
-        double xmin = inf, xmax = -inf;
-        double ymin = inf, ymax = -inf;
-        double zmin = inf, zmax = -inf;
-        for (const auto& p : points) {
-            xmin = std::min(xmin, p.x);
-            xmax = std::max(xmax, p.x);
-            ymin = std::min(ymin, p.y);
-            ymax = std::max(ymax, p.y);
-            zmin = std::min(zmin, p.z);
-            zmax = std::max(zmax, p.z);
-        }
-        for (auto& p : points) {
-            p.x = (p.x - xmin) / (xmax - xmin);
-            p.y = (p.y - ymin) / (ymax - ymin);
-            p.z = (p.z - zmin) / (zmax - zmin);
-        }
+void normalize_positions(std::vector<vessels::point_type>& points) {
+    auto inf = std::numeric_limits<double>::infinity();
+    double xmin = inf, xmax = -inf;
+    double ymin = inf, ymax = -inf;
+    double zmin = inf, zmax = -inf;
+    for (const auto& p : points) {
+        xmin = std::min(xmin, p.x);
+        xmax = std::max(xmax, p.x);
+        ymin = std::min(ymin, p.y);
+        ymax = std::max(ymax, p.y);
+        zmin = std::min(zmin, p.z);
+        zmax = std::max(zmax, p.z);
     }
+    for (auto& p : points) {
+        p.x = (p.x - xmin) / (xmax - xmin);
+        p.y = (p.y - ymin) / (ymax - ymin);
+        p.z = (p.z - zmin) / (zmax - zmin);
+    }
+}
 
 vessels parse_vessels(std::istream& is) {
     vessels vs;
 
     constexpr auto ALL = std::numeric_limits<std::streamsize>::max();
-    auto skip_lines = [&](int n = 1) { for (int i = 0; i < n; ++ i) is.ignore(ALL, '\n'); };
-    auto skip_word = [&]{ is.ignore(ALL, ' '); };
+    auto skip_lines = [&](int n = 1) {
+        for (int i = 0; i < n; ++i)
+            is.ignore(ALL, '\n');
+    };
+    auto skip_word = [&] { is.ignore(ALL, ' '); };
 
     skip_lines(4);
 
@@ -53,11 +55,10 @@ vessels parse_vessels(std::istream& is) {
     std::vector<point> points;
     points.reserve(joint_count);
 
-    for (int i = 0; i < joint_count; ++ i) {
+    for (int i = 0; i < joint_count; ++i) {
         double x, y, z;
         is >> x >> y >> z;
-        points.push_back(point{ x, y, z });
-
+        points.push_back(point{x, y, z});
     }
     normalize_positions(points);
 
@@ -77,7 +78,7 @@ vessels parse_vessels(std::istream& is) {
     std::vector<std::tuple<int, int>> lines;
     lines.reserve(line_count);
 
-    for (int i = 0; i < line_count; ++ i) {
+    for (int i = 0; i < line_count; ++i) {
         skip_word();
         int j, k;
         is >> j >> k;
@@ -89,7 +90,7 @@ vessels parse_vessels(std::istream& is) {
     std::vector<double> diameters;
     diameters.reserve(line_count);
 
-    for (int i = 0; i < line_count; ++ i) {
+    for (int i = 0; i < line_count; ++i) {
         double d;
         is >> d;
         diameters.push_back(d);
@@ -100,13 +101,13 @@ vessels parse_vessels(std::istream& is) {
     std::vector<vessel_type> types;
     types.reserve(line_count);
 
-    for (int i = 0; i < line_count; ++ i) {
+    for (int i = 0; i < line_count; ++i) {
         int type;
         is >> type;
         diameters.push_back(type);
     }
 
-    for (int i = 0; i < line_count; ++ i) {
+    for (int i = 0; i < line_count; ++i) {
         int j = std::get<0>(lines[i]);
         int k = std::get<1>(lines[i]);
         double d = diameters[i];
@@ -116,6 +117,6 @@ vessels parse_vessels(std::istream& is) {
     return vs;
 }
 
-}
+}  // namespace tumor
 
-#endif // TUMOR_3D_VASCULATURE_PARSER_HPP
+#endif  // TUMOR_3D_VASCULATURE_PARSER_HPP

@@ -7,7 +7,6 @@
 #include "ads/lin/band_matrix.hpp"
 #include "ads/lin/band_solve.hpp"
 
-
 namespace ads {
 
 struct dim_data {
@@ -17,7 +16,6 @@ struct dim_data {
 
 template <typename Rhs, typename Buf, typename Dim, typename... Dims>
 void solve_worker(Rhs& rhs, Buf& buf, const Dim& dim, const Dims&... dims) {
-
     lin::solve_with_factorized(dim.M, rhs, dim.ctx);
     auto F = lin::cyclic_transpose(rhs, buf.data());
 
@@ -29,12 +27,10 @@ void solve_worker(Rhs&, Buf&) {
     // base case
 }
 
-
 template <typename Rhs>
 void ads_solve(Rhs& rhs, dim_data dim) {
     lin::solve_with_factorized(dim.M, rhs, dim.ctx);
 }
-
 
 template <typename Rhs>
 void ads_solve(Rhs& rhs, Rhs& /*buf*/, dim_data dim) {
@@ -61,12 +57,11 @@ void ads_solve_aux(Rhs& rhs, Rhs& buf, const std::array<dim_data, D>& dims,
     ads_solve(rhs, buf, dims[Idx]...);
 }
 
-
 template <typename Rhs, std::size_t D>
 void ads_solve(Rhs& rhs, Rhs& buf, const std::array<dim_data, D>& dims) {
     ads_solve_aux(rhs, buf, dims, std::make_index_sequence<D>{});
 }
 
-}
+}  // namespace ads
 
-#endif // ADS_SOLVER_HPP
+#endif  // ADS_SOLVER_HPP

@@ -10,7 +10,6 @@
 #include "ads/output/range.hpp"
 #include "ads/util.hpp"
 
-
 namespace ads::output {
 
 struct axis {
@@ -21,28 +20,19 @@ struct axis {
     using range_type = decltype(output::from_container(points));
 
     axis(const bspline::basis& basis, std::size_t intervals)
-    : basis{ basis }
-    , ctx{ basis.degree }
-    , points{ linspace(basis.begin(), basis.end(), intervals) }
-    { }
+    : basis{basis}
+    , ctx{basis.degree}
+    , points{linspace(basis.begin(), basis.end(), intervals)} { }
 
-    std::size_t size() const {
-        return points.size();
-    }
+    std::size_t size() const { return points.size(); }
 
-    std::size_t intervals() const {
-        return size() - 1;
-    }
+    std::size_t intervals() const { return size() - 1; }
 
-    range_type range() const {
-        return output::from_container(points);
-    }
+    range_type range() const { return output::from_container(points); }
 
-    double operator [](int i) const {
-        return points[i];
-    }
+    double operator[](int i) const { return points[i]; }
 };
 
-}
+}  // namespace ads::output
 
-#endif // ADS_OUTPUT_AXIS_HPP
+#endif  // ADS_OUTPUT_AXIS_HPP

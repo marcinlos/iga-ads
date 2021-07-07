@@ -8,7 +8,6 @@
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
 
-
 namespace ads {
 
 class implicit_2d : public simulation_2d {
@@ -25,14 +24,13 @@ private:
 
 public:
     implicit_2d(const config_2d& config, int save_every)
-    : Base{ config }
-    , u{ shape() }
-    , u_prev{ shape() }
-    , output{ x.B, y.B, 200 }
+    : Base{config}
+    , u{shape()}
+    , u_prev{shape()}
+    , output{x.B, y.B, 200}
     , Kx{x.p, x.p, x.B.dofs()}
     , Ky{y.p, y.p, y.B.dofs()}
-    , save_every{save_every}
-    {
+    , save_every{save_every} {
         matrix(Kx, x.basis, steps.dt);
         matrix(Ky, y.basis, steps.dt);
     }
@@ -46,12 +44,12 @@ public:
 
 private:
     void matrix(lin::band_matrix& K, const basis_data& d, double h) {
-        for (element_id e = 0; e < d.elements; ++ e) {
-            for (int q = 0; q < d.quad_order; ++ q) {
+        for (element_id e = 0; e < d.elements; ++e) {
+            for (int q = 0; q < d.quad_order; ++q) {
                 int first = d.first_dof(e);
                 int last = d.last_dof(e);
-                for (int a = 0; a + first <= last; ++ a) {
-                    for (int b = 0; b + first <= last; ++ b) {
+                for (int a = 0; a + first <= last; ++a) {
+                    for (int b = 0; b + first <= last; ++b) {
                         int ia = a + first;
                         int ib = b + first;
                         auto va = d.b[e][q][0][a];
@@ -123,8 +121,8 @@ private:
             int num = (iter + 1) / save_every;
             auto name = str(boost::format("out_%d.data") % num);
             std::ofstream sol(name);
-            for (int i = 0; i < x.dofs(); ++ i) {
-                for (int j = 0; j < y.dofs(); ++ j) {
+            for (int i = 0; i < x.dofs(); ++i) {
+                for (int j = 0; j < y.dofs(); ++j) {
                     sol << i << " " << j << " " << u(i, j) << std::endl;
                 }
             }
@@ -153,9 +151,7 @@ private:
                 }
             }
 
-            executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e);
-            });
+            executor.synchronized([&]() { update_global_rhs(rhs, U, e); });
         });
     }
 
@@ -181,9 +177,7 @@ private:
                 }
             }
 
-            executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e);
-            });
+            executor.synchronized([&]() { update_global_rhs(rhs, U, e); });
         });
     }
 
@@ -214,6 +208,6 @@ private:
     }
 };
 
-}
+}  // namespace ads
 
-#endif // IMPLICIT_IMPLICIT_HPP
+#endif  // IMPLICIT_IMPLICIT_HPP

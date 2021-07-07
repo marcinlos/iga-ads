@@ -6,7 +6,6 @@
 
 #include "ads/simulation/config.hpp"
 
-
 namespace ads {
 
 class simulation_base {
@@ -34,6 +33,6 @@ public:
 
 inline simulation_base::~simulation_base() = default;
 
-}
+}  // namespace ads
 
-#endif // ADS_SIMULATION_SIMULATION_BASE_HPP
+#endif  // ADS_SIMULATION_SIMULATION_BASE_HPP

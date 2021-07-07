@@ -6,7 +6,6 @@
 
 #include <string_view>
 
-
 namespace ads {
 
 struct version_info {
@@ -20,6 +19,6 @@ struct version_info {
 
 auto version() -> version_info;
 
-}
+}  // namespace ads
 
-#endif // ADS_CONFIG_HPP
+#endif  // ADS_CONFIG_HPP

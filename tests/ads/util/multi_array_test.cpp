@@ -5,7 +5,6 @@
 
 #include <catch2/catch.hpp>
 
-
 using namespace ads;
 
 TEST_CASE("Multiarray") {
@@ -13,8 +12,8 @@ TEST_CASE("Multiarray") {
     auto buffer = std::vector<int>(n * m);
     ads::multi_array_wrapper<int, 2, int*> a(buffer.data(), {n, m});
 
-    for (int i = 0; i < n; ++ i) {
-        for (int j = 0; j < m; ++ j) {
+    for (int i = 0; i < n; ++i) {
+        for (int j = 0; j < m; ++j) {
             a(i, j) = 10 * (i + 1) + j + 1;
         }
     }

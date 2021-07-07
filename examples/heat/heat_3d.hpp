@@ -6,7 +6,6 @@
 
 #include "ads/simulation.hpp"
 
-
 namespace ads::problems {
 
 class heat_3d : public simulation_3d {
@@ -18,8 +17,7 @@ public:
     heat_3d(const config_3d& config)
     : Base{config}
     , u{shape()}
-    , u_prev{shape()}
-    { }
+    , u_prev{shape()} { }
 
     double init_state(double x, double y, double z) {
         double dx = x - 0.5;
@@ -69,7 +67,6 @@ private:
     }
 };
 
-}
+}  // namespace ads::problems
 
-
-#endif // HEAT_HEAT_3D_HPP
+#endif  // HEAT_HEAT_3D_HPP

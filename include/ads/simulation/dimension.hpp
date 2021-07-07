@@ -15,7 +15,6 @@
 #include "ads/solver.hpp"
 #include "ads/util.hpp"
 
-
 namespace ads {
 
 class dimension {
@@ -35,42 +34,30 @@ public:
 
     dimension(const dim_config& config, int derivatives);
 
-    int dofs() const {
-        return B.dofs();
-    }
+    int dofs() const { return B.dofs(); }
 
-    element_range_type element_indices() const {
-        return boost::counting_range(0, elements);
-    }
+    element_range_type element_indices() const { return boost::counting_range(0, elements); }
 
-    dim_data data() {
-        return {M, ctx};
-    }
+    dim_data data() { return {M, ctx}; }
 
     void fix_dof(int k);
 
-    void fix_left() {
-        fix_dof(0);
-    }
+    void fix_left() { fix_dof(0); }
 
     void fix_right() {
         int last = dofs() - 1;
         fix_dof(last);
     }
 
-    void factorize_matrix() {
-        lin::factorize(M, ctx);
-    }
+    void factorize_matrix() { lin::factorize(M, ctx); }
 
 private:
-
     static bspline::basis bspline_basis(const dim_config& config) {
-        return bspline::create_basis(config.a, config.b, config.p, config.elements, config.repeated_nodes);
+        return bspline::create_basis(config.a, config.b, config.p, config.elements,
+                                     config.repeated_nodes);
     }
 };
 
+}  // namespace ads
 
-}
-
-
-#endif // ADS_SIMULATION_DIMENSION_HPP
+#endif  // ADS_SIMULATION_DIMENSION_HPP

@@ -17,11 +17,13 @@
 #include "ads/util/math/vec.hpp"
 #include "rasterizer.hpp"
 
-
 namespace tumor {
 
 enum class vessel_type {
-    vein, arthery, capillary, sprout
+    vein,
+    arthery,
+    capillary,
+    sprout,
 };
 
 class vessels {
@@ -64,8 +66,8 @@ public:
         auto zmin = 300 / zsize;
         auto zmax = 2400 / zsize;
 
-        for (auto x = dh/2; x < 1; x += dh) {
-            for (auto y = dh/2; y < 1; y += dh) {
+        for (auto x = dh / 2; x < 1; x += dh) {
+            for (auto y = dh / 2; y < 1; y += dh) {
                 make_line({x, y, zmin}, {x, y, zmax}, 10);
             }
         }
@@ -74,7 +76,7 @@ public:
     void make_line(point_type a, point_type b, int steps) {
         auto na = make_node(a);
         roots_.push_back(na);
-        for (int i = 0; i < steps; ++ i) {
+        for (int i = 0; i < steps; ++i) {
             double t = static_cast<double>(i) / (steps - 1);
             auto nb = make_node(a + t * (b - a));
             connect(na, nb, vessel_type::arthery, 1.0);
@@ -82,9 +84,7 @@ public:
         }
     }
 
-    const std::set<edge_ptr>& edges() const {
-        return edges_;
-    }
+    const std::set<edge_ptr>& edges() const { return edges_; }
 
     template <typename Tumor, typename TAF>
     void update(Tumor&& tumor, TAF&& taf, int iter, double dt) {
@@ -119,13 +119,13 @@ public:
     }
 
     node_ptr make_node(point_type p) {
-        node_ptr n = new node{ p, {} };
+        node_ptr n = new node{p, {}};
         nodes_.insert(n);
         return n;
     }
 
     edge_ptr connect(node_ptr a, node_ptr b, vessel_type type, double radius) {
-        edge_ptr e = new edge{ a, b, type, cfg.init_stability, radius, 0 };
+        edge_ptr e = new edge{a, b, type, cfg.init_stability, radius, 0};
         edges_.insert(e);
         a->edges.push_back(e);
         b->edges.push_back(e);
@@ -173,29 +173,20 @@ private:
         return 0 <= v.x && v.x <= 1 && 0 <= v.y && v.y <= 1 && 0 <= v.z && v.z <= 1;
     }
 
-    point_type center(edge_ptr s) {
-        return 0.5 * (s->src->pos + s->dst->pos);
-    }
+    point_type center(edge_ptr s) { return 0.5 * (s->src->pos + s->dst->pos); }
 
-    point_type grad(value_type v) {
-        return { v.dx, v.dy, v.dz };
-    }
+    point_type grad(value_type v) { return {v.dx, v.dy, v.dz}; }
 
-    bool flip_coin(double p) {
-        return rand(0, 1) < p;
-    }
+    bool flip_coin(double p) { return rand(0, 1) < p; }
 
     double rand(double a, double b) {
-        std::uniform_real_distribution<> dist{ a, b };
+        std::uniform_real_distribution<> dist{a, b};
         return dist(rng);
     }
-
 };
-
 
 class vasculature {
 private:
-
     using value_array = ads::lin::tensor<double, 3>;
     value_array src;
     int sx, sy, sz;
@@ -204,10 +195,11 @@ private:
 
 public:
     vasculature(int sx, int sy, int sz, vessels vs)
-    : src{{ sx, sy, sz }}
-    , sx{ sx }, sy{ sy }, sz{ sz }
-    , vs{ std::move(vs) }
-    {
+    : src{{sx, sy, sz}}
+    , sx{sx}
+    , sy{sy}
+    , sz{sz}
+    , vs{std::move(vs)} {
         rasterize();
     }
 
@@ -222,22 +214,22 @@ public:
 
     void to_file(const std::string& name) const {
         using namespace ads;
-        output::vtk output{ ads::DEFAULT_FMT };
+        output::vtk output{ads::DEFAULT_FMT};
         std::vector<double> px, py, pz;
-        for (int i = 0; i < sx; ++ i) {
+        for (int i = 0; i < sx; ++i) {
             px.push_back(i);
         }
-        for (int i = 0; i < sy; ++ i) {
+        for (int i = 0; i < sy; ++i) {
             py.push_back(i);
         }
-        for (int i = 0; i < sz; ++ i) {
+        for (int i = 0; i < sz; ++i) {
             pz.push_back(i);
         }
         auto rx = output::from_container(px);
         auto ry = output::from_container(py);
         auto rz = output::from_container(pz);
         auto grid = output::make_grid(rx, ry, rz);
-        std::ofstream os{ name };
+        std::ofstream os{name};
         output.print(os, grid, src);
     }
 
@@ -247,20 +239,15 @@ public:
         recompute();
     }
 
-
 private:
-    int coord(double t, int s) const {
-        return static_cast<int>(t * s);
-    }
+    int coord(double t, int s) const { return static_cast<int>(t * s); }
 
     void recompute() {
         clear();
         rasterize();
     }
 
-    void clear() {
-        zero(src);
-    }
+    void clear() { zero(src); }
 
     void draw(const vessels::edge& e) {
         auto a = e.src->pos;
@@ -275,8 +262,6 @@ private:
     }
 };
 
+}  // namespace tumor
 
-}
-
-
-#endif // TUMOR_3D_VASCULATURE_HPP
+#endif  // TUMOR_3D_VASCULATURE_HPP

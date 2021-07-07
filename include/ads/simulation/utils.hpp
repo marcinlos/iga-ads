@@ -6,7 +6,6 @@
 
 #include "ads/simulation/dimension.hpp"
 
-
 namespace ads {
 
 inline double min_element_size(const dimension& U) {
@@ -17,6 +16,6 @@ inline double max_element_size(const dimension& U) {
     return 2 * *std::max_element(U.basis.J, U.basis.J + U.elements);
 }
 
-}
+}  // namespace ads
 
-#endif // ADS_SIMULATION_UTILS_HPP
+#endif  // ADS_SIMULATION_UTILS_HPP

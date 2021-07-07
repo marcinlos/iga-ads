@@ -11,12 +11,10 @@
 
 #include "ads/bspline/bspline.hpp"
 
-
 namespace ads {
 
 typedef int element_id;
 typedef int dof_id;
-
 
 struct basis_data {
     using range_type = decltype(boost::counting_range(0, 0));
@@ -37,22 +35,15 @@ struct basis_data {
     double* J;
 
     basis_data(bspline::basis basis, int derivatives)
-    : basis_data{ std::move(basis), derivatives, basis.degree + 1, 1 }
-    { }
+    : basis_data{std::move(basis), derivatives, basis.degree + 1, 1} { }
 
     basis_data(bspline::basis basis, int derivatives, int quad_order, int elem_division);
 
-    int first_dof(element_id e) const {
-        return first_dofs[e / elem_division];
-    }
+    int first_dof(element_id e) const { return first_dofs[e / elem_division]; }
 
-    int last_dof(element_id e) const {
-        return first_dof(e) + dofs_per_element() - 1;
-    }
+    int last_dof(element_id e) const { return first_dof(e) + dofs_per_element() - 1; }
 
-    int dofs_per_element() const {
-        return degree + 1;
-    }
+    int dofs_per_element() const { return degree + 1; }
 
     range_type dof_range(element_id e) const {
         return boost::counting_range(first_dof(e), last_dof(e) + 1);
@@ -63,6 +54,6 @@ struct basis_data {
     }
 };
 
-}
+}  // namespace ads
 
-#endif // ADS_BASIS_DATA_HPP
+#endif  // ADS_BASIS_DATA_HPP

@@ -5,7 +5,6 @@
 
 #include "maxwell_head.hpp"
 
-
 using namespace ads;
 using namespace clara;
 
@@ -16,15 +15,15 @@ int main(int argc, char* argv[]) {
     int step_count;
 
     bool help = false;
-    auto cli = Help(help)
-        | Arg(n, "N").required()
-        | Arg(p, "p").required()
-        | Arg(c, "c").required()
-        | Arg(step_count, "steps").required();
+    auto cli = Help(help)              //
+             | Arg(n, "N").required()  //
+             | Arg(p, "p").required()  //
+             | Arg(c, "c").required()  //
+             | Arg(step_count, "steps").required();
 
     auto result = cli.parse(Args(argc, argv));
 
-    if (! result) {
+    if (!result) {
         std::cerr << "Error: " << result.errorMessage() << std::endl;
         std::exit(1);
     }

@@ -9,7 +9,6 @@
 #include "ads/lin/dense_matrix.hpp"
 #include "ads/util/function_value/function_value_1d.hpp"
 
-
 namespace ads {
 
 void gram_matrix_1d(lin::band_matrix& M, const basis_data& d);
@@ -18,22 +17,20 @@ void stiffness_matrix_1d(lin::band_matrix& M, const basis_data& d);
 
 void advection_matrix_1d(lin::band_matrix& M, const basis_data& d);
 
-
 void gram_matrix_1d(lin::dense_matrix& M, const basis_data& U, const basis_data& V);
 
 void stiffness_matrix_1d(lin::dense_matrix& M, const basis_data& U, const basis_data& V);
 
 void advection_matrix_1d(lin::dense_matrix& M, const basis_data& U, const basis_data& V);
 
-
 template <typename Form>
 void form_matrix(lin::band_matrix& M, const basis_data& d, Form&& form) {
-    for (element_id e = 0; e < d.elements; ++ e) {
-        for (int q = 0; q < d.quad_order; ++ q) {
+    for (element_id e = 0; e < d.elements; ++e) {
+        for (int q = 0; q < d.quad_order; ++q) {
             int first = d.first_dof(e);
             int last = d.last_dof(e);
-            for (int a = 0; a + first <= last; ++ a) {
-                for (int b = 0; b + first <= last; ++ b) {
+            for (int a = 0; a + first <= last; ++a) {
+                for (int b = 0; b + first <= last; ++b) {
                     int ia = a + first;
                     int ib = b + first;
                     auto va = d.b[e][q][0][a];
@@ -49,6 +46,6 @@ void form_matrix(lin::band_matrix& M, const basis_data& d, Form&& form) {
     }
 }
 
-}
+}  // namespace ads
 
-#endif // ADS_FORM_MATRIX_HPP
+#endif  // ADS_FORM_MATRIX_HPP

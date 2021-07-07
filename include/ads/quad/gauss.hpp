@@ -4739,6 +4739,6 @@ struct gauss_data<64> {
     };
 };
 
-}
+}  // namespace ads::quad::gauss
 
-#endif // ADS_QUAD_GAUSS_HPP
+#endif  // ADS_QUAD_GAUSS_HPP

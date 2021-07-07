@@ -10,9 +10,7 @@
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
 
-
 namespace ads::problems {
-
 
 class heat_2d : public simulation_2d {
 private:
@@ -25,11 +23,10 @@ private:
 
 public:
     heat_2d(const config_2d& config)
-    : Base{ config }
-    , u{ shape() }
-    , u_prev{ shape() }
-    , output{ x.B, y.B, 200 }
-    { }
+    : Base{config}
+    , u{shape()}
+    , u_prev{shape()}
+    , output{x.B, y.B, 200} { }
 
     double init_state(double /*x*/, double /*y*/) {
         // double dx = x - 0.5;
@@ -41,11 +38,9 @@ public:
 
 private:
     void solve(vector_type& v) {
-        lin::vector buf{{ y.dofs() }};
-        compute_projection(buf, y.basis, [](double y) {
-            return std::sin(y * M_PI);
-        });
-        for (int i = 0; i < y.dofs(); ++ i) {
+        lin::vector buf{{y.dofs()}};
+        compute_projection(buf, y.basis, [](double y) { return std::sin(y * M_PI); });
+        for (int i = 0; i < y.dofs(); ++i) {
             v(0, i) = buf(i);
         }
         Base::solve(v);
@@ -105,21 +100,16 @@ private:
                 }
             }
 
-            executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e);
-            });
+            executor.synchronized([&]() { update_global_rhs(rhs, U, e); });
         });
         integration_timer.stop();
     }
 
     virtual void after() override {
-        std::cout << "integration: " << static_cast<double>(integration_timer.get())  << std::endl;
+        std::cout << "integration: " << static_cast<double>(integration_timer.get()) << std::endl;
     }
 };
 
-}
+}  // namespace ads::problems
 
-
-
-
-#endif // HEAT_HEAT_2D_HPP
+#endif  // HEAT_HEAT_2D_HPP

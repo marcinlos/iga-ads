@@ -13,7 +13,6 @@
 #include "ads/solver/mumps.hpp"
 #include "erikkson_base.hpp"
 
-
 namespace ads {
 
 enum class scheme { BE, CN, peaceman_rachford, strang_BE, strang_CN };
@@ -29,14 +28,12 @@ private:
     dimension& Vx;
     dimension& Vy;
 
-
     // New stuff
     lin::band_matrix MVx, MVy;
     lin::band_matrix MUx, MUy;
 
     lin::band_matrix KVx, KVy;
     lin::band_matrix KUx, KUy;
-
 
     lin::dense_matrix MUVx, MUVy;
     lin::dense_matrix KUVx, KUVy;
@@ -68,18 +65,16 @@ private:
 
     // double bbeta = 0;
 
-
     double pecelet = 1e2;
     double epsilon = 1 / pecelet;
 
-    point_type c_diff{{ epsilon, epsilon }};
+    point_type c_diff{{epsilon, epsilon}};
 
     // double angle = 0;
     // double len = 1;
 
     // point_type beta{{ len * cos(angle), len * sin(angle) }};
-    point_type beta{{ 1, 0 }};
-
+    point_type beta{{1, 0}};
 
     mumps::solver solver;
 
@@ -91,10 +86,10 @@ public:
     erikkson_mumps_split(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y,
                          scheme method, const timesteps_config& steps)
     : Base{std::move(test_x), std::move(test_y), steps}
-    , Ux{ std::move(trial_x) }
-    , Uy{ std::move(trial_y) }
-    , Vx{ x }
-    , Vy{ y }
+    , Ux{std::move(trial_x)}
+    , Uy{std::move(trial_y)}
+    , Vx{x}
+    , Vy{y}
     , MVx{Vx.p, Vx.p, Vx.dofs(), Vx.dofs(), 0}
     , MVy{Vy.p, Vy.p, Vy.dofs(), Vy.dofs(), 0}
     , MUx{Ux.p, Ux.p, Ux.dofs(), Ux.dofs(), 0}
@@ -103,28 +98,26 @@ public:
     , KVy{Vy.p, Vy.p, Vy.dofs(), Vy.dofs(), 0}
     , KUx{Ux.p, Ux.p, Ux.dofs(), Ux.dofs(), 0}
     , KUy{Uy.p, Uy.p, Uy.dofs(), Uy.dofs(), 0}
-    , MUVx{ Vx.dofs(), Ux.dofs() }
-    , MUVy{ Vy.dofs(), Uy.dofs() }
-    , KUVx{ Vx.dofs(), Ux.dofs() }
-    , KUVy{ Vy.dofs(), Uy.dofs() }
-    , AUVx{ Vx.dofs(), Ux.dofs() }
-    , AUVy{ Vy.dofs(), Uy.dofs() }
-    , MUUx{ Ux.dofs(), Ux.dofs() }
-    , MUUy{ Uy.dofs(), Uy.dofs() }
-    , KUUx{ Ux.dofs(), Ux.dofs() }
-    , KUUy{ Uy.dofs(), Uy.dofs() }
-    , AUUx{ Ux.dofs(), Ux.dofs() }
-    , AUUy{ Uy.dofs(), Uy.dofs() }
-    , u{{ Ux.dofs(), Uy.dofs() }}
-    , r{ vector_type{{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy}
-    , u_buffer{{ Ux.dofs(), Uy.dofs() }}
+    , MUVx{Vx.dofs(), Ux.dofs()}
+    , MUVy{Vy.dofs(), Uy.dofs()}
+    , KUVx{Vx.dofs(), Ux.dofs()}
+    , KUVy{Vy.dofs(), Uy.dofs()}
+    , AUVx{Vx.dofs(), Ux.dofs()}
+    , AUVy{Vy.dofs(), Uy.dofs()}
+    , MUUx{Ux.dofs(), Ux.dofs()}
+    , MUUy{Uy.dofs(), Uy.dofs()}
+    , KUUx{Ux.dofs(), Ux.dofs()}
+    , KUUy{Uy.dofs(), Uy.dofs()}
+    , AUUx{Ux.dofs(), Ux.dofs()}
+    , AUUy{Uy.dofs(), Uy.dofs()}
+    , u{{Ux.dofs(), Uy.dofs()}}
+    , r{vector_type{{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy}
+    , u_buffer{{Ux.dofs(), Uy.dofs()}}
     , full_rhs(Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs())
-    , output{ Ux.B, Uy.B, 500 }
-    , method{ method }
-    { }
+    , output{Ux.B, Uy.B, 500}
+    , method{method} { }
 
 private:
-
     struct matrix_set {
         using band_matrix_ref = lin::band_matrix&;
         using dense_matrix_ref = lin::dense_matrix&;
@@ -133,15 +126,16 @@ private:
         dense_matrix_ref MUVx, MUVy, KUVx, KUVy, AUVx, AUVy;
     };
 
-    void gram_matrix(mumps::problem& problem, const dimension& Vx, const dimension& Vy,
-                     double sx, double sy) const {
+    void gram_matrix(mumps::problem& problem, const dimension& Vx, const dimension& Vy, double sx,
+                     double sy) const {
         for (auto i : internal_dofs(Vx, Vy)) {
             for (auto j : overlapping_internal_dofs(i, Vx, Vy)) {
                 int ii = linear_index(i, Vx, Vy) + 1;
                 int jj = linear_index(j, Vx, Vy) + 1;
 
                 // Standard H1 product
-                double val = kron(MVx, MVy, i, j) + sx * kron(KVx, MVy, i, j) + sy * kron(MVx, KVy, i, j);
+                double val =
+                    kron(MVx, MVy, i, j) + sx * kron(KVx, MVy, i, j) + sy * kron(MVx, KVy, i, j);
                 problem.add(ii, jj, val);
             }
         }
@@ -154,8 +148,7 @@ private:
     }
 
     void assemble_problem(mumps::problem& problem, double cx, double cy, double sx, double sy,
-                          const dimension& Vx, const dimension& Vy,
-                          const matrix_set& M) {
+                          const dimension& Vx, const dimension& Vy, const matrix_set& M) {
         auto N = Vx.dofs() * Vy.dofs();
 
         // gram_matrix(problem, Vx, Vy, sx, sy);
@@ -166,7 +159,8 @@ private:
                 int ii = linear_index(i, Vx, Vy) + 1;
                 int jj = linear_index(j, Vx, Vy) + 1;
 
-                double val = kron(M.MVx, M.MVy, i, j) + sx * kron(M.KVx, M.MVy, i, j) + sy * kron(M.MVx, M.KVy, i, j);
+                double val = kron(M.MVx, M.MVy, i, j) + sx * kron(M.KVx, M.MVy, i, j)
+                           + sy * kron(M.MVx, M.KVy, i, j);
                 problem.add(ii, jj, val);
             }
         }
@@ -181,12 +175,14 @@ private:
         for (auto i : dofs(Vx, Vy)) {
             for (auto j : dofs(Ux, Uy)) {
                 double MM = kron(M.MUVx, M.MUVy, i, j);
-                double Lx = c_diff[0] * kron(M.KUVx, M.MUVy, i, j) + beta[0] * kron(M.AUVx, M.MUVy, i, j);
-                double Ly = c_diff[1] * kron(M.MUVx, M.KUVy, i, j) + beta[1] * kron(M.MUVx, M.AUVy, i, j);
+                double Lx =
+                    c_diff[0] * kron(M.KUVx, M.MUVy, i, j) + beta[0] * kron(M.AUVx, M.MUVy, i, j);
+                double Ly =
+                    c_diff[1] * kron(M.MUVx, M.KUVy, i, j) + beta[1] * kron(M.MUVx, M.AUVy, i, j);
                 double val = MM + cx * Lx + cy * Ly;
 
                 if (val != 0) {
-                    if (! is_boundary(i, Vx, Vy) && ! is_boundary(j, Ux, Uy)) {
+                    if (!is_boundary(i, Vx, Vy) && !is_boundary(j, Ux, Uy)) {
                         int ii = linear_index(i, Vx, Vy) + 1;
                         int jj = linear_index(j, Ux, Uy) + 1;
 
@@ -206,13 +202,13 @@ private:
 
     matrix_set matrices(bool x_refined, bool y_refined) {
         if (x_refined && y_refined) {
-            return { MVx, MVy, KVx, KVy, MUVx, MUVy, KUVx, KUVy, AUVx, AUVy };
+            return {MVx, MVy, KVx, KVy, MUVx, MUVy, KUVx, KUVy, AUVx, AUVy};
         } else if (x_refined) {
-            return { MVx, MUy, KVx, KUy, MUVx, MUUy, KUVx, KUUy, AUVx, AUUy };
+            return {MVx, MUy, KVx, KUy, MUVx, MUUy, KUVx, KUUy, AUVx, AUUy};
         } else if (y_refined) {
-            return { MUx, MVy, KUx, KVy, MUUx, MUVy, KUUx, KUVy, AUUx, AUVy };
+            return {MUx, MVy, KUx, KVy, MUUx, MUVy, KUUx, KUVy, AUUx, AUVy};
         } else {
-            return { MUx, MUy, KUx, KUy, MUUx, MUUy, KUUx, KUUy, AUUx, AUUy };
+            return {MUx, MUy, KUx, KUy, MUUx, MUUy, KUUx, KUUy, AUUx, AUUy};
         }
     }
 
@@ -229,7 +225,6 @@ private:
         gram_matrix_1d(MUVx, Ux.basis, Vx.basis);
         gram_matrix_1d(MUVy, Uy.basis, Vy.basis);
 
-
         stiffness_matrix_1d(KVx, Vx.basis);
         stiffness_matrix_1d(KVy, Vy.basis);
 
@@ -241,7 +236,6 @@ private:
 
         stiffness_matrix_1d(KUUx, Ux.basis, Ux.basis);
         stiffness_matrix_1d(KUUy, Uy.basis, Uy.basis);
-
 
         advection_matrix_1d(AUVx, Ux.basis, Vx.basis);
         advection_matrix_1d(AUVy, Uy.basis, Vy.basis);
@@ -275,24 +269,22 @@ private:
     }
 
     void copy_solution(const vector_view& u_rhs, const vector_view& r_rhs, vector_type& u) {
-        for (auto i = 0; i < Ux.dofs(); ++ i) {
-            for (auto j = 0; j < Uy.dofs(); ++ j) {
+        for (auto i = 0; i < Ux.dofs(); ++i) {
+            for (auto j = 0; j < Uy.dofs(); ++j) {
                 u(i, j) = u_rhs(i, j);
             }
         }
-        r = residuum{ vector_type{{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy };
-        for (auto i = 0; i < Vx.dofs(); ++ i) {
-            for (auto j = 0; j < Vy.dofs(); ++ j) {
+        r = residuum{vector_type{{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy};
+        for (auto i = 0; i < Vx.dofs(); ++i) {
+            for (auto j = 0; j < Vy.dofs(); ++j) {
                 r.data(i, j) = r_rhs(i, j);
             }
         }
     }
 
     template <typename Fun>
-    void substep(vector_type& u, bool x_refine, bool y_refine,
-                 double Lx_lhs, double Ly_lhs,
-                 double Lx_rhs, double Ly_rhs,
-                 double dt, Fun&& f) {
+    void substep(vector_type& u, bool x_refine, bool y_refine, double Lx_lhs, double Ly_lhs,
+                 double Lx_rhs, double Ly_rhs, double dt, Fun&& f) {
         dimension& Vx = x_refine ? this->Vx : Ux;
         dimension& Vy = y_refine ? this->Vy : Uy;
 
@@ -326,10 +318,11 @@ private:
         auto f = [&](point_type x, double s) { return erikkson_forcing(x[0], x[1], epsilon, s); };
         auto F = [&](double s) { return std::bind(f, _1, s); };
         auto Favg = [&](double s1, double s2) {
-            return [=,&f](point_type x) { return 0.5 * (f(x, s1) + f(x, s2)); };
+            return [=, &f](point_type x) { return 0.5 * (f(x, s1) + f(x, s2)); };
         };
         auto zero = [&](point_type) { return 0; };
 
+        // clang-format off
         if (method == scheme::BE) {
             substep(u, true, true, dt, dt, 0, 0, dt, F(t + dt));
         }
@@ -350,37 +343,38 @@ private:
             substep(u, true,  false,      0, dt/2,       0, -dt/2,     dt, zero);
             substep(u, false,  true,   dt/4,    0,   -dt/4,     0,   dt/2, Favg(t + dt/2, t + dt));
         }
+        // clang-format on
     }
 
     void after_step(int iter, double t) override {
         if ((iter + 1) % save_every == 0) {
-            // std::cout << "Step " << (iter + 1) << " : " << errorL2(u, t) << " " << errorH1(u, t) << std::endl;
-            // output.to_file(u, "out_%d.data", (iter + 1) / save_every);
+            // std::cout << "Step " << (iter + 1) << " : " << errorL2(u, t) << " " << errorH1(u, t)
+            // << std::endl; output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
         std::cout << iter << " " << t << " " << errorL2(u, t) << " " << errorH1(u, t) << " "
-                  << rel_errorL2(u, t) << " " << rel_errorH1(u, t) << " "
-                  << normL2(r.data, Vx, Vy) << " " << normH1(r.data, Vx, Vy) << std::endl;
+                  << rel_errorL2(u, t) << " " << rel_errorH1(u, t) << " " << normL2(r.data, Vx, Vy)
+                  << " " << normH1(r.data, Vx, Vy) << std::endl;
     }
 
     void after() override {
         plot_middle("final.data", u, Ux, Uy);
-        // std::cout << "{ 'L2': '" << errorL2(u) << "', 'H1': '" << errorH1(u) << "'}" << std::endl;
+        // std::cout << "{ 'L2': '" << errorL2(u) << "', 'H1': '" << errorH1(u) << "'}" <<
+        // std::endl;
 
         std::ofstream sol("solution.data");
-        for (int i = 0; i < Ux.dofs(); ++ i) {
-            for (int j = 0; j < Uy.dofs(); ++ j) {
+        for (int i = 0; i < Ux.dofs(); ++i) {
+            for (int j = 0; j < Uy.dofs(); ++j) {
                 sol << i << " " << j << " " << u(i, j) << std::endl;
             }
         }
     }
 
-
     template <typename Fun>
     void compute_rhs(double cx, double cy, const dimension& Vx, const dimension& Vy,
                      vector_view& r_rhs, vector_view& u_rhs, double dt, Fun&& F) {
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
-            auto R = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
-            auto U = vector_type{{ Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element() }};
+            auto R = vector_type{{Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element()}};
+            auto U = vector_type{{Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element()}};
 
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Vy)) {
@@ -454,8 +448,6 @@ private:
     //     });
     // }
 
-
-
     template <typename Sol, typename Norm>
     double norm(const Sol& u, const dimension& Ux, const dimension& Uy, Norm&& n) const {
         double error = 0;
@@ -487,7 +479,7 @@ private:
         // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
 
-        return Base::errorL2(u, Ux, Uy, sol);// / normL2(Ux, Uy, sol) * 100;
+        return Base::errorL2(u, Ux, Uy, sol);  // / normL2(Ux, Uy, sol) * 100;
     }
 
     double errorH1(const vector_type& u, double t) const {
@@ -495,7 +487,7 @@ private:
         // auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         auto sol = [&](point_type x) { return erikkson_nonstationary_exact(x[0], x[1], t); };
 
-        return Base::errorH1(u, Ux, Uy, sol);// / normH1(Ux, Uy, sol) * 100;
+        return Base::errorH1(u, Ux, Uy, sol);  // / normH1(Ux, Uy, sol) * 100;
     }
 
     double rel_errorL2(const vector_type& u, double t) const {
@@ -509,8 +501,6 @@ private:
     }
 };
 
-}
+}  // namespace ads
 
-
-
-#endif // ERIKKSON_ERIKKSON_MUMPS_SPLIT_HPP
+#endif  // ERIKKSON_ERIKKSON_MUMPS_SPLIT_HPP

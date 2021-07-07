@@ -14,4 +14,4 @@
 #include "ads/lin/tensor/tensor.hpp"
 #include "ads/lin/tensor/view.hpp"
 
-#endif // ADS_LIN_TENSOR_HPP
+#endif  // ADS_LIN_TENSOR_HPP

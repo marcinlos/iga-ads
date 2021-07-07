@@ -5,22 +5,21 @@
 #include "tumor.hpp"
 #include "vasculature.hpp"
 
-
 using namespace ads;
 
 struct sim_params {
-    int p;                            // 2
-    int elems;                        // 80
-    timesteps_config steps;           // 10000, 0.1
+    int p;                   // 2
+    int elems;               // 80
+    timesteps_config steps;  // 10000, 0.1
     int plot_every;
     tumor::params tumor_params;
     tumor::vasc::config vasc_config;
 };
 
 sim_params parse_params(char* args[], int idx) {
-    using std::atoi;
     using std::atof;
-    auto next = [&]() { return args[idx ++]; };
+    using std::atoi;
+    auto next = [&]() { return args[idx++]; };
     auto next_int = [&]() { return atoi(next()); };
     auto next_float = [&]() { return atof(next()); };
 
@@ -76,18 +75,18 @@ sim_params parse_params(char* args[], int idx) {
     vasc.c_switch = next_float();
     vasc.dilatation = next_float();
 
-    return { p, elems, { nsteps, dt }, plot_every, tumor, vasc };
+    return {p, elems, {nsteps, dt}, plot_every, tumor, vasc};
 }
 
 int main(int /*argc*/, char* argv[]) {
     sim_params sp = parse_params(argv, 1);
 
-    dim_config dim { sp.p, sp.elems, 0, 3000.0 };
+    dim_config dim{sp.p, sp.elems, 0, 3000.0};
     int ders = 1;
 
-    config_2d c { dim, dim, sp.steps, ders };
+    config_2d c{dim, dim, sp.steps, ders};
 
-    tumor::vasc::random_vasculature rand_vasc { sp.vasc_config, 0};
-    tumor::tumor_2d sim { c, sp.tumor_params, sp.plot_every, rand_vasc() };
+    tumor::vasc::random_vasculature rand_vasc{sp.vasc_config, 0};
+    tumor::tumor_2d sim{c, sp.tumor_params, sp.plot_every, rand_vasc()};
     sim.run();
 }

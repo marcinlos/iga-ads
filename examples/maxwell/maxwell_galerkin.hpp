@@ -11,7 +11,6 @@
 #include "problems.hpp"
 #include "state.hpp"
 
-
 namespace ads {
 
 class maxwell_galerkin : public simulation_3d {
@@ -43,12 +42,24 @@ private:
 public:
     maxwell_galerkin(const config_3d& config)
     : Base{config}
-    , UE1x{x}, UE1y{y}, UE1z{z}
-    , UE2x{x}, UE2y{y}, UE2z{z}
-    , UE3x{x}, UE3y{y}, UE3z{z}
-    , UH1x{x}, UH1y{y}, UH1z{z}
-    , UH2x{x}, UH2y{y}, UH2z{z}
-    , UH3x{x}, UH3y{y}, UH3z{z}
+    , UE1x{x}
+    , UE1y{y}
+    , UE1z{z}
+    , UE2x{x}
+    , UE2y{y}
+    , UE2z{z}
+    , UE3x{x}
+    , UE3y{y}
+    , UE3z{z}
+    , UH1x{x}
+    , UH1y{y}
+    , UH1z{z}
+    , UH2x{x}
+    , UH2y{y}
+    , UH2z{z}
+    , UH3x{x}
+    , UH3y{y}
+    , UH3z{z}
     , Vx{x}
     , Vy{y}
     , Vz{z}
@@ -61,26 +72,30 @@ public:
     , Bx_ctx{Bx}
     , By_ctx{By}
     , Bz_ctx{Bz}
-    , output{Vx.B, Vy.B, Vz.B, 50}
-    { }
+    , output{Vx.B, Vy.B, Vz.B, 50} { }
 
 private:
-
     void fix_dof(int k, const dimension& dim, lin::band_matrix& K) {
         int last = dim.dofs() - 1;
-        for (int i = clamp(k - dim.p, 0, last); i <= clamp(k + dim.p, 0, last); ++ i) {
+        for (int i = clamp(k - dim.p, 0, last); i <= clamp(k + dim.p, 0, last); ++i) {
             K(k, i) = 0;
         }
         K(k, k) = 1;
     }
 
     void prepare_matrices() {
-        auto zero = [](auto& dim) { dim.fix_left(); dim.fix_right(); };
+        auto zero = [](auto& dim) {
+            dim.fix_left();
+            dim.fix_right();
+        };
 
         // E x n = 0
-        zero(UE1y); zero(UE1z);
-        zero(UE2x); zero(UE2z);
-        zero(UE3x); zero(UE3y);
+        zero(UE1y);
+        zero(UE1z);
+        zero(UE2x);
+        zero(UE2z);
+        zero(UE3x);
+        zero(UE3y);
 
         // H * n = 0
         zero(UH1x);
@@ -111,7 +126,6 @@ private:
         Vy.factorize_matrix();
         Vz.factorize_matrix();
 
-
         Bx.zero();
         By.zero();
         Bz.zero();
@@ -124,9 +138,12 @@ private:
         form_matrix(By, Vy.basis, form);
         form_matrix(Bz, Vz.basis, form);
 
-        fix_dof(0, Vx, Bx); fix_dof(Vx.dofs() - 1, Vx, Bx);
-        fix_dof(0, Vy, By); fix_dof(Vy.dofs() - 1, Vy, By);
-        fix_dof(0, Vz, Bz); fix_dof(Vz.dofs() - 1, Vz, Bz);
+        fix_dof(0, Vx, Bx);
+        fix_dof(Vx.dofs() - 1, Vx, Bx);
+        fix_dof(0, Vy, By);
+        fix_dof(Vy.dofs() - 1, Vy, By);
+        fix_dof(0, Vz, Bz);
+        fix_dof(Vz.dofs() - 1, Vz, Bz);
 
         lin::factorize(Bx, Bx_ctx);
         lin::factorize(By, By_ctx);
@@ -138,7 +155,7 @@ private:
 
         auto project = [&](auto& rhs, auto& x, auto& y, auto& z, auto fun) {
             auto f = [&](double x, double y, double z) { return fun({x, y, z}); };
-            auto buffer = vector_type{{ x.dofs(), y.dofs(), z.dofs() }};
+            auto buffer = vector_type{{x.dofs(), y.dofs(), z.dofs()}};
             compute_projection(rhs, x.basis, y.basis, z.basis, f);
             ads_solve(rhs, buffer, x.data(), y.data(), z.data());
         };
@@ -159,26 +176,26 @@ private:
         swap(now, prev);
     }
 
-    void zero_sides(const char dims[], vector_type& rhs,
-            const dimension& Ux, const dimension& Uy, const dimension& Uz) const {
+    void zero_sides(const char dims[], vector_type& rhs, const dimension& Ux, const dimension& Uy,
+                    const dimension& Uz) const {
         for (char dim : std::string{dims}) {
             if (dim == 'x') {
-                for (int i = 0; i < Uy.dofs(); ++ i) {
-                    for (int j = 0; j < Uz.dofs(); ++ j) {
+                for (int i = 0; i < Uy.dofs(); ++i) {
+                    for (int j = 0; j < Uz.dofs(); ++j) {
                         rhs(0, i, j) = 0;
                         rhs(Ux.dofs() - 1, i, j) = 0;
                     }
                 }
             } else if (dim == 'y') {
-                for (int i = 0; i < Ux.dofs(); ++ i) {
-                    for (int j = 0; j < Uz.dofs(); ++ j) {
+                for (int i = 0; i < Ux.dofs(); ++i) {
+                    for (int j = 0; j < Uz.dofs(); ++j) {
                         rhs(i, 0, j) = 0;
                         rhs(i, Uy.dofs() - 1, j) = 0;
                     }
                 }
             } else if (dim == 'z') {
-                for (int i = 0; i < Ux.dofs(); ++ i) {
-                    for (int j = 0; j < Uy.dofs(); ++ j) {
+                for (int i = 0; i < Ux.dofs(); ++i) {
+                    for (int j = 0; j < Uy.dofs(); ++j) {
                         rhs(i, j, 0) = 0;
                         rhs(i, j, Uz.dofs() - 1) = 0;
                     }
@@ -214,45 +231,51 @@ private:
 
         // First substep - E
         auto rhs_E1 = vector_type{shape_E1};
-        compute_rhs(rhs_E1, prev, prev.E1, prev.E2, prev.E3, UE1x, UE1y, UE1z, [=](auto E, auto, auto H, auto v) {
-            return (E[X].val + a * (H[Z].dy - H[Y].dz)) * v.val + b * E[Y].dx * v.dy;
-        });
+        compute_rhs(rhs_E1, prev, prev.E1, prev.E2, prev.E3, UE1x, UE1y, UE1z,
+                    [=](auto E, auto, auto H, auto v) {
+                        return (E[X].val + a * (H[Z].dy - H[Y].dz)) * v.val + b * E[Y].dx * v.dy;
+                    });
         zero_sides("yz", rhs_E1, UE1x, UE1y, UE1z);
         ads_solve(rhs_E1, buffer, UE1x.data(), dim_data{By, By_ctx}, UE1z.data());
 
         auto rhs_E2 = vector_type{shape_E2};
-        compute_rhs(rhs_E2, prev, prev.E1, prev.E2, prev.E3, UE2x, UE2y, UE2z, [=](auto E, auto, auto H, auto v) {
-            return (E[Y].val + a * (H[X].dz - H[Z].dx)) * v.val + b * E[Z].dy * v.dz;
-        });
+        compute_rhs(rhs_E2, prev, prev.E1, prev.E2, prev.E3, UE2x, UE2y, UE2z,
+                    [=](auto E, auto, auto H, auto v) {
+                        return (E[Y].val + a * (H[X].dz - H[Z].dx)) * v.val + b * E[Z].dy * v.dz;
+                    });
         zero_sides("xz", rhs_E2, UE2x, UE2y, UE2z);
         ads_solve(rhs_E2, buffer, UE2x.data(), UE2y.data(), dim_data{Bz, Bz_ctx});
 
         auto rhs_E3 = vector_type{shape_E3};
-        compute_rhs(rhs_E3, prev, prev.E1, prev.E2, prev.E3, UE3x, UE3y, UE3z, [=](auto E, auto, auto H, auto v) {
-            return (E[Z].val + a * (H[Y].dx - H[X].dy)) * v.val + b * E[X].dz * v.dx;
-        });
+        compute_rhs(rhs_E3, prev, prev.E1, prev.E2, prev.E3, UE3x, UE3y, UE3z,
+                    [=](auto E, auto, auto H, auto v) {
+                        return (E[Z].val + a * (H[Y].dx - H[X].dy)) * v.val + b * E[X].dz * v.dx;
+                    });
         zero_sides("xy", rhs_E3, UE3x, UE3y, UE3z);
         ads_solve(rhs_E3, buffer, dim_data{Bx, Bx_ctx}, UE3y.data(), UE3z.data());
 
         // First substep - H
         auto rhs_H1 = vector_type{shape_H1};
-        compute_rhs(rhs_H1, prev, rhs_E1, rhs_E2, rhs_E3, UH1x, UH1y, UH1z, [=](auto E, auto En, auto H, auto v) {
-            return (H[X].val - c * (E[Z].dy - En[Y].dz)) * v.val;
-        });
+        compute_rhs(rhs_H1, prev, rhs_E1, rhs_E2, rhs_E3, UH1x, UH1y, UH1z,
+                    [=](auto E, auto En, auto H, auto v) {
+                        return (H[X].val - c * (E[Z].dy - En[Y].dz)) * v.val;
+                    });
         zero_sides("x", rhs_H1, UH1x, UH1y, UH1z);
         ads_solve(rhs_H1, buffer, UH1x.data(), UH1y.data(), UH1z.data());
 
         auto rhs_H2 = vector_type{shape_H2};
-        compute_rhs(rhs_H2, prev, rhs_E1, rhs_E2, rhs_E3, UH2x, UH2y, UH2z, [=](auto E, auto En, auto H, auto v) {
-            return (H[Y].val - c * (E[X].dz - En[Z].dx)) * v.val;
-        });
+        compute_rhs(rhs_H2, prev, rhs_E1, rhs_E2, rhs_E3, UH2x, UH2y, UH2z,
+                    [=](auto E, auto En, auto H, auto v) {
+                        return (H[Y].val - c * (E[X].dz - En[Z].dx)) * v.val;
+                    });
         zero_sides("y", rhs_H2, UH2x, UH2y, UH2z);
         ads_solve(rhs_H2, buffer, UH2x.data(), UH2y.data(), UH2z.data());
 
         auto rhs_H3 = vector_type{shape_H3};
-        compute_rhs(rhs_H3, prev, rhs_E1, rhs_E2, rhs_E3, UH3x, UH3y, UH3z, [=](auto E, auto En, auto H, auto v) {
-            return (H[Z].val - c * (E[Y].dx - En[X].dy)) * v.val;
-        });
+        compute_rhs(rhs_H3, prev, rhs_E1, rhs_E2, rhs_E3, UH3x, UH3y, UH3z,
+                    [=](auto E, auto En, auto H, auto v) {
+                        return (H[Z].val - c * (E[Y].dx - En[X].dy)) * v.val;
+                    });
         zero_sides("z", rhs_H3, UH3x, UH3y, UH3z);
         ads_solve(rhs_H3, buffer, UH3x.data(), UH3y.data(), UH3z.data());
 
@@ -265,52 +288,61 @@ private:
         prev.H3 = rhs_H3;
 
         // Second substep - E
-        compute_rhs(now.E1, prev, prev.E1, prev.E2, prev.E3, UE1x, UE1y, UE1z, [=](auto E, auto, auto H, auto v) {
-            return (E[X].val + a * (H[Z].dy - H[Y].dz)) * v.val + b * E[Z].dx * v.dz;
-        });
+        compute_rhs(now.E1, prev, prev.E1, prev.E2, prev.E3, UE1x, UE1y, UE1z,
+                    [=](auto E, auto, auto H, auto v) {
+                        return (E[X].val + a * (H[Z].dy - H[Y].dz)) * v.val + b * E[Z].dx * v.dz;
+                    });
         zero_sides("yz", now.E1, UE1x, UE1y, UE1z);
         ads_solve(now.E1, buffer, UE1x.data(), UE1y.data(), dim_data{Bz, Bz_ctx});
 
-        compute_rhs(now.E2, prev, prev.E1, prev.E2, prev.E3, UE2x, UE2y, UE2z, [=](auto E, auto, auto H, auto v) {
-            return (E[Y].val + a * (H[X].dz - H[Z].dx)) * v.val + b * E[X].dy * v.dx;
-        });
+        compute_rhs(now.E2, prev, prev.E1, prev.E2, prev.E3, UE2x, UE2y, UE2z,
+                    [=](auto E, auto, auto H, auto v) {
+                        return (E[Y].val + a * (H[X].dz - H[Z].dx)) * v.val + b * E[X].dy * v.dx;
+                    });
         zero_sides("xz", now.E2, UE2x, UE2y, UE2z);
         ads_solve(now.E2, buffer, dim_data{Bx, Bx_ctx}, UE2y.data(), UE2z.data());
 
-        compute_rhs(now.E3, prev, prev.E1, prev.E2, prev.E3, UE3x, UE3y, UE3z, [=](auto E, auto, auto H, auto v) {
-            return (E[Z].val + a * (H[Y].dx - H[X].dy)) * v.val + b * E[Y].dz * v.dy;
-        });
+        compute_rhs(now.E3, prev, prev.E1, prev.E2, prev.E3, UE3x, UE3y, UE3z,
+                    [=](auto E, auto, auto H, auto v) {
+                        return (E[Z].val + a * (H[Y].dx - H[X].dy)) * v.val + b * E[Y].dz * v.dy;
+                    });
         zero_sides("xy", now.E3, UE3x, UE3y, UE3z);
         ads_solve(now.E3, buffer, UE3x.data(), dim_data{By, By_ctx}, UE3z.data());
 
         // Second substep - H
-        compute_rhs(now.H1, prev, now.E1, now.E2, now.E3, UH1x, UH1y, UH1z, [=](auto E, auto En, auto H, auto v) {
-            return (H[X].val - c * (En[Z].dy - E[Y].dz)) * v.val;
-        });
+        compute_rhs(now.H1, prev, now.E1, now.E2, now.E3, UH1x, UH1y, UH1z,
+                    [=](auto E, auto En, auto H, auto v) {
+                        return (H[X].val - c * (En[Z].dy - E[Y].dz)) * v.val;
+                    });
         zero_sides("x", now.H1, UH1x, UH1y, UH1z);
         ads_solve(now.H1, buffer, UH1x.data(), UH1y.data(), UH1z.data());
 
-        compute_rhs(now.H2, prev, now.E1, now.E2, now.E3, UH2x, UH2y, UH2z, [=](auto E, auto En, auto H, auto v) {
-            return (H[Y].val - c * (En[X].dz - E[Z].dx)) * v.val;
-        });
+        compute_rhs(now.H2, prev, now.E1, now.E2, now.E3, UH2x, UH2y, UH2z,
+                    [=](auto E, auto En, auto H, auto v) {
+                        return (H[Y].val - c * (En[X].dz - E[Z].dx)) * v.val;
+                    });
         zero_sides("y", now.H2, UH2x, UH2y, UH2z);
         ads_solve(now.H2, buffer, UH2x.data(), UH2y.data(), UH2z.data());
 
-        compute_rhs(now.H3, prev, now.E1, now.E2, now.E3, UH3x, UH3y, UH3z, [=](auto E, auto En, auto H, auto v) {
-            return (H[Z].val - c * (En[Y].dx - E[X].dy)) * v.val;
-        });
+        compute_rhs(now.H3, prev, now.E1, now.E2, now.E3, UH3x, UH3y, UH3z,
+                    [=](auto E, auto En, auto H, auto v) {
+                        return (H[Z].val - c * (En[Y].dx - E[X].dy)) * v.val;
+                    });
         zero_sides("z", now.H3, UH3x, UH3y, UH3z);
         ads_solve(now.H3, buffer, UH3x.data(), UH3y.data(), UH3z.data());
     }
 
     template <typename RHS, typename Form>
-    void compute_rhs(RHS& rhs, const state& prev,
-            const vector_type& E1_new, const vector_type& E2_new, const vector_type& E3_new,
-            const dimension& Vx, const dimension& Vy, const dimension& Vz,
-            Form&& form) {
+    void compute_rhs(RHS& rhs, const state& prev, const vector_type& E1_new,
+                     const vector_type& E2_new, const vector_type& E3_new, const dimension& Vx,
+                     const dimension& Vy, const dimension& Vz, Form&& form) {
         zero(rhs);
         using shape = std::array<std::size_t, 3>;
-        auto shape_loc = shape{Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element(), Vz.basis.dofs_per_element()};
+        auto shape_loc = shape{
+            Vx.basis.dofs_per_element(),
+            Vy.basis.dofs_per_element(),
+            Vz.basis.dofs_per_element(),
+        };
 
         executor.for_each(elements(Vx, Vy, Vz), [&](auto e) {
             auto loc = vector_type{shape_loc};
@@ -344,9 +376,7 @@ private:
                     loc(aa[0], aa[1], aa[2]) += val * W * J;
                 }
             }
-            executor.synchronized([&]{
-                update_global_rhs(rhs, loc, e, Vx, Vy, Vz);
-            });
+            executor.synchronized([&] { update_global_rhs(rhs, loc, e, Vx, Vy, Vz); });
         });
     }
 
@@ -367,54 +397,62 @@ private:
         auto E1_norm_L2 = normL2(now.E1, UE1x, UE1y, UE1z);
         auto E2_norm_L2 = normL2(now.E2, UE2x, UE2y, UE2z);
         auto E3_norm_L2 = normL2(now.E3, UE3x, UE3y, UE3z);
-        auto E_norm_L2 = std::sqrt(E1_norm_L2 * E1_norm_L2 + E2_norm_L2 * E2_norm_L2 + E3_norm_L2 * E3_norm_L2);
+        auto E_norm_L2 =
+            std::sqrt(E1_norm_L2 * E1_norm_L2 + E2_norm_L2 * E2_norm_L2 + E3_norm_L2 * E3_norm_L2);
 
         auto E1_err_L2 = errorL2(now.E1, UE1x, UE1y, UE1z, problem.E1_at(tt));
         auto E2_err_L2 = errorL2(now.E2, UE2x, UE2y, UE2z, problem.E2_at(tt));
         auto E3_err_L2 = errorL2(now.E3, UE3x, UE3y, UE3z, problem.E3_at(tt));
-        auto E_err_L2 = std::sqrt(E1_err_L2 * E1_err_L2 + E2_err_L2 * E2_err_L2 + E3_err_L2 * E3_err_L2);
+        auto E_err_L2 =
+            std::sqrt(E1_err_L2 * E1_err_L2 + E2_err_L2 * E2_err_L2 + E3_err_L2 * E3_err_L2);
 
         auto E1_norm_H1 = normH1(now.E1, UE1x, UE1y, UE1z);
         auto E2_norm_H1 = normH1(now.E2, UE2x, UE2y, UE2z);
         auto E3_norm_H1 = normH1(now.E3, UE3x, UE3y, UE3z);
-        auto E_norm_H1 = std::sqrt(E1_norm_H1 * E1_norm_H1 + E2_norm_H1 * E2_norm_H1 + E3_norm_H1 * E3_norm_H1);
+        auto E_norm_H1 =
+            std::sqrt(E1_norm_H1 * E1_norm_H1 + E2_norm_H1 * E2_norm_H1 + E3_norm_H1 * E3_norm_H1);
 
         auto E1_err_H1 = errorH1(now.E1, UE1x, UE1y, UE1z, problem.E1_at(tt));
         auto E2_err_H1 = errorH1(now.E2, UE2x, UE2y, UE2z, problem.E2_at(tt));
         auto E3_err_H1 = errorH1(now.E3, UE3x, UE3y, UE3z, problem.E3_at(tt));
-        auto E_err_H1 = std::sqrt(E1_err_H1 * E1_err_H1 + E2_err_H1 * E2_err_H1 + E3_err_H1 * E3_err_H1);
+        auto E_err_H1 =
+            std::sqrt(E1_err_H1 * E1_err_H1 + E2_err_H1 * E2_err_H1 + E3_err_H1 * E3_err_H1);
 
         auto rot_E = norm_rot(now.E1, now.E2, now.E3, Vx, Vy, Vz);
         auto div_E = norm_div(now.E1, now.E2, now.E3, Vx, Vy, Vz);
-        auto E_err_rot = error_rot(now.E1, now.E2, now.E3,
-                UE1x, UE1y, UE1z, UE2x, UE2y, UE2z, UE3x, UE3y, UE3z,
-                problem.E1_at(tt), problem.E2_at(tt), problem.E3_at(tt));
+        auto E_err_rot =
+            error_rot(now.E1, now.E2, now.E3, UE1x, UE1y, UE1z, UE2x, UE2y, UE2z, UE3x, UE3y, UE3z,
+                      problem.E1_at(tt), problem.E2_at(tt), problem.E3_at(tt));
 
         auto H1_norm_L2 = normL2(now.H1, UH1x, UH1y, UH1z);
         auto H2_norm_L2 = normL2(now.H2, UH2x, UH2y, UH2z);
         auto H3_norm_L2 = normL2(now.H3, UH3x, UH3y, UH3z);
-        auto H_norm_L2 = std::sqrt(H1_norm_L2 * H1_norm_L2 + H2_norm_L2 * H2_norm_L2 + H3_norm_L2 * H3_norm_L2);
+        auto H_norm_L2 =
+            std::sqrt(H1_norm_L2 * H1_norm_L2 + H2_norm_L2 * H2_norm_L2 + H3_norm_L2 * H3_norm_L2);
 
         auto H1_err_L2 = errorL2(now.H1, UH1x, UH1y, UH1z, problem.H1_at(tt));
         auto H2_err_L2 = errorL2(now.H2, UH2x, UH2y, UH2z, problem.H2_at(tt));
         auto H3_err_L2 = errorL2(now.H3, UH3x, UH3y, UH3z, problem.H3_at(tt));
-        auto H_err_L2 = std::sqrt(H1_err_L2 * H1_err_L2 + H2_err_L2 * H2_err_L2 + H3_err_L2 * H3_err_L2);
+        auto H_err_L2 =
+            std::sqrt(H1_err_L2 * H1_err_L2 + H2_err_L2 * H2_err_L2 + H3_err_L2 * H3_err_L2);
 
         auto H1_norm_H1 = normH1(now.H1, UH1x, UH1y, UH1z);
         auto H2_norm_H1 = normH1(now.H2, UH2x, UH2y, UH2z);
         auto H3_norm_H1 = normH1(now.H3, UH3x, UH3y, UH3z);
-        auto H_norm_H1 = std::sqrt(H1_norm_H1 * H1_norm_H1 + H2_norm_H1 * H2_norm_H1 + H3_norm_H1 * H3_norm_H1);
+        auto H_norm_H1 =
+            std::sqrt(H1_norm_H1 * H1_norm_H1 + H2_norm_H1 * H2_norm_H1 + H3_norm_H1 * H3_norm_H1);
 
         auto H1_err_H1 = errorH1(now.H1, UH1x, UH1y, UH1z, problem.H1_at(tt));
         auto H2_err_H1 = errorH1(now.H2, UH2x, UH2y, UH2z, problem.H2_at(tt));
         auto H3_err_H1 = errorH1(now.H3, UH3x, UH3y, UH3z, problem.H3_at(tt));
-        auto H_err_H1 = std::sqrt(H1_err_H1 * H1_err_H1 + H2_err_H1 * H2_err_H1 + H3_err_H1 * H3_err_H1);
+        auto H_err_H1 =
+            std::sqrt(H1_err_H1 * H1_err_H1 + H2_err_H1 * H2_err_H1 + H3_err_H1 * H3_err_H1);
 
         auto rot_H = norm_rot(now.H1, now.H2, now.H3, Vx, Vy, Vz);
         auto div_H = norm_div(now.H1, now.H2, now.H3, Vx, Vy, Vz);
-        auto H_err_rot = error_rot(now.H1, now.H2, now.H3,
-                UH1x, UH1y, UH1z, UH2x, UH2y, UH2z, UH3x, UH3y, UH3z,
-                problem.H1_at(tt), problem.H2_at(tt), problem.H3_at(tt));
+        auto H_err_rot =
+            error_rot(now.H1, now.H2, now.H3, UH1x, UH1y, UH1z, UH2x, UH2y, UH2z, UH3x, UH3y, UH3z,
+                      problem.H1_at(tt), problem.H2_at(tt), problem.H3_at(tt));
 
         std::cout << "After step " << i << ", t = " << tt << std::endl;
         std::cout << "  |E|     = " << E_norm_L2 << "  " << E_norm_H1 << std::endl;
@@ -422,7 +460,7 @@ private:
         std::cout << "  |div E| = " << div_E << std::endl;
         std::cout << "  E err L2 = " << E_err_L2 << "  " << E_err_H1 << std::endl;
         std::cout << "    rel L2 = " << E_err_L2 / E_norm_L2 * 100 << "%  "
-                                     << E_err_H1 / E_norm_H1 * 100 << "%" << std::endl;
+                  << E_err_H1 / E_norm_H1 * 100 << "%" << std::endl;
         std::cout << "  E err rot = " << E_err_rot << std::endl;
 
         std::cout << "  |H| = " << H_norm_L2 << "  " << H_norm_H1 << std::endl;
@@ -430,12 +468,11 @@ private:
         std::cout << "  |div H| = " << div_H << std::endl;
         std::cout << "  H err L2 = " << H_err_L2 << "  " << H_err_H1 << std::endl;
         std::cout << "    rel L2 = " << H_err_L2 / H_norm_L2 * 100 << "%  "
-                                     << H_err_H1 / H_norm_H1 * 100 << "%" << std::endl;
+                  << H_err_H1 / H_norm_H1 * 100 << "%" << std::endl;
         std::cout << "  H err rot = " << H_err_rot << std::endl;
     }
-
 };
 
-}
+}  // namespace ads
 
-#endif // MAXWELL_MAXWELL_GALERKIN_HPP
+#endif  // MAXWELL_MAXWELL_GALERKIN_HPP

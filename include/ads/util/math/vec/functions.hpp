@@ -8,7 +8,6 @@
 #include "ads/util/math/vec/vec_3d.hpp"
 #include "ads/util/math/vec/vec_fwd.hpp"
 
-
 namespace ads::math {
 
 template <std::size_t D>
@@ -21,23 +20,20 @@ double norm_sq(const vec<D>& u) {
     return u.norm_sq();
 }
 
-
 template <std::size_t D>
 double norm(const vec<D>& u) {
     return std::sqrt(norm_sq(u));
 }
 
-
 inline double cross(const vec<2>& u, const vec<2>& v) {
     return u.x * v.y - u.y * v.x;
 }
-
 
 inline vec<3> cross(const vec<3>& u, const vec<3>& v) {
     return {
         u.y * v.z - u.z * v.y,
         u.z * v.x - u.x * v.z,
-        u.x * v.y - u.y * v.x
+        u.x * v.y - u.y * v.x,
     };
 }
 
@@ -46,6 +42,6 @@ vec<D> normalized(vec<D> u) {
     return u / norm(u);
 }
 
-}
+}  // namespace ads::math
 
-#endif // ADS_UTIL_MATH_VEC_FUNCTIONS_HPP
+#endif  // ADS_UTIL_MATH_VEC_FUNCTIONS_HPP

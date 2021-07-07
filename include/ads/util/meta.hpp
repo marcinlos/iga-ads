@@ -6,28 +6,23 @@
 
 #include <type_traits>
 
-
 namespace ads::util {
 
 template <typename...>
 struct and_;
 
 template <>
-struct and_<> : std::true_type
-{ };
+struct and_<> : std::true_type { };
 
 template <typename T>
-struct and_<T> : T
-{ };
+struct and_<T> : T { };
 
 template <typename T, typename... Ts>
-struct and_<T, Ts...> : std::conditional<T::value, and_<Ts...>, T>::type
-{ };
+struct and_<T, Ts...> : std::conditional<T::value, and_<Ts...>, T>::type { };
 
 template <template <typename...> class Pred, typename... Types>
-struct all_ : and_<Pred<Types>...>
-{ };
+struct all_ : and_<Pred<Types>...> { };
 
-}
+}  // namespace ads::util
 
-#endif // ADS_UTIL_META_HPP
+#endif  // ADS_UTIL_META_HPP

@@ -15,7 +15,6 @@
 #include "ads/util/function_value.hpp"
 #include "ads/util/iter/product.hpp"
 
-
 namespace ads {
 
 class basic_simulation_2d {
@@ -34,32 +33,34 @@ protected:
 
     using point_type = std::array<double, 2>;
 
-    value_type eval_basis(index_type e, index_type q, index_type a, const dimension& x, const dimension& y) const  {
+    value_type eval_basis(index_type e, index_type q, index_type a, const dimension& x,
+                          const dimension& y) const {
         auto loc = dof_global_to_local(e, a, x, y);
 
         const auto& bx = x.basis;
         const auto& by = y.basis;
 
-        double B1  = bx.b[e[0]][q[0]][0][loc[0]];
-        double B2  = by.b[e[1]][q[1]][0][loc[1]];
+        double B1 = bx.b[e[0]][q[0]][0][loc[0]];
+        double B2 = by.b[e[1]][q[1]][0][loc[1]];
         double dB1 = bx.b[e[0]][q[0]][1][loc[0]];
         double dB2 = by.b[e[1]][q[1]][1][loc[1]];
 
         double v = B1 * B2;
-        double dxv = dB1 *  B2;
-        double dyv =  B1 * dB2;
+        double dxv = dB1 * B2;
+        double dyv = B1 * dB2;
 
-        return { v, dxv, dyv };
+        return {v, dxv, dyv};
     }
 
-    double laplacian(index_type e, index_type q, index_type a, const dimension& x, const dimension& y) const {
+    double laplacian(index_type e, index_type q, index_type a, const dimension& x,
+                     const dimension& y) const {
         auto loc = dof_global_to_local(e, a, x, y);
 
         const auto& bx = x.basis;
         const auto& by = y.basis;
 
-        double B1  = bx.b[e[0]][q[0]][0][loc[0]];
-        double B2  = by.b[e[1]][q[1]][0][loc[1]];
+        double B1 = bx.b[e[0]][q[0]][0][loc[0]];
+        double B2 = by.b[e[1]][q[1]][0][loc[1]];
         double ddB1 = bx.b[e[0]][q[0]][2][loc[0]];
         double ddB2 = by.b[e[1]][q[1]][2][loc[1]];
 
@@ -67,7 +68,8 @@ protected:
     }
 
     template <typename Sol>
-    value_type eval(const Sol& v, index_type e, index_type q, const dimension& x, const dimension& y) const {
+    value_type eval(const Sol& v, index_type e, index_type q, const dimension& x,
+                    const dimension& y) const {
         value_type u{};
         for (auto b : dofs_on_element(e, x, y)) {
             double c = v(b[0], b[1]);
@@ -93,7 +95,8 @@ protected:
         return util::product_range<index_type>(rx, ry);
     }
 
-    index_range elements_supporting_dof(index_type dof, const dimension& x, const dimension& y) const {
+    index_range elements_supporting_dof(index_type dof, const dimension& x,
+                                        const dimension& y) const {
         auto rx = x.basis.element_range(dof[0]);
         auto ry = y.basis.element_range(dof[1]);
         return util::product_range<index_type>(rx, ry);
@@ -102,19 +105,20 @@ protected:
     bool supported_in(index_type dof, index_type e, const dimension& x, const dimension& y) const {
         auto xrange = x.basis.element_ranges[dof[0]];
         auto yrange = y.basis.element_ranges[dof[1]];
-        return e[0] >= xrange.first && e[0] <= xrange.second && e[1] >= yrange.first && e[1] <= yrange.second;
+        return e[0] >= xrange.first && e[0] <= xrange.second && e[1] >= yrange.first
+            && e[1] <= yrange.second;
     }
 
-
-    index_type dof_global_to_local(index_type e, index_type a, const dimension& x, const dimension& y) const {
+    index_type dof_global_to_local(index_type e, index_type a, const dimension& x,
+                                   const dimension& y) const {
         const auto& bx = x.basis;
         const auto& by = y.basis;
-        return {{ a[0] - bx.first_dof(e[0]), a[1] - by.first_dof(e[1]) }};
+        return {{a[0] - bx.first_dof(e[0]), a[1] - by.first_dof(e[1])}};
     }
 
     template <typename RHS>
-    void update_global_rhs(RHS& global, const vector_type& local, index_type e,
-                           const dimension& x, const dimension& y) const {
+    void update_global_rhs(RHS& global, const vector_type& local, index_type e, const dimension& x,
+                           const dimension& y) const {
         for (auto a : dofs_on_element(e, x, y)) {
             auto loc = dof_global_to_local(e, a, x, y);
             global(a[0], a[1]) += local(loc[0], loc[1]);
@@ -144,12 +148,12 @@ protected:
     point_type point(index_type e, index_type q, const dimension& x, const dimension& y) const {
         double px = x.basis.x[e[0]][q[0]];
         double py = y.basis.x[e[1]][q[1]];
-        return { px, py };
+        return {px, py};
     }
 
     auto overlapping_dofs(int dof, int begin, int end, const dimension& x) const {
-        using std::min;
         using std::max;
+        using std::min;
 
         auto minx = max(begin, dof - x.B.degree);
         auto maxx = min(end, dof + x.B.degree + 1);
@@ -164,7 +168,7 @@ protected:
     }
 
     index_range overlapping_dofs(index_type dof, const dimension& Ux, const dimension& Uy,
-            const dimension& Vx, const dimension& Vy) const {
+                                 const dimension& Vx, const dimension& Vy) const {
         auto xrange = Ux.basis.element_ranges[dof[0]];
         auto yrange = Uy.basis.element_ranges[dof[1]];
 
@@ -180,7 +184,8 @@ protected:
         return util::product_range<index_type>(rx, ry);
     }
 
-    index_range overlapping_internal_dofs(index_type dof, const dimension& x, const dimension& y) const {
+    index_range overlapping_internal_dofs(index_type dof, const dimension& x,
+                                          const dimension& y) const {
         auto rx = overlapping_dofs(dof[0], 1, x.dofs() - 1, x);
         auto ry = overlapping_dofs(dof[1], 1, y.dofs() - 1, y);
         return util::product_range<index_type>(rx, ry);
@@ -193,19 +198,17 @@ protected:
 
     template <typename Fun>
     void for_boundary_dofs(const dimension& x, const dimension& y, Fun&& fun) const {
-        for (auto jx = 0; jx < x.dofs(); ++ jx) {
+        for (auto jx = 0; jx < x.dofs(); ++jx) {
             fun({jx, 0});
             fun({jx, y.dofs() - 1});
         }
-        for (auto jy = 1; jy < y.dofs() - 1; ++ jy) {
+        for (auto jy = 1; jy < y.dofs() - 1; ++jy) {
             fun({0, jy});
             fun({x.dofs() - 1, jy});
         }
     }
 
-    bool is_boundary(int dof, const dimension& x) const {
-        return dof == 0 || dof == x.dofs() - 1;
-    }
+    bool is_boundary(int dof, const dimension& x) const { return dof == 0 || dof == x.dofs() - 1; }
 
     bool is_boundary(index_type dof, const dimension& x, const dimension& y) const {
         return is_boundary(dof[0], x) || is_boundary(dof[1], y);
@@ -216,20 +219,19 @@ protected:
         return A(i[0], j[0]) * B(i[1], j[1]);
     }
 
-    template <typename RHS, typename Fun, typename = std::enable_if<
-        std::is_arithmetic<std::result_of_t<Fun(double)>>{}>
-    >
+    template <typename RHS, typename Fun,
+              typename = std::enable_if<std::is_arithmetic<std::result_of_t<Fun(double)>>{}>>
     void dirichlet_bc(RHS& u, boundary side, dimension& x, dimension& y, Fun&& fun) const {
         bool horizontal = side == boundary::top || side == boundary::bottom;
         auto& basis = horizontal ? x : y;
         const auto& other = horizontal ? y : x;
 
-        lin::vector buf{{ basis.dofs() }};
+        lin::vector buf{{basis.dofs()}};
         compute_projection(buf, basis.basis, std::forward<Fun>(fun));
         lin::solve_with_factorized(basis.M, buf, basis.ctx);
 
         int idx = side == boundary::left || side == boundary::bottom ? 0 : other.dofs() - 1;
-        for (int i = 0; i < basis.dofs(); ++ i) {
+        for (int i = 0; i < basis.dofs(); ++i) {
             if (horizontal) {
                 u(i, idx) = buf(i);
             } else {
@@ -299,7 +301,8 @@ protected:
     }
 
     template <typename Sol, typename Fun, typename Norm>
-    double error(const Sol& u, const dimension& Ux, const dimension& Uy, Norm&& norm, Fun&& fun) const {
+    double error(const Sol& u, const dimension& Ux, const dimension& Uy, Norm&& norm,
+                 Fun&& fun) const {
         double error = 0;
 
         for (auto e : elements(Ux, Uy)) {
@@ -317,8 +320,8 @@ protected:
     }
 
     template <typename Sol, typename Fun, typename Norm>
-    double error_relative(const Sol& u, const dimension& Ux, const dimension& Uy,
-            Norm&& norm, Fun&& fun) const {
+    double error_relative(const Sol& u, const dimension& Ux, const dimension& Uy, Norm&& norm,
+                          Fun&& fun) const {
         double error = 0;
         double ref_norm = 0;
 
@@ -344,7 +347,8 @@ protected:
     }
 
     template <typename Sol, typename Fun>
-    double error_relative_L2(const Sol& u, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+    double error_relative_L2(const Sol& u, const dimension& Ux, const dimension& Uy,
+                             Fun&& fun) const {
         auto L2 = [](value_type a) { return a.val * a.val; };
         return error_relative(u, Ux, Uy, L2, fun);
     }
@@ -356,13 +360,13 @@ protected:
     }
 
     template <typename Sol, typename Fun>
-    double error_relative_H1(const Sol& u, const dimension& Ux, const dimension& Uy, Fun&& fun) const {
+    double error_relative_H1(const Sol& u, const dimension& Ux, const dimension& Uy,
+                             Fun&& fun) const {
         auto H1 = [](value_type a) { return a.val * a.val + a.dx * a.dx + a.dy * a.dy; };
         return error_relative(u, Ux, Uy, H1, fun);
     }
-
 };
 
-}
+}  // namespace ads
 
-#endif // ADS_SIMULATION_BASIC_SIMULATION_2D_HPP
+#endif  // ADS_SIMULATION_BASIC_SIMULATION_2D_HPP

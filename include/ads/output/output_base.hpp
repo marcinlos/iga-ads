@@ -6,16 +6,13 @@
 
 #include "ads/output/output_format.hpp"
 
-
 namespace ads::output {
 
 struct output_base {
-
     output_format format;
 
     explicit output_base(const output_format& format)
-    : format { format }
-    { }
+    : format{format} { }
 
     void prepare_stream(std::ostream& os) const {
         os.precision(format.precision());
@@ -34,11 +31,9 @@ struct output_base {
         print_row(os, values...);
     }
 
-    void print_row(std::ostream& os) const {
-        os << '\n';
-    }
+    void print_row(std::ostream& os) const { os << '\n'; }
 };
 
-}
+}  // namespace ads::output
 
-#endif // ADS_OUTPUT_OUTPUT_BASE_HPP
+#endif  // ADS_OUTPUT_OUTPUT_BASE_HPP

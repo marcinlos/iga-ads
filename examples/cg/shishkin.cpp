@@ -3,8 +3,8 @@
 
 #include "shishkin.hpp"
 
-
-ads::bspline::basis create_basis(double a, double b, int p, int elements, int repeated_nodes, bool adapt, double d) {
+ads::bspline::basis create_basis(double a, double b, int p, int elements, int repeated_nodes,
+                                 bool adapt, double d) {
     int points = elements + 1;
     int r = repeated_nodes + 1;
     int knot_size = 2 * (p + 1) + (points - 2) * r;
@@ -22,7 +22,7 @@ ads::bspline::basis create_basis(double a, double b, int p, int elements, int re
         auto t = ads::lerp(i, elements, 0.0, 1.0);
 
         auto s = adapt ? (t < x0 ? t / x0 * y0 : (t - x0) / (1 - x0) * (1 - y0) + y0) : t;
-        for (int j = 0; j < r; ++ j) {
+        for (int j = 0; j < r; ++j) {
             knot[p + 1 + (i - 1) * r + j] = ads::lerp(s, a, b);
         }
     }

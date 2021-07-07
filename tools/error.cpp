@@ -1,24 +1,23 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include <string>
-#include <fstream>
 #include <exception>
+#include <fstream>
+#include <string>
+
 #include "ads/executor/galois.hpp"
 #include "ads/simulation.hpp"
 
 using namespace ads;
 
-
 class diff_computer2d : public simulation_2d {
-
     galois_executor executor{4};
 
     vector_type read_solution(const std::string& path) {
-        vector_type u{{{ x.dofs(), y.dofs() }}};
-        std::ifstream in{ path };
-        if (! in) {
-            throw std::invalid_argument{ path };
+        vector_type u{{{x.dofs(), y.dofs()}}};
+        std::ifstream in{path};
+        if (!in) {
+            throw std::invalid_argument{path};
         }
         while (in) {
             int i, j;
@@ -30,7 +29,8 @@ class diff_computer2d : public simulation_2d {
     }
 
 public:
-    explicit diff_computer2d(const ads::config_2d& cfg): simulation_2d(cfg) { }
+    explicit diff_computer2d(const ads::config_2d& cfg)
+    : simulation_2d(cfg) { }
 
     double error_L2(const std::string& path1, const std::string& path2) {
         auto u = read_solution(path1);
@@ -49,9 +49,7 @@ public:
                 auto e = uval - vval;
                 localL2 += w * J * e.val * e.val;
             }
-            executor.synchronized([&]() {
-                L2 += localL2;
-            });
+            executor.synchronized([&]() { L2 += localL2; });
         });
         return std::sqrt(L2);
     }
@@ -71,19 +69,15 @@ public:
                 auto uval = eval_fun(u, e, q);
                 auto vval = eval_fun(v, e, q);
                 auto e = uval - vval;
-                localH1 += w * J * (e.val  * e.val + e.dx * e.dx + e.dy * e.dy);
+                localH1 += w * J * (e.val * e.val + e.dx * e.dx + e.dy * e.dy);
             }
-            executor.synchronized([&]() {
-                H1 += localH1;
-            });
+            executor.synchronized([&]() { H1 += localH1; });
         });
         return std::sqrt(H1);
     }
 };
 
-
 class diff_computer3d : public simulation_3d {
-
     galois_executor executor{4};
 
     struct state {
@@ -91,11 +85,11 @@ class diff_computer3d : public simulation_3d {
     };
 
     state read_solution(const std::string& path) {
-        std::array<std::size_t, 3> dims{{ x.dofs(), y.dofs(), z.dofs() }};
-        vector_type ux{ dims }, uy{ dims }, uz{ dims };
-        std::ifstream in{ path };
-        if (! in) {
-            throw std::invalid_argument{ path };
+        std::array<std::size_t, 3> dims{{x.dofs(), y.dofs(), z.dofs()}};
+        vector_type ux{dims}, uy{dims}, uz{dims};
+        std::ifstream in{path};
+        if (!in) {
+            throw std::invalid_argument{path};
         }
         while (in) {
             int i, j, k;
@@ -106,7 +100,8 @@ class diff_computer3d : public simulation_3d {
     }
 
 public:
-    explicit diff_computer3d(const ads::config_3d& cfg): simulation_3d(cfg) { }
+    explicit diff_computer3d(const ads::config_3d& cfg)
+    : simulation_3d(cfg) { }
 
     double error_L2(const std::string& path1, const std::string& path2) {
         auto a = read_solution(path1);
@@ -126,9 +121,7 @@ public:
 
                 localL2 += w * J * (ex.val * ex.val + ey.val * ey.val + ez.val * ez.val);
             }
-            executor.synchronized([&]() {
-                L2 += localL2;
-            });
+            executor.synchronized([&]() { L2 += localL2; });
         });
         return std::sqrt(L2);
     }
@@ -148,12 +141,12 @@ public:
                 auto ex = eval_fun(a.ux, e, q) - eval_fun(b.ux, e, q);
                 auto ey = eval_fun(a.uy, e, q) - eval_fun(b.uy, e, q);
                 auto ez = eval_fun(a.uz, e, q) - eval_fun(b.uz, e, q);
-                auto norm2 = [](auto e) { return e.val  * e.val + e.dx * e.dx + e.dy * e.dy + e.dz * e.dz; };
+                auto norm2 = [](auto e) {
+                    return e.val * e.val + e.dx * e.dx + e.dy * e.dy + e.dz * e.dz;
+                };
                 localH1 += w * J * (norm2(ex) + norm2(ey) + norm2(ez));
             }
-            executor.synchronized([&]() {
-                H1 += localH1;
-            });
+            executor.synchronized([&]() { H1 += localH1; });
         });
         return std::sqrt(H1);
     }
@@ -170,18 +163,18 @@ int main(int argc, char* argv[]) {
     auto file1 = argv[4];
     auto file2 = argv[5];
 
-    dim_config dim{ p, n };
+    dim_config dim{p, n};
     int ders = 1;
 
-    timesteps_config steps { 4000, 2.7e-2 };
+    timesteps_config steps{4000, 2.7e-2};
 
     if (d == 2) {
-        config_2d c { dim, dim, steps, ders };
-        diff_computer2d diff{ c };
+        config_2d c{dim, dim, steps, ders};
+        diff_computer2d diff{c};
         std::cout << diff.error_L2(file1, file2) << ' ' << diff.error_H1(file1, file2) << std::endl;
     } else if (d == 3) {
-        config_3d c { dim, dim, dim, steps, ders };
-        diff_computer3d diff{ c };
+        config_3d c{dim, dim, dim, steps, ders};
+        diff_computer3d diff{c};
         std::cout << diff.error_L2(file1, file2) << ' ' << diff.error_H1(file1, file2) << std::endl;
     }
 }

@@ -16,11 +16,9 @@
 #include "plot.hpp"
 #include "rasterizer.hpp"
 
-
 namespace tumor::vasc {
 
 class vasculature {
-
 public:
     struct segment;
     struct node;
@@ -33,8 +31,7 @@ public:
         std::vector<segment_ptr> segments;
 
         node(vector p)
-        : position(p)
-        { }
+        : position(p) { }
     };
 
     struct segment {
@@ -47,7 +44,7 @@ private:
     using array = ads::lin::tensor<double, Dim>;
 
     config cfg;
-    array veins{{ N + 1, N + 1 }}, oxygen{{ N + 1, N + 1 }};
+    array veins{{N + 1, N + 1}}, oxygen{{N + 1, N + 1}};
     std::vector<node_ptr> roots;
 
     std::set<node_ptr> nodes;
@@ -56,21 +53,15 @@ private:
     std::mt19937 rng;
 
 public:
-
     vasculature(std::vector<node_ptr> roots, config cfg);
 
-    void plot_veins(const std::string& file) const {
-        plot(file, veins);
-    }
+    void plot_veins(const std::string& file) const { plot(file, veins); }
 
-    void plot_oxygen(const std::string& file) const {
-        plot(file, oxygen);
-    }
+    void plot_oxygen(const std::string& file) const { plot(file, oxygen); }
 
 private:
-
     segment_ptr connect(node_ptr a, node_ptr b) {
-        segment_ptr s = new segment{ a, b, cfg.init_stability };
+        segment_ptr s = new segment{a, b, cfg.init_stability};
         a->segments.push_back(s);
         b->segments.push_back(s);
         segments.insert(s);
@@ -92,7 +83,7 @@ private:
     }
 
     node_ptr make_node(vector p) {
-        node_ptr n = new node{ p };
+        node_ptr n = new node{p};
         nodes.insert(n);
         return n;
     }
@@ -107,13 +98,9 @@ public:
         blur(veins, oxygen, 3, 1);
     }
 
-    const array& veins_grid() const {
-        return veins;
-    }
+    const array& veins_grid() const { return veins; }
 
-    const array& oxygen_grid() const {
-        return oxygen;
-    }
+    const array& oxygen_grid() const { return oxygen; }
 
     double oxygen_level(double x, double y) const {
         int ix = static_cast<int>(x * N - 0.5);
@@ -143,7 +130,6 @@ public:
         return nullptr;
     }
 
-
     template <typename Tumor, typename TAF>
     void update(Tumor&& tumor, TAF&& taf, double dt) {
         auto nodes_copy = nodes;
@@ -158,13 +144,13 @@ public:
                     if (inside_domain(end)) {
                         node_ptr tip = make_node(end);
                         connect(n, tip);
-                        sprouts.push_back( { tip, dir, 0 });
+                        sprouts.push_back({tip, dir, 0});
                     }
                 }
             }
         }
 
-        for (auto it = begin(sprouts); it != end(sprouts); ) {
+        for (auto it = begin(sprouts); it != end(sprouts);) {
             sprout& s = *it;
             node_ptr tip = s.tip;
 
@@ -187,8 +173,8 @@ public:
                     }
                 }
             }
-            if (! removed)
-                ++ it;
+            if (!removed)
+                ++it;
         }
 
         for (segment_ptr s : segments) {
@@ -205,32 +191,22 @@ public:
         }
     }
 
-    bool inside_domain(vector v) const {
-        return 0 <= v.x && v.x <= 1 && 0 <= v.y && v.y <= 1;
-    }
+    bool inside_domain(vector v) const { return 0 <= v.x && v.x <= 1 && 0 <= v.y && v.y <= 1; }
 
-    vector center(segment_ptr s) {
-        return 0.5 * (s->begin->position + s->end->position);
-    }
+    vector center(segment_ptr s) { return 0.5 * (s->begin->position + s->end->position); }
 
-    vector grad(value_type v) {
-        return { v.dx, v.dy };
-    }
+    vector grad(value_type v) { return {v.dx, v.dy}; }
 
-    bool flip_coin(double p) {
-        return rand(0, 1) < p;
-    }
+    bool flip_coin(double p) { return rand(0, 1) < p; }
 
     double rand(double a, double b) {
-        std::uniform_real_distribution<> dist{ a, b };
+        std::uniform_real_distribution<> dist{a, b};
         return dist(rng);
     }
 
     void blur(array& src, array& dst, int r, double scale) const;
 };
 
+}  // namespace tumor::vasc
 
-}
-
-
-#endif // TUMOR_VASCULATURE_VASCULATURE_HPP
+#endif  // TUMOR_VASCULATURE_VASCULATURE_HPP

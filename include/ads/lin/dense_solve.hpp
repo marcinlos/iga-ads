@@ -10,7 +10,6 @@
 #include "ads/lin/lapack.hpp"
 #include "ads/lin/solver_ctx.hpp"
 
-
 namespace ads::lin {
 
 inline void factorize(dense_matrix& a, solver_ctx& ctx) {
@@ -26,6 +25,6 @@ inline void solve_with_factorized(const dense_matrix& a, Rhs& b, solver_ctx& ctx
     dgetrs_("N", &n, &nrhs, a.data(), &ctx.lda, ctx.pivot(), b.data(), &n, &ctx.info);
 }
 
-}
+}  // namespace ads::lin
 
-#endif // ADS_LIN_DENSE_SOLVE_HPP
+#endif  // ADS_LIN_DENSE_SOLVE_HPP

@@ -11,4 +11,4 @@
 #include "ads/simulation/simulation_3d.hpp"
 #include "ads/simulation/simulation_base.hpp"
 
-#endif // ADS_SIMULATION_HPP
+#endif  // ADS_SIMULATION_HPP

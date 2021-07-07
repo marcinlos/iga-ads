@@ -9,7 +9,6 @@
 #include "ads/lin/tensor.hpp"
 #include "ads/util/math/vec.hpp"
 
-
 namespace tumor::vasc {
 
 constexpr std::size_t Dim = 2;
@@ -17,7 +16,6 @@ constexpr std::size_t Dim = 2;
 using vector = ads::math::vec<Dim>;
 using val_array = ads::lin::tensor<double, Dim>;
 
-}
+}  // namespace tumor::vasc
 
-
-#endif // TUMOR_VASCULATURE_DEFS_HPP
+#endif  // TUMOR_VASCULATURE_DEFS_HPP

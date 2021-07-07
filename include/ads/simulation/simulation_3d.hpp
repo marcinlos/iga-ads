@@ -18,31 +18,27 @@
 #include "ads/util/iter/product.hpp"
 #include "basic_simulation_3d.hpp"
 
-
 namespace ads {
 
 class simulation_3d : public basic_simulation_3d, public simulation_base {
 public:
+    using basic_simulation_3d::dof_global_to_local;
+    using basic_simulation_3d::dofs;
+    using basic_simulation_3d::dofs_on_element;
+    using basic_simulation_3d::elements;
+    using basic_simulation_3d::elements_supporting_dof;
     using basic_simulation_3d::eval;
     using basic_simulation_3d::eval_basis;
-    using basic_simulation_3d::elements;
-    using basic_simulation_3d::quad_points;
-    using basic_simulation_3d::dofs_on_element;
-    using basic_simulation_3d::elements_supporting_dof;
-    using basic_simulation_3d::dof_global_to_local;
-    using basic_simulation_3d::update_global_rhs;
-    using basic_simulation_3d::dofs;
     using basic_simulation_3d::jacobian;
-    using basic_simulation_3d::weight;
     using basic_simulation_3d::point;
-
+    using basic_simulation_3d::quad_points;
+    using basic_simulation_3d::update_global_rhs;
+    using basic_simulation_3d::weight;
 
     dimension x, y, z;
     vector_type buffer;
 
-    void solve(vector_type& rhs) {
-        ads_solve(rhs, buffer, x.data(), y.data(), z.data());
-    }
+    void solve(vector_type& rhs) { ads_solve(rhs, buffer, x.data(), y.data(), z.data()); }
 
     template <typename Function>
     void projection(vector_type& v, Function f) {
@@ -53,9 +49,7 @@ public:
         return a.dx * b.dx + a.dy * b.dy + a.dz * b.dz;
     }
 
-    std::array<std::size_t, 3> shape() const {
-        return {x.dofs(), y.dofs(), z.dofs()};
-    }
+    std::array<std::size_t, 3> shape() const { return {x.dofs(), y.dofs(), z.dofs()}; }
 
     std::array<std::size_t, 3> local_shape() const {
         return {x.basis.dofs_per_element(), y.basis.dofs_per_element(), z.basis.dofs_per_element()};
@@ -68,7 +62,8 @@ public:
     }
 
     index_range elements() const {
-        return util::product_range<index_type>(x.element_indices(), y.element_indices(), z.element_indices());
+        return util::product_range<index_type>(x.element_indices(), y.element_indices(),
+                                               z.element_indices());
     }
 
     index_range quad_points() const {
@@ -97,7 +92,7 @@ public:
         double px = x.basis.x[e[0]][q[0]];
         double py = y.basis.x[e[1]][q[1]];
         double pz = z.basis.x[e[2]][q[2]];
-        return { px, py, pz };
+        return {px, py, pz};
     }
 
     value_type eval_basis(index_type e, index_type q, index_type a) const {
@@ -107,19 +102,19 @@ public:
         const auto& by = y.basis;
         const auto& bz = z.basis;
 
-        double B1  = bx.b[e[0]][q[0]][0][loc[0]];
-        double B2  = by.b[e[1]][q[1]][0][loc[1]];
-        double B3  = bz.b[e[2]][q[2]][0][loc[2]];
+        double B1 = bx.b[e[0]][q[0]][0][loc[0]];
+        double B2 = by.b[e[1]][q[1]][0][loc[1]];
+        double B3 = bz.b[e[2]][q[2]][0][loc[2]];
         double dB1 = bx.b[e[0]][q[0]][1][loc[0]];
         double dB2 = by.b[e[1]][q[1]][1][loc[1]];
         double dB3 = bz.b[e[2]][q[2]][1][loc[2]];
 
         double v = B1 * B2 * B3;
-        double dxv = dB1 *  B2 *  B3;
-        double dyv =  B1 * dB2 *  B3;
-        double dzv =  B1 *  B2 * dB3;
+        double dxv = dB1 * B2 * B3;
+        double dyv = B1 * dB2 * B3;
+        double dzv = B1 * B2 * dB3;
 
-        return { v, dxv, dyv, dzv };
+        return {v, dxv, dyv, dzv};
     }
 
     value_type eval_fun(const vector_type& v, index_type e, index_type q) const {
@@ -137,12 +132,10 @@ public:
         const auto& by = y.basis;
         const auto& bz = z.basis;
 
-        return {{ a[0] - bx.first_dof(e[0]), a[1] - by.first_dof(e[1]), a[2] - bz.first_dof(e[2]) }};
+        return {{a[0] - bx.first_dof(e[0]), a[1] - by.first_dof(e[1]), a[2] - bz.first_dof(e[2])}};
     }
 
-    vector_type element_rhs() const {
-        return vector_type{local_shape()};
-    }
+    vector_type element_rhs() const { return vector_type{local_shape()}; }
 
     void update_global_rhs(vector_type& global, const vector_type& local, index_type e) const {
         for (auto a : dofs_on_element(e)) {
@@ -151,14 +144,12 @@ public:
         }
     }
 
-
 public:
     explicit simulation_3d(const config_3d& config);
 
     simulation_3d(dimension x, dimension y, dimension z, const timesteps_config& steps);
-
 };
 
-}
+}  // namespace ads
 
-#endif // ADS_SIMULATION_SIMULATION_3D_HPP
+#endif  // ADS_SIMULATION_SIMULATION_3D_HPP

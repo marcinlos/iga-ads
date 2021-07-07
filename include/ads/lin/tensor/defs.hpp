@@ -6,12 +6,11 @@
 
 #include "ads/lin/tensor/tensor.hpp"
 
-
 namespace ads::lin {
 
 using vector = tensor<double, 1>;
 using matrix = tensor<double, 2>;
 
-}
+}  // namespace ads::lin
 
-#endif // ADS_LIN_TENSOR_DEFS_HPP
+#endif  // ADS_LIN_TENSOR_DEFS_HPP

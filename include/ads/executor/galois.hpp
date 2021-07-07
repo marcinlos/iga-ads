@@ -5,10 +5,10 @@
 #define ADS_EXECUTOR_GALOIS_HPP
 
 #include <iterator>
+#include <utility>
 
 #include <galois/Galois.h>
 #include <galois/substrate/SimpleLock.h>
-
 
 namespace ads {
 
@@ -28,7 +28,7 @@ public:
     }
 
     template <typename Range, typename Fun>
-    void for_each(Range range, Fun fun) const {
+    void for_each(Range range, Fun&& fun) const {
         using std::begin;
         using std::end;
 
@@ -36,9 +36,7 @@ public:
         auto b = end(range);
         auto items = galois::iterate(a, b);
 
-        galois::do_all(items, [&fun](auto&& item) {
-            fun(item);
-        }, galois::no_stats());
+        galois::do_all(items, std::forward<Fun>(fun), galois::no_stats{});
     }
 
     explicit galois_executor(int threads);
@@ -46,6 +44,6 @@ public:
     void thread_count(int threads);
 };
 
-}
+}  // namespace ads
 
-#endif // ADS_EXECUTOR_GALOIS_HPP
+#endif  // ADS_EXECUTOR_GALOIS_HPP

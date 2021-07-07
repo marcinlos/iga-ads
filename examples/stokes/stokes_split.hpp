@@ -10,7 +10,6 @@
 #include "ads/simulation.hpp"
 #include "ads/solver/mumps.hpp"
 
-
 namespace ads::problems {
 
 class stokes_split : public simulation_2d {
@@ -18,22 +17,20 @@ private:
     using Base = simulation_2d;
     using vector_view = lin::tensor_view<double, 2>;
 
-
     struct state {
         vector_type vx, vy;
         vector_type p;
 
         state(std::array<std::size_t, 2> shape)
-        : vx{{ shape[0] + 1, shape[1] }}
-        , vy{{ shape[0], shape[1] + 1 }}
-        , p{ shape }
-        { }
+        : vx{{shape[0] + 1, shape[1]}}
+        , vy{{shape[0], shape[1] + 1}}
+        , p{shape} { }
     };
 
     state now;
 
     vector_type u, u_prev;
-    dimension x_1, y_1; // p + 1
+    dimension x_1, y_1;  // p + 1
 
     output_manager<2> output_p, output_vx, output_vy;
     galois_executor executor{4};
@@ -51,15 +48,15 @@ private:
 
 public:
     stokes_split(const config_2d& config)
-    : Base{ config }
-    , now{ shape() }
-    , u{ shape() }
-    , u_prev{ shape() }
-    , x_1{ higher(config.x), config.derivatives }
-    , y_1{ higher(config.y), config.derivatives }
-    , output_p{ x.B, y.B, RES }
-    , output_vx{ x_1.B, y.B, RES }
-    , output_vy{ x.B, y_1.B, RES }
+    : Base{config}
+    , now{shape()}
+    , u{shape()}
+    , u_prev{shape()}
+    , x_1{higher(config.x), config.derivatives}
+    , y_1{higher(config.y), config.derivatives}
+    , output_p{x.B, y.B, RES}
+    , output_vx{x_1.B, y.B, RES}
+    , output_vy{x.B, y_1.B, RES}
     , Kx{x.p, x.p, x.B.dofs()}
     , Ky{y.p, y.p, y.B.dofs()}
     , Kx_1{x_1.p, x_1.p, x_1.B.dofs()}
@@ -71,8 +68,7 @@ public:
     , A11y{y_1.p, y.p, y_1.dofs(), y.dofs()}
     , A12y{y_1.p, y.p, y_1.dofs(), y.dofs()}
     , A21y{y.p, y_1.p, y.dofs(), y_1.dofs()}
-    , A22y{y.p, y_1.p, y.dofs(), y_1.dofs()}
-    {
+    , A22y{y.p, y_1.p, y.dofs(), y_1.dofs()} {
         stiffness(Kx, x.basis);
         stiffness(Ky, y.basis);
         stiffness(Kx_1, x_1.basis);
@@ -90,7 +86,7 @@ public:
     }
 
     dim_config higher(dim_config cfg) const {
-        ++ cfg.p;
+        ++cfg.p;
         // ++ cfg.quad_order; // TODO: handle this correctly
         return cfg;
     }
@@ -104,12 +100,12 @@ public:
 
 private:
     void stiffness(lin::band_matrix& K, const basis_data& d) {
-        for (element_id e = 0; e < d.elements; ++ e) {
-            for (int q = 0; q < d.quad_order; ++ q) {
+        for (element_id e = 0; e < d.elements; ++e) {
+            for (int q = 0; q < d.quad_order; ++q) {
                 int first = d.first_dof(e);
                 int last = d.last_dof(e);
-                for (int a = 0; a + first <= last; ++ a) {
-                    for (int b = 0; b + first <= last; ++ b) {
+                for (int a = 0; a + first <= last; ++a) {
+                    for (int b = 0; b + first <= last; ++b) {
                         int ia = a + first;
                         int ib = b + first;
                         auto da = d.b[e][q][1][a];
@@ -122,10 +118,10 @@ private:
     }
 
     void mixed2(lin::band_matrix& K, const basis_data& bV, const basis_data& bU) {
-        for (element_id e = 0; e < bV.elements; ++ e) {
-            for (int q = 0; q < bV.quad_order; ++ q) {
-                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++ a) {
-                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++ b) {
+        for (element_id e = 0; e < bV.elements; ++e) {
+            for (int q = 0; q < bV.quad_order; ++q) {
+                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++a) {
+                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++b) {
                         int ia = a + bV.first_dof(e);
                         int ib = b + bU.first_dof(e);
                         auto va = bV.b[e][q][0][a];
@@ -138,10 +134,10 @@ private:
     }
 
     void mixed1(lin::band_matrix& K, const basis_data& bV, const basis_data& bU) {
-        for (element_id e = 0; e < bV.elements; ++ e) {
-            for (int q = 0; q < bV.quad_order; ++ q) {
-                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++ a) {
-                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++ b) {
+        for (element_id e = 0; e < bV.elements; ++e) {
+            for (int q = 0; q < bV.quad_order; ++q) {
+                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++a) {
+                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++b) {
                         int ia = a + bV.first_dof(e);
                         int ib = b + bU.first_dof(e);
                         auto da = bV.b[e][q][1][a];
@@ -155,10 +151,10 @@ private:
 
     void advection_matrix(lin::dense_matrix& M, const basis_data& bU, const basis_data& bV,
                           double h, double advection) {
-        for (element_id e = 0; e < bV.elements; ++ e) {
-            for (int q = 0; q < bV.quad_order; ++ q) {
-                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++ a) {
-                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++ b) {
+        for (element_id e = 0; e < bV.elements; ++e) {
+            for (int q = 0; q < bV.quad_order; ++q) {
+                for (int a = 0; a + bV.first_dof(e) <= bV.last_dof(e); ++a) {
+                    for (int b = 0; b + bU.first_dof(e) <= bU.last_dof(e); ++b) {
                         int ia = a + bV.first_dof(e);
                         int ib = b + bU.first_dof(e);
                         auto va = bV.b[e][q][0][a];
@@ -188,15 +184,15 @@ private:
 
     template <typename Rhs>
     void tensor_product(const Rhs& rhs1, const Rhs& rhs2, mumps::problem& p,
-                        const lin::band_matrix& A, const lin::band_matrix& B,
-                        double a = 1.0, int bx = 0, int by = 0) const {
-        using std::min;
+                        const lin::band_matrix& A, const lin::band_matrix& B, double a = 1.0,
+                        int bx = 0, int by = 0) const {
         using std::max;
+        using std::min;
 
-        for (int ix = 0; ix < A.rows; ++ ix) {
-            for (int jx = max(0, ix - A.kl); jx < min(A.rows, ix + A.ku + 1); ++ jx) {
-                for (int iy = 0; iy < B.rows; ++ iy) {
-                    for (int jy = max(0, iy - B.kl); jy < min(B.rows, iy + B.ku + 1); ++ jy) {
+        for (int ix = 0; ix < A.rows; ++ix) {
+            for (int jx = max(0, ix - A.kl); jx < min(A.rows, ix + A.ku + 1); ++jx) {
+                for (int iy = 0; iy < B.rows; ++iy) {
+                    for (int jy = max(0, iy - B.kl); jy < min(B.rows, iy + B.ku + 1); ++jy) {
                         int i = &rhs1(ix, iy) - &rhs1(0, 0) + 1;
                         int j = &rhs2(jx, jy) - &rhs2(0, 0) + 1;
                         double val = a * A(ix, jx) * B(iy, jy);
@@ -226,9 +222,7 @@ private:
     }
 
     void compute_exact() {
-        auto e_pressure = [](double x, double /*y*/) {
-            return x * (1 - x);
-        };
+        auto e_pressure = [](double x, double /*y*/) { return x * (1 - x); };
 
         auto fun = [](double x, double y) {
             return x * x * (1 - x) * (1 - x) * (2 * y - 6 * y * y + 4 * y * y * y);
@@ -238,9 +232,9 @@ private:
 
         std::vector<double> rhs(now.vx.size() + now.vy.size() + now.p.size());
 
-        vector_view vx{ rhs.data(), now.vx.sizes() };
-        vector_view vy{ vx.data() + vx.size(), now.vy.sizes() };
-        vector_view p{ vy.data() + vy.size(), now.p.sizes() };
+        vector_view vx{rhs.data(), now.vx.sizes()};
+        vector_view vy{vx.data() + vx.size(), now.vy.sizes()};
+        vector_view p{vy.data() + vy.size(), now.p.sizes()};
 
         compute_projection(vx, x_1.basis, y.basis, e_vx);
         compute_projection(vy, x.basis, y_1.basis, e_vy);
@@ -252,7 +246,7 @@ private:
         auto nvy = vy.data() - rhs.data();
         auto np = p.data() - rhs.data();
 
-        tensor_product(vx, vx,problem, x_1.M, y.M);
+        tensor_product(vx, vx, problem, x_1.M, y.M);
         tensor_product(vy, vy, problem, x.M, y_1.M, 1, nvy, nvy);
         tensor_product(p, p, problem, x.M, y.M, 1, np, np);
 
@@ -263,29 +257,26 @@ private:
         output_vy.to_file(vy, "vy_ref.data");
     }
 
-
     void compute() {
         auto fx = [&](double x, double y) {
-            return
-            (12 - 24 * y) * x*x*x*x +
-            (-24 + 48*y) * x*x*x +
-            (-48 * y + 72 * y*y - 48 * y*y*y + 12) * x*x +
-            (-2 + 24*y - 72 * y*y + 48 * y*y*y) * x +
-            1 - 4 * y + 12 * y*y - 8 * y*y*y;
+            return (12 - 24 * y) * x * x * x * x                         //
+                 + (-24 + 48 * y) * x * x * x                            //
+                 + (-48 * y + 72 * y * y - 48 * y * y * y + 12) * x * x  //
+                 + (-2 + 24 * y - 72 * y * y + 48 * y * y * y) * x       //
+                 + 1 - 4 * y + 12 * y * y - 8 * y * y * y;
         };
         auto fy = [&](double x, double y) {
-            return
-            (8 - 48 * y + 48 * y*y) * x*x*x +
-            (-12 + 72 * y - 72 * y*y) * x*x +
-            (4 - 24 * y + 48 * y*y - 48 * y*y*y + 24 * y*y*y*y) * x -
-            12 * y*y + 24 * y*y*y - 12 * y*y*y*y;
+            return (8 - 48 * y + 48 * y * y) * x * x * x                                //
+                 + (-12 + 72 * y - 72 * y * y) * x * x                                  //
+                 + (4 - 24 * y + 48 * y * y - 48 * y * y * y + 24 * y * y * y * y) * x  //
+                 - 12 * y * y + 24 * y * y * y - 12 * y * y * y * y;
         };
 
         std::vector<double> rhs(now.vx.size() + now.vy.size() + now.p.size());
 
-        vector_view vx{ rhs.data(), now.vx.sizes() };
-        vector_view vy{ vx.data() + vx.size(), now.vy.sizes() };
-        vector_view p{ vy.data() + vy.size(), now.p.sizes() };
+        vector_view vx{rhs.data(), now.vx.sizes()};
+        vector_view vy{vx.data() + vx.size(), now.vy.sizes()};
+        vector_view p{vy.data() + vy.size(), now.p.sizes()};
 
         compute_projection(vx, x_1.basis, y.basis, fx);
         compute_projection(vy, x.basis, y_1.basis, fy);
@@ -307,7 +298,6 @@ private:
         // 13 - vx, p
         tensor_product(vx, p, problem, A11x, y.M, -1, nvx, np);
 
-
         // 21 - vy, vx
         tensor_product(vy, vx, problem, A21x, A12y, mu, nvy, nvx);
 
@@ -318,14 +308,11 @@ private:
         // 23 - vy, p
         tensor_product(vy, p, problem, x.M, A11y, -1, nvy, np);
 
-
         // 31 - p, vx
         tensor_product(p, vx, problem, A22x, y.M, 1, np, nvx);
 
         // 32 - p, vy
         tensor_product(p, vy, problem, x.M, A22y, 1, np, nvy);
-
-
 
         solver.solve(problem);
 
@@ -381,9 +368,7 @@ private:
                 }
             }
 
-            executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e);
-            });
+            executor.synchronized([&]() { update_global_rhs(rhs, U, e); });
         });
     }
 
@@ -409,9 +394,7 @@ private:
                 }
             }
 
-            executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e);
-            });
+            executor.synchronized([&]() { update_global_rhs(rhs, U, e); });
         });
     }
 
@@ -442,6 +425,6 @@ private:
     }
 };
 
-} // ads
+}  // namespace ads::problems
 
-#endif // STOKES_STOKES_SPLIT_HPP
+#endif  // STOKES_STOKES_SPLIT_HPP

@@ -6,7 +6,6 @@
 
 #include "defs.hpp"
 
-
 namespace tumor::vasc {
 
 inline int octant(vector a) {
@@ -26,30 +25,34 @@ inline int octant(vector a) {
 }
 
 inline vector to_base_octant(int octant, vector v) {
+    // clang-format off
     switch (octant) {
-    case 0: return {  v.x,  v.y };
-    case 1: return {  v.y,  v.x };
-    case 2: return {  v.y, -v.x };
-    case 3: return { -v.x,  v.y };
-    case 4: return { -v.x, -v.y };
-    case 5: return { -v.y, -v.x };
-    case 6: return { -v.y,  v.x };
-    case 7: return {  v.x, -v.y };
+    case 0: return { v.x,  v.y};
+    case 1: return { v.y,  v.x};
+    case 2: return { v.y, -v.x};
+    case 3: return {-v.x,  v.y};
+    case 4: return {-v.x, -v.y};
+    case 5: return {-v.y, -v.x};
+    case 6: return {-v.y,  v.x};
+    case 7: return { v.x, -v.y};
     }
+    // clang-format on
     return v;
 }
 
 inline vector from_base_octant(int octant, vector v) {
+    // clang-format off
     switch (octant) {
-    case 0: return {  v.x,  v.y };
-    case 1: return {  v.y,  v.x };
-    case 2: return { -v.y,  v.x };
-    case 3: return { -v.x,  v.y };
-    case 4: return { -v.x, -v.y };
-    case 5: return { -v.y, -v.x };
-    case 6: return {  v.y, -v.x };
-    case 7: return {  v.x, -v.y };
+    case 0: return { v.x,  v.y};
+    case 1: return { v.y,  v.x};
+    case 2: return {-v.y,  v.x};
+    case 3: return {-v.x,  v.y};
+    case 4: return {-v.x, -v.y};
+    case 5: return {-v.y, -v.x};
+    case 6: return { v.y, -v.x};
+    case 7: return { v.x, -v.y};
     }
+    // clang-format on
     return v;
 }
 
@@ -83,7 +86,7 @@ void draw_segment(vector a, vector b, Array& v, Value val) {
     double de = std::abs(dy / dx);
 
     int y = y1;
-    for (int x = x1; x <= x2; ++ x) {
+    for (int x = x1; x <= x2; ++x) {
         auto p = from_base_octant(oct, {x, y});
         int px = static_cast<int>(p.x);
         int py = static_cast<int>(p.y);
@@ -96,6 +99,6 @@ void draw_segment(vector a, vector b, Array& v, Value val) {
     }
 }
 
-}
+}  // namespace tumor::vasc
 
-#endif // TUMOR_VASCULATURE_RASTERIZER_HPP
+#endif  // TUMOR_VASCULATURE_RASTERIZER_HPP

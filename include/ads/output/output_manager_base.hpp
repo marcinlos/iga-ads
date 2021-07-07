@@ -10,13 +10,11 @@
 
 #include <boost/format.hpp>
 
-
 namespace ads {
 
 template <typename Derived>
 class output_manager_base {
 public:
-
     template <typename Solution>
     void to_file(const Solution& sol, const std::string& file_pattern, int iter) {
         auto name = str(boost::format(file_pattern) % iter);
@@ -25,16 +23,14 @@ public:
 
     template <typename Solution>
     void to_file(const Solution& sol, const std::string& output_file) {
-        std::ofstream os { output_file };
+        std::ofstream os{output_file};
         derived()->write(sol, os);
     }
 
 private:
-    Derived* derived() {
-        return static_cast<Derived*>(this);
-    }
+    Derived* derived() { return static_cast<Derived*>(this); }
 };
 
-}
+}  // namespace ads
 
-#endif // ADS_OUTPUT_OUTPUT_MANAGER_BASE_HPP
+#endif  // ADS_OUTPUT_OUTPUT_MANAGER_BASE_HPP

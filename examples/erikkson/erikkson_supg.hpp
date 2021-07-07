@@ -13,7 +13,6 @@
 #include "ads/solver/mumps.hpp"
 #include "erikkson_base.hpp"
 
-
 namespace ads {
 
 class erikkson_supg : public erikkson_base {
@@ -45,7 +44,7 @@ private:
 
     // point_type beta{{ len * cos(angle), len * sin(angle) }};
     // point_type beta{{ 1, 0 }};
-    point_type beta{{ 1, 1 }};
+    point_type beta{{1, 1}};
 
     mumps::solver solver;
 
@@ -62,13 +61,11 @@ public:
     , Ky{y.p, y.p, y.dofs(), y.dofs(), 0}
     , Ax{x.p, x.p, x.dofs(), x.dofs(), 0}
     , Ay{y.p, y.p, y.dofs(), y.dofs(), 0}
-    , u{{ x.dofs(), y.dofs() }}
-    , rhs{{ x.dofs(), y.dofs() }}
-    , output{ x.B, y.B, 500 }
-    { }
+    , u{{x.dofs(), y.dofs()}}
+    , rhs{{x.dofs(), y.dofs()}}
+    , output{x.B, y.B, 500} { }
 
 private:
-
     double elem_diam(index_type e) const {
         double hx = 2 * x.basis.J[e[0]];
         double hy = 2 * y.basis.J[e[1]];
@@ -77,7 +74,7 @@ private:
     }
 
     double diffusion(double /*x*/, double /*y*/) const {
-        return 1/peclet;
+        return 1 / peclet;
         // constexpr double eta = 1e6;
         // bool left = x < 0.5, right = !left;
         // bool bottom = y < 0.5, top = !bottom;
@@ -92,10 +89,10 @@ private:
     void assemble_problem(mumps::problem& problem, double /*dt*/) {
         for (auto a : internal_dofs(x, y)) {
             for (auto b : overlapping_dofs(a, x, y)) {
-
                 double val = 0;
                 for (auto e : elements_supporting_dof(a, x, y)) {
-                    if (! supported_in(b, e, x, y)) continue;
+                    if (!supported_in(b, e, x, y))
+                        continue;
 
                     double J = jacobian(e, x, y);
                     for (auto q : quad_points(x, y)) {
@@ -105,7 +102,8 @@ private:
                         value_type uu = eval_basis(e, q, b, x, y);
 
                         auto diff = diffusion(pt[0], pt[1]);
-                        double bwu = diff * grad_dot(uu, ww) + beta[0] * uu.dx * ww.val + beta[1] * uu.dy * ww.val;
+                        double bwu = diff * grad_dot(uu, ww) + beta[0] * uu.dx * ww.val
+                                   + beta[1] * uu.dy * ww.val;
 
                         double hx = 2 * x.basis.J[e[0]];
                         double hy = 2 * y.basis.J[e[1]];
@@ -118,13 +116,13 @@ private:
                         double bDw = beta[0] * ww.dx + beta[1] * ww.dy;
 
                         double lap = laplacian(e, q, b, x, y);
-                        double res = - epsilon * lap + beta[0] * uu.dx + beta[1] * uu.dy;
+                        double res = -epsilon * lap + beta[0] * uu.dx + beta[1] * uu.dy;
                         double v = bDw * res;
                         val += (bwu + tau * v) * w * J;
                     }
                 }
 
-                if (val != 0 && ! is_boundary(a, x, y)) {
+                if (val != 0 && !is_boundary(a, x, y)) {
                     int i = linear_index(a, x, y) + 1;
                     int j = linear_index(b, x, y) + 1;
                     problem.add(i, j, val);
@@ -153,7 +151,7 @@ private:
     double init_state(double x, double y) {
         double dx = x - 0.5;
         double dy = y - 0.5;
-        double r2 = std::min( (dx * dx + dy * dy), 1.0);
+        double r2 = std::min((dx * dx + dy * dy), 1.0);
         return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
         // return 0;
     };
@@ -188,7 +186,8 @@ private:
 
         u = rhs;
 
-        std::cout << "  solver time:       " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
+        std::cout << "  solver time:       " << static_cast<double>(solver_timer.get()) << " ms"
+                  << std::endl;
         std::cout << "  assembly    FLOPS: " << solver.flops_assembly() << std::endl;
         std::cout << "  elimination FLOPS: " << solver.flops_elimination() << std::endl;
 
@@ -197,7 +196,8 @@ private:
 
     void after_step(int iter, double /*t*/) override {
         if ((iter + 1) % save_every == 0) {
-            // std::cout << "Step " << (iter + 1) << " : " << errorL2() << " " << errorH1() << std::endl;
+            // std::cout << "Step " << (iter + 1) << " : " << errorL2() << " " << errorH1() <<
+            // std::endl;
             output.to_file(u, "out_%d.data", (iter + 1) / save_every);
         }
     }
@@ -206,13 +206,14 @@ private:
         plot_middle("final.data", u, x, y);
         // std::cout << "{ 'L2': '" << errorL2() << "', 'H1': '" << errorH1() << "'}" << std::endl;
         print_solution("solution.data", u, x, y);
-        // std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
+        // std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << " ms" <<
+        // std::endl;
     }
 
     void compute_rhs() {
         zero(rhs);
         executor.for_each(elements(x, y), [&](index_type e) {
-            auto U = vector_type{{ x.basis.dofs_per_element(), y.basis.dofs_per_element() }};
+            auto U = vector_type{{x.basis.dofs_per_element(), y.basis.dofs_per_element()}};
 
             double J = jacobian(e, x, y);
             for (auto q : quad_points(x, y)) {
@@ -230,9 +231,7 @@ private:
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
-            executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e, x, y);
-            });
+            executor.synchronized([&]() { update_global_rhs(rhs, U, e, x, y); });
         });
     }
 
@@ -247,11 +246,8 @@ private:
         auto sol = [&](point_type x) { return erikkson2_exact(x[0], x[1], epsilon); };
         return Base::errorH1(u, x, y, sol) / normH1(x, y, sol) * 100;
     }
-
 };
 
-}
+}  // namespace ads
 
-
-
-#endif // ERIKKSON_ERIKKSON_SUPG_HPP
+#endif  // ERIKKSON_ERIKKSON_SUPG_HPP

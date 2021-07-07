@@ -4,12 +4,10 @@
 #ifndef SCALABILITY_TEST3D_HPP
 #define SCALABILITY_TEST3D_HPP
 
-#include "ads/simulation.hpp"
 #include "ads/executor/galois.hpp"
+#include "ads/simulation.hpp"
 
-namespace ads {
-namespace problems {
-
+namespace ads::problems {
 
 class scalability_3d : public simulation_3d {
 private:
@@ -21,16 +19,13 @@ private:
 
 public:
     scalability_3d(const config_3d& config, int threads)
-    : Base{ config }
-    , u{ shape() }
-    , u_prev{ shape() }
-    , executor{threads}
-    { }
+    : Base{config}
+    , u{shape()}
+    , u_prev{shape()}
+    , executor{threads} { }
 
 private:
-    void solve(vector_type& v) {
-        Base::solve(v);
-    }
+    void solve(vector_type& v) { Base::solve(v); }
 
     void prepare_matrices() {
         x.fix_left();
@@ -40,9 +35,9 @@ private:
     void before() override {
         prepare_matrices();
 
-        for (int i = 0; i < x.dofs(); ++ i) {
-            for (int j = 0; j < y.dofs(); ++ j) {
-                for (int k = 0; k < z.dofs(); ++ k) {
+        for (int i = 0; i < x.dofs(); ++i) {
+            for (int j = 0; j < y.dofs(); ++j) {
+                for (int k = 0; k < z.dofs(); ++k) {
                     u(i, j, k) = 1;
                 }
             }
@@ -65,7 +60,7 @@ private:
         double dy = y - 0.5;
         double dz = z - 0.5;
         double r = std::sqrt(dx * dx + dy * dy + dz * dz);
-        return std::exp(- r) + 1 + std::cos(M_PI * x) * std::cos(M_PI * y) * std::cos(M_PI * z);
+        return std::exp(-r) + 1 + std::cos(M_PI * x) * std::cos(M_PI * y) * std::cos(M_PI * z);
     }
 
     void compute_rhs() {
@@ -88,14 +83,13 @@ private:
                     value_type v = eval_basis(e, q, a);
 
                     double gradient_prod = grad_dot(u, v);
-                    double val = u.val * v.val - steps.dt * (gradient_prod - forcing(x[0], x[1], x[2]));
+                    double val =
+                        u.val * v.val - steps.dt * (gradient_prod - forcing(x[0], x[1], x[2]));
                     U(aa[0], aa[1], aa[2]) += val * w * J;
                 }
             }
 
-            executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e);
-            });
+            executor.synchronized([&]() { update_global_rhs(rhs, U, e); });
         });
         integration_timer.stop();
     }
@@ -103,14 +97,10 @@ private:
     virtual void after() override {
         auto total = static_cast<double>(integration_timer.get());
         auto avg = total / steps.step_count;
-        std::cout << "{ 'integration' : " << avg  << "}" << std::endl;
+        std::cout << "{ 'integration' : " << avg << "}" << std::endl;
     }
 };
 
-}
-}
+}  // namespace ads::problems
 
-
-
-
-#endif // SCALABILITY_TEST3D_HPP
+#endif  // SCALABILITY_TEST3D_HPP

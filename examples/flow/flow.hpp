@@ -12,7 +12,6 @@
 #include "environment.hpp"
 #include "pumps.hpp"
 
-
 namespace ads::problems {
 
 class flow : public simulation_3d {
@@ -22,7 +21,7 @@ private:
 
     galois_executor executor{4};
 
-    environment env {1};
+    environment env{1};
     lin::tensor<double, 6> kq;
     output_manager<3> output;
 
@@ -31,12 +30,9 @@ public:
     : Base{config}
     , u{shape()}
     , u_prev{shape()}
-    , kq{{
-        x.basis.elements, y.basis.elements, z.basis.elements,
-        x.basis.quad_order + 1, y.basis.quad_order + 1, z.basis.quad_order + 1
-    }}
-    , output{ x.B, y.B, z.B, 50 }
-    { }
+    , kq{{x.basis.elements, y.basis.elements, z.basis.elements, x.basis.quad_order + 1,
+          y.basis.quad_order + 1, z.basis.quad_order + 1}}
+    , output{x.B, y.B, z.B, 50} { }
 
     double init_state(double x, double y, double z) {
         double r = 0.1;
@@ -95,7 +91,7 @@ private:
                     auto aa = dof_global_to_local(e, a);
                     value_type v = eval_basis(e, q, a);
 
-                    double val = - k * std::exp(mi * u.val) * grad_dot(u, v) + h * v.val;
+                    double val = -k * std::exp(mi * u.val) * grad_dot(u, v) + h * v.val;
                     U(aa[0], aa[1], aa[2]) += (u.val * v.val + steps.dt * val) * w * J;
                 }
             }
@@ -136,6 +132,6 @@ private:
     }
 };
 
-}
+}  // namespace ads::problems
 
-#endif // FLOW_FLOW_HPP
+#endif  // FLOW_FLOW_HPP

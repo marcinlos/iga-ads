@@ -9,9 +9,7 @@
 #include "ads/bspline/bspline.hpp"
 #include "ads/util/function_value.hpp"
 
-
 namespace ads::bspline {
-
 
 template <std::size_t N, typename U>
 struct evaluator {
@@ -23,21 +21,19 @@ struct evaluator {
     std::vector<eval_ctx> ctxs;
 
     evaluator(U u, const std::array<basis, N>& bs)
-    : u{ std::move(u) }
-    , bs{ bs }
-    {
-        for (std::size_t i = 0; i < N; ++ i) {
+    : u{std::move(u)}
+    , bs{bs} {
+        for (std::size_t i = 0; i < N; ++i) {
             ctxs.emplace_back(bs[i].degree);
         }
     }
 
     template <typename Point>
-    double operator () (const Point& p) {
-
+    double operator()(const Point& p) {
         index_type spans;
         buffer_array bufs;
 
-        for (std::size_t i = 0; i < N; ++ i) {
+        for (std::size_t i = 0; i < N; ++i) {
             const basis& b = bs[i];
             eval_ctx& ctx = ctxs[i];
 
@@ -52,11 +48,12 @@ struct evaluator {
     }
 
     template <typename Point>
-    double eval(const Point& p, index_type spans, const buffer_array& bufs, index_type& idx, double v, std::size_t lvl) {
+    double eval(const Point& p, index_type spans, const buffer_array& bufs, index_type& idx,
+                double v, std::size_t lvl) {
         if (lvl < N) {
             double val = 0;
             int offset = spans[lvl] - bs[lvl].degree;
-            for (int i = 0; i < bs[lvl].dofs_per_element(); ++ i) {
+            for (int i = 0; i < bs[lvl].dofs_per_element(); ++i) {
                 idx[lvl] = i + offset;
                 double basis_val = bufs[lvl][i];
                 val += eval(p, spans, bufs, idx, v * basis_val, lvl + 1);
@@ -73,16 +70,15 @@ struct evaluator {
     }
 };
 
-
 template <typename U>
 double eval(double x, const U& u, const basis& b, eval_ctx& ctx) {
     int span = find_span(x, b);
     double* bvals = ctx.basis_vals();
     eval_basis(span, x, b, bvals, ctx);
-    int offset = span - b.degree; // first nonzero function on element
+    int offset = span - b.degree;  // first nonzero function on element
 
     double value = 0;
-    for (int i = 0; i <= b.degree; ++ i) {
+    for (int i = 0; i <= b.degree; ++i) {
         value += u(i + offset) * bvals[i];
     }
     return value;
@@ -93,22 +89,21 @@ function_value_1d eval_ders(double x, const U& u, const basis& b, eval_ders_ctx&
     int span = find_span(x, b);
     double** bvals = ctx.basis_vals();
     eval_basis_with_derivatives(span, x, b, bvals, 1, ctx);
-    int offset = span - b.degree; // first nonzero function on element
+    int offset = span - b.degree;  // first nonzero function on element
 
     double value = 0;
     double dx = 0;
-    for (int i = 0; i <= b.degree; ++ i) {
+    for (int i = 0; i <= b.degree; ++i) {
         double uu = u(i + offset);
         value += uu * bvals[0][i];
         dx += uu * bvals[1][i];
     }
-    return { value, dx };
+    return {value, dx};
 }
 
 template <typename U>
 double eval(double x, double y, const U& u, const basis& bx, const basis& by, eval_ctx& cx,
-        eval_ctx& cy) {
-
+            eval_ctx& cy) {
     int spanx = find_span(x, bx);
     int spany = find_span(y, by);
 
@@ -122,8 +117,8 @@ double eval(double x, double y, const U& u, const basis& bx, const basis& by, ev
     int offsety = spany - by.degree;
 
     double value = 0;
-    for (int ix = 0; ix < bx.dofs_per_element(); ++ ix) {
-        for (int iy = 0; iy < by.dofs_per_element(); ++ iy) {
+    for (int ix = 0; ix < bx.dofs_per_element(); ++ix) {
+        for (int iy = 0; iy < by.dofs_per_element(); ++iy) {
             int ixx = ix + offsetx;
             int iyy = iy + offsety;
             value += u(ixx, iyy) * bvx[ix] * bvy[iy];
@@ -134,8 +129,7 @@ double eval(double x, double y, const U& u, const basis& bx, const basis& by, ev
 
 template <typename U>
 function_value_2d eval_ders(double x, double y, const U& u, const basis& bx, const basis& by,
-        eval_ders_ctx& cx, eval_ders_ctx& cy) {
-
+                            eval_ders_ctx& cx, eval_ders_ctx& cy) {
     int spanx = find_span(x, bx);
     int spany = find_span(y, by);
 
@@ -152,8 +146,8 @@ function_value_2d eval_ders(double x, double y, const U& u, const basis& bx, con
     double dx = 0;
     double dy = 0;
 
-    for (int ix = 0; ix < bx.dofs_per_element(); ++ ix) {
-        for (int iy = 0; iy < by.dofs_per_element(); ++ iy) {
+    for (int ix = 0; ix < bx.dofs_per_element(); ++ix) {
+        for (int iy = 0; iy < by.dofs_per_element(); ++iy) {
             int ixx = ix + offsetx;
             int iyy = iy + offsety;
             double uu = u(ixx, iyy);
@@ -162,15 +156,12 @@ function_value_2d eval_ders(double x, double y, const U& u, const basis& bx, con
             dy += uu * bvx[0][ix] * bvy[1][iy];
         }
     }
-    return { value, dx, dy };
+    return {value, dx, dy};
 }
 
 template <typename U>
-double eval(double x, double y, double z,
-        const U& u,
-        const basis& bx, const basis& by, const basis& bz,
-        eval_ctx& cx, eval_ctx& cy, eval_ctx& cz) {
-
+double eval(double x, double y, double z, const U& u, const basis& bx, const basis& by,
+            const basis& bz, eval_ctx& cx, eval_ctx& cy, eval_ctx& cz) {
     int spanx = find_span(x, bx);
     int spany = find_span(y, by);
     int spanz = find_span(z, bz);
@@ -188,9 +179,9 @@ double eval(double x, double y, double z,
     int offsetz = spanz - bz.degree;
 
     double value = 0;
-    for (int ix = 0; ix < bx.dofs_per_element(); ++ ix) {
-        for (int iy = 0; iy < by.dofs_per_element(); ++ iy) {
-            for (int iz = 0; iz < bz.dofs_per_element(); ++ iz) {
+    for (int ix = 0; ix < bx.dofs_per_element(); ++ix) {
+        for (int iy = 0; iy < by.dofs_per_element(); ++iy) {
+            for (int iz = 0; iz < bz.dofs_per_element(); ++iz) {
                 int ixx = ix + offsetx;
                 int iyy = iy + offsety;
                 int izz = iz + offsetz;
@@ -203,8 +194,8 @@ double eval(double x, double y, double z,
 
 template <typename U>
 function_value_3d eval_ders(double x, double y, double z, const U& u, const basis& bx,
-        const basis& by, const basis& bz, eval_ders_ctx& cx, eval_ders_ctx& cy, eval_ders_ctx& cz) {
-
+                            const basis& by, const basis& bz, eval_ders_ctx& cx, eval_ders_ctx& cy,
+                            eval_ders_ctx& cz) {
     int spanx = find_span(x, bx);
     int spany = find_span(y, by);
     int spanz = find_span(z, bz);
@@ -226,9 +217,9 @@ function_value_3d eval_ders(double x, double y, double z, const U& u, const basi
     double dy = 0;
     double dz = 0;
 
-    for (int ix = 0; ix < bx.dofs_per_element(); ++ ix) {
-        for (int iy = 0; iy < by.dofs_per_element(); ++ iy) {
-            for (int iz = 0; iz < bz.dofs_per_element(); ++ iz) {
+    for (int ix = 0; ix < bx.dofs_per_element(); ++ix) {
+        for (int iy = 0; iy < by.dofs_per_element(); ++iy) {
+            for (int iz = 0; iz < bz.dofs_per_element(); ++iz) {
                 int ixx = ix + offsetx;
                 int iyy = iy + offsety;
                 int izz = iz + offsetz;
@@ -240,9 +231,9 @@ function_value_3d eval_ders(double x, double y, double z, const U& u, const basi
             }
         }
     }
-    return { value, dx, dy, dz };
+    return {value, dx, dy, dz};
 }
 
-}
+}  // namespace ads::bspline
 
-#endif // ADS_BSPLINE_EVAL_HPP
+#endif  // ADS_BSPLINE_EVAL_HPP

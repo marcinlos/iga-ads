@@ -5,12 +5,10 @@
 
 #include <catch2/catch.hpp>
 
-
 using namespace ads::bspline;
 using namespace Catch::Matchers;
 
 TEST_CASE("B-spline basis", "[splines]") {
-
     basis b = create_basis(0.0, 1.0, 2, 4);
 
     SECTION("Knot vector is correct after creation") {
@@ -69,4 +67,3 @@ TEST_CASE("B-spline basis", "[splines]") {
         REQUIRE_THAT(first_nonzero_dofs(b), Equals<int>({0, 1, 2, 3}));
     }
 }
-

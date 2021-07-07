@@ -10,4 +10,4 @@
 #include "ads/util/multi_array/reshape.hpp"
 #include "ads/util/multi_array/wrapper.hpp"
 
-#endif // ADS_UTIL_MULTI_ARRAY_HPP
+#endif  // ADS_UTIL_MULTI_ARRAY_HPP

@@ -9,7 +9,6 @@
 #include "ads/lin/tensor.hpp"
 #include "ads/util/math/vec.hpp"
 
-
 namespace tumor {
 
 class rasterizer {
@@ -18,8 +17,8 @@ public:
     using canvas = ads::lin::tensor<double, 3>;
 
     void draw(point_type a, point_type b, double w, canvas& c) const {
-        using std::max;
         using std::abs;
+        using std::max;
 
         auto sizes = c.sizes();
         int sx = sizes[0], sy = sizes[1], sz = sizes[2];
@@ -34,7 +33,7 @@ public:
         point_type step = d / nsteps;
 
         point_type p = a;
-        for (int i = 0; i < nsteps; ++ i) {
+        for (int i = 0; i < nsteps; ++i) {
             p += step;
             int ix = coord(p.x, sx);
             int iy = coord(p.y, sy);
@@ -44,12 +43,9 @@ public:
     }
 
 private:
-    int coord(double t, int s) const {
-        return std::min(static_cast<int>(t * s), s - 1);
-    }
+    int coord(double t, int s) const { return std::min(static_cast<int>(t * s), s - 1); }
 };
 
-}
+}  // namespace tumor
 
-
-#endif // TUMOR_3D_RASTERIZER_HPP
+#endif  // TUMOR_3D_RASTERIZER_HPP

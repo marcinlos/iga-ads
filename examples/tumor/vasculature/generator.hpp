@@ -25,34 +25,34 @@ private:
 
 public:
     random_vasculature(config cfg, int seed = 0)
-    : rng{ seed }
-    , cfg{ cfg }
-    { }
+    : rng{seed}
+    , cfg{cfg} { }
 
-    vasculature operator() () {
+    vasculature operator()() {
         std::vector<vasculature::node_ptr> nodes;
         int n = 5;
-        for (int i = 0; i <= n; ++ i) {
-            vector pos = { 0.1, ads::lerp(i, n, 0.1, 0.9) }; // random_point({0.05, 0.1}, {0.1, 0.9});
+        for (int i = 0; i <= n; ++i) {
+            vector pos = {0.1,
+                          ads::lerp(i, n, 0.1, 0.9)};  // random_point({0.05, 0.1}, {0.1, 0.9});
             vector bias = {1, 0};
             node_ptr root = grow_tree(pos, bias);
             nodes.push_back(root);
         }
-        for (int i = 0; i <= n; ++ i) {
-            vector pos = { 0.9, ads::lerp(i, n, 0.1, 0.9) }; //random_point({0.9, 0.1}, {0.85, 0.9});
-            vector bias = {- 1, 0};
+        for (int i = 0; i <= n; ++i) {
+            vector pos = {0.9, ads::lerp(i, n, 0.1, 0.9)};  // random_point({0.9, 0.1}, {0.85,
+                                                            // 0.9});
+            vector bias = {-1, 0};
             node_ptr root = grow_tree(pos, bias);
             nodes.push_back(root);
         }
-        return vasculature{ nodes, cfg };
+        return vasculature{nodes, cfg};
     }
 
 private:
-
     std::vector<node_ptr> nodes;
 
     node_ptr grow_tree(vector p, vector bias) {
-        node_ptr root = new node{ p };
+        node_ptr root = new node{p};
         nodes.push_back(root);
 
         double bias_strength = 10;
@@ -87,11 +87,11 @@ private:
             dir = rotate(dir, dphi);
             vector s = length * dir;
             vector end = n->position + s;
-            if (! inside_domain(end)) {
+            if (!inside_domain(end)) {
                 break;
             }
             node_ptr prev = n;
-            n = new node{ end };
+            n = new node{end};
             connect(prev, n, 1);
 
             nodes.push_back(n);
@@ -101,11 +101,10 @@ private:
                 break;
             }
 
-
             if (flip_coin(0.05)) {
                 // small branch
                 double dev_back = 0.1 * M_PI;
-                double dev_fwd  = 0.3 * M_PI;
+                double dev_fwd = 0.3 * M_PI;
                 double angle = rand_sign() * (M_PI / 2 + rand(dev_back, -dev_fwd));
                 grow_from(prev, rotate(dir, angle), segment_length, expected_length * 0.5);
             }
@@ -121,7 +120,7 @@ private:
                 break;
             }
 
-            ++ segments;
+            ++segments;
             if (segments > min_segments) {
                 double p = 1 / expected_length;
                 if (flip_coin(p)) {
@@ -135,53 +134,45 @@ private:
     }
 
     segment_ptr connect(node_ptr a, node_ptr b, double stability) {
-        segment_ptr s = new segment{ a, b, stability };
+        segment_ptr s = new segment{a, b, stability};
         a->segments.push_back(s);
         b->segments.push_back(s);
         return s;
     }
 
-    bool inside_domain(vector v) const {
-        return 0 <= v.x && v.x <= 1 && 0 <= v.y && v.y <= 1;
-    }
+    bool inside_domain(vector v) const { return 0 <= v.x && v.x <= 1 && 0 <= v.y && v.y <= 1; }
 
     double rand(double a, double b) {
-        std::uniform_real_distribution<> dist{ a, b };
+        std::uniform_real_distribution<> dist{a, b};
         return dist(rng);
     }
 
     int rand_sign() {
-        std::uniform_int_distribution<> dist{ 0, 1 };
+        std::uniform_int_distribution<> dist{0, 1};
         return 1 - 2 * dist(rng);
     }
 
-    bool flip_coin(double p) {
-        return rand(0, 1) < p;
-    }
+    bool flip_coin(double p) { return rand(0, 1) < p; }
 
-    vector random_dir() {
-        return random_dir(0, 2 * M_PI);
-    }
+    vector random_dir() { return random_dir(0, 2 * M_PI); }
 
     vector random_dir(double phi1, double phi2) {
         double phi = rand(phi1, phi2) * M_PI;
-        return { std::cos(phi), std::sin(phi) };
+        return {std::cos(phi), std::sin(phi)};
     }
 
-    vector random_point(vector a, vector b) {
-        return { rand(a.x, b.x), rand(a.y, b.y) };
-    }
+    vector random_point(vector a, vector b) { return {rand(a.x, b.x), rand(a.y, b.y)}; }
 
     vector rotate(vector a, double phi) const {
         double cos_phi = std::cos(phi);
         double sin_phi = std::sin(phi);
         return {
             a.x * cos_phi - a.y * sin_phi,
-            a.x * sin_phi + a.y * cos_phi
+            a.x * sin_phi + a.y * cos_phi,
         };
     }
 };
 
-}
+}  // namespace tumor::vasc
 
-#endif // TUMOR_VASCULATURE_GENERATOR_HPP
+#endif  // TUMOR_VASCULATURE_GENERATOR_HPP

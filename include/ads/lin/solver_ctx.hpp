@@ -9,7 +9,6 @@
 #include "ads/lin/band_matrix.hpp"
 #include "ads/lin/dense_matrix.hpp"
 
-
 namespace ads::lin {
 
 struct solver_ctx {
@@ -19,22 +18,17 @@ struct solver_ctx {
 
     solver_ctx(int n, int lda)
     : pivot_vector(n)
-    , lda(lda)
-    { }
+    , lda(lda) { }
 
     explicit solver_ctx(const band_matrix& a)
-    : solver_ctx(a.rows, 2 * a.kl +  a.ku + 1)
-    { }
+    : solver_ctx(a.rows, 2 * a.kl + a.ku + 1) { }
 
     explicit solver_ctx(const dense_matrix& a)
-    : solver_ctx(a.rows(), a.rows())
-    { }
+    : solver_ctx(a.rows(), a.rows()) { }
 
-    int* pivot() {
-        return pivot_vector.data();
-    }
+    int* pivot() { return pivot_vector.data(); }
 };
 
-}
+}  // namespace ads::lin
 
-#endif // ADS_LIN_SOLVER_CTX_HPP
+#endif  // ADS_LIN_SOLVER_CTX_HPP

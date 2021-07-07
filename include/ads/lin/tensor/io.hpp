@@ -10,7 +10,6 @@
 
 #include "ads/lin/tensor/base.hpp"
 
-
 namespace ads::lin {
 
 namespace impl {
@@ -20,26 +19,22 @@ struct tensor_printer {
     static_assert(Rank <= 3, "Too high tensor rank");
 };
 
-
 template <typename T>
 struct tensor_printer<T, 1> {
-
     template <typename Impl>
     static void print(std::ostream& os, const tensor_base<T, 1, Impl>& t) {
-        for (std::size_t i = 0; i < t.size(0); ++ i) {
+        for (std::size_t i = 0; i < t.size(0); ++i) {
             os << std::setw(12) << t(i) << ' ';
         }
     }
 };
 
-
 template <typename T>
 struct tensor_printer<T, 2> {
-
     template <typename Impl>
     static void print(std::ostream& os, const tensor_base<T, 2, Impl>& t) {
-        for (std::size_t i = 0; i < t.size(0); ++ i) {
-            for (std::size_t j = 0; j < t.size(1); ++ j) {
+        for (std::size_t i = 0; i < t.size(0); ++i) {
+            for (std::size_t j = 0; j < t.size(1); ++j) {
                 os << std::setw(12) << t(i, j) << ' ';
             }
             os << std::endl;
@@ -49,12 +44,11 @@ struct tensor_printer<T, 2> {
 
 template <typename T>
 struct tensor_printer<T, 3> {
-
     template <typename Impl>
     static void print(std::ostream& os, const tensor_base<T, 3, Impl>& t) {
-        for (std::size_t i = 0; i < t.size(0); ++ i) {
-            for (std::size_t j = 0; j < t.size(1); ++ j) {
-                for (std::size_t k = 0; k < t.size(2); ++ k) {
+        for (std::size_t i = 0; i < t.size(0); ++i) {
+            for (std::size_t j = 0; j < t.size(1); ++j) {
+                for (std::size_t k = 0; k < t.size(2); ++k) {
                     os << std::setw(12) << t(i, j, k) << ' ';
                 }
                 os << std::endl;
@@ -66,15 +60,14 @@ struct tensor_printer<T, 3> {
     }
 };
 
-}
-
+}  // namespace impl
 
 template <typename T, std::size_t Rank, typename Impl>
-std::ostream& operator <<(std::ostream& os, const tensor_base<T, Rank, Impl>& t) {
+std::ostream& operator<<(std::ostream& os, const tensor_base<T, Rank, Impl>& t) {
     impl::tensor_printer<T, Rank>::print(os, t);
     return os;
 }
 
-}
+}  // namespace ads::lin
 
-#endif // ADS_LIN_TENSOR_IO_HPP
+#endif  // ADS_LIN_TENSOR_IO_HPP

@@ -10,4 +10,4 @@
 #include "ads/util/math/vec/vec_3d.hpp"
 #include "ads/util/math/vec/vec_fwd.hpp"
 
-#endif // ADS_UTIL_MATH_VEC_HPP
+#endif  // ADS_UTIL_MATH_VEC_HPP

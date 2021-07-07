@@ -9,7 +9,6 @@
 #include "ads/util.hpp"
 #include "geometry.hpp"
 
-
 namespace ads::problems {
 
 struct pumps {
@@ -42,12 +41,10 @@ struct pumps {
     }
 
     auto pumping_fun() const {
-        return [this](double x, double y, double z) {
-            return pumping(x, y, z);
-        };
+        return [this](double x, double y, double z) { return pumping(x, y, z); };
     }
 };
 
-}
+}  // namespace ads::problems
 
-#endif // FLOW_PUMPS_HPP
+#endif  // FLOW_PUMPS_HPP

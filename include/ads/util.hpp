@@ -6,7 +6,6 @@
 
 #include <vector>
 
-
 namespace ads {
 
 template <typename T, typename TMin, typename TMax>
@@ -28,12 +27,12 @@ Num lerp(Int1 i, Int2 n, Num a, Num b) {
 template <typename Num>
 inline std::vector<Num> linspace(Num a, Num b, std::size_t n) {
     std::vector<Num> xs(n + 1);
-    for (std::size_t i = 0; i <= n; ++ i) {
+    for (std::size_t i = 0; i <= n; ++i) {
         xs[i] = lerp(i, n, a, b);
     }
     return xs;
 }
 
-}
+}  // namespace ads
 
-#endif // ADS_UTIL_HPP
+#endif  // ADS_UTIL_HPP

@@ -7,7 +7,6 @@
 #include "problems.hpp"
 #include "shishkin.hpp"
 
-
 using namespace ads;
 using namespace clara;
 
@@ -17,13 +16,13 @@ bspline::basis basis_from_points(const std::vector<double>& points, int p, int r
     int size = (elems - 1) * r + 2 * (p + 1);
     auto knot = bspline::knot_vector(size);
 
-    for (int i = 0; i <= p; ++ i) {
+    for (int i = 0; i <= p; ++i) {
         knot[i] = points[0];
         knot[size - i - 1] = points[elems];
     }
 
-    for (int i = 1; i < elems; ++ i) {
-        for (int j = 0; j < r; ++ j) {
+    for (int i = 1; i < elems; ++i) {
+        for (int j = 0; j < r; ++j) {
             knot[p + 1 + (i - 1) * r + j] = points[i];
         }
     }
@@ -38,7 +37,7 @@ std::vector<double> make_points(int n) {
     double x = 0;
     double h = 1;
 
-    for (int i = 0; i < n; ++ i) {
+    for (int i = 0; i < n; ++i) {
         h /= 2;
         x += h;
         points.push_back(x);
@@ -48,14 +47,13 @@ std::vector<double> make_points(int n) {
     return points;
 }
 
-
 void validate_dimensions(const ads::dimension& trial, const ads::dimension& test, bool print_dim) {
     auto trial_dim = trial.B.dofs();
     auto test_dim = test.B.dofs();
 
     if (trial_dim > test_dim) {
-        std::cerr << "Dimension of the trial space greater than that of test space ("
-                  << trial_dim << " > " << test_dim << ")" << std::endl;
+        std::cerr << "Dimension of the trial space greater than that of test space (" << trial_dim
+                  << " > " << test_dim << ")" << std::endl;
         std::exit(1);
     } else if (print_dim) {
         std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
@@ -73,23 +71,22 @@ void print_dofs(const ads::dimension& trial, const ads::dimension& test) {
 }
 
 auto make_config_parser(advection_config& cfg) {
-    return
-        Opt(cfg.tol_outer, "outer iterations tolerance")["--tol-outer"] |
-        Opt(cfg.tol_inner, "inner iterations tolerance")["--tol-inner"] |
-        Opt(cfg.max_outer_iters, "maximum # of outer iterations")["--max-outer-iters"] |
-        Opt(cfg.max_inner_iters, "maximum # of inner iterations")["--max-inner-iters"] |
-        Opt(cfg.use_cg, "use CG solver?")["--cg"] |
-        Opt(cfg.weak_bc, "impose Dirichlet BC weakly?")["--weak-bc"] |
-        Opt(cfg.print_inner, "print errors for inner iterations?")["--print-inner"] |
-        Opt(cfg.print_inner_count, "print number of inner iterations?")["--print-inner-count"] |
-        Opt(cfg.print_outer, "print errors for outer iterations?")["--print-outer"] |
-        Opt(cfg.print_outer_count, "print number of outer iterations?")["--print-outer-count"] |
-        Opt(cfg.print_inner_total, "print total number of inner iterations?")["--print-inner-total"] |
-        Opt(cfg.print_times, "print integration and solver times?")["--print-times"] |
-        Opt(cfg.print_errors, "print solution errors?")["--print-errors"] |
-        Opt(cfg.plot, "save data for plots?")["--plots"] |
-        Opt(cfg.threads, "number of threads")["--threads"]
-        ;
+    return Opt(cfg.tol_outer, "outer iterations tolerance")["--tol-outer"]
+         | Opt(cfg.tol_inner, "inner iterations tolerance")["--tol-inner"]
+         | Opt(cfg.max_outer_iters, "maximum # of outer iterations")["--max-outer-iters"]
+         | Opt(cfg.max_inner_iters, "maximum # of inner iterations")["--max-inner-iters"]
+         | Opt(cfg.use_cg, "use CG solver?")["--cg"]
+         | Opt(cfg.weak_bc, "impose Dirichlet BC weakly?")["--weak-bc"]
+         | Opt(cfg.print_inner, "print errors for inner iterations?")["--print-inner"]
+         | Opt(cfg.print_inner_count, "print number of inner iterations?")["--print-inner-count"]
+         | Opt(cfg.print_outer, "print errors for outer iterations?")["--print-outer"]
+         | Opt(cfg.print_outer_count, "print number of outer iterations?")["--print-outer-count"]
+         | Opt(cfg.print_inner_total,
+               "print total number of inner iterations?")["--print-inner-total"]
+         | Opt(cfg.print_times, "print integration and solver times?")["--print-times"]
+         | Opt(cfg.print_errors, "print solution errors?")["--print-errors"]
+         | Opt(cfg.plot, "save data for plots?")["--plots"]
+         | Opt(cfg.threads, "number of threads")["--threads"];
 }
 
 template <typename Fun>
@@ -126,25 +123,25 @@ int main(int argc, char* argv[]) {
     advection_config cfg;
 
     bool help = false;
-    auto cli = Help(help)
-        | Arg(problem, "problem").required()
-        | Arg(nx, "Nx").required()
-        | Arg(ny, "Ny").required()
-        | Arg(p_trial, "p trial").required()
-        | Arg(C_trial, "C trial").required()
-        | Arg(p_test, "p test").required()
-        | Arg(C_test, "C test").required()
-        | Opt(adapt_x, "adapt in x direction")["--adaptx"]
-        | Opt(adapt_y, "adapt in y direction")["--adapty"]
-        | Opt(peclet, "Peclet number")["--Pe"]
-        | Opt(eta, "eta (solver parameter)")["--eta"]
-        | Opt(print_dof_count, "print # of DOFs")["--dofs"]
-        | Opt(print_dims, "print dimensions of spacs")["--dims"]
-        | make_config_parser(cfg);
+    auto cli = Help(help)                                              //
+             | Arg(problem, "problem").required()                      //
+             | Arg(nx, "Nx").required()                                //
+             | Arg(ny, "Ny").required()                                //
+             | Arg(p_trial, "p trial").required()                      //
+             | Arg(C_trial, "C trial").required()                      //
+             | Arg(p_test, "p test").required()                        //
+             | Arg(C_test, "C test").required()                        //
+             | Opt(adapt_x, "adapt in x direction")["--adaptx"]        //
+             | Opt(adapt_y, "adapt in y direction")["--adapty"]        //
+             | Opt(peclet, "Peclet number")["--Pe"]                    //
+             | Opt(eta, "eta (solver parameter)")["--eta"]             //
+             | Opt(print_dof_count, "print # of DOFs")["--dofs"]       //
+             | Opt(print_dims, "print dimensions of spacs")["--dims"]  //
+             | make_config_parser(cfg);
 
     auto result = cli.parse(Args(argc, argv));
 
-    if (! result) {
+    if (!result) {
         std::cerr << "Error: " << result.errorMessage() << std::endl;
         std::exit(1);
     }
@@ -153,14 +150,15 @@ int main(int argc, char* argv[]) {
         return 0;
     }
     if (argc < 8) {
-        std::cerr << "Usage: cg <problem> <Nx> <Ny> <p trial> <C trial> <p test> <C test>" << std::endl;
+        std::cerr << "Usage: cg <problem> <Nx> <Ny> <p trial> <C trial> <p test> <C test>"
+                  << std::endl;
         std::exit(1);
     }
 
     int quad = std::max(p_trial, p_test) + 1;
 
     int rep_trial = p_trial - 1 - C_trial;
-    int rep_test  = p_test - 1 - C_test;
+    int rep_test = p_test - 1 - C_test;
 
     auto bd_layer = shishkin_const(nx, 1 / peclet);
 
@@ -184,7 +182,8 @@ int main(int argc, char* argv[]) {
 
     validate_dimensions(dtrial_x, dtest_x, print_dims);
 
-    if (print_dof_count) print_dofs(dtrial_x, dtest_x);
+    if (print_dof_count)
+        print_dofs(dtrial_x, dtest_x);
 
     with_problem(problem, peclet, [&](auto prob) {
         using Problem = decltype(prob);

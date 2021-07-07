@@ -15,7 +15,6 @@
 #include "ads/output_manager.hpp"
 #include "ads/solver/mumps.hpp"
 
-
 namespace ads {
 
 struct advection_config {
@@ -40,16 +39,13 @@ struct advection_config {
     int threads = 8;
 };
 
-
 template <typename Problem>
 class advection : public erikkson_base {
 public:
-
-
 private:
     using Base = erikkson_base;
-    using Base::errorL2;
     using Base::errorH1;
+    using Base::errorL2;
 
     galois_executor executor{8};
 
@@ -91,44 +87,44 @@ private:
     boundary dirichlet;
 
 public:
-    advection(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y, double peclet, double eta, const advection_config& cfg, Problem problem)
+    advection(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y,
+              double peclet, double eta, const advection_config& cfg, Problem problem)
     : Base{std::move(test_x), std::move(test_y), timesteps_config(1, 0.0)}
-    , executor{ cfg.threads }
-    , Ux{ std::move(trial_x) }
-    , Uy{ std::move(trial_y) }
-    , Vx{ x }
-    , Vy{ y }
+    , executor{cfg.threads}
+    , Ux{std::move(trial_x)}
+    , Uy{std::move(trial_y)}
+    , Vx{x}
+    , Vy{y}
     , MVx{Vx.p, Vx.p, Vx.dofs(), Vx.dofs(), 0}
     , MVy{Vy.p, Vy.p, Vy.dofs(), Vy.dofs(), 0}
     , KVx{Vx.p, Vx.p, Vx.dofs(), Vx.dofs(), 0}
     , KVy{Vy.p, Vy.p, Vy.dofs(), Vy.dofs(), 0}
     , Ax{Vx.p, Vx.p, Vx.dofs()}
     , Ay{Vy.p, Vy.p, Vy.dofs()}
-    , Ax_ctx{ Ax }
-    , Ay_ctx{ Ay }
-    , u{{ Ux.dofs(), Uy.dofs() }}
-    , r{{ Vx.dofs(), Vy.dofs() }}
-    , buffer{{ Vx.dofs(), Vy.dofs() }}
+    , Ax_ctx{Ax}
+    , Ay_ctx{Ay}
+    , u{{Ux.dofs(), Uy.dofs()}}
+    , r{{Vx.dofs(), Vy.dofs()}}
+    , buffer{{Vx.dofs(), Vy.dofs()}}
     , full_rhs(Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs())
-    , h{ element_diam(Ux, Uy) }
-    , eta{ eta }
-    , peclet{ peclet }
-    , cfg{ cfg }
-    , problem{ problem }
-    , output{ Ux.B, Uy.B, 500 }
-    , dirichlet{ cfg.weak_bc ? boundary::none : boundary::full }
-    {
+    , h{element_diam(Ux, Uy)}
+    , eta{eta}
+    , peclet{peclet}
+    , cfg{cfg}
+    , problem{problem}
+    , output{Ux.B, Uy.B, 500}
+    , dirichlet{cfg.weak_bc ? boundary::none : boundary::full} {
         int p = Vx.basis.degree;
         gamma = 3 * epsilon * p * p / h;
     }
 
 private:
-
     double element_diam(const dimension& Ux, const dimension& Uy) const {
         return std::sqrt(max_element_size(Ux) * max_element_size(Uy));
     }
 
-    value_type eval_basis_at(point_type p, index_type dof, const dimension& x, const dimension& y) const {
+    value_type eval_basis_at(point_type p, index_type dof, const dimension& x,
+                             const dimension& y) const {
         int spanx = bspline::find_span(p[0], x.B);
         int spany = bspline::find_span(p[1], y.B);
 
@@ -148,10 +144,10 @@ private:
         int iy = dof[1] - offsety;
 
         auto value = bvx[0][ix] * bvy[0][iy];
-        auto dx    = bvx[1][ix] * bvy[0][iy];
-        auto dy    = bvx[0][ix] * bvy[1][iy];
+        auto dx = bvx[1][ix] * bvy[0][iy];
+        auto dy = bvx[0][ix] * bvy[1][iy];
 
-        return { value, dx, dy };
+        return {value, dx, dy};
     }
 
     template <typename Sol>
@@ -161,31 +157,33 @@ private:
         return bspline::eval_ders(p[0], p[1], v, x.B, y.B, cx, cy);
     }
 
-
     bool supported_in_1d(int dof, int e, const dimension& x) const {
         auto xrange = x.basis.element_ranges[dof];
         return e >= xrange.first && e <= xrange.second;
     }
 
     template <typename Form>
-    double integrate_boundary(boundary side, index_type i, index_type j, const dimension& Ux, const dimension& Uy,
-                              const dimension& Vx, const dimension& Vy, Form&& form) const {
+    double integrate_boundary(boundary side, index_type i, index_type j, const dimension& Ux,
+                              const dimension& Uy, const dimension& Vx, const dimension& Vy,
+                              Form&& form) const {
         double val = 0;
         bool horizontal = side == boundary::top || side == boundary::bottom;
         auto nv = normal(side);
 
         if (horizontal) {
             int ey = side == boundary::bottom ? 0 : Uy.elements - 1;
-            if (! supported_in_1d(j[1], ey, Vy) || ! supported_in_1d(i[1], ey, Uy)) return 0;
+            if (!supported_in_1d(j[1], ey, Vy) || !supported_in_1d(i[1], ey, Uy))
+                return 0;
 
             auto y0 = side == boundary::bottom ? Uy.a : Uy.b;
 
             for (auto e : Ux.basis.element_range(i[0])) {
-                if (! supported_in_1d(j[0], e, Vx)) continue;
+                if (!supported_in_1d(j[0], e, Vx))
+                    continue;
 
                 double J = Ux.basis.J[e];
 
-                for (int q = 0; q < Ux.basis.quad_order; ++ q) {
+                for (int q = 0; q < Ux.basis.quad_order; ++q) {
                     double w = Ux.basis.w[q];
                     point_type x{Ux.basis.x[e][q], y0};
                     value_type ww = eval_basis_at(x, i, Ux, Uy);
@@ -196,16 +194,18 @@ private:
             }
         } else {
             int ex = side == boundary::left ? 0 : Ux.elements - 1;
-            if (! supported_in_1d(j[0], ex, Vx) || ! supported_in_1d(i[0], ex, Ux)) return 0;
+            if (!supported_in_1d(j[0], ex, Vx) || !supported_in_1d(i[0], ex, Ux))
+                return 0;
 
             auto x0 = side == boundary::left ? Ux.a : Ux.b;
 
             for (auto e : Uy.basis.element_range(i[1])) {
-                if (! supported_in_1d(j[1], e, Vy)) continue;
+                if (!supported_in_1d(j[1], e, Vy))
+                    continue;
 
                 double J = Uy.basis.J[e];
 
-                for (int q = 0; q < Uy.basis.quad_order; ++ q) {
+                for (int q = 0; q < Uy.basis.quad_order; ++q) {
                     double w = Uy.basis.w[q];
                     point_type x{x0, Uy.basis.x[e][q]};
                     value_type ww = eval_basis_at(x, i, Ux, Uy);
@@ -219,21 +219,23 @@ private:
     }
 
     template <typename Form>
-    double integrate_boundary(boundary side, index_type i, const dimension& Ux, const dimension& Uy, Form&& form) const {
+    double integrate_boundary(boundary side, index_type i, const dimension& Ux, const dimension& Uy,
+                              Form&& form) const {
         double val = 0;
         bool horizontal = side == boundary::top || side == boundary::bottom;
         auto nv = normal(side);
 
         if (horizontal) {
             int ey = side == boundary::bottom ? 0 : Uy.elements - 1;
-            if (! supported_in_1d(i[1], ey, Uy)) return 0;
+            if (!supported_in_1d(i[1], ey, Uy))
+                return 0;
 
             auto y0 = side == boundary::bottom ? Uy.a : Uy.b;
 
             for (auto e : Ux.basis.element_range(i[0])) {
                 double J = Ux.basis.J[e];
 
-                for (int q = 0; q < Ux.basis.quad_order; ++ q) {
+                for (int q = 0; q < Ux.basis.quad_order; ++q) {
                     double w = Ux.basis.w[q];
                     point_type x{Ux.basis.x[e][q], y0};
                     value_type ww = eval_basis_at(x, i, Ux, Uy);
@@ -243,14 +245,15 @@ private:
             }
         } else {
             int ex = side == boundary::left ? 0 : Ux.elements - 1;
-            if (! supported_in_1d(i[0], ex, Ux)) return 0;
+            if (!supported_in_1d(i[0], ex, Ux))
+                return 0;
 
             auto x0 = side == boundary::left ? Ux.a : Ux.b;
 
             for (auto e : Uy.basis.element_range(i[1])) {
                 double J = Uy.basis.J[e];
 
-                for (int q = 0; q < Uy.basis.quad_order; ++ q) {
+                for (int q = 0; q < Uy.basis.quad_order; ++q) {
                     double w = Uy.basis.w[q];
                     point_type x{x0, Uy.basis.x[e][q]};
                     value_type ww = eval_basis_at(x, i, Ux, Uy);
@@ -264,21 +267,23 @@ private:
 
     template <typename Form, typename Sol>
     double integrate_boundary(boundary side, index_type i, const dimension& Ux, const dimension& Uy,
-                              const Sol& u, const dimension& Vx, const dimension& Vy, Form&& form) const {
+                              const Sol& u, const dimension& Vx, const dimension& Vy,
+                              Form&& form) const {
         double val = 0;
         bool horizontal = side == boundary::top || side == boundary::bottom;
         auto nv = normal(side);
 
         if (horizontal) {
             int ey = side == boundary::bottom ? 0 : Vy.elements - 1;
-            if (! supported_in_1d(i[1], ey, Uy)) return 0;
+            if (!supported_in_1d(i[1], ey, Uy))
+                return 0;
 
             auto y0 = side == boundary::bottom ? Uy.a : Uy.b;
 
             for (auto e : Ux.basis.element_range(i[0])) {
                 double J = Ux.basis.J[e];
 
-                for (int q = 0; q < Ux.basis.quad_order; ++ q) {
+                for (int q = 0; q < Ux.basis.quad_order; ++q) {
                     double w = Ux.basis.w[q];
                     point_type x{Ux.basis.x[e][q], y0};
                     value_type uu = eval_at(x, u, Vx, Vy);
@@ -289,14 +294,15 @@ private:
             }
         } else {
             int ex = side == boundary::left ? 0 : Vx.elements - 1;
-            if (! supported_in_1d(i[0], ex, Ux)) return 0;
+            if (!supported_in_1d(i[0], ex, Ux))
+                return 0;
 
             auto x0 = side == boundary::left ? Ux.a : Ux.b;
 
             for (auto e : Uy.basis.element_range(i[1])) {
                 double J = Uy.basis.J[e];
 
-                for (int q = 0; q < Uy.basis.quad_order; ++ q) {
+                for (int q = 0; q < Uy.basis.quad_order; ++q) {
                     double w = Uy.basis.w[q];
                     point_type x{x0, Uy.basis.x[e][q]};
                     value_type uu = eval_at(x, u, Vx, Vy);
@@ -309,24 +315,18 @@ private:
         return val;
     }
 
-    double dot(point_type a, point_type b) const {
-        return a[0] * b[0] + a[1] * b[1];
-    }
+    double dot(point_type a, point_type b) const { return a[0] * b[0] + a[1] * b[1]; }
 
-    double dot(value_type a, point_type b) const {
-        return a.dx * b[0] + a.dy * b[1];
-    }
+    double dot(value_type a, point_type b) const { return a.dx * b[0] + a.dy * b[1]; }
 
-    double dot(point_type a, value_type b) const {
-        return a[0] * b.dx + a[1] * b.dy;
-    }
+    double dot(point_type a, value_type b) const { return a[0] * b.dx + a[1] * b.dy; }
 
     point_type normal(boundary side) const {
         switch (side) {
-        case boundary::left:   return {-1,  0};
-        case boundary::right:  return { 1,  0};
-        case boundary::bottom: return { 0, -1};
-        case boundary::top:    return { 0,  1};
+        case boundary::left: return {-1, 0};
+        case boundary::right: return {1, 0};
+        case boundary::bottom: return {0, -1};
+        case boundary::top: return {0, 1};
         default: return {0, 0};
         }
     }
@@ -348,12 +348,14 @@ private:
         // Gram matrix - upper left
         for (auto i : dofs(Vx, Vy)) {
             for (auto j : overlapping_dofs(i, Vx, Vy)) {
-                if (is_fixed(i, Vx, Vy) || is_fixed(j, Vx, Vy)) continue;
+                if (is_fixed(i, Vx, Vy) || is_fixed(j, Vx, Vy))
+                    continue;
 
                 int ii = linear_index(i, Vx, Vy) + 1;
                 int jj = linear_index(j, Vx, Vy) + 1;
 
-                double val = kron(MVx, MVy, i, j) + eta * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
+                double val =
+                    kron(MVx, MVy, i, j) + eta * (kron(KVx, MVy, i, j) + kron(MVx, KVy, i, j));
                 val += eta * eta * kron(KVx, KVy, i, j);
                 problem.add(ii, jj, val);
             }
@@ -362,11 +364,13 @@ private:
         // B, B^T
         for (auto i : dofs(Vx, Vy)) {
             for (auto j : dofs(Ux, Uy)) {
-                if (is_fixed(i, Vx, Vy) || is_fixed(j, Ux, Uy)) continue;
+                if (is_fixed(i, Vx, Vy) || is_fixed(j, Ux, Uy))
+                    continue;
 
                 double val = 0;
                 for (auto e : elements_supporting_dof(i, Vx, Vy)) {
-                    if (! supported_in(j, e, Ux, Uy)) continue;
+                    if (!supported_in(j, e, Ux, Uy))
+                        continue;
 
                     double J = jacobian(e, x, y);
                     for (auto q : quad_points(Vx, Vy)) {
@@ -414,7 +418,7 @@ private:
 
     void fix_dof(int k, const dimension& dim, lin::band_matrix& K) {
         int last = dim.dofs() - 1;
-        for (int i = clamp(k - dim.p, 0, last); i <= clamp(k + dim.p, 0, last); ++ i) {
+        for (int i = clamp(k - dim.p, 0, last); i <= clamp(k + dim.p, 0, last); ++i) {
             K(k, i) = 0;
         }
         K(k, k) = 1;
@@ -428,21 +432,25 @@ private:
 
         // double eta = h * h;
 
-        for (int i = 0; i < Vx.dofs(); ++ i) {
+        for (int i = 0; i < Vx.dofs(); ++i) {
             for (int j : overlapping_dofs(i, 0, Vx.dofs(), Vx)) {
                 Ax(i, j) = MVx(i, j) + eta * KVx(i, j);
             }
         }
-        for (int i = 0; i < Vy.dofs(); ++ i) {
+        for (int i = 0; i < Vy.dofs(); ++i) {
             for (int j : overlapping_dofs(i, 0, Vy.dofs(), Vy)) {
                 Ay(i, j) = MVy(i, j) + eta * KVy(i, j);
             }
         }
 
-        if (contains(dirichlet, boundary::left))   fix_dof(0, Vx, Ax);
-        if (contains(dirichlet, boundary::right))  fix_dof(Vx.dofs() - 1, Vx, Ax);
-        if (contains(dirichlet, boundary::bottom)) fix_dof(0, Vy, Ay);
-        if (contains(dirichlet, boundary::top))    fix_dof(Vy.dofs() - 1, Vy, Ay);
+        if (contains(dirichlet, boundary::left))
+            fix_dof(0, Vx, Ax);
+        if (contains(dirichlet, boundary::right))
+            fix_dof(Vx.dofs() - 1, Vx, Ax);
+        if (contains(dirichlet, boundary::bottom))
+            fix_dof(0, Vy, Ay);
+        if (contains(dirichlet, boundary::top))
+            fix_dof(Vy.dofs() - 1, Vy, Ay);
     }
 
     void before() override {
@@ -541,13 +549,13 @@ private:
         vector_type u_prev = u;
 
         auto p = dc, q = dc;
-        auto theta = vector_type{{ Vx.dofs(), Vy.dofs() }};
+        auto theta = vector_type{{Vx.dofs(), Vy.dofs()}};
         auto delta = theta;
 
-        auto Mp = vector_type{{ Ux.dofs(), Uy.dofs() }};
+        auto Mp = vector_type{{Ux.dofs(), Uy.dofs()}};
 
         int i = 0;
-        for (; i < cfg.max_inner_iters; ++ i) {
+        for (; i < cfg.max_inner_iters; ++i) {
             // theta = Bp
             apply_B(p, theta);
             zero_bc(theta, Vx, Vy);
@@ -588,14 +596,13 @@ private:
                 std::cout << "     inner " << (i + 1) << ": |q| = " << residuum << std::endl;
 
             if (residuum < cfg.tol_inner) {
-                ++ i;
+                ++i;
                 break;
             }
         }
         total_CG_iters += i;
         if (cfg.print_inner_count)
             std::cout << "  CG iters: " << i << std::endl;
-
 
         vector_view du{full_rhs.data(), {Ux.dofs(), Uy.dofs()}};
         for (auto i : dofs(Ux, Uy)) {
@@ -609,13 +616,13 @@ private:
     }
 
     void step(int /*iter*/, double /*t*/) override {
-        auto dd = vector_type{{ Vx.dofs(), Vy.dofs() }};
-        auto dc = vector_type{{ Ux.dofs(), Uy.dofs() }};
-        auto Bc = vector_type{{ Vx.dofs(), Vy.dofs() }};
+        auto dd = vector_type{{Vx.dofs(), Vy.dofs()}};
+        auto dc = vector_type{{Ux.dofs(), Uy.dofs()}};
+        auto Bc = vector_type{{Vx.dofs(), Vy.dofs()}};
 
         total_timer.start();
         int i = 0;
-        for (; i < cfg.max_outer_iters ; ++ i) {
+        for (; i < cfg.max_outer_iters; ++i) {
             // dd = A~ \ (F + Kr - Bu)
             compute_dd(Vx, Vy, dd);
             zero_bc(dd, Vx, Vy);
@@ -642,7 +649,7 @@ private:
                 std::cout << "  outer " << (i + 1) << ": |c| = " << cc << std::endl;
 
             if (cc < cfg.tol_outer) {
-                ++ i;
+                ++i;
                 break;
             }
         }
@@ -670,16 +677,20 @@ private:
         }
 
         if (cfg.print_times) {
-            std::cout << "integration: " << static_cast<double>(integration_timer.get()) << " ms" << std::endl;
-            std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << " ms" << std::endl;
-            std::cout << "total:       " << static_cast<double>(total_timer.get()) << " ms" << std::endl;
+            std::cout << "integration: " << static_cast<double>(integration_timer.get()) << " ms"
+                      << std::endl;
+            std::cout << "solver:      " << static_cast<double>(solver_timer.get()) << " ms"
+                      << std::endl;
+            std::cout << "total:       " << static_cast<double>(total_timer.get()) << " ms"
+                      << std::endl;
         }
     }
 
-    void compute_rhs(const dimension& Vx, const dimension& Vy, vector_view& r_rhs, vector_view& u_rhs) {
+    void compute_rhs(const dimension& Vx, const dimension& Vy, vector_view& r_rhs,
+                     vector_view& u_rhs) {
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
-            auto R = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
-            auto U = vector_type{{ Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element() }};
+            auto R = vector_type{{Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element()}};
+            auto U = vector_type{{Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element()}};
 
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Vy)) {
@@ -753,7 +764,8 @@ private:
         }
     }
 
-    double eval_basis_dxy(index_type e, index_type q, index_type dof, const dimension& x, const dimension& y) const  {
+    double eval_basis_dxy(index_type e, index_type q, index_type dof, const dimension& x,
+                          const dimension& y) const {
         auto loc = dof_global_to_local(e, dof);
         const auto& bx = x.basis;
         const auto& by = y.basis;
@@ -762,7 +774,8 @@ private:
         return dB1 * dB2;
     }
 
-    double eval_fun_dxy(const vector_type& v, index_type e, index_type q, const dimension& x, const dimension& y) const {
+    double eval_fun_dxy(const vector_type& v, index_type e, index_type q, const dimension& x,
+                        const dimension& y) const {
         double u = 0;
         for (auto b : dofs_on_element(e)) {
             double c = v(b[0], b[1]);
@@ -775,7 +788,7 @@ private:
     void compute_dd(const dimension& Vx, const dimension& Vy, vector_type& dd) {
         zero(dd);
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
-            auto R = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
+            auto R = vector_type{{Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element()}};
 
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Vy)) {
@@ -798,9 +811,7 @@ private:
                     R(aa[0], aa[1]) += val * WJ;
                 }
             }
-            executor.synchronized([&]() {
-                update_global_rhs(dd, R, e, Vx, Vy);
-            });
+            executor.synchronized([&]() { update_global_rhs(dd, R, e, Vx, Vy); });
         });
 
         // Boundary terms of -Bu
@@ -834,7 +845,7 @@ private:
     void apply_B(const U& u, Res& result) {
         zero(result);
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
-            auto rhs = vector_type{{ Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element() }};
+            auto rhs = vector_type{{Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element()}};
 
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Vy)) {
@@ -851,9 +862,7 @@ private:
                     rhs(aa[0], aa[1]) += val * WJ;
                 }
             }
-            executor.synchronized([&]() {
-                update_global_rhs(result, rhs, e, Vx, Vy);
-            });
+            executor.synchronized([&]() { update_global_rhs(result, rhs, e, Vx, Vy); });
         });
 
         // Boundary terms of Bu
@@ -874,7 +883,7 @@ private:
     void apply_Bt(const U& r, Res& result) {
         zero(result);
         executor.for_each(elements(Vx, Vy), [&](index_type e) {
-            auto rhs = vector_type{{ Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element() }};
+            auto rhs = vector_type{{Ux.basis.dofs_per_element(), Uy.basis.dofs_per_element()}};
 
             double J = jacobian(e);
             for (auto q : quad_points(Vx, Vy)) {
@@ -892,9 +901,7 @@ private:
                     rhs(aa[0], aa[1]) += val * WJ;
                 }
             }
-            executor.synchronized([&]() {
-                update_global_rhs(result, rhs, e, Ux, Uy);
-            });
+            executor.synchronized([&]() { update_global_rhs(result, rhs, e, Ux, Uy); });
         });
 
         // Boundary terms of B'r
@@ -936,17 +943,24 @@ private:
     }
 
     bool is_fixed(index_type dof, const dimension& x, const dimension& y) const {
-        if (dof[0] == 0            && contains(dirichlet, boundary::left))   return true;
-        if (dof[0] == x.dofs() - 1 && contains(dirichlet, boundary::right))  return true;
-        if (dof[1] == 0            && contains(dirichlet, boundary::bottom)) return true;
-        if (dof[1] == y.dofs() - 1 && contains(dirichlet, boundary::top))    return true;
+        if (dof[0] == 0 && contains(dirichlet, boundary::left))
+            return true;
+        if (dof[0] == x.dofs() - 1 && contains(dirichlet, boundary::right))
+            return true;
+        if (dof[1] == 0 && contains(dirichlet, boundary::bottom))
+            return true;
+        if (dof[1] == y.dofs() - 1 && contains(dirichlet, boundary::top))
+            return true;
 
         return false;
     }
 
     template <typename Fun>
     void for_sides(boundary sides, Fun&& f) {
-        auto g = [&](auto s) { if (contains(sides, s)) f(s); };
+        auto g = [&](auto s) {
+            if (contains(sides, s))
+                f(s);
+        };
         g(boundary::left);
         g(boundary::right);
         g(boundary::bottom);
@@ -957,11 +971,11 @@ private:
         double x0 = Ux.a, x1 = Ux.b;
         double y0 = Uy.a, y1 = Uy.b;
         switch (side) {
-        case boundary::left:   return {x0, t};
-        case boundary::right:  return {x1, t};
+        case boundary::left: return {x0, t};
+        case boundary::right: return {x1, t};
         case boundary::bottom: return {t, y0};
-        case boundary::top:    return {t, y1};
-        default:               return {0, 0};
+        case boundary::top: return {t, y1};
+        default: return {0, 0};
         }
     }
 
@@ -985,55 +999,39 @@ private:
     }
 
     double bdB(value_type u, value_type v, point_type x, point_type n) const {
-        return
-            - epsilon * v.val * dot(u, n)         // <eps \/u*n, v> -- consistency
-            - epsilon * u.val * dot(v, n)         // <u, eps \/v*n> -- symmetrization
-            - u.val * v.val * dot(beta(x), n)     // <u, v beta*n>  -- symmetrization
-            - u.val * v.val * gamma;              // <u, gamma v>   -- penalty
+        return -epsilon * v.val * dot(u, n)     // <eps \/u*n, v> -- consistency
+             - epsilon * u.val * dot(v, n)      // <u, eps \/v*n> -- symmetrization
+             - u.val * v.val * dot(beta(x), n)  // <u, v beta*n>  -- symmetrization
+             - u.val * v.val * gamma;           // <u, gamma v>   -- penalty
     }
 
     double bdL(value_type v, point_type x, point_type n) const {
-        return
-            - epsilon * g(x) * dot(v, n)          // <g, eps \/v*n>
-            - g(x) * v.val * dot(beta(x), n)      // <g, v beta*n>
-            - g(x) * v.val * gamma;               // <u, gamma v> -- penalty
+        return -epsilon * g(x) * dot(v, n)     // <g, eps \/v*n>
+             - g(x) * v.val * dot(beta(x), n)  // <g, v beta*n>
+             - g(x) * v.val * gamma;           // <u, gamma v> -- penalty
     }
 
     // Scalar product
-    double A(value_type u, value_type v) const {
-        return u.val * v.val + h * h * grad_dot(u, v);
-    }
+    double A(value_type u, value_type v) const { return u.val * v.val + h * h * grad_dot(u, v); }
 
     // --------------------
     // Problem definition
     // --------------------
 
-    double diffusion(point_type x) const {
-        return problem.diffusion(x);
-    }
+    double diffusion(point_type x) const { return problem.diffusion(x); }
 
-    point_type beta(point_type x) const {
-        return problem.beta(x);
-    }
+    point_type beta(point_type x) const { return problem.beta(x); }
 
     // forcing
-    double F(point_type x) const {
-        return problem.forcing(x);
-    }
+    double F(point_type x) const { return problem.forcing(x); }
 
     // Boundary conditions
-    double g(point_type x) const {
-        return problem.boundary(x);
-    }
+    double g(point_type x) const { return problem.boundary(x); }
 
     // Exact solution
-    value_type solution(point_type x) const {
-        return problem.solution(x);
-    }
-
+    value_type solution(point_type x) const { return problem.solution(x); }
 };
 
-}
+}  // namespace ads
 
-
-#endif // CG_ADVECTION_HPP
+#endif  // CG_ADVECTION_HPP

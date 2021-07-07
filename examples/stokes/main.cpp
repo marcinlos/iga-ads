@@ -6,9 +6,9 @@
 #include <string>
 
 #include "ads/bspline/bspline.hpp"
+#include "stokes_conforming.hpp"
+#include "stokes_constrained.hpp"
 #include "stokes.hpp"
-// #include "problems/stokes/stokes_conforming.hpp"
-// #include "problems/stokes/stokes_constrained.hpp"
 
 using namespace ads;
 

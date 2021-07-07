@@ -9,4 +9,4 @@
 #include "vasculature/plot.hpp"
 #include "vasculature/vasculature.hpp"
 
-#endif // TUMOR_VASCULATURE_HPP
+#endif  // TUMOR_VASCULATURE_HPP

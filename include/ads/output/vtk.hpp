@@ -14,35 +14,33 @@
 #include "ads/output/output_base.hpp"
 #include "ads/util/io.hpp"
 
-
 namespace ads::output {
 
 namespace impl {
 
 template <typename... Iters>
 struct vtk_print_helper : output_base {
-
     explicit vtk_print_helper(const output_format& format)
-    : output_base { format }
-    { }
+    : output_base{format} { }
 
     template <typename Value, typename... Values>
-    void print(std::ostream& os, const grid<Iters...>&, const Value& value, const Values&... values) {
+    void print(std::ostream& os, const grid<Iters...>&, const Value& value,
+               const Values&... values) {
         util::stream_state_saver guard(os);
         prepare_stream(os);
-        for_each_multiindex([this,&os,&value,&values...](auto... is) {
-            this->print_row(os, value(is...), values(is...)...);
-        }, value);
+        for_each_multiindex(
+            [this, &os, &value, &values...](auto... is) {
+                this->print_row(os, value(is...), values(is...)...);
+            },
+            value);
     }
 };
 
-}
+}  // namespace impl
 
 struct vtk : output_base {
-
     explicit vtk(const output_format& format)
-    : output_base { format }
-    { }
+    : output_base{format} { }
 
     template <typename... Iters>
     void print_header(std::ostream& os, const grid<Iters...>& grid, std::size_t value_count) {
@@ -54,12 +52,15 @@ struct vtk : output_base {
 
         os << "<?xml version=\"1.0\"?>" << std::endl;
         os << "<VTKFile type=\"ImageData\" version=\"0.1\">" << std::endl;
-        os << format("  <ImageData WholeExtent=\"%s\" origin=\"%s\" spacing=\"%s\">")
-                % extent % origin % spacing<< std::endl;
+        os << format("  <ImageData WholeExtent=\"%s\" origin=\"%s\" spacing=\"%s\">") % extent
+                  % origin % spacing
+           << std::endl;
         os << format("    <Piece Extent=\"%s\">") % extent << std::endl;
-        os <<        "      <PointData Scalars=\"Result\">" << std::endl;
+        os << "      <PointData Scalars=\"Result\">" << std::endl;
         os << format("        <DataArray Name=\"Result\"  type=\"Float32\" "
-                "format=\"ascii\" NumberOfComponents=\"%d\">") % value_count << std::endl;
+                     "format=\"ascii\" NumberOfComponents=\"%d\">")
+                  % value_count
+           << std::endl;
     }
 
     void print_end(std::ostream& os) {
@@ -73,7 +74,7 @@ struct vtk : output_base {
     template <typename... Iters, typename... Values>
     void print(std::ostream& os, const grid<Iters...>& grid, const Values&... values) {
         auto value_count = sizeof...(Values);
-        impl::vtk_print_helper<Iters...> printer { output_base::format };
+        impl::vtk_print_helper<Iters...> printer{output_base::format};
 
         print_header(os, grid, value_count);
         printer.print(os, grid, values...);
@@ -81,7 +82,6 @@ struct vtk : output_base {
     }
 
 private:
-
     template <typename T>
     std::string repeat(T value, std::size_t n) {
         return join(' ', std::vector<T>(n, value));
@@ -89,9 +89,9 @@ private:
 
     template <typename T, std::size_t N>
     std::string make_extent(const std::array<T, N>& extents) {
-        constexpr std::size_t dim = 3; // paraview needs 3D
+        constexpr std::size_t dim = 3;  // paraview needs 3D
         std::vector<T> exts(2 * dim);
-        for (std::size_t i = 0; i < N; ++ i) {
+        for (std::size_t i = 0; i < N; ++i) {
             exts[2 * i + 1] = extents[i] - 1;
         }
         return join(' ', exts);
@@ -117,9 +117,8 @@ private:
         }
         return ss.str();
     }
-
 };
 
-}
+}  // namespace ads::output
 
-#endif // ADS_OUTPUT_VTK_HPP
+#endif  // ADS_OUTPUT_VTK_HPP

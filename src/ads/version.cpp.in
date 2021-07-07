@@ -3,7 +3,6 @@
 
 #include "ads/config.hpp"
 
-
 namespace ads {
 
 auto version() -> version_info {
@@ -18,4 +17,4 @@ auto version() -> version_info {
     };
 }
 
-}
+}  // namespace ads

@@ -8,7 +8,6 @@
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
 
-
 namespace ads::problems {
 
 class validation : public simulation_2d {
@@ -21,23 +20,20 @@ private:
 
 public:
     validation(const config_2d& config)
-    : Base{ config }
-    , u{ shape() }
-    , u_prev{ shape() }
-    , output{ x.B, y.B, 200 }
-    { }
+    : Base{config}
+    , u{shape()}
+    , u_prev{shape()}
+    , output{x.B, y.B, 200} { }
 
-    double init_state(double x, double y) {
-        return fi(x, y) * sc(0);
-    };
+    double init_state(double x, double y) { return fi(x, y) * sc(0); };
 
 private:
     void solve(vector_type& v) {
-        for (int i = 0; i < y.dofs(); ++ i) {
+        for (int i = 0; i < y.dofs(); ++i) {
             v(0, i) = 0;
             v(x.dofs() - 1, i) = 0;
         }
-        for (int i = 0; i < x.dofs(); ++ i) {
+        for (int i = 0; i < x.dofs(); ++i) {
             v(i, 0) = 0;
             v(i, y.dofs() - 1) = 0;
         }
@@ -50,17 +46,13 @@ private:
         return value_type{
             sc(t) * fi(x, y),
             sc(t) * M_PI * std::cos(x * M_PI) * std::sin(y * M_PI),
-            sc(t) * M_PI * std::sin(x * M_PI) * std::cos(y * M_PI)
+            sc(t) * M_PI * std::sin(x * M_PI) * std::cos(y * M_PI),
         };
     }
 
-    double fi(double x, double y) const {
-        return std::sin(x * M_PI) * std::sin(y * M_PI);
-    }
+    double fi(double x, double y) const { return std::sin(x * M_PI) * std::sin(y * M_PI); }
 
-    double sc(double t) const {
-        return std::exp(-k*t);
-    }
+    double sc(double t) const { return std::exp(-k * t); }
 
     void prepare_matrices() {
         x.fix_left();
@@ -117,14 +109,12 @@ private:
                     value_type v = eval_basis(e, q, a);
 
                     double gradient_prod = grad_dot(u, v);
-                    double val = u.val * v.val - steps.dt * gradient_prod ;
+                    double val = u.val * v.val - steps.dt * gradient_prod;
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
 
-            executor.synchronized([&]() {
-                update_global_rhs(rhs, U, e);
-            });
+            executor.synchronized([&]() { update_global_rhs(rhs, U, e); });
         });
     }
 
@@ -139,6 +129,6 @@ private:
     }
 };
 
-}
+}  // namespace ads::problems
 
-#endif // VALIDATION_VALIDATION_HPP
+#endif  // VALIDATION_VALIDATION_HPP
