@@ -19,6 +19,8 @@ Checks: |
     -google-runtime-references,
 
     hicpp-*,
+    # unnamed parameters are useful in lambdas that do not use all the data,
+    -hicpp-named-parameter,
     misc-*,
     performance-*,
     llvm-include-order,
