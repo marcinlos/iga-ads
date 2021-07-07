@@ -17,10 +17,15 @@ Checks: |
     google-*,
     # flags passing non-const references,
     -google-runtime-references,
+    # covered by readability-*,
+    -google-readability-braces-around-statements,
 
     hicpp-*,
     # unnamed parameters are useful in lambdas that do not use all the data,
     -hicpp-named-parameter,
+    # covered by readability-*,
+    -hicpp-braces-around-statements,
+
     misc-*,
     performance-*,
     llvm-include-order,
