@@ -31,7 +31,7 @@ from util import relative_to_project, read_lines, write_lines, for_each_header
 
 IFNDEF_PATTERN = re.compile(r"#ifndef ([a-zA-Z0-9_]+)\n")
 DEFINE_PATTERN = re.compile(r"#define ([a-zA-Z0-9_]+)\n")
-ENDIF_PATTERN = re.compile(r"#endif // ([a-zA-Z0-9_]+)\n")
+ENDIF_PATTERN = re.compile(r"#endif  // ([a-zA-Z0-9_]+)\n")
 
 
 def validate_guards(path, lines):
@@ -111,7 +111,7 @@ def fix_guards():
             macro = guard(relpath)
             lines[3] = f"#ifndef {macro}\n"
             lines[4] = f"#define {macro}\n"
-            lines[-1] = f"#endif // {macro}\n"
+            lines[-1] = f"#endif  // {macro}\n"
             write_lines(path, lines)
 
     for_each_header(fix)
