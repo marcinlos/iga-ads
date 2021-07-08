@@ -1084,11 +1084,11 @@ public:
             const auto before = point{px - eps * nx, py - eps * ny};
             const auto after = point{px + eps * nx, py + eps * ny};
 
-            const auto v0 = (*this) (before);
-            const auto v1 = (*this) (after);
+            const auto v0 = (*this)(before);
+            const auto v1 = (*this)(after);
             return {0.5 * (v0 + v1), v0 - v1};
         } else {
-            const auto v = (*this) (p);
+            const auto v = (*this)(p);
             return {v, v};
         }
     }
@@ -1417,7 +1417,7 @@ struct L2 {
     constexpr auto operator()(double v) const noexcept -> double { return v * v; }
 
     constexpr auto operator()(const ads::value_type& v) const noexcept -> double {
-        return (*this) (v.val);
+        return (*this)(v.val);
     }
 };
 
@@ -3249,11 +3249,11 @@ public:
             const auto before = point{px - eps * nx, py - eps * ny, pz - eps * nz};
             const auto after = point{px + eps * nx, py + eps * ny, pz + eps * nz};
 
-            const auto v0 = (*this) (before);
-            const auto v1 = (*this) (after);
+            const auto v0 = (*this)(before);
+            const auto v1 = (*this)(after);
             return {0.5 * (v0 + v1), v0 - v1};
         } else {
-            const auto v = (*this) (p);
+            const auto v = (*this)(p);
             return {v, v};
         }
     }
