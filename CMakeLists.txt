@@ -21,6 +21,7 @@ option(ADS_USE_MUMPS "Use MUMPS solver" OFF)
 option(ADS_USE_GALOIS "Use Galois framework" OFF)
 option(ADS_BUILD_PROBLEMS "Build example problems" ON)
 option(ADS_BUILD_TOOLS "Build supporting applications" ON)
+set(ADS_USE_SANITIZERS "" CACHE STRING "List of sanitizers to use (semicolon separated)")
 
 include(CTest)
 include(GNUInstallDirs)
