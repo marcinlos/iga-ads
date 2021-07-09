@@ -1,3 +1,4 @@
+include(GNUInstallDirs)
 
 # Define an export set for the main library
 install(
@@ -43,6 +44,7 @@ install(
   DIRECTORY cmake/Modules
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/ads"
   COMPONENT ads-devel
+  FILES_MATCHING PATTERN "Find*"
 )
 
 # Copy public header files

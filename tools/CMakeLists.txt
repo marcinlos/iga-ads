@@ -1,3 +1,10 @@
+if (NOT ADS_BUILD_TOOLS)
+  return()
+endif()
+
+include(AddProgram)
+
+# Helper function prefixing target and executable names with "ads-"
 function(add_tool name)
   set(TARGET_NAME "ads-${name}")
 
@@ -8,5 +15,8 @@ function(add_tool name)
   endif()
 endfunction()
 
-add_tool(error GALOIS SRC error.cpp)
+# --------------------------------------------------------------------
+# Tool definitions
+# --------------------------------------------------------------------
 
+add_tool(error GALOIS SRC error.cpp)

@@ -1,3 +1,10 @@
+if (NOT ADS_BUILD_PROBLEMS)
+  return()
+endif()
+
+include(AddProgram)
+
+# Helper function prefixing target names with "ads-example-"
 function(add_example name)
   set(TARGET_NAME "ads-example-${name}")
   add_program(${TARGET_NAME} ${ARGN})
@@ -6,6 +13,10 @@ function(add_example name)
     set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME ${name})
   endif()
 endfunction()
+
+# --------------------------------------------------------------------
+# Problem definitions
+# --------------------------------------------------------------------
 
 add_example(heat_1d
   SRC

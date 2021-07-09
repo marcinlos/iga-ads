@@ -1,3 +1,8 @@
+# No need for packaging as a subproject
+if (NOT ADS_IS_TOP_LEVEL)
+  return()
+endif()
+
 # Metadata
 set(CPACK_GENERATOR "TGZ")
 set(CPACK_PACKAGE_NAME "ADS")
