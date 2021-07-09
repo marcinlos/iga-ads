@@ -21,6 +21,7 @@ option(ADS_USE_MUMPS "Use MUMPS solver" OFF)
 option(ADS_USE_GALOIS "Use Galois framework" OFF)
 option(ADS_BUILD_PROBLEMS "Build example problems" ON)
 option(ADS_BUILD_TOOLS "Build supporting applications" ON)
+option(ADS_BUILD_TESTING "Build tests (even as a subproject)" OFF)
 set(ADS_USE_SANITIZERS "" CACHE STRING "List of sanitizers to use (semicolon separated)")
 
 include(CTest)
@@ -106,7 +107,7 @@ include(cmake/AddProgram.cmake)
 # --------------------------------------------------------------------
 
 # Tests
-if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
+if ((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR ADS_BUILD_TESTING) AND BUILD_TESTING)
   add_subdirectory(tests)
 endif()
 
