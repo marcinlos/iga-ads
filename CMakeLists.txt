@@ -128,52 +128,5 @@ endif()
 # Installation
 # --------------------------------------------------------------------
 
-install(
-  TARGETS ADS ads-options-public ads-options-private
-  EXPORT ads-targets
-  LIBRARY
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    COMPONENT ads-runtime
-  ARCHIVE
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    COMPONENT ads-devel
-  INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-)
-
-install(
-  EXPORT ads-targets
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/ads"
-  NAMESPACE ADS::
-  COMPONENT ads-devel
-)
-
-include(CMakePackageConfigHelpers)
-
-configure_file(cmake/ads-config.cmake.in ads-config.cmake @ONLY)
-
-write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/ads-config-version.cmake"
-  COMPATIBILITY SameMajorVersion
-)
-
-install(
-  FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/ads-config.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/ads-config-version.cmake"
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/ads"
-  COMPONENT ads-devel
-)
-
-install(
-  DIRECTORY cmake/Modules
-  DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/ads"
-  COMPONENT ads-devel
-)
-
-install(
-  DIRECTORY include/
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  COMPONENT ads-devel
-)
-
+include(cmake/Installation.cmake)
 include(cmake/Packaging.cmake)
