@@ -40,10 +40,11 @@ include(cmake/Sanitizers.cmake)
 include(cmake/Version.cmake)
 
 # Target library definition
-add_library(ads)
-add_library(ads::ads ALIAS ads)
+add_library(ADS)
+add_library(ADS::ADS ALIAS ADS)
+set_target_properties(ADS PROPERTIES OUTPUT_NAME ads)
 
-target_sources(ads
+target_sources(ADS
   PRIVATE
     "${CMAKE_CURRENT_BINARY_DIR}/ads/version.cpp"
     src/ads/form_matrix.cpp
@@ -57,10 +58,10 @@ target_sources(ads
     src/ads/simulation/simulation_3d.cpp
 )
 
-target_link_libraries(ads PUBLIC project-options)
-target_link_libraries(ads PRIVATE project-warnings)
+target_link_libraries(ADS PUBLIC project-options)
+target_link_libraries(ADS PRIVATE project-warnings)
 
-target_include_directories(ads
+target_include_directories(ADS
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
@@ -74,27 +75,27 @@ add_subdirectory(external)
 # Numerical libraries
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
-target_link_libraries(ads PUBLIC ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+target_link_libraries(ADS PUBLIC ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 
 # Boost
 find_package(Boost 1.58.0 REQUIRED)
-target_link_libraries(ads PUBLIC Boost::boost)
+target_link_libraries(ADS PUBLIC Boost::boost)
 
 # fmt
 find_package(fmt 7.1 REQUIRED)
-target_link_libraries(ads PUBLIC fmt::fmt)
+target_link_libraries(ADS PUBLIC fmt::fmt)
 
 # MUMPS
 if (ADS_USE_MUMPS)
   find_package(MUMPS REQUIRED)
-  target_link_libraries(ads PUBLIC MUMPS::MUMPS)
+  target_link_libraries(ADS PUBLIC MUMPS::MUMPS)
 endif()
 
 # Galois
 if (ADS_USE_GALOIS)
   find_package(Galois 6.0 REQUIRED)
-  target_link_libraries(ads PUBLIC Galois::shmem)
-  target_sources(ads PRIVATE src/ads/executor/galois.cpp)
+  target_link_libraries(ADS PUBLIC Galois::shmem)
+  target_sources(ADS PRIVATE src/ads/executor/galois.cpp)
 endif()
 
 # Helper for defining programs using ads
@@ -124,7 +125,7 @@ endif()
 # --------------------------------------------------------------------
 
 install(
-  TARGETS ads project-options project-warnings
+  TARGETS ADS project-options project-warnings
   EXPORT ads-targets
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -138,7 +139,7 @@ install(
 install(
   EXPORT ads-targets
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/ads"
-  NAMESPACE ads::
+  NAMESPACE ADS::
   COMPONENT ads-devel
 )
 
