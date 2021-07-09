@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 project(ADS
   VERSION 0.1.0
-  LANGUAGES CXX)
+  DESCRIPTION "Isogeometric Finite Element Method framework"
+  LANGUAGES CXX
+)
 
 # We use C++17
 set(CMAKE_CXX_STANDARD 17)
@@ -174,3 +176,4 @@ install(
   COMPONENT ads-devel
 )
 
+include(cmake/Packaging.cmake)
