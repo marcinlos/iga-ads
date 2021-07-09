@@ -1,10 +1,12 @@
 function(add_tool name)
-  add_program(${name} ${ARGN})
+  set(TARGET_NAME "ads-${name}")
 
-  if (TARGET ${name})
-    install(TARGETS ${name} COMPONENT ads-tools)
+  add_program(${TARGET_NAME} ${ARGN})
+
+  if (TARGET ${TARGET_NAME})
+    install(TARGETS ${TARGET_NAME} COMPONENT ads-tools)
   endif()
 endfunction()
 
-add_tool(ads-error GALOIS SRC error.cpp)
+add_tool(error GALOIS SRC error.cpp)
 
