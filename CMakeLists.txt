@@ -27,9 +27,10 @@ set(ADS_USE_SANITIZERS "" CACHE STRING "List of sanitizers to use (semicolon sep
 include(CTest)
 include(GNUInstallDirs)
 
-# Imaginary library to propagate settings
-add_library(project-options INTERFACE)
-target_compile_features(project-options INTERFACE cxx_std_17)
+# Imaginary libraries to propagate settings
+add_library(ads-options-public INTERFACE)
+add_library(ads-options-private INTERFACE)
+target_compile_features(ads-options-public INTERFACE cxx_std_17)
 
 # Compiler warning options
 include(cmake/Warnings.cmake)
@@ -59,8 +60,8 @@ target_sources(ADS
     src/ads/simulation/simulation_3d.cpp
 )
 
-target_link_libraries(ADS PUBLIC project-options)
-target_link_libraries(ADS PRIVATE project-warnings)
+target_link_libraries(ADS PUBLIC ads-options-public)
+target_link_libraries(ADS PRIVATE ads-options-private)
 
 target_include_directories(ADS
   PUBLIC
@@ -126,7 +127,7 @@ endif()
 # --------------------------------------------------------------------
 
 install(
-  TARGETS ADS project-options project-warnings
+  TARGETS ADS ads-options-public ads-options-private
   EXPORT ads-targets
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}

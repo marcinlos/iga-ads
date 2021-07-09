@@ -11,7 +11,7 @@ function(add_program name)
 
   if (OK)
     add_executable(${name} ${PROGRAM_SRC})
-    target_link_libraries(${name} PRIVATE ADS project-warnings ${PROGRAM_LIBS})
+    target_link_libraries(${name} PRIVATE ADS ads-options-private ${PROGRAM_LIBS})
   endif()
 endfunction()
 
