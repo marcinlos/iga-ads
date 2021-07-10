@@ -23,7 +23,7 @@ struct cyclic_transpose_helper {
     static constexpr std::size_t Index = Rank - I - 1;
 
     static void do_transpose(Input a, Output b, Indices... indices) {
-        for (std::size_t i = 0; i < a.size(Index); ++i) {
+        for (int i = 0; i < a.size(Index); ++i) {
             Next::do_transpose(a, b, i, indices...);
         }
     }

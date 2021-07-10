@@ -22,7 +22,7 @@ struct equal_helper {
     using Next = equal_helper<T, S, Eps, Rank, Impl1, Impl2, I + 1, Indices..., std::size_t>;
 
     static bool approx_equal(Tensor1 a, Tensor2 b, Eps eps, Indices... indices) {
-        for (std::size_t i = 0; i < a.size(I); ++i) {
+        for (int i = 0; i < a.size(I); ++i) {
             if (!Next::approx_equal(a, b, eps, indices..., i)) {
                 return false;
             }

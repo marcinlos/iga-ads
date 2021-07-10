@@ -19,7 +19,7 @@ struct tensor_helper {
     template <typename F>
     static void for_each_multiindex(F&& fun, const Tensor& t, Indices... indices) {
         auto size = t.size(I);
-        for (std::size_t i = 0; i < size; ++i) {
+        for (int i = 0; i < size; ++i) {
             Next::for_each_multiindex(std::forward<F>(fun), t, i, indices...);
         }
     }
