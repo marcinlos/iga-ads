@@ -3,6 +3,7 @@
 
 #include <clara.hpp>
 
+#include "ads/util.hpp"
 #include "advection.hpp"
 #include "problems.hpp"
 #include "shishkin.hpp"
@@ -11,7 +12,7 @@ using namespace ads;
 using namespace clara;
 
 bspline::basis basis_from_points(const std::vector<double>& points, int p, int repeated_nodes) {
-    int elems = points.size() - 1;
+    auto elems = narrow_cast<int>(points.size()) - 1;
     int r = repeated_nodes + 1;
     int size = (elems - 1) * r + 2 * (p + 1);
     auto knot = bspline::knot_vector(size);

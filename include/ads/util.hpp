@@ -33,6 +33,11 @@ inline std::vector<Num> linspace(Num a, Num b, std::size_t n) {
     return xs;
 }
 
+template <typename T, typename U>
+constexpr T narrow_cast(U&& u) noexcept {
+    return static_cast<T>(std::forward<U>(u));
+}
+
 }  // namespace ads
 
 #endif  // ADS_UTIL_HPP

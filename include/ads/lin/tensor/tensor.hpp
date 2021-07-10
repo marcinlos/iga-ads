@@ -10,18 +10,18 @@
 
 namespace ads::lin {
 
-namespace impl {
+namespace detail {
 
 template <std::size_t N>
-inline std::size_t product(const std::array<std::size_t, N>& ns) {
-    std::size_t p = 1;
+int product(const std::array<int, N>& ns) {
+    int p = 1;
     for (auto n : ns) {
         p *= n;
     }
     return p;
 }
 
-}  // namespace impl
+}  // namespace detail
 
 template <typename T, std::size_t Rank>
 struct tensor : tensor_base<T, Rank, tensor<T, Rank>> {
@@ -35,7 +35,7 @@ private:
 public:
     explicit tensor(const size_array& sizes)
     : Base{sizes}
-    , buffer_(impl::product(sizes)) { }
+    , buffer_(detail::product(sizes)) { }
 
     T* data() { return buffer_.data(); }
 

@@ -6,6 +6,7 @@
 
 #include <vector>
 
+#include "ads/util.hpp"
 #include "ads/util/multi_array.hpp"
 
 namespace ads::bspline {
@@ -28,13 +29,13 @@ struct basis {
         }
     }
 
-    std::size_t knot_size() const { return knot.size(); }
+    int knot_size() const { return narrow_cast<int>(knot.size()); }
 
     int dofs() const { return knot_size() - degree - 1; }
 
     int dofs_per_element() const { return degree + 1; }
 
-    int elements() const { return points.size() - 1; }
+    int elements() const { return static_cast<int>(points.size()) - 1; }
 
     int begin_idx() const { return degree; }
 

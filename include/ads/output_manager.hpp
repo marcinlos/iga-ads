@@ -41,7 +41,7 @@ public:
 
     template <typename Solution>
     void write(const Solution& sol, std::ostream& os) {
-        for (std::size_t i = 0; i < x.size(); ++i) {
+        for (int i = 0; i < x.size(); ++i) {
             vals(i) = bspline::eval(x[i], sol, x.basis, x.ctx);
         }
         auto grid = make_grid(x.range());
@@ -66,8 +66,8 @@ public:
 
     template <typename Solution>
     void write(const Solution& sol, std::ostream& os) {
-        for (std::size_t i = 0; i < x.size(); ++i) {
-            for (std::size_t j = 0; j < y.size(); ++j) {
+        for (int i = 0; i < x.size(); ++i) {
+            for (int j = 0; j < y.size(); ++j) {
                 vals(i, j) = bspline::eval(x[i], y[j], sol, x.basis, y.basis, x.ctx, y.ctx);
             }
         }
@@ -96,9 +96,9 @@ public:
 
     template <typename Solution>
     void evaluate(const Solution& sol, value_array& out) {
-        for (std::size_t i = 0; i < x.size(); ++i) {
-            for (std::size_t j = 0; j < y.size(); ++j) {
-                for (std::size_t k = 0; k < z.size(); ++k) {
+        for (int i = 0; i < x.size(); ++i) {
+            for (int j = 0; j < y.size(); ++j) {
+                for (int k = 0; k < z.size(); ++k) {
                     out(i, j, k) = bspline::eval(x[i], y[j], z[k], sol, x.basis, y.basis, z.basis,
                                                  x.ctx, y.ctx, z.ctx);
                 }

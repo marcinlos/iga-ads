@@ -30,7 +30,7 @@ public:
 template <typename T, typename... Sizes>
 tensor_view<T, sizeof...(Sizes)> as_tensor(T* data, Sizes... sizes) {
     constexpr auto N = sizeof...(Sizes);
-    std::array<std::size_t, N> sz{sizes...};
+    std::array<int, N> sz{sizes...};
     return {data, sz};
 }
 

@@ -9,6 +9,7 @@
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
 #include "ads/solver/mumps.hpp"
+#include "ads/util.hpp"
 
 namespace ads::problems {
 
@@ -21,7 +22,7 @@ private:
         vector_type vx, vy;
         vector_type p;
 
-        state(std::array<std::size_t, 2> shape)
+        state(std::array<int, 2> shape)
         : vx{{shape[0] + 1, shape[1]}}
         , vy{{shape[0], shape[1] + 1}}
         , p{shape} { }
@@ -240,11 +241,11 @@ private:
         compute_projection(vy, x.basis, y_1.basis, e_vy);
         compute_projection(p, x.basis, y.basis, e_pressure);
 
-        mumps::problem problem(rhs.data(), rhs.size());
+        mumps::problem problem{rhs};
 
         // auto nvx = vx.data() - rhs.data();
-        auto nvy = vy.data() - rhs.data();
-        auto np = p.data() - rhs.data();
+        auto nvy = narrow_cast<int>(vy.data() - rhs.data());
+        auto np = narrow_cast<int>(p.data() - rhs.data());
 
         tensor_product(vx, vx, problem, x_1.M, y.M);
         tensor_product(vy, vy, problem, x.M, y_1.M, 1, nvy, nvy);
@@ -281,12 +282,12 @@ private:
         compute_projection(vx, x_1.basis, y.basis, fx);
         compute_projection(vy, x.basis, y_1.basis, fy);
 
-        mumps::problem problem(rhs.data(), rhs.size());
+        mumps::problem problem{rhs};
         double mu = 1;
 
-        auto nvx = vx.data() - rhs.data();
-        auto nvy = vy.data() - rhs.data();
-        auto np = p.data() - rhs.data();
+        auto nvx = narrow_cast<int>(vx.data() - rhs.data());
+        auto nvy = narrow_cast<int>(vy.data() - rhs.data());
+        auto np = narrow_cast<int>(p.data() - rhs.data());
 
         // 11 - vx, vx
         tensor_product(vx, vx, problem, Kx_1, y.M, 2 * mu);

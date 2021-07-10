@@ -72,7 +72,7 @@ void draw_segment(vector a, vector b, Array& v, Value val) {
     int y2 = static_cast<int>(bb.y / sy);
 
     if (x1 == x2) {
-        auto p = from_base_octant(oct, {x1, y1});
+        auto p = from_base_octant(oct, {static_cast<double>(x1), static_cast<double>(y1)});
         int px = static_cast<int>(p.x);
         int py = static_cast<int>(p.y);
         v(px, py) = val;
@@ -87,7 +87,7 @@ void draw_segment(vector a, vector b, Array& v, Value val) {
 
     int y = y1;
     for (int x = x1; x <= x2; ++x) {
-        auto p = from_base_octant(oct, {x, y});
+        auto p = from_base_octant(oct, {static_cast<double>(x1), static_cast<double>(y1)});
         int px = static_cast<int>(p.x);
         int py = static_cast<int>(p.y);
         v(px, py) = val;

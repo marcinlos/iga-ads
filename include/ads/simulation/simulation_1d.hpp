@@ -38,9 +38,9 @@ protected:
 
     double grad_dot(value_type a, value_type b) const { return a.dx * b.dx; }
 
-    std::array<std::size_t, 1> shape() const { return {x.dofs()}; }
+    std::array<int, 1> shape() const { return {x.dofs()}; }
 
-    std::array<std::size_t, 1> local_shape() const { return {x.basis.dofs_per_element()}; }
+    std::array<int, 1> local_shape() const { return {x.basis.dofs_per_element()}; }
 
     void prepare_matrices() { x.factorize_matrix(); }
 

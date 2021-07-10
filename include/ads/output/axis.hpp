@@ -24,9 +24,9 @@ struct axis {
     , ctx{basis.degree}
     , points{linspace(basis.begin(), basis.end(), intervals)} { }
 
-    std::size_t size() const { return points.size(); }
+    int size() const { return narrow_cast<int>(points.size()); }
 
-    std::size_t intervals() const { return size() - 1; }
+    int intervals() const { return size() - 1; }
 
     range_type range() const { return output::from_container(points); }
 

@@ -17,7 +17,7 @@ private:
     using Base = multi_array_base<T, Rank, Self, reverse_ordering>;
 
 protected:
-    using size_array = std::array<std::size_t, Rank>;
+    using size_array = typename Base::size_array;
 
 public:
     explicit tensor_base(const size_array& sizes)

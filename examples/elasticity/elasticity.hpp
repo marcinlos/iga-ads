@@ -19,7 +19,7 @@ class linear_elasticity : public ads::simulation_3d {
     struct state {
         vector_type ux, uy, uz;
         vector_type vx, vy, vz;
-        state(std::array<std::size_t, 3> shape)
+        state(std::array<int, 3> shape)
         : ux{shape}
         , uy{shape}
         , uz{shape}

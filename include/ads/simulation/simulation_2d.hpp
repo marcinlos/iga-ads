@@ -47,9 +47,9 @@ protected:
 
     double grad_dot(value_type a, value_type b) const { return a.dx * b.dx + a.dy * b.dy; }
 
-    std::array<std::size_t, 2> shape() const { return {x.dofs(), y.dofs()}; }
+    std::array<int, 2> shape() const { return {x.dofs(), y.dofs()}; }
 
-    std::array<std::size_t, 2> local_shape() const {
+    std::array<int, 2> local_shape() const {
         return {x.basis.dofs_per_element(), y.basis.dofs_per_element()};
     }
 

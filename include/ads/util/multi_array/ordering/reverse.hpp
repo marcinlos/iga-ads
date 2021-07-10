@@ -24,29 +24,29 @@ struct reverse_ordering_indexer_ : reverse_ordering_indexer_<I - 1, Rank> {
     : Base{sizes} { }
 
     template <typename... Indices>
-    std::size_t linearize(std::size_t idx, Indices... indices) const {
+    int linearize(int idx, Indices... indices) const {
         assert(idx < n() && "Index out of bounds");
         return idx + n() * Base::linearize(indices...);
     }
 
-    std::size_t size() const { return n() * Base::size(); }
+    int size() const { return n() * Base::size(); }
 
 private:
-    std::size_t n() const { return std::get<Rank - I>(Base::sizes); }
+    int n() const { return std::get<Rank - I>(Base::sizes); }
 };
 
 template <std::size_t Rank>
 struct reverse_ordering_indexer_<0, Rank> {
-    using size_array = std::array<std::size_t, Rank>;
+    using size_array = std::array<int, Rank>;
 
     size_array sizes;
 
     explicit reverse_ordering_indexer_(size_array sizes)
     : sizes(sizes) { }
 
-    std::size_t linearize() const { return 0; }
+    int linearize() const { return 0; }
 
-    std::size_t size() const { return 1; }
+    int size() const { return 1; }
 };
 
 }  // namespace impl
@@ -54,24 +54,24 @@ struct reverse_ordering_indexer_<0, Rank> {
 template <std::size_t Rank>
 struct reverse_ordering : private impl::reverse_ordering_indexer_<Rank, Rank> {
     using Indexer = impl::reverse_ordering_indexer_<Rank, Rank>;
-    using size_array = std::array<std::size_t, Rank>;
+    using size_array = typename Indexer::size_array;
 
     explicit reverse_ordering(size_array sizes)
     : Indexer{sizes} { }
 
     template <typename... Indices>
-    std::size_t linear_index(Indices... indices) const {
+    int linear_index(Indices... indices) const {
         static_assert(util::all_<std::is_integral, Indices...>::value,
                       "Indices need to be of integral type");
         return Indexer::linearize(indices...);
     }
 
-    std::size_t size(std::size_t dim) const {
+    int size(int dim) const {
         assert(dim < Rank && "Index larger than rank");
         return Indexer::sizes[dim];
     }
 
-    std::size_t size() const { return Indexer::size(); }
+    int size() const { return Indexer::size(); }
 
     size_array sizes() const { return Indexer::sizes; }
 };

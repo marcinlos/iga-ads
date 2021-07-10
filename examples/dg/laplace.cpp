@@ -112,7 +112,7 @@ public:
 
     auto elements() const noexcept -> element_range { return range(0, element_count()); }
 
-    auto element_count() const noexcept -> int { return points_.size() - 1; }
+    auto element_count() const noexcept -> int { return narrow_cast<int>(points_.size()) - 1; }
 
     auto subinterval(element_index e) const noexcept -> interval {
         return ads::subinterval(points_, e);
@@ -125,17 +125,17 @@ public:
     };
 
     auto facets() const noexcept -> facet_range {
-        const auto facet_count = points_.size();
+        const auto facet_count = narrow_cast<int>(points_.size());
         return range(0, facet_count);
     }
 
     auto boundary_facets() const noexcept -> std::array<facet_index, 2> {
-        const auto last = points_.size() - 1;
+        const auto last = narrow_cast<int>(points_.size()) - 1;
         return {0, last};
     }
 
     auto interior_facets() const noexcept -> facet_range {
-        const auto facet_count = points_.size();
+        const auto facet_count = narrow_cast<int>(points_.size());
         return range(1, facet_count - 1);
     }
 
@@ -328,7 +328,7 @@ public:
         auto dofs = dofs_on_facet(f);
         using std::begin;
         using std::end;
-        return std::distance(begin(dofs), end(dofs));
+        return narrow_cast<int>(std::distance(begin(dofs), end(dofs)));
     }
 
     auto dofs() const noexcept -> dof_range { return range(0, dof_count()); }
@@ -559,7 +559,10 @@ public:
 
     auto points() const noexcept -> const std::vector<double>& { return points_; }
 
-    auto indices() const noexcept -> point_range { return range(0, points_.size()); }
+    auto indices() const noexcept -> point_range {
+        const auto count = narrow_cast<int>(points_.size());
+        return range(0, count);
+    }
 
     auto coords(point_index q) const noexcept -> point {
         assert(q >= 0 && q < as_signed(points_.size()) && "Quadrature point index out of bounds");
@@ -2236,7 +2239,7 @@ void DGiGRM_stokes() {
     fmt::print("Total:      {:10L}\n", N + n);
 
     auto F = std::vector<double>(N + n);
-    auto problem = ads::mumps::problem{F.data(), F.size()};
+    auto problem = ads::mumps::problem{F};
     auto solver = ads::mumps::solver{};
 
     auto G = [&problem](int row, int col, double val) {

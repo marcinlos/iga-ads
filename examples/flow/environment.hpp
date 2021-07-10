@@ -32,12 +32,12 @@ class environment {
 
     std::vector<path> paths;
 
-    const double MIN = 1.0;
-    const double MAX = 1000.0;
+    static constexpr double MIN = 1.0;
+    static constexpr double MAX = 1000.0;
 
-    const std::size_t PATH_COUNT = 20;
-    const std::size_t MIN_PATH_LEN = 10;
-    const std::size_t MAX_PATH_LEN = 20;
+    static constexpr int PATH_COUNT = 20;
+    static constexpr int MIN_PATH_LEN = 10;
+    static constexpr int MAX_PATH_LEN = 20;
 
     vec3d random_vector(double a, double b) const {
         std::uniform_real_distribution<> dist{a, b};

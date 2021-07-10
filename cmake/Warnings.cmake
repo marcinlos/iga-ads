@@ -6,8 +6,6 @@ set(COMMON_WARNINGS
   -Wmisleading-indentation
   -Wfloat-conversion
   -Wold-style-cast
-  # ignored warnings
-  -Wno-narrowing
   )
 
 set(GCC_WARNINGS

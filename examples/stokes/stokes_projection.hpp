@@ -687,7 +687,7 @@ public:
         apply_velocity_bc(vx1, trial.U1x, trial.U1y, t + dt, 0);
         apply_velocity_bc(vy1, trial.U2x, trial.U2y, t + dt, 1);
 
-        mumps::problem problem_vx1(rhs.data(), rhs.size());
+        mumps::problem problem_vx1{rhs};
         assemble_matrix_velocity(problem_vx1, dt / (2 * Re), 0);
 
         solver_timer.start();
@@ -717,7 +717,7 @@ public:
         apply_velocity_bc(vx2, trial.U1x, trial.U1y, t + dt, 0);
         apply_velocity_bc(vy2, trial.U2x, trial.U2y, t + dt, 1);
 
-        mumps::problem problem_vx2(rhs2.data(), rhs2.size());
+        mumps::problem problem_vx2{rhs2};
         assemble_matrix_velocity(problem_vx2, 0, dt / (2 * Re));
 
         solver_timer.start();
@@ -800,7 +800,7 @@ public:
         vector_view p1{rhs.data() + dim_test, {trial.Px.dofs(), trial.Py.dofs()}};
 
         compute_rhs_pressure_1(rhs_p1, vx, vy, test.Px, test.Py, steps.dt);
-        mumps::problem problem_px(rhs.data(), rhs.size());
+        mumps::problem problem_px{rhs};
         assemble_matrix_pressure(problem_px, 1, 0);
 
         solver_timer.start();
@@ -814,7 +814,7 @@ public:
         vector_view p2{rhs2.data() + dim_test, {trial.Px.dofs(), trial.Py.dofs()}};
 
         compute_rhs_pressure_2(rhs_p2, p1, test.Px, test.Py);
-        mumps::problem problem_py(rhs2.data(), rhs2.size());
+        mumps::problem problem_py{rhs2};
         assemble_matrix_pressure(problem_py, 0, 1);
 
         solver_timer.start();
@@ -853,7 +853,7 @@ public:
     void compute_rhs(RHS& rhsx, RHS& rhsy, const S1& vx0, const S1& vy0, const S2& vx, const S2& vy,
                      const S3& p, Fun&& forcing, double ax, double ay, double bx, double by,
                      double conv, double c, double d) const {
-        using shape = std::array<std::size_t, 2>;
+        using shape = std::array<int, 2>;
         auto u1_shape = shape{test.U1x.basis.dofs_per_element(), test.U1y.basis.dofs_per_element()};
         auto u2_shape = shape{test.U2x.basis.dofs_per_element(), test.U2y.basis.dofs_per_element()};
 
@@ -911,7 +911,7 @@ public:
     template <typename RHS, typename Sol>
     void compute_rhs_pressure_1(RHS& rhs, const Sol& vx, const Sol& vy, const dimension& Vx,
                                 const dimension& Vy, double dt) const {
-        using shape = std::array<std::size_t, 2>;
+        using shape = std::array<int, 2>;
         auto p_shape = shape{Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element()};
 
         executor.for_each(elements(trial.Px, trial.Py), [&](index_type e) {
@@ -938,7 +938,7 @@ public:
     template <typename RHS, typename Sol>
     void compute_rhs_pressure_2(RHS& rhs, const Sol& p, const dimension& Vx,
                                 const dimension& Vy) const {
-        using shape = std::array<std::size_t, 2>;
+        using shape = std::array<int, 2>;
         auto p_shape = shape{Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element()};
 
         executor.for_each(elements(trial.Px, trial.Py), [&](index_type e) {
@@ -965,7 +965,7 @@ public:
     void compute_rhs_pressure_update(RHS& rhs, double chi) const {
         auto Re = problem.Re;
 
-        using shape = std::array<std::size_t, 2>;
+        using shape = std::array<int, 2>;
         auto p_shape = shape{trial.Px.basis.dofs_per_element(), trial.Py.basis.dofs_per_element()};
 
         executor.for_each(elements(trial.Px, trial.Py), [&](index_type e) {

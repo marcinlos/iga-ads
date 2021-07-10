@@ -85,7 +85,7 @@ class diff_computer3d : public simulation_3d {
     };
 
     state read_solution(const std::string& path) {
-        std::array<std::size_t, 3> dims{{x.dofs(), y.dofs(), z.dofs()}};
+        std::array<int, 3> dims{{x.dofs(), y.dofs(), z.dofs()}};
         vector_type ux{dims}, uy{dims}, uz{dims};
         std::ifstream in{path};
         if (!in) {

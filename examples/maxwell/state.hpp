@@ -19,7 +19,7 @@ struct state {
     field H2;
     field H3;
 
-    state(const std::array<std::size_t, 3> shape)
+    state(const std::array<int, 3> shape)
     : E1{shape}
     , E2{shape}
     , E3{shape}

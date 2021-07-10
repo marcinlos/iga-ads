@@ -182,7 +182,7 @@ private:
     }
 
     void step(int /*iter*/, double t) override {
-        mumps::problem problem(full_rhs.data(), full_rhs.size());
+        mumps::problem problem{full_rhs};
 
         std::cout << "Assembling matrix" << std::endl;
         assemble_problem(problem, steps.dt);

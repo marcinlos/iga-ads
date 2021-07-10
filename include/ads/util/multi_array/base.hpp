@@ -29,20 +29,20 @@ public:
     template <typename... Indices>
     const T& operator()(Indices... indices) const {
         check_indices_(indices...);
-        std::size_t lin_idx = Ordering::linear_index(indices...);
+        const auto lin_idx = Ordering::linear_index(indices...);
         return static_cast<const Array*>(this)->storage_(lin_idx);
     }
 
     template <typename... Indices>
     T& operator()(Indices... indices) {
         check_indices_(indices...);
-        std::size_t lin_idx = Ordering::linear_index(indices...);
+        const auto lin_idx = Ordering::linear_index(indices...);
         return static_cast<Array*>(this)->storage_(lin_idx);
     }
 
-    std::size_t size(std::size_t dim) const { return Ordering::size(dim); }
+    int size(std::size_t dim) const { return Ordering::size(dim); }
 
-    std::size_t size() const { return Ordering::size(); }
+    int size() const { return Ordering::size(); }
 
     size_array sizes() const { return Ordering::sizes(); }
 

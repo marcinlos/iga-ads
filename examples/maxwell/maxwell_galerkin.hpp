@@ -212,7 +212,7 @@ private:
         auto b = tau * tau / (4 * eps);
         auto c = tau / (2 * mu);
 
-        using shape = std::array<std::size_t, 3>;
+        using shape = std::array<int, 3>;
         auto basic_shape = shape{Vx.dofs(), Vy.dofs(), Vz.dofs()};
         // Buffer large enough for all the RHS
         auto buffer = vector_type{basic_shape};
@@ -337,7 +337,7 @@ private:
                      const vector_type& E2_new, const vector_type& E3_new, const dimension& Vx,
                      const dimension& Vy, const dimension& Vz, Form&& form) {
         zero(rhs);
-        using shape = std::array<std::size_t, 3>;
+        using shape = std::array<int, 3>;
         auto shape_loc = shape{
             Vx.basis.dofs_per_element(),
             Vy.basis.dofs_per_element(),

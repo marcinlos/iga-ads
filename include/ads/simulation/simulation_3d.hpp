@@ -49,9 +49,9 @@ public:
         return a.dx * b.dx + a.dy * b.dy + a.dz * b.dz;
     }
 
-    std::array<std::size_t, 3> shape() const { return {x.dofs(), y.dofs(), z.dofs()}; }
+    std::array<int, 3> shape() const { return {x.dofs(), y.dofs(), z.dofs()}; }
 
-    std::array<std::size_t, 3> local_shape() const {
+    std::array<int, 3> local_shape() const {
         return {x.basis.dofs_per_element(), y.basis.dofs_per_element(), z.basis.dofs_per_element()};
     }
 

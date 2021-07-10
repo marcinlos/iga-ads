@@ -521,7 +521,7 @@ public:
     }
 
     void compute_rhs(vector_view& vx, vector_view& vy) const {
-        using shape = std::array<std::size_t, 2>;
+        using shape = std::array<int, 2>;
         auto u1_shape = shape{test.U1x.basis.dofs_per_element(), test.U1y.basis.dofs_per_element()};
         auto u2_shape = shape{test.U2x.basis.dofs_per_element(), test.U2y.basis.dofs_per_element()};
 

@@ -11,7 +11,7 @@
 
 namespace ads::lin {
 
-namespace impl {
+namespace detail {
 
 template <typename T, typename S, std::size_t Rank, typename Impl1, typename Impl2, std::size_t I,
           typename... Indices>
@@ -41,8 +41,9 @@ struct cyclic_transpose_helper<T, S, Rank, Impl1, Impl2, Rank, std::size_t, Indi
 };
 
 template <std::size_t N>
-auto cyclic_transpose_sizes(const std::array<std::size_t, N>& sizes) {
-    std::array<std::size_t, N> new_sizes;
+auto cyclic_transpose_sizes(const std::array<int, N>& sizes) {
+    // TODO: use std::rotate
+    std::array<int, N> new_sizes;
     for (std::size_t i = 0; i < N - 1; ++i) {
         new_sizes[i] = sizes[i + 1];
     }
@@ -50,17 +51,17 @@ auto cyclic_transpose_sizes(const std::array<std::size_t, N>& sizes) {
     return new_sizes;
 }
 
-}  // namespace impl
+}  // namespace detail
 
 template <typename T, typename S, std::size_t Rank, typename Impl1, typename Impl2>
 void cyclic_transpose(const tensor_base<T, Rank, Impl1>& a, tensor_base<S, Rank, Impl2>& out) {
-    impl::cyclic_transpose_helper<T, S, Rank, Impl1, Impl2, 0>::do_transpose(a, out);
+    detail::cyclic_transpose_helper<T, S, Rank, Impl1, Impl2, 0>::do_transpose(a, out);
 }
 
 template <typename T, std::size_t Rank, typename Impl>
 tensor_view<T, Rank> cyclic_transpose(const tensor_base<T, Rank, Impl>& a, T* out) {
-    tensor_view<T, Rank> view{out, impl::cyclic_transpose_sizes(a.sizes())};
-    impl::cyclic_transpose_helper<T, T, Rank, Impl, decltype(view), 0>::do_transpose(a, view);
+    tensor_view<T, Rank> view{out, detail::cyclic_transpose_sizes(a.sizes())};
+    detail::cyclic_transpose_helper<T, T, Rank, Impl, decltype(view), 0>::do_transpose(a, view);
     return view;
 }
 

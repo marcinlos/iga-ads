@@ -21,7 +21,7 @@ class elasticity_victor : public ads::simulation_3d {
         vector_type vx, vy, vz;
         vector_type ax, ay, az;
 
-        state(std::array<std::size_t, 3> shape)
+        state(std::array<int, 3> shape)
         : ux{shape}
         , uy{shape}
         , uz{shape}

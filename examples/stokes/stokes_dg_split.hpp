@@ -588,7 +588,7 @@ public:
     template <typename Fun>
     void compute_rhs(double cx, double cy, vector_view& Rvx, vector_view& Rvy, vector_view& /*Rp*/,
                      double dt, Fun&& forcing) const {
-        using shape = std::array<std::size_t, 2>;
+        using shape = std::array<int, 2>;
         auto u1_shape = shape{test.U1x.basis.dofs_per_element(), test.U1y.basis.dofs_per_element()};
         auto u2_shape = shape{test.U2x.basis.dofs_per_element(), test.U2y.basis.dofs_per_element()};
 
@@ -733,7 +733,7 @@ public:
         vector_view vy{vx.data() + dU1, {trial.U2x.dofs(), trial.U2y.dofs()}};
         vector_view p{vy.data() + dU2, {trial.Px.dofs(), trial.Py.dofs()}};
 
-        mumps::problem problem(rhs.data(), rhs.size());
+        mumps::problem problem{rhs};
 
         // std::cout << "Assembling matrix" << std::endl;
         assemble_matrix(problem, Lx_lhs, Ly_lhs, dt, sx, sy);

@@ -15,6 +15,8 @@
 #    include <iostream>
 #    include <vector>
 
+#    include "ads/util.hpp"
+
 namespace ads::mumps {
 
 struct problem {
@@ -24,7 +26,7 @@ struct problem {
 
     explicit problem(std::vector<double>& rhs)
     : rhs_{rhs.data()}
-    , n{rhs.size()} { }
+    , n{static_cast<int>(rhs.size())} { }
 
     void add(int row, int col, double value) {
         rows_.push_back(row);
@@ -32,7 +34,7 @@ struct problem {
         values_.push_back(value);
     }
 
-    int nonzero_entries() const { return values_.size(); }
+    int nonzero_entries() const { return narrow_cast<int>(values_.size()); }
 
     void reserve(int entries) {
         rows_.reserve(entries);

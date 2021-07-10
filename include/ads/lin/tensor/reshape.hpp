@@ -14,14 +14,14 @@ namespace ads::lin {
 template <typename T, std::size_t Rank, typename Impl, typename... Sizes>
 tensor_view<T, sizeof...(Sizes)> reshape(tensor_base<T, Rank, Impl>& tensor, Sizes... sizes) {
     constexpr auto N = sizeof...(Sizes);
-    std::array<std::size_t, N> sz{sizes...};
+    std::array<int, N> sz{sizes...};
     return {tensor.data(), sz};
 }
 
 template <typename T, std::size_t Rank, typename Impl, typename... Sizes>
 tensor_view<T, sizeof...(Sizes)> reshape(const tensor_base<T, Rank, Impl>& tensor, Sizes... sizes) {
     constexpr auto N = sizeof...(Sizes);
-    std::array<std::size_t, N> sz{sizes...};
+    std::array<int, N> sz{sizes...};
     return {tensor.data(), sz};
 }
 
