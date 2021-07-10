@@ -1,6 +1,3 @@
-# Ensure BUILD_TESTING is defined
-include(CTest)
-
 # Only build tests if:
 # a) we are top-level project and BUILD_TESTING is TRUE
 # b) both BUILD_TESTING and ADS_BUILD_TESTING are TRUE
