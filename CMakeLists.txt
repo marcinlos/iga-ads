@@ -44,9 +44,12 @@ set_target_properties(ADS PROPERTIES OUTPUT_NAME ads)
 target_link_libraries(ADS PUBLIC ads-options-public)
 target_link_libraries(ADS PRIVATE ads-options-private)
 
+configure_file(include/ads/config.hpp.in include/ads/config.hpp @ONLY)
+
 target_include_directories(ADS
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
 )
 
 # --------------------------------------------------------------------

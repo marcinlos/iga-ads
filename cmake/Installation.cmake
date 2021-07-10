@@ -52,4 +52,12 @@ install(
   DIRECTORY include/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
   COMPONENT ads-devel
+  FILES_MATCHING PATTERN "*.hpp"
+)
+
+# Copy config header
+install(
+  DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include/"
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  COMPONENT ads-devel
 )

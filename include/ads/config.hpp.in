@@ -4,6 +4,12 @@
 #ifndef ADS_CONFIG_HPP
 #define ADS_CONFIG_HPP
 
+// Defined if ADS was configured to use Galois
+#cmakedefine ADS_USE_GALOIS
+
+// Defined if ADS was configured to use MUMPS
+#cmakedefine ADS_USE_MUMPS
+
 #include <string_view>
 
 namespace ads {
