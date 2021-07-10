@@ -3,6 +3,7 @@ target_sources(ADS
     ads/basis_data.cpp
     ads/form_matrix.cpp
     ads/bspline/bspline.cpp
+    ads/executor/galois.cpp
     ads/quad/gauss_data.cpp
     ads/simulation/dimension.cpp
     ads/simulation/simulation_base.cpp

@@ -78,7 +78,6 @@ endif()
 if (ADS_USE_GALOIS)
   find_package(Galois 6.0 REQUIRED)
   target_link_libraries(ADS PUBLIC Galois::shmem)
-  target_sources(ADS PRIVATE src/ads/executor/galois.cpp)
 endif()
 
 # --------------------------------------------------------------------

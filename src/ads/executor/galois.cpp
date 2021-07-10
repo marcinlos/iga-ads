@@ -3,7 +3,11 @@
 
 #include "ads/executor/galois.hpp"
 
-#include <galois/runtime/Statistics.h>
+#include "ads/config.hpp"
+
+#ifdef ADS_USE_GALOIS
+
+#    include <galois/runtime/Statistics.h>
 
 namespace ads {
 
@@ -17,3 +21,5 @@ void galois_executor::thread_count(int threads) {
 }
 
 }  // namespace ads
+
+#endif  // defined(ADS_USE_GALOIS)

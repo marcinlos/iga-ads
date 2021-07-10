@@ -4,11 +4,15 @@
 #ifndef ADS_EXECUTOR_GALOIS_HPP
 #define ADS_EXECUTOR_GALOIS_HPP
 
-#include <iterator>
-#include <utility>
+#include "ads/config.hpp"
 
-#include <galois/Galois.h>
-#include <galois/substrate/SimpleLock.h>
+#ifdef ADS_USE_GALOIS
+
+#    include <iterator>
+#    include <utility>
+
+#    include <galois/Galois.h>
+#    include <galois/substrate/SimpleLock.h>
 
 namespace ads {
 
@@ -45,5 +49,7 @@ public:
 };
 
 }  // namespace ads
+
+#endif  // defined(ADS_USE_GALOIS)
 
 #endif  // ADS_EXECUTOR_GALOIS_HPP

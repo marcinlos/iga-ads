@@ -4,12 +4,16 @@
 #ifndef ADS_SOLVER_MUMPS_HPP
 #define ADS_SOLVER_MUMPS_HPP
 
-#include <dmumps_c.h>
-#include <mpi.h>
+#include "ads/config.hpp"
 
-#include <cstring>
-#include <iostream>
-#include <vector>
+#ifdef ADS_USE_MUMPS
+
+#    include <dmumps_c.h>
+#    include <mpi.h>
+
+#    include <cstring>
+#    include <iostream>
+#    include <vector>
 
 namespace ads::mumps {
 
@@ -251,5 +255,7 @@ private:
 };
 
 }  // namespace ads::mumps
+
+#endif  // defined(ADS_USE_MUMPS)
 
 #endif  // ADS_SOLVER_MUMPS_HPP
