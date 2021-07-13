@@ -1,11 +1,14 @@
 
 set(COMMON_WARNINGS
   -Wall -Wextra -Wpedantic
+  -Wunused
   -Wnon-virtual-dtor
   -Woverloaded-virtual
   -Wmisleading-indentation
   -Wfloat-conversion
   -Wold-style-cast
+  -Wcast-align
+  -Woverloaded-virtual
   )
 
 set(GCC_WARNINGS
@@ -14,6 +17,7 @@ set(GCC_WARNINGS
   -Wlogical-op
   -Wuseless-cast
   -Wduplicated-cond
+  -Wduplicated-branches
   )
 
 set(CLANG_WARNINGS
