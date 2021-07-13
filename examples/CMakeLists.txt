@@ -86,6 +86,11 @@ add_example(erikkson_nonstationary MUMPS GALOIS
   SRC
   erikkson/main_nonstationary.cpp)
 
+add_example(multistep GALOIS
+  SRC
+  multistep/main.cpp
+  multistep/scheme.cpp)
+
 add_example(stokes MUMPS GALOIS
   SRC
   stokes/main.cpp)
