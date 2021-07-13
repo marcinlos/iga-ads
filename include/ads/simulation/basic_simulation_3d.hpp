@@ -33,6 +33,20 @@ protected:
 
     using point_type = std::array<double, 3>;
 
+    struct L2 {
+        double operator()(value_type a) const { return a.val * a.val; }
+    };
+
+    struct H10 {
+        double operator()(value_type a) const { return a.dx * a.dx + a.dy * a.dy + a.dz * a.dz; }
+    };
+
+    struct H1 {
+        double operator()(value_type a) const {
+            return a.val * a.val + a.dx * a.dx + a.dy * a.dy + a.dz * a.dz;
+        }
+    };
+
     value_type eval_basis(index_type e, index_type q, index_type a, const dimension& x,
                           const dimension& y, const dimension& z) const {
         auto loc = dof_global_to_local(e, a, x, y, z);
@@ -54,6 +68,25 @@ protected:
         double dzv = B1 * B2 * dB3;
 
         return {v, dxv, dyv, dzv};
+    }
+
+    double laplacian(index_type e, index_type q, index_type a, const dimension& x,
+                     const dimension& y, const dimension& z) const {
+        auto loc = dof_global_to_local(e, a, x, y, z);
+
+        const auto& bx = x.basis;
+        const auto& by = y.basis;
+        const auto& bz = z.basis;
+
+        double B1 = bx.b[e[0]][q[0]][0][loc[0]];
+        double B2 = by.b[e[1]][q[1]][0][loc[1]];
+        double B3 = bz.b[e[2]][q[2]][0][loc[2]];
+
+        double ddB1 = bx.b[e[0]][q[0]][2][loc[0]];
+        double ddB2 = by.b[e[1]][q[1]][2][loc[1]];
+        double ddB3 = by.b[e[2]][q[2]][2][loc[2]];
+
+        return ddB1 * B2 * B3 + B1 * ddB2 * B3 + B1 * B2 * ddB3;
     }
 
     template <typename Sol>
@@ -209,6 +242,29 @@ protected:
         return order.linear_index(dof[0], dof[1], dof[2]);
     }
 
+    template <typename Fun>
+    void for_boundary_dofs(const dimension& x, const dimension& y, const dimension& z,
+                           Fun&& fun) const {
+        for (auto jx = 0; jx < x.dofs(); ++jx) {
+            for (auto jy = 0; jy < y.dofs(); ++jy) {
+                fun({jx, jy, 0});
+                fun({jx, jy, z.dofs() - 1});
+            }
+        }
+        for (auto jx = 0; jx < x.dofs(); ++jx) {
+            for (auto jz = 1; jz < z.dofs() - 1; ++jz) {
+                fun({jx, 0, jz});
+                fun({jx, y.dofs() - 1, jz});
+            }
+        }
+        for (auto jy = 1; jy < y.dofs() - 1; ++jy) {
+            for (auto jz = 1; jz < z.dofs() - 1; ++jz) {
+                fun({0, jy, jz});
+                fun({x.dofs() - 1, jy, jz});
+            }
+        }
+    }
+
     bool is_boundary(int dof, const dimension& x) const { return dof == 0 || dof == x.dofs() - 1; }
 
     bool is_boundary(index_type dof, const dimension& x, const dimension& y,
@@ -235,16 +291,12 @@ protected:
 
     template <typename Fun>
     double normL2(const dimension& Ux, const dimension& Uy, const dimension& Uz, Fun&& fun) const {
-        auto L2 = [](value_type a) { return a.val * a.val; };
-        return norm(Ux, Uy, Uz, L2, fun);
+        return norm(Ux, Uy, Uz, L2{}, fun);
     }
 
     template <typename Fun>
     double normH1(const dimension& Ux, const dimension& Uy, const dimension& Uz, Fun&& fun) const {
-        auto H1 = [](value_type a) {
-            return a.val * a.val + a.dx * a.dx + a.dy * a.dy + a.dz * a.dz;
-        };
-        return norm(Ux, Uy, Uz, H1, fun);
+        return norm(Ux, Uy, Uz, H1{}, fun);
     }
 
     template <typename Sol, typename Norm>
@@ -266,17 +318,13 @@ protected:
     template <typename Sol>
     double normL2(const Sol& u, const dimension& Ux, const dimension& Uy,
                   const dimension& Uz) const {
-        auto L2 = [](value_type a) { return a.val * a.val; };
-        return norm(u, Ux, Uy, Uz, L2);
+        return norm(u, Ux, Uy, Uz, L2{});
     }
 
     template <typename Sol>
     double normH1(const Sol& u, const dimension& Ux, const dimension& Uy,
                   const dimension& Uz) const {
-        auto H1 = [](value_type a) {
-            return a.val * a.val + a.dx * a.dx + a.dy * a.dy + a.dz * a.dz;
-        };
-        return norm(u, Ux, Uy, Uz, H1);
+        return norm(u, Ux, Uy, Uz, H1{});
     }
 
     template <typename Sol, typename Fun, typename Norm>
@@ -322,33 +370,25 @@ protected:
     template <typename Sol, typename Fun>
     double errorL2(const Sol& u, const dimension& Ux, const dimension& Uy, const dimension& Uz,
                    Fun&& fun) const {
-        auto L2 = [](value_type a) { return a.val * a.val; };
-        return error(u, Ux, Uy, Uz, L2, fun);
+        return error(u, Ux, Uy, Uz, L2{}, fun);
     }
 
     template <typename Sol, typename Fun>
     double error_relative_L2(const Sol& u, const dimension& Ux, const dimension& Uy,
                              const dimension& Uz, Fun&& fun) const {
-        auto L2 = [](value_type a) { return a.val * a.val; };
-        return error_relative(u, Ux, Uy, Uz, L2, fun);
+        return error_relative(u, Ux, Uy, Uz, L2{}, fun);
     }
 
     template <typename Sol, typename Fun>
     double errorH1(const Sol& u, const dimension& Ux, const dimension& Uy, const dimension& Uz,
                    Fun&& fun) const {
-        auto H1 = [](value_type a) {
-            return a.val * a.val + a.dx * a.dx + a.dy * a.dy + a.dz * a.dz;
-        };
-        return error(u, Ux, Uy, Uz, H1, fun);
+        return error(u, Ux, Uy, Uz, H1{}, fun);
     }
 
     template <typename Sol, typename Fun>
     double error_relative_H1(const Sol& u, const dimension& Ux, const dimension& Uy,
                              const dimension& Uz, Fun&& fun) const {
-        auto H1 = [](value_type a) {
-            return a.val * a.val + a.dx * a.dx + a.dy * a.dy + a.dz * a.dz;
-        };
-        return error_relative(u, Ux, Uy, Uz, H1, fun);
+        return error_relative(u, Ux, Uy, Uz, H1{}, fun);
     }
 
     template <typename Sol>
