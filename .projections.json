@@ -1,0 +1,40 @@
+{
+    "src/*.cpp": {
+        "alternate": "include/{}.hpp",
+        "type": "source"
+    },
+    "include/*.hpp": {
+        "alternate": "src/{}.cpp",
+        "type": "header"
+    },
+    "tests/*_test.cpp": {
+        "alternate": "include/{}.hpp",
+        "type": "test"
+    },
+    "examples/*.cpp": {
+        "alternate": "examples/{}.hpp",
+        "type": "source"
+    },
+    "examples/*.hpp": {
+        "alternate": "examples/{}.cpp",
+        "type": "header"
+    },
+    "*pp": {
+        "template": [
+            "// SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>",
+            "// SPDX-License-Identifier: MIT"
+        ]
+    },
+    "*": {
+        "path": [
+            "src/**",
+            "include/**",
+            "tools/**",
+            "scripts/",
+            "tests/**",
+            "examples/**",
+            "cmake/**",
+            "external/**"
+        ]
+    }
+}
