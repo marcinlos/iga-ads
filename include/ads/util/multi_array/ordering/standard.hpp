@@ -8,6 +8,7 @@
 #include <cassert>
 #include <cstddef>
 
+#include "ads/util.hpp"
 #include "ads/util/meta.hpp"
 
 namespace ads {
@@ -70,7 +71,7 @@ struct standard_ordering : private impl::standard_ordering_indexer_<0, Rank> {
     }
 
     int size(int dim) const {
-        assert(dim < Rank && "Index larger than rank");
+        assert(dim < as_signed(Rank) && "Index larger than rank");
         return Indexer::sizes[dim];
     }
 

@@ -33,6 +33,16 @@ inline std::vector<Num> linspace(Num a, Num b, std::size_t n) {
     return xs;
 }
 
+template <typename T>
+auto as_signed(T a) {
+    return std::make_signed_t<T>(a);
+}
+
+template <typename T>
+auto as_unsigned(T a) {
+    return std::make_unsigned_t<T>(a);
+}
+
 template <typename T, typename U>
 constexpr T narrow_cast(U&& u) noexcept {
     return static_cast<T>(std::forward<U>(u));

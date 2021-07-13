@@ -7,6 +7,7 @@
 #include <cassert>
 #include <cstddef>
 
+#include "ads/util.hpp"
 #include "ads/util/meta.hpp"
 
 namespace ads {
@@ -67,7 +68,7 @@ struct reverse_ordering : private impl::reverse_ordering_indexer_<Rank, Rank> {
     }
 
     int size(int dim) const {
-        assert(dim < Rank && "Index larger than rank");
+        assert(dim < as_signed(Rank) && "Index larger than rank");
         return Indexer::sizes[dim];
     }
 

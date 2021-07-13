@@ -32,16 +32,6 @@
 
 namespace ads {
 
-template <typename T>
-auto as_signed(T a) {
-    return std::make_signed_t<T>(a);
-}
-
-template <typename T>
-auto as_unsigned(T a) {
-    return std::make_unsigned_t<T>(a);
-}
-
 using partition = std::vector<double>;
 
 using simple_index = int;
