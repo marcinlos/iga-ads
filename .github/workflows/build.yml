@@ -1,0 +1,64 @@
+name: Build
+
+on:
+  push:
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+
+env:
+  BUILD_PREFIX: ~/_build
+  INSTALL_PREFIX: ~/_install
+  BUILD_TYPE: Debug
+  GALOIS: ON
+  MUMPS: ON
+
+jobs:
+  build:
+    name: "Build"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install apt packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+            libblas-dev \
+            liblapack-dev \
+            libboost1.71-dev \
+            libboost-serialization1.71-dev \
+            libboost-iostreams1.71-dev \
+            libmumps-dev
+
+      - name: Configure environment
+        run: echo "CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)" >> $GITHUB_ENV
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        id: cache-libs
+        with:
+          path: ${{ env.INSTALL_PREFIX }}
+          key: libs
+
+      - name: Install dependencies
+        if: steps.cache-libs.outputs.cache-hit != 'true'
+        run: |
+          scripts/install-dependencies.sh ${BUILD_PREFIX} ${INSTALL_PREFIX}
+
+      - name: Configure
+        run: |
+          mkdir build
+          cmake -S . -B build \
+               -D CMAKE_PREFIX_PATH=${INSTALL_PREFIX} \
+               -D CMAKE_BUILD_TYPE=${BUILD_TYPE} \
+               -D ADS_USE_GALOIS=${GALOIS} \
+               -D ADS_USE_MUMPS=${MUMPS} \
+               -D BUILD_TESTING=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
