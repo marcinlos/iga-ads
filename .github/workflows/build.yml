@@ -92,3 +92,13 @@ jobs:
 
       - name: Run codespell
         run: scripts/spelling.sh
+
+  check-header-guards:
+    name: "Header guards"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Check header guards
+        run: scripts/guards.py check
