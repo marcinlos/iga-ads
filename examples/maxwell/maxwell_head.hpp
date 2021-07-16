@@ -56,19 +56,29 @@ public:
 
 private:
     static density_data read_density_data(const std::string& path) {
-        std::ifstream input{path};
+        std::ifstream input;
+        input.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        try {
+            input.open(path);
 
-        int nx, ny, nz;
-        input >> nz >> ny >> nx;
-        auto data = density_data{{nx, ny, nz}};
+            int nx, ny, nz;
+            input >> nz >> ny >> nx;
+            auto data = density_data{{nx, ny, nz}};
 
-        for (int i = 0; i < nx * ny * nz; ++i) {
-            int ix, iy, iz, val;
-            input >> iz >> iy >> ix >> val;
-            data(ix, iy, iz) = static_cast<byte>(val);
+            for (int i = 0; i < nx * ny * nz; ++i) {
+                int ix, iy, iz, val;
+                input >> iz >> iy >> ix >> val;
+                data(ix, iy, iz) = static_cast<byte>(val);
+            }
+
+            return data;
+        } catch (std::system_error& e) {
+            std::cerr << "Error reading " << path << ":\n";
+            std::cerr << e.code().message() << std::endl;
+            std::cerr << "Make sure " << path << " is in the current working directory."
+                      << std::endl;
+            std::exit(1);
         }
-
-        return data;
     }
 
     byte density(point_type x) const {
