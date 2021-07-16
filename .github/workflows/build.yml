@@ -77,3 +77,18 @@ jobs:
 
       - name: Run clang-format
         run: scripts/format.py check
+
+  check-spelling:
+    name: "Spelling"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install codespell
+        run: |
+          sudo apt-get update
+          sudo apt-get install codespell
+
+      - name: Run codespell
+        run: scripts/spelling.sh
