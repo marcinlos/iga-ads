@@ -62,3 +62,18 @@ jobs:
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+  check-format:
+    name: "Code formatting"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup clang-format
+        run: |
+          sudo update-alternatives --remove-all clang-format
+          sudo update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-12 100
+
+      - name: Run clang-format
+        run: scripts/format.py check
