@@ -1534,18 +1534,15 @@ auto sum_norms(Args... args) noexcept -> double {
 template <typename... Funs>
 auto save_to_file(const std::string& path, Funs&&... funs) -> void {
     constexpr auto res = 200;
-    auto buff = fmt::memory_buffer{};
+    auto out = fmt::output_file(path);
 
     for (auto x : ads::evenly_spaced(0.0, 1.0, res)) {
         for (auto y : ads::evenly_spaced(0.0, 1.0, res)) {
-            fmt::format_to(buff, "{} {}", x, y);
-            (fmt::format_to(buff, " {:.7}", funs({x, y})), ...);
-            fmt::format_to(buff, "\n");
+            out.print("{} {}", x, y);
+            (out.print(" {:.7}", funs({x, y})), ...);
+            out.print("\n");
         }
     }
-
-    auto out = std::ofstream{path};
-    out << to_string(buff);
 }
 
 constexpr double pi = M_PI;
