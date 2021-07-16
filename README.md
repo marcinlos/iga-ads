@@ -29,8 +29,8 @@ where ${PROJECT_DIR} is the root directory of the project source. Options allow 
 parts of the project are compiled. By default parallelization using Galois is disabled, example
 applications are compiled and tests are skipped.
 
-- USE_GALOIS - wether or not parallel executor using Galois framework is compiled. Disabling this options also stops example programs using it from being compiled (default: OFF)
-- COMPILE_TESTS - wether the unit tests are compiled. This should be disabled if libunittest is not available (default: OFF)
+- USE_GALOIS - whether or not parallel executor using Galois framework is compiled. Disabling this options also stops example programs using it from being compiled (default: OFF)
+- COMPILE_TESTS - whether the unit tests are compiled. This should be disabled if libunittest is not available (default: OFF)
 - SKIP_PROBLEMS - if ON, the example problems are not compiled (default: OFF)
 
 Options are specified as -Doption=value, e.g. 

@@ -130,7 +130,7 @@ def guard_from_parts(parts):
     """Combine parts of the path into a guard macro name."""
     name = parts[-1]
 
-    # Remore .in suffix from config files
+    # Remove .in suffix from config files
     if name.endswith(".in"):
         name = name[:-3]
 

@@ -13,7 +13,7 @@ target_compile_options(ads-options-public INTERFACE "-fno-omit-frame-pointer")
 # Build types are case-insensitive
 string(TOUPPER "${CMAKE_BUILD_TYPE}" UPPER_BUILD_TYPE)
 
-# Enable symbol infor for build types that usually omit it
+# Enable symbol info for build types that usually omit it
 # Without it stack traces have no line numbers
 if (NOT UPPER_BUILD_TYPE STREQUAL "DEBUG" AND
     NOT UPPER_BUILD_TYPE STREQUAL "RELWITHDEBINFO")
