@@ -33,4 +33,15 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(ADS_WARNINGS ${CLANG_WARNINGS})
 endif()
 
-target_compile_options(ads-options-private INTERFACE ${ADS_WARNINGS})
+include(CheckCXXCompilerFlag)
+
+function(add_if_supported flag)
+  check_cxx_compiler_flag(${flag} "ADS_CXX_SUPPORTS_${flag}")
+  if (ADS_CXX_SUPPORTS_${flag})
+    target_compile_options(ads-options-private INTERFACE ${flag})
+  endif()
+endfunction()
+
+foreach(flag ${ADS_WARNINGS})
+  add_if_supported(${flag})
+endforeach()
