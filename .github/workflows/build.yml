@@ -83,6 +83,7 @@ jobs:
         run: |
           mkdir build
           cmake -S . -B build \
+               -D CMAKE_CXX_FLAGS="-fdiagnostics-color=always" \
                -D CMAKE_PREFIX_PATH=${INSTALL_PREFIX} \
                -D CMAKE_BUILD_TYPE=${{ matrix.build-type }} \
                -D ADS_USE_GALOIS=${{ matrix.galois }} \
