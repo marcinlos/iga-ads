@@ -20,7 +20,7 @@ Val lerp(Num t, Val a, Val b) {
 
 template <typename Int1, typename Int2, typename Num>
 Num lerp(Int1 i, Int2 n, Num a, Num b) {
-    Num t = static_cast<Num>(i) / n;
+    Num t = static_cast<Num>(i) / static_cast<Num>(n);
     return lerp(t, a, b);
 }
 

@@ -194,8 +194,8 @@ private:
             for (int jx = max(0, ix - A.kl); jx < min(A.rows, ix + A.ku + 1); ++jx) {
                 for (int iy = 0; iy < B.rows; ++iy) {
                     for (int jy = max(0, iy - B.kl); jy < min(B.rows, iy + B.ku + 1); ++jy) {
-                        int i = &rhs1(ix, iy) - &rhs1(0, 0) + 1;
-                        int j = &rhs2(jx, jy) - &rhs2(0, 0) + 1;
+                        auto i = narrow_cast<int>(&rhs1(ix, iy) - &rhs1(0, 0) + 1);
+                        auto j = narrow_cast<int>(&rhs2(jx, jy) - &rhs2(0, 0) + 1);
                         double val = a * A(ix, jx) * B(iy, jy);
                         p.add(bx + i, by + j, val);
                     }

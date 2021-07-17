@@ -9,6 +9,7 @@
 #include "ads/output/grid.hpp"
 #include "ads/output/output_base.hpp"
 #include "ads/output/raw.hpp"
+#include "ads/util.hpp"
 
 namespace ads::output {
 
@@ -47,8 +48,8 @@ struct gnuplot_printer<2> : output_base {
         prepare_stream(os);
         const auto& xs = get_range<0>(grid);
         const auto& ys = get_range<1>(grid);
-        for (std::size_t i = 0; i < xs.size(); ++i) {
-            for (std::size_t j = 0; j < ys.size(); ++j) {
+        for (int i = 0; i < as_signed(xs.size()); ++i) {
+            for (int j = 0; j < as_signed(ys.size()); ++j) {
                 print_row(os, xs[i], ys[j], values(i, j)...);
             }
         }

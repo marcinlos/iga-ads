@@ -14,7 +14,7 @@ namespace impl {
 
 template <typename T, std::size_t Rank, std::size_t I, typename Tensor, typename... Indices>
 struct tensor_helper {
-    using Next = tensor_helper<T, Rank, I + 1, Tensor, std::size_t, Indices...>;
+    using Next = tensor_helper<T, Rank, I + 1, Tensor, int, Indices...>;
 
     template <typename F>
     static void for_each_multiindex(F&& fun, const Tensor& t, Indices... indices) {

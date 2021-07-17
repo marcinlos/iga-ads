@@ -40,7 +40,7 @@ public:
         return static_cast<Array*>(this)->storage_(lin_idx);
     }
 
-    int size(std::size_t dim) const { return Ordering::size(dim); }
+    int size(int dim) const { return Ordering::size(dim); }
 
     int size() const { return Ordering::size(); }
 

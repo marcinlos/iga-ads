@@ -19,7 +19,7 @@ struct cyclic_transpose_helper {
     using Input = const tensor_base<T, Rank, Impl1>&;
     using Output = tensor_base<S, Rank, Impl2>&;
 
-    using Next = cyclic_transpose_helper<T, S, Rank, Impl1, Impl2, I + 1, std::size_t, Indices...>;
+    using Next = cyclic_transpose_helper<T, S, Rank, Impl1, Impl2, I + 1, int, Indices...>;
     static constexpr std::size_t Index = Rank - I - 1;
 
     static void do_transpose(Input a, Output b, Indices... indices) {
@@ -31,11 +31,11 @@ struct cyclic_transpose_helper {
 
 template <typename T, typename S, std::size_t Rank, typename Impl1, typename Impl2,
           typename... Indices>
-struct cyclic_transpose_helper<T, S, Rank, Impl1, Impl2, Rank, std::size_t, Indices...> {
+struct cyclic_transpose_helper<T, S, Rank, Impl1, Impl2, Rank, int, Indices...> {
     using Input = const tensor_base<T, Rank, Impl1>&;
     using Output = tensor_base<S, Rank, Impl2>&;
 
-    static void do_transpose(Input a, Output b, size_t i, Indices... indices) {
+    static void do_transpose(Input a, Output b, int i, Indices... indices) {
         b(indices..., i) = a(i, indices...);
     }
 };

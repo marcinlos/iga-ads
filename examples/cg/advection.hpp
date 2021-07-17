@@ -533,7 +533,7 @@ private:
             dirichlet_bc(dr, side, Vx, Vy, 0);
         });
 
-        mumps::problem problem(full_rhs.data(), full_rhs.size());
+        mumps::problem problem{full_rhs};
         assemble_problem(problem, Vx, Vy);
         integration_timer.stop();
 

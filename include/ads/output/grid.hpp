@@ -36,7 +36,7 @@ auto get_range(const grid<RangeIters...>& g) {
 }
 
 template <std::size_t I, typename... RangeIters>
-std::size_t size(const grid<RangeIters...>& g) {
+int size(const grid<RangeIters...>& g) {
     return std::get<I>(g.ranges).size();
 }
 

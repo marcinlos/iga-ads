@@ -50,7 +50,7 @@ public:
     }
 
     double mu(point_type x) const {
-        int n = density(x);
+        auto n = density(x);
         return mu_vals[as_material(n)];
     }
 

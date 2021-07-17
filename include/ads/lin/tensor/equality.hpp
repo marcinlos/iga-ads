@@ -8,6 +8,7 @@
 #include <cstddef>
 
 #include "ads/lin/tensor/base.hpp"
+#include "ads/util.hpp"
 
 namespace ads::lin {
 
@@ -19,7 +20,7 @@ struct equal_helper {
     using Tensor1 = const tensor_base<T, Rank, Impl1>&;
     using Tensor2 = const tensor_base<S, Rank, Impl2>&;
 
-    using Next = equal_helper<T, S, Eps, Rank, Impl1, Impl2, I + 1, Indices..., std::size_t>;
+    using Next = equal_helper<T, S, Eps, Rank, Impl1, Impl2, I + 1, Indices..., int>;
 
     static bool approx_equal(Tensor1 a, Tensor2 b, Eps eps, Indices... indices) {
         for (int i = 0; i < a.size(I); ++i) {
@@ -47,7 +48,7 @@ struct equal_helper<T, S, Eps, Rank, Impl1, Impl2, Rank, Indices...> {
 template <typename T, typename S, typename Eps, std::size_t Rank, typename Impl1, typename Impl2>
 inline bool approx_equal(const tensor_base<T, Rank, Impl1>& a, const tensor_base<S, Rank, Impl2>& b,
                          Eps eps) {
-    for (std::size_t i = 0; i < Rank; ++i) {
+    for (int i = 0; i < as_signed(Rank); ++i) {
         if (a.size(i) != b.size(i)) {
             return false;
         }

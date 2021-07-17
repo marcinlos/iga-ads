@@ -7,6 +7,8 @@
 #include <iterator>
 #include <type_traits>
 
+#include "ads/util.hpp"
+
 namespace ads::output {
 
 template <typename RangeIter>
@@ -19,9 +21,9 @@ struct range {
     RangeIter begin;
     RangeIter end;
 
-    std::size_t size() const {
+    int size() const {
         using std::distance;
-        return distance(begin, end);
+        return narrow_cast<int>(distance(begin, end));
     }
 
     value_type operator[](std::size_t i) const { return begin[i]; }

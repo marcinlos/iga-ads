@@ -9,6 +9,7 @@ set(COMMON_WARNINGS
   -Wold-style-cast
   -Wcast-align
   -Woverloaded-virtual
+  -Wconversion
   )
 
 set(GCC_WARNINGS

@@ -19,10 +19,10 @@ struct raw_printer : output_base {
     : Base{format} { }
 
     template <typename... Data>
-    void print(std::ostream& os, std::size_t count, const Data&... data) const {
+    void print(std::ostream& os, int count, const Data&... data) const {
         ads::util::stream_state_saver guard(os);
         prepare_stream(os);
-        for (std::size_t i = 0; i < count; ++i) {
+        for (int i = 0; i < count; ++i) {
             print_row(os, data(i)...);
         }
     }
