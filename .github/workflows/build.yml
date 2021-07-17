@@ -57,8 +57,17 @@ jobs:
                -D ADS_USE_MUMPS=${MUMPS} \
                -D BUILD_TESTING=ON
 
-      - name: Build
-        run: cmake --build build
+      - name: Build library
+        run: cmake --build build --target ADS
+
+      - name: Build examples
+        run: cmake --build build --target ads-examples
+
+      - name: Build tools
+        run: cmake --build build --target ads-tools
+
+      - name: Build tests
+        run: cmake --build build --target ads-suite
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
