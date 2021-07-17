@@ -4,6 +4,9 @@ endif()
 
 include(AddProgram)
 
+# Custom target that depends on all example applications
+add_custom_target(ads-examples)
+
 # Helper function prefixing target names with "ads-example-"
 function(add_example name)
   set(TARGET_NAME "ads-example-${name}")
@@ -11,6 +14,7 @@ function(add_example name)
 
   if (TARGET ${TARGET_NAME})
     set_target_properties(${TARGET_NAME} PROPERTIES OUTPUT_NAME ${name})
+    add_dependencies(ads-examples ${TARGET_NAME})
   endif()
 endfunction()
 
