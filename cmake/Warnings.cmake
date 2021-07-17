@@ -24,6 +24,7 @@ set(GCC_WARNINGS
 set(CLANG_WARNINGS
   ${COMMON_WARNINGS}
   -Wno-missing-braces
+  -Wno-sign-conversion
   )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
