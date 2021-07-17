@@ -28,6 +28,11 @@ set(CLANG_WARNINGS
   )
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  # GCC < 8 warns about unused structured binding names
+  if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 8.0.0)
+    list(APPEND GCC_WARNINGS -Wno-unused-variable)
+  endif()
+
   set(ADS_WARNINGS ${GCC_WARNINGS})
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   set(ADS_WARNINGS ${CLANG_WARNINGS})
