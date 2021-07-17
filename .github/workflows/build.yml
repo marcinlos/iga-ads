@@ -15,8 +15,38 @@ env:
 
 jobs:
   build:
-    name: "Build"
+    strategy:
+      fail-fast: false
+      matrix:
+        cxx: [GCC-7, GCC-8, GCC-9, GCC-10, GCC-11, Clang-6, Clang-10, Clang-12]
+        build-type: [Release]
+        galois: [ON]
+        mumps: [ON]
+
+        include:
+          - cxx: gcc-10
+            build-type: Release
+            galois: ON
+            mumps: OFF
+
+          - cxx: gcc-10
+            build-type: Release
+            galois: OFF
+            mumps: ON
+
+          - cxx: gcc-10
+            build-type: Release
+            galois: OFF
+            mumps: OFF
+
+    name: >
+      ${{ matrix.cxx }}
+      ${{ matrix.build-type }}
+      (${{ matrix.galois == 'ON' && 'Galois' || '' }}
+      ${{ matrix.mumps == 'ON' && 'MUMPS' || '' }})
+
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -31,6 +61,9 @@ jobs:
             libboost-serialization1.71-dev \
             libboost-iostreams1.71-dev \
             libmumps-dev
+
+      - name: Setup compiler
+        run: scripts/setup-compiler.sh ${{ matrix.cxx }}
 
       - name: Configure environment
         run: echo "CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)" >> $GITHUB_ENV
@@ -52,9 +85,9 @@ jobs:
           mkdir build
           cmake -S . -B build \
                -D CMAKE_PREFIX_PATH=${INSTALL_PREFIX} \
-               -D CMAKE_BUILD_TYPE=${BUILD_TYPE} \
-               -D ADS_USE_GALOIS=${GALOIS} \
-               -D ADS_USE_MUMPS=${MUMPS} \
+               -D CMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+               -D ADS_USE_GALOIS=${{ matrix.galois }} \
+               -D ADS_USE_MUMPS=${{ matrix.mumps }} \
                -D BUILD_TESTING=ON
 
       - name: Build library
