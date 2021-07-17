@@ -17,6 +17,15 @@ jobs:
   build:
     name: "Build"
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        cxx: [g++-6, g++-7, g++-9, g++-8, g++-10, clang++-5, clang++-10]
+        build-type: [Release]
+        galois: [ON]
+        mumps: [ON]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -24,6 +33,7 @@ jobs:
       - name: Install apt packages
         run: |
           sudo apt-get update
+          sudo apt-get install ${{ matrix.cxx }}
           sudo apt-get install \
             libblas-dev \
             liblapack-dev \
@@ -48,13 +58,15 @@ jobs:
           scripts/install-dependencies.sh ${BUILD_PREFIX} ${INSTALL_PREFIX}
 
       - name: Configure
+        env:
+          CXX: ${{ matrix.cxx }}
         run: |
           mkdir build
           cmake -S . -B build \
                -D CMAKE_PREFIX_PATH=${INSTALL_PREFIX} \
-               -D CMAKE_BUILD_TYPE=${BUILD_TYPE} \
-               -D ADS_USE_GALOIS=${GALOIS} \
-               -D ADS_USE_MUMPS=${MUMPS} \
+               -D CMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+               -D ADS_USE_GALOIS=${{ matrix.galois }} \
+               -D ADS_USE_MUMPS=${{ matrix.mumps }} \
                -D BUILD_TESTING=ON
 
       - name: Build library
