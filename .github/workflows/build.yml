@@ -77,8 +77,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cache-libs.outputs.cache-hit != 'true'
-        run: |
-          scripts/install-dependencies.sh ${BUILD_PREFIX} ${INSTALL_PREFIX}
+        run: scripts/install-dependencies.sh ${BUILD_PREFIX} ${INSTALL_PREFIX}
 
       - name: Configure
         run: |
