@@ -904,7 +904,7 @@ public:
         auto data_x = evaluate_basis(points.xs(), space_x_, ders);
         auto data_y = evaluate_basis(points.ys(), space_y_, ders);
 
-        return evaluator{this, e, ders, std::move(data_x), std::move(data_y)};
+        return evaluator{this, e, std::move(data_x), std::move(data_y)};
     }
 
     auto dof_evaluator(facet_index f, const edge_quadrature_points& points, int ders) const
@@ -913,12 +913,12 @@ public:
         if (dir == orientation::horizontal) {
             auto data_x = evaluate_basis(points.points(), space_x_, ders);
             auto data_y = evaluate_basis(fy, space_y_, ders);
-            return edge_evaluator{this, f, ders, std::move(data_x), std::move(data_y)};
+            return edge_evaluator{this, f, std::move(data_x), std::move(data_y)};
         } else {
             assert(dir == orientation::vertical && "Invalid edge orientation");
             auto data_x = evaluate_basis(fx, space_x_, ders);
             auto data_y = evaluate_basis(points.points(), space_y_, ders);
-            return edge_evaluator{this, f, ders, std::move(data_y), std::move(data_x)};
+            return edge_evaluator{this, f, std::move(data_y), std::move(data_x)};
         }
     }
 
@@ -927,18 +927,16 @@ private:
     private:
         const space* space_;
         element_index element_;
-        int derivatives_;
         bspline_basis_values vals_x_;
         bspline_basis_values vals_y_;
 
     public:
         using point_index = tensor_quadrature_points::point_index;
 
-        evaluator(const space* space, element_index element, int derivatives,
-                  bspline_basis_values vals_x, bspline_basis_values vals_y) noexcept
+        evaluator(const space* space, element_index element, bspline_basis_values vals_x,
+                  bspline_basis_values vals_y) noexcept
         : space_{space}
         , element_{element}
-        , derivatives_{derivatives}
         , vals_x_{std::move(vals_x)}
         , vals_y_{std::move(vals_y)} { }
 
@@ -956,19 +954,16 @@ private:
     private:
         const space* space_;
         facet_index facet_;
-        int derivatives_;
         bspline_basis_values vals_interval_;
         bspline_basis_values_on_vertex vals_point_;
 
     public:
         using point_index = edge_quadrature_points::point_index;
 
-        edge_evaluator(const space* space, facet_index facet, int derivatives,
-                       bspline_basis_values vals_interval,
+        edge_evaluator(const space* space, facet_index facet, bspline_basis_values vals_interval,
                        bspline_basis_values_on_vertex vals_point) noexcept
         : space_{space}
         , facet_{facet}
-        , derivatives_{derivatives}
         , vals_interval_{std::move(vals_interval)}
         , vals_point_{std::move(vals_point)} { }
 
@@ -2994,7 +2989,7 @@ public:
         auto data_y = evaluate_basis(points.ys(), space_y_, ders);
         auto data_z = evaluate_basis(points.zs(), space_z_, ders);
 
-        return evaluator{this, e, ders, std::move(data_x), std::move(data_y), std::move(data_z)};
+        return evaluator{this, e, std::move(data_x), std::move(data_y), std::move(data_z)};
     }
 
     auto dof_evaluator(facet_index f, const face_quadrature_points& points, int ders) const
@@ -3007,7 +3002,7 @@ public:
             auto data_y = evaluate_basis(points.points1(), space_y_, ders);
             auto data_z = evaluate_basis(points.points2(), space_z_, ders);
             return face_evaluator{
-                this, f, ders, std::move(data_y), std::move(data_z), std::move(data_x),
+                this, f, std::move(data_y), std::move(data_z), std::move(data_x),
             };
         } else if (dir == orientation3::dir_y) {
             // 1 - x, 2 - z
@@ -3015,7 +3010,7 @@ public:
             auto data_y = evaluate_basis(fy, space_y_, ders);
             auto data_z = evaluate_basis(points.points2(), space_z_, ders);
             return face_evaluator{
-                this, f, ders, std::move(data_x), std::move(data_z), std::move(data_y),
+                this, f, std::move(data_x), std::move(data_z), std::move(data_y),
             };
         } else {
             assert(dir == orientation3::dir_z && "Invalid face orientation");
@@ -3024,7 +3019,7 @@ public:
             auto data_y = evaluate_basis(points.points2(), space_y_, ders);
             auto data_z = evaluate_basis(fz, space_z_, ders);
             return face_evaluator{
-                this, f, ders, std::move(data_x), std::move(data_y), std::move(data_z),
+                this, f, std::move(data_x), std::move(data_y), std::move(data_z),
             };
         }
     }
@@ -3034,7 +3029,6 @@ private:
     private:
         const space3* space_;
         element_index element_;
-        int derivatives_;
         bspline_basis_values vals_x_;
         bspline_basis_values vals_y_;
         bspline_basis_values vals_z_;
@@ -3042,12 +3036,10 @@ private:
     public:
         using point_index = tensor_quadrature_points3::point_index;
 
-        evaluator(const space3* space, element_index element, int derivatives,
-                  bspline_basis_values vals_x, bspline_basis_values vals_y,
-                  bspline_basis_values vals_z) noexcept
+        evaluator(const space3* space, element_index element, bspline_basis_values vals_x,
+                  bspline_basis_values vals_y, bspline_basis_values vals_z) noexcept
         : space_{space}
         , element_{element}
-        , derivatives_{derivatives}
         , vals_x_{std::move(vals_x)}
         , vals_y_{std::move(vals_y)}
         , vals_z_{std::move(vals_z)} { }
@@ -3067,7 +3059,6 @@ private:
     private:
         const space3* space_;
         facet_index facet_;
-        int derivatives_;
 
         // dir x: 1 - y, 2 - z
         // dir y: 1 - x, 2 - z
@@ -3081,12 +3072,11 @@ private:
         // using point_index = face_quadrature_points::point_index;
         using point_index = std::tuple<int, int>;
 
-        face_evaluator(const space3* space, facet_index facet, int derivatives,
-                       bspline_basis_values vals_interval1, bspline_basis_values vals_interval2,
+        face_evaluator(const space3* space, facet_index facet, bspline_basis_values vals_interval1,
+                       bspline_basis_values vals_interval2,
                        bspline_basis_values_on_vertex vals_point) noexcept
         : space_{space}
         , facet_{facet}
-        , derivatives_{derivatives}
         , vals_interval1_{std::move(vals_interval1)}
         , vals_interval2_{std::move(vals_interval2)}
         , vals_point_{std::move(vals_point)} { }
