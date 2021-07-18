@@ -42,6 +42,6 @@ runs:
               -D CMAKE_BUILD_TYPE=${{ inputs.build-type }} \
               -D ADS_USE_GALOIS=${{ inputs.use-galois }} \
               -D ADS_USE_MUMPS=${{ inputs.use-mumps }} \
-              -D ADS_USE_SANITIZERS=${{ inputs.use-sanitizers }} \
+              -D ADS_USE_SANITIZERS="${{ inputs.use-sanitizers }}" \
               ${{ inputs.other-flags }} \
               -D BUILD_TESTING=ON
