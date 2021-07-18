@@ -51,22 +51,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Install apt packages
-        run: |
-          sudo apt-get update
-          sudo apt-get install \
-            libblas-dev \
-            liblapack-dev \
-            libboost1.71-dev \
-            libboost-serialization1.71-dev \
-            libboost-iostreams1.71-dev \
-            libmumps-dev
-
-      - name: Setup compiler
-        run: scripts/setup-compiler.sh ${{ matrix.cxx }}
-
-      - name: Configure environment
-        run: echo "CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)" >> $GITHUB_ENV
+      - name: Prepare for building
+        uses: ./.github/actions/prepare
+        with:
+          cxx: ${{ matrix.cxx }}
 
       - name: Cache dependencies
         uses: actions/cache@v2
@@ -80,15 +68,12 @@ jobs:
         run: scripts/install-dependencies.sh ${BUILD_PREFIX} ${INSTALL_PREFIX}
 
       - name: Configure
-        run: |
-          mkdir build
-          cmake -S . -B build \
-               -D CMAKE_CXX_FLAGS="-Werror -fdiagnostics-color=always" \
-               -D CMAKE_PREFIX_PATH=${INSTALL_PREFIX} \
-               -D CMAKE_BUILD_TYPE=${{ matrix.build-type }} \
-               -D ADS_USE_GALOIS=${{ matrix.galois }} \
-               -D ADS_USE_MUMPS=${{ matrix.mumps }} \
-               -D BUILD_TESTING=ON
+        uses: ./.github/actions/configure
+        with:
+          cxx-flags: -Werror -fdiagnostics-color=always
+          build-type: ${{ matrix.build-type }}
+          use-galois: ${{ matrix.galois }}
+          use-mumps: ${{ matrix.mumps }}
 
       - name: Build library
         run: cmake --build build --target ADS

@@ -1,0 +1,47 @@
+name: Configure ADS
+description: Downloads dependencies and runs cmake
+
+inputs:
+  cxx-flags:
+    description: Additional compilation flags
+    required: false
+    default: ''
+
+  build-type:
+    description: Type of build - Release, Debug etc.
+    required: true
+
+  use-galois:
+    description: Passed to ADS_USE_GALOIS
+    required: true
+
+  use-mumps:
+    description: Passed to ADS_USE_MUMPS
+    required: true
+
+  use-sanitizers:
+    description: Passed to ADS_USE_SANITIZERS
+    required: false
+    default: OFF
+
+  other-flags:
+    description: Additional options to pass to CMake
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Configure
+      shell: bash
+      run: |
+        mkdir build
+        cmake -S . -B build \
+              -D CMAKE_CXX_FLAGS="${{ inputs.cxx-flags }}" \
+              -D CMAKE_PREFIX_PATH=${INSTALL_PREFIX} \
+              -D CMAKE_BUILD_TYPE=${{ inputs.build-type }} \
+              -D ADS_USE_GALOIS=${{ inputs.use-galois }} \
+              -D ADS_USE_MUMPS=${{ inputs.use-mumps }} \
+              -D ADS_USE_SANITIZERS=${{ inputs.use-sanitizers }} \
+              ${{ inputs.other-flags }} \
+              -D BUILD_TESTING=ON

@@ -1,0 +1,30 @@
+name: Prepare environment
+description: Installs packages and sets relevant variables
+
+inputs:
+  cxx:
+    description: Compiler to use
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install apt packages
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install \
+          libblas-dev \
+          liblapack-dev \
+          libboost1.71-dev \
+          libboost-serialization1.71-dev \
+          libboost-iostreams1.71-dev \
+          libmumps-dev
+
+    - name: Setup compiler
+      shell: bash
+      run: scripts/setup-compiler.sh ${{ inputs.cxx }}
+
+    - name: Set variables
+      shell: bash
+      run: echo "CMAKE_BUILD_PARALLEL_LEVEL=$(nproc)" >> $GITHUB_ENV
