@@ -127,6 +127,61 @@ jobs:
       - name: Test
         run: ctest --test-dir build --output-on-failure
 
+  coverage:
+    name: "Code coverage"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Prepare for building
+        uses: ./.github/actions/prepare
+        with:
+          cxx: Clang-12
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        id: cache-libs
+        with:
+          path: ${{ env.INSTALL_PREFIX }}
+          key: libs
+
+      - name: Install dependencies
+        if: steps.cache-libs.outputs.cache-hit != 'true'
+        run: scripts/install-dependencies.sh ${BUILD_PREFIX} ${INSTALL_PREFIX}
+
+      - name: Setup tools
+        run: |
+          sudo update-alternatives --install /usr/bin/llvm-profdata llvm-profdata /usr/bin/llvm-profdata-12 100
+          sudo update-alternatives --install /usr/bin/llvm-cov llvm-cov /usr/bin/llvm-cov-12 100
+
+      - name: Configure
+        uses: ./.github/actions/configure
+        with:
+          cxx-flags: -fprofile-instr-generate -fcoverage-mapping -O0 -fno-inline -fno-elide-constructors
+          build-type: Debug
+          use-galois: ON
+          use-mumps: ON
+
+      - name: Build tests
+        run: cmake --build build --target ads-suite
+
+      - name: Generate coverage data
+        env:
+          LLVM_PROFILE_FILE: "ads-cov-%p.profraw"
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Merge coverage data
+        run: find build -name "ads-cov-*.profraw" | xargs llvm-profdata merge -sparse -o coverage.profdata
+
+      - name: Create coverage report
+        run: llvm-cov show build/tests/suite -instr-profile=coverage.profdata src/ include/ > coverage.txt
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          files: coverage.txt
+
   check-format:
     name: "Code formatting"
     runs-on: ubuntu-20.04
