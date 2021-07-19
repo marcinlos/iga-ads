@@ -17,6 +17,8 @@ option(ADS_USE_GALOIS "Use Galois framework" OFF)
 option(ADS_BUILD_PROBLEMS "Build example problems" ON)
 option(ADS_BUILD_TOOLS "Build supporting applications" ON)
 option(ADS_BUILD_TESTING "Build tests (even as a subproject)" OFF)
+
+option(ADS_ENABLE_COVERAGE "Code coverage" OFF)
 set(ADS_USE_SANITIZERS "" CACHE STRING "List of sanitizers to use (semicolon separated)")
 
 # --------------------------------------------------------------------
@@ -28,6 +30,9 @@ include(cmake/Warnings.cmake)
 
 # Sanitizers
 include(cmake/Sanitizers.cmake)
+
+# Code coverage
+include(cmake/Coverage.cmake)
 
 # Version information
 include(cmake/Version.cmake)

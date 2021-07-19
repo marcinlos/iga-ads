@@ -24,6 +24,11 @@ inputs:
     required: false
     default: OFF
 
+  enable-coverage:
+    description: Passed to ADS_ENABLE_COVERAGE
+    required: false
+    default: OFF
+
   other-flags:
     description: Additional options to pass to CMake
     required: false
@@ -43,5 +48,6 @@ runs:
               -D ADS_USE_GALOIS=${{ inputs.use-galois }} \
               -D ADS_USE_MUMPS=${{ inputs.use-mumps }} \
               -D ADS_USE_SANITIZERS="${{ inputs.use-sanitizers }}" \
+              -D ADS_ENABLE_COVERAGE=${{ inputs.enable-coverage }} \
               ${{ inputs.other-flags }} \
               -D BUILD_TESTING=ON

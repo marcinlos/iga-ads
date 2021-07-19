@@ -158,29 +158,18 @@ jobs:
       - name: Configure
         uses: ./.github/actions/configure
         with:
-          cxx-flags: -fprofile-instr-generate -fcoverage-mapping -O0 -fno-inline -fno-elide-constructors
           build-type: Debug
           use-galois: ON
           use-mumps: ON
-
-      - name: Build tests
-        run: cmake --build build --target ads-suite
+          enable-coverage: ON
 
       - name: Generate coverage data
-        env:
-          LLVM_PROFILE_FILE: "ads-cov-%p.profraw"
-        run: ctest --test-dir build --output-on-failure
-
-      - name: Merge coverage data
-        run: find build -name "ads-cov-*.profraw" | xargs llvm-profdata merge -sparse -o coverage.profdata
-
-      - name: Create coverage report
-        run: llvm-cov show build/tests/suite -instr-profile=coverage.profdata src/ include/ > coverage.txt
+        run: cmake --build build --target coverage
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v1
         with:
-          files: coverage.txt
+          files: build/coverage.txt
 
   check-format:
     name: "Code formatting"
