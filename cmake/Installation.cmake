@@ -2,7 +2,7 @@ include(GNUInstallDirs)
 
 # Define an export set for the main library
 install(
-  TARGETS ADS ads-options-public ads-options-private
+  TARGETS ADS ads-objects ads-options-public ads-options-private
   EXPORT ads-targets
   LIBRARY
     DESTINATION ${CMAKE_INSTALL_LIBDIR}

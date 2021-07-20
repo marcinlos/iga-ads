@@ -1,4 +1,5 @@
-target_sources(ADS
+
+target_sources(ads-objects
   PRIVATE
     ads/basis_data.cpp
     ads/form_matrix.cpp
@@ -13,4 +14,4 @@ target_sources(ADS
 )
 
 # Add configured source file with version information
-target_sources(ADS PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/ads/version.cpp")
+target_sources(ads-objects PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/ads/version.cpp")

@@ -45,13 +45,16 @@ add_library(ADS)
 add_library(ADS::ADS ALIAS ADS)
 set_target_properties(ADS PROPERTIES OUTPUT_NAME ads)
 
+add_library(ads-objects OBJECT)
+target_link_libraries(ADS PUBLIC ads-objects)
+
 # Apply project settings
-target_link_libraries(ADS PUBLIC ads-options-public)
-target_link_libraries(ADS PRIVATE ads-options-private)
+target_link_libraries(ads-objects PUBLIC ads-options-public)
+target_link_libraries(ads-objects PRIVATE ads-options-private)
 
 configure_file(include/ads/config.hpp.in include/ads/config.hpp @ONLY)
 
-target_include_directories(ADS
+target_include_directories(ads-objects
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
@@ -67,22 +70,22 @@ add_subdirectory(external)
 # Numerical libraries
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
-target_link_libraries(ADS PUBLIC ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+target_link_libraries(ads-objects PUBLIC ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 
 find_package(Boost 1.58.0 REQUIRED)
-target_link_libraries(ADS PUBLIC Boost::boost)
+target_link_libraries(ads-objects PUBLIC Boost::boost)
 
 find_package(fmt 7.1 REQUIRED)
-target_link_libraries(ADS PUBLIC fmt::fmt)
+target_link_libraries(ads-objects PUBLIC fmt::fmt)
 
 if (ADS_USE_MUMPS)
   find_package(MUMPS REQUIRED)
-  target_link_libraries(ADS PUBLIC MUMPS::MUMPS)
+  target_link_libraries(ads-objects PUBLIC MUMPS::MUMPS)
 endif()
 
 if (ADS_USE_GALOIS)
   find_package(Galois 6.0 REQUIRED)
-  target_link_libraries(ADS PUBLIC Galois::shmem)
+  target_link_libraries(ads-objects PUBLIC Galois::shmem)
 endif()
 
 # --------------------------------------------------------------------

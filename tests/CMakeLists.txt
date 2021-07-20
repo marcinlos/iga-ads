@@ -24,6 +24,6 @@ target_sources(ads-suite
 
 target_include_directories(ads-suite PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(ads-suite PRIVATE ADS ads-options-private Catch2::Catch2)
+target_link_libraries(ads-suite PRIVATE ads-objects ads-options-private Catch2::Catch2)
 
 catch_discover_tests(ads-suite PROPERTIES LABELS "ADS")
