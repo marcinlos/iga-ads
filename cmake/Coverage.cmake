@@ -2,6 +2,8 @@ if (NOT ADS_ENABLE_COVERAGE)
   return()
 endif()
 
+find_program(ADS_LCOV lcov)
+find_program(ADS_GENHTML genhtml)
 find_program(ADS_LLVM_COV llvm-cov)
 find_program(ADS_LLVM_PROFDATA llvm-profdata)
 
@@ -9,6 +11,51 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
   set(ADS_CXX_FLAGS_COVERAGE --coverage -fno-inline -O0)
   set(ADS_EXE_LINKER_FLAGS_COVERAGE --coverage)
+
+  add_custom_target(coverage
+    COMMAND
+      ${ADS_LCOV}
+        --zerocounters
+        --directory ${PROJECT_BINARY_DIR}
+        --rc lcov_branch_coverage=1
+    COMMAND
+      ${ADS_LCOV}
+        --capture --initial
+        --directory ${PROJECT_BINARY_DIR}
+        --output-file baseline.info
+        --rc lcov_branch_coverage=1
+    COMMAND
+      ${CMAKE_CTEST_COMMAND}
+    COMMAND
+      ${ADS_LCOV}
+        --capture
+        --directory ${PROJECT_BINARY_DIR}
+        --output-file tests.info
+        --rc lcov_branch_coverage=1
+    COMMAND
+      ${ADS_LCOV}
+        --add-tracefile baseline.info
+        --add-tracefile tests.info
+        --output-file coverage-full.info
+        --rc lcov_branch_coverage=1
+    COMMAND
+      ${ADS_LCOV}
+        --extract coverage-full.info
+          '${PROJECT_SOURCE_DIR}/src/*'
+          '${PROJECT_SOURCE_DIR}/include/*'
+        --output-file coverage.info
+        --rc lcov_branch_coverage=1
+    COMMAND
+      ${ADS_GENHTML} coverage.info
+        --prefix ${PROJECT_SOURCE_DIR}
+        --output-directory html
+        --show-details
+        --title "ADS coverage"
+        --demangle-cpp
+        --legend
+        --branch-coverage
+    DEPENDS ads-suite
+  )
 
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 
