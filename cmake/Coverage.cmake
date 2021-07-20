@@ -37,10 +37,20 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     COMMAND
       ${ADS_LLVM_COV} show
         -instr-profile coverage.profdata
+        -Xdemangler=c++filt
         $<TARGET_FILE:ads-suite>
         ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/src
         > coverage.txt
+    COMMAND
+      ${ADS_LLVM_COV} show
+        -format=html
+        -output-dir=html
+        -Xdemangler=c++filt
+        -instr-profile coverage.profdata
+        $<TARGET_FILE:ads-suite>
+        ${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/src
     DEPENDS ads-suite
   )
 
