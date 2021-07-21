@@ -22,8 +22,10 @@ jobs:
         build-type: [Release]
         galois: [ON]
         mumps: [ON]
+        shared: [OFF]
 
         include:
+          # Feature combinations
           - cxx: gcc-10
             build-type: Release
             galois: ON
@@ -39,9 +41,23 @@ jobs:
             galois: OFF
             mumps: OFF
 
+          # Shared libraries
+          - cxx: gcc-10
+            build-type: Release
+            galois: ON
+            mumps: ON
+            shared: ON
+
+          - cxx: Clang-12
+            build-type: Release
+            galois: ON
+            mumps: ON
+            shared: ON
+
     name: >
       ${{ matrix.cxx }}
       ${{ matrix.build-type }}
+      ${{ matrix.shared == 'ON' && 'shared' || '' }}
       (${{ matrix.galois == 'ON' && 'Galois' || '' }}
       ${{ matrix.mumps == 'ON' && 'MUMPS' || '' }})
 
@@ -74,6 +90,7 @@ jobs:
           build-type: ${{ matrix.build-type }}
           use-galois: ${{ matrix.galois }}
           use-mumps: ${{ matrix.mumps }}
+          shared: ${{ matrix.shared }}
 
       - name: Build library
         run: cmake --build build --target ADS
