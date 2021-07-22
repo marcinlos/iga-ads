@@ -5,6 +5,10 @@ on:
     paths-ignore:
       - 'README.md'
       - 'docs/**'
+  pull_request:
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
 
 env:
   BUILD_PREFIX: ~/_build
