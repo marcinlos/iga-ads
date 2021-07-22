@@ -5,6 +5,8 @@ set -eux
 IFS=- read -r COMPILER VERSION <<< "${1,,}"
 
 echo "Compiler: ${COMPILER}, version ${VERSION}"
+echo "::set-output name=cxx-family::${COMPILER}"
+echo "::set-output name=cxx-version::${VERSION}"
 
 case ${COMPILER} in
   gcc)

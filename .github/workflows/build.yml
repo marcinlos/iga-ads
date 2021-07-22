@@ -20,6 +20,35 @@ env:
   MUMPS: ON
 
 jobs:
+  prepare-dependencies:
+    strategy:
+      matrix:
+        cxx: [GCC-10, Clang-12]
+
+    name: Build dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Prepare for building
+        id: prepare
+        uses: ./.github/actions/prepare
+        with:
+          cxx: ${{ matrix.cxx }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        id: cache-libs
+        with:
+          path: ${{ env.INSTALL_PREFIX }}
+          key: libs-${{ steps.prepare.outputs.cxx-family }}
+
+      - name: Build dependencies
+        if: steps.cache-libs.outputs.cache-hit != 'true'
+        run: scripts/install-dependencies.sh ${BUILD_PREFIX} ${INSTALL_PREFIX}
+
   build:
     strategy:
       fail-fast: false
@@ -68,26 +97,23 @@ jobs:
       ${{ matrix.mumps == 'ON' && 'MUMPS' || '' }})
 
     runs-on: ubuntu-latest
+    needs: prepare-dependencies
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Prepare for building
+        id: prepare
         uses: ./.github/actions/prepare
         with:
           cxx: ${{ matrix.cxx }}
 
       - name: Cache dependencies
         uses: actions/cache@v2
-        id: cache-libs
         with:
           path: ${{ env.INSTALL_PREFIX }}
-          key: libs
-
-      - name: Install dependencies
-        if: steps.cache-libs.outputs.cache-hit != 'true'
-        run: scripts/install-dependencies.sh ${BUILD_PREFIX} ${INSTALL_PREFIX}
+          key: libs-${{ steps.prepare.outputs.cxx-family }}
 
       - name: Configure
         uses: ./.github/actions/configure
@@ -116,25 +142,23 @@ jobs:
   sanitize:
     name: "Sanitizers"
     runs-on: ubuntu-latest
+    needs: prepare-dependencies
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Prepare for building
+        id: prepare
         uses: ./.github/actions/prepare
         with:
           cxx: Clang-12
 
       - name: Cache dependencies
         uses: actions/cache@v2
-        id: cache-libs
         with:
           path: ${{ env.INSTALL_PREFIX }}
-          key: libs
-
-      - name: Install dependencies
-        if: steps.cache-libs.outputs.cache-hit != 'true'
-        run: scripts/install-dependencies.sh ${BUILD_PREFIX} ${INSTALL_PREFIX}
+          key: libs-${{ steps.prepare.outputs.cxx-family }}
 
       - name: Configure
         uses: ./.github/actions/configure
@@ -153,25 +177,23 @@ jobs:
   coverage:
     name: "Code coverage"
     runs-on: ubuntu-latest
+    needs: prepare-dependencies
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Prepare for building
+        id: prepare
         uses: ./.github/actions/prepare
         with:
           cxx: Clang-12
 
       - name: Cache dependencies
         uses: actions/cache@v2
-        id: cache-libs
         with:
           path: ${{ env.INSTALL_PREFIX }}
-          key: libs
-
-      - name: Install dependencies
-        if: steps.cache-libs.outputs.cache-hit != 'true'
-        run: scripts/install-dependencies.sh ${BUILD_PREFIX} ${INSTALL_PREFIX}
+          key: libs-${{ steps.prepare.outputs.cxx-family }}
 
       - name: Setup tools
         run: |

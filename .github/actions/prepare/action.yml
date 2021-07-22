@@ -6,6 +6,15 @@ inputs:
     description: Compiler to use
     required: true
 
+outputs:
+  cxx-family:
+    description: Name of the compiler family (GCC, Clang)
+    value: ${{ steps.compiler.outputs.cxx-family }}
+
+  cxx-version:
+    description: Version of the compiler
+    value: ${{ steps.compiler.outputs.cxx-version }}
+
 runs:
   using: composite
   steps:
@@ -22,6 +31,7 @@ runs:
           libmumps-dev
 
     - name: Setup compiler
+      id: compiler
       shell: bash
       run: scripts/setup-compiler.sh ${{ inputs.cxx }}
 
