@@ -25,6 +25,7 @@ struct basis_data {
     int degree;
     int elements;
     int dofs;
+    int derivatives;
     int quad_order;
     int elem_division;
     std::vector<double> points;
@@ -33,6 +34,8 @@ struct basis_data {
     double** x;
     const double* w;
     double* J;
+
+    ~basis_data();
 
     basis_data(bspline::basis basis, int derivatives)
     : basis_data{std::move(basis), derivatives, basis.degree + 1, 1} { }

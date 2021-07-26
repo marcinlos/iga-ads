@@ -8,12 +8,29 @@
 
 namespace ads {
 
+basis_data::~basis_data() {
+    for (int e = 0; e < elements; ++e) {
+        for (int k = 0; k < quad_order; ++k) {
+            for (int d = 0; d <= derivatives; ++d) {
+                delete[] b[e][k][d];
+            }
+            delete[] b[e][k];
+        }
+        delete[] b[e];
+        delete[] x[e];
+    }
+    delete[] b;
+    delete[] J;
+    delete[] x;
+}
+
 basis_data::basis_data(bspline::basis basis, int derivatives, int quad_order, int elem_division)
 : first_dofs(bspline::first_nonzero_dofs(basis))
 , element_ranges(bspline::elements_supporting_dofs(basis))
 , degree(basis.degree)
 , elements(basis.elements() * elem_division)
 , dofs(basis.dofs())
+, derivatives(derivatives)
 , quad_order(quad_order)
 , elem_division(elem_division)
 , points(elements + 1)

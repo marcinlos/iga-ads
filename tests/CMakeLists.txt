@@ -16,6 +16,7 @@ target_sources(ads-suite
     main.cpp
     ads/bspline/bspline_test.cpp
     ads/bspline/eval_test.cpp
+    ads/basis_data_test.cpp
     ads/util/multi_array_test.cpp
     ads/lin/band_solve_test.cpp
     ads/lin/dense_solve_test.cpp
