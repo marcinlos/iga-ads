@@ -24,6 +24,42 @@ basis_data::~basis_data() {
     delete[] x;
 }
 
+basis_data::basis_data(const basis_data& other)
+: first_dofs{other.first_dofs}
+, element_ranges{other.element_ranges}
+, degree{other.degree}
+, elements{other.elements}
+, dofs{other.dofs}
+, derivatives{other.derivatives}
+, quad_order{other.quad_order}
+, elem_division{other.elem_division}
+, points{other.points}
+, basis{other.basis}
+, b{new double***[elements]}
+, x{new double*[elements]}
+, w{other.w}
+, J{new double[elements]} {
+    for (int e = 0; e < elements; ++e) {
+        x[e] = new double[quad_order];
+        b[e] = new double**[quad_order];
+
+        for (int k = 0; k < quad_order; ++k) {
+            x[e][k] = other.x[e][k];
+            b[e][k] = new double*[derivatives + 1];
+
+            for (int d = 0; d <= derivatives; ++d) {
+                b[e][k][d] = new double[degree + 1];
+
+                for (int i = 0; i < degree + 1; ++i) {
+                    b[e][k][d][i] = other.b[e][k][d][i];
+                }
+            }
+        }
+
+        J[e] = other.J[e];
+    }
+}
+
 basis_data::basis_data(bspline::basis basis, int derivatives, int quad_order, int elem_division)
 : first_dofs(bspline::first_nonzero_dofs(basis))
 , element_ranges(bspline::elements_supporting_dofs(basis))

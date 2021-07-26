@@ -37,6 +37,8 @@ struct basis_data {
 
     ~basis_data();
 
+    basis_data(const basis_data& other);
+
     basis_data(bspline::basis basis, int derivatives)
     : basis_data{std::move(basis), derivatives, basis.degree + 1, 1} { }
 

@@ -10,4 +10,15 @@
 TEST_CASE("basis_data memory management") {
     auto basis = ads::bspline::create_basis(0.0, 1.0, 2, 5);
     auto data = ads::basis_data{basis, 1};
+
+    SECTION("can be copied") {
+        auto copy = data;
+
+        REQUIRE(copy.degree == data.degree);
+        REQUIRE(copy.elements == data.elements);
+        REQUIRE(copy.dofs == data.dofs);
+        REQUIRE(copy.derivatives == data.derivatives);
+        REQUIRE(copy.quad_order == data.quad_order);
+        REQUIRE(copy.elem_division == data.elem_division);
+    }
 }
