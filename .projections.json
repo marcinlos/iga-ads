@@ -1,10 +1,16 @@
 {
     "src/*.cpp": {
-        "alternate": "include/{}.hpp",
+        "alternate": [
+            "include/{}.hpp",
+            "tests/{}_test.cpp"
+        ],
         "type": "source"
     },
     "include/*.hpp": {
-        "alternate": "src/{}.cpp",
+        "alternate": [
+            "src/{}.cpp",
+            "tests/{}_test.cpp"
+        ],
         "type": "header"
     },
     "tests/*_test.cpp": {
