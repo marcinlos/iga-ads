@@ -2,23 +2,27 @@
 
 IGA-ADS is a C++ framework designed to facilitate creating parallel numerical simulations for time-dependent PDEs using isogeometric finite element method.
 
+## Building
 
-## Requirements
+### Dependencies
 
-1. Dependencies
-- LAPACK, BLAS
-- Boost, version 1.58 or higher (http://www.boost.org/)
-- (optional) Galois framework, version 2.2.1 (http://iss.ices.utexas.edu/?p=projects/galois)
-- (optional) libunittest (http://libunittest.sourceforge.net/)
+#### Tools
+- Modern C++ compiler with C++17 support (GCC >= 7, Clang >= 6)
+- [CMake](https://cmake.org/)
+  (>= 3.13, 3.20 recommended for [presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html))
 
-Galois is required for parallelism, libunittest for unit tests only.
+#### Libraries
+- [BLAS](http://www.netlib.org/blas/) and [LAPACK](https://www.netlib.org/lapack/)
+- [Boost](https://www.boost.org/) (>= 1.58)
+- [{fmt}](https://github.com/fmtlib/fmt) (>= 7.1)
 
-2. Tools
-- compiler: reasonable C++14 support is required (framework has been tested with GCC 5.3.1)
-- build system: CMake 3.1 or higher
+#### Optional
+- [Galois](https://iss.oden.utexas.edu/?p=projects/galois) (>= 6.0) - parallel assembly
+  (**recommended**)
+- [MUMPS](http://mumps.enseeiht.fr/) - used for stationary problems
+- [Catch2](https://github.com/catchorg/Catch2) - required to build test suite
 
-
-2. Compilation
+## Compilation
 
 To compile the code, create a directory for the build and execute following commands:
 
