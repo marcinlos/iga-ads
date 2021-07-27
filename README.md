@@ -39,15 +39,12 @@ $ cmake -DUSE_GALOIS=ON ..
 ## Citation
 
 If you use this code, please cite:
-- Marcin Łoś, Maciej Woźniak, Maciej Paszyński, Andrew
-Lenharth, Keshav Pingali, IGA-ADS : Isogeometric Analysis FEM using ADS
-solver, Computer & Physics Communications, 217 (2017) 99-116
-- Marcin Łoś,  Maciej Paszyński, Adriank Kłusek, Witold
-Dzwinel, Application of fast isogeometric L2 projection solver for tumor
-growth simulations, Computer Methods in Applied Mechanics and
-Engineering, 316 (2017) 1257-1269
-- Marcin Łoś,  Adriank Kłusek, M. Amber Hassaan, Keshav
-Pingali, Witold Dzwinel, Maciej Paszyński,  Parallel fast
-isogeometric L2 projection solver  with GALOIS system for 3D tumor
-growth simulations, Computer Methods in Applied
-Mechanics and Engineering, 343, (2019) 1-22
+- Marcin Łoś, Maciej Woźniak, Maciej Paszyński, Andrew Lenharth and Keshav Pingali.
+  IGA-ADS : Isogeometric Analysis FEM using ADS solver.
+  _Computer & Physics Communications_, 217:99-116, 2017.
+- Marcin Łoś,  Maciej Paszyński, Adriank Kłusek and Witold Dzwinel.
+  Application of fast isogeometric L2 projection solver for tumor growth simulations.
+  _Computer Methods in Applied Mechanics and Engineering_, 316:1257-1269, 2017.
+- Marcin Łoś,  Adriank Kłusek, M. Amber Hassaan, Keshav Pingali, Witold Dzwinel and Maciej Paszyński.
+  Parallel fast isogeometric L2 projection solver with GALOIS system for 3D tumor growth simulations.
+  _Computer Methods in Applied Mechanics and Engineering_, 343:1-22, 2019.
