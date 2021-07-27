@@ -1,6 +1,13 @@
 # IGA-ADS
 
-IGA-ADS is a C++ framework designed to facilitate creating parallel numerical simulations for time-dependent PDEs using isogeometric finite element method.
+[![Build status](https://github.com/marcinlos/iga-ads/actions/workflows/build.yml/badge.svg)](https://github.com/marcinlos/iga-ads/actions?query=workflow%3ABuild+branch%3Adevelop)
+[![Codecov](https://codecov.io/gh/marcinlos/iga-ads/branch/develop/graph/badge.svg?token=rkZgDGLoTy)](https://codecov.io/gh/marcinlos/iga-ads)
+[![License](https://img.shields.io/github/license/marcinlos/iga-ads)](https://raw.githubusercontent.com/marcinlos/iga-ads/develop/LICENSE)
+[![Language](https://img.shields.io/badge/C%2B%2B-17-b.svg?logo=cplusplus)](https://isocpp.org/)
+[![Latest release](https://img.shields.io/github/v/release/marcinlos/iga-ads)](https://github.com/marcinlos/iga-ads/releases)
+
+IGA-ADS is a C++ framework designed to facilitate creating parallel numerical simulations for
+time-dependent and stationary PDEs using isogeometric finite element method.
 
 ## Building
 
