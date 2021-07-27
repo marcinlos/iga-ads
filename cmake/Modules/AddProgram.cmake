@@ -14,4 +14,3 @@ function(add_program name)
     target_link_libraries(${name} PRIVATE ADS ads-options-private ${PROGRAM_LIBS})
   endif()
 endfunction()
-

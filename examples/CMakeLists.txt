@@ -153,4 +153,3 @@ add_example(coupled GALOIS
 add_example(dg_laplace MUMPS GALOIS
   SRC
   dg/laplace.cpp)
-
