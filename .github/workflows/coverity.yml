@@ -28,7 +28,7 @@ jobs:
         id: prepare
         uses: ./.github/actions/prepare
         with:
-          cxx: Clang-12
+          cxx: GCC-9
 
       - name: Cache dependencies
         uses: actions/cache@v2
