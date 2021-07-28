@@ -140,6 +140,7 @@ add_example(tumor GALOIS
 
 add_example(tumor_3d GALOIS
   SRC
+  tumor/3d/vasculature_parser.cpp
   tumor/3d/main.cpp)
 
 add_example(implicit GALOIS
