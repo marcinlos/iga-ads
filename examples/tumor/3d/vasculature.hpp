@@ -119,13 +119,13 @@ public:
     }
 
     node_ptr make_node(point_type p) {
-        node_ptr n = new node{p, {}};
+        auto* n = new node{p, {}};
         nodes_.insert(n);
         return n;
     }
 
     edge_ptr connect(node_ptr a, node_ptr b, vessel_type type, double radius) {
-        edge_ptr e = new edge{a, b, type, cfg.init_stability, radius, 0};
+        auto* e = new edge{a, b, type, cfg.init_stability, radius, 0};
         edges_.insert(e);
         a->edges.push_back(e);
         b->edges.push_back(e);

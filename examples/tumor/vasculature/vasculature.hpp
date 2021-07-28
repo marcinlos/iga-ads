@@ -61,7 +61,7 @@ public:
 
 private:
     segment_ptr connect(node_ptr a, node_ptr b) {
-        segment_ptr s = new segment{a, b, cfg.init_stability};
+        auto* s = new segment{a, b, cfg.init_stability};
         a->segments.push_back(s);
         b->segments.push_back(s);
         segments.insert(s);
@@ -83,7 +83,7 @@ private:
     }
 
     node_ptr make_node(vector p) {
-        node_ptr n = new node{p};
+        auto* n = new node{p};
         nodes.insert(n);
         return n;
     }

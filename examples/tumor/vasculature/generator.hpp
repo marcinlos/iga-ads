@@ -52,7 +52,7 @@ private:
     std::vector<node_ptr> nodes;
 
     node_ptr grow_tree(vector p, vector bias) {
-        node_ptr root = new node{p};
+        auto* root = new node{p};
         nodes.push_back(root);
 
         double bias_strength = 10;
@@ -134,7 +134,7 @@ private:
     }
 
     segment_ptr connect(node_ptr a, node_ptr b, double stability) {
-        segment_ptr s = new segment{a, b, stability};
+        auto* s = new segment{a, b, stability};
         a->segments.push_back(s);
         b->segments.push_back(s);
         return s;
