@@ -13,8 +13,8 @@
 
 namespace ads {
 
-typedef int element_id;
-typedef int dof_id;
+using element_id = int;
+using dof_id = int;
 
 struct basis_data {
     using range_type = decltype(boost::counting_range(0, 0));
