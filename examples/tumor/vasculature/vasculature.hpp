@@ -165,7 +165,7 @@ public:
                     connect(tip, new_tip);
                     s.tip = new_tip;
 
-                    auto neighbor = find_neighbor(new_tip, tip, cfg.segment_length);
+                    auto* neighbor = find_neighbor(new_tip, tip, cfg.segment_length);
                     if (neighbor != nullptr) {
                         connect(neighbor, new_tip);
                         removed = true;

@@ -74,11 +74,11 @@ public:
     }
 
     void make_line(point_type a, point_type b, int steps) {
-        auto na = make_node(a);
+        auto* na = make_node(a);
         roots_.push_back(na);
         for (int i = 0; i < steps; ++i) {
             double t = static_cast<double>(i) / (steps - 1);
-            auto nb = make_node(a + t * (b - a));
+            auto* nb = make_node(a + t * (b - a));
             connect(na, nb, vessel_type::arthery, 1.0);
             na = nb;
         }
@@ -256,7 +256,7 @@ private:
     }
 
     void rasterize() {
-        for (auto e : vs.edges()) {
+        for (const auto* e : vs.edges()) {
             draw(*e);
         }
     }

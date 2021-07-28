@@ -160,8 +160,8 @@ int main(int argc, char* argv[]) {
     auto d = std::atoi(argv[1]);
     auto p = std::atoi(argv[2]);
     auto n = std::atoi(argv[3]);
-    auto file1 = argv[4];
-    auto file2 = argv[5];
+    auto* file1 = argv[4];
+    auto* file2 = argv[5];
 
     dim_config dim{p, n};
     int ders = 1;

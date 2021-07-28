@@ -66,7 +66,7 @@ vessels parse_vessels(std::istream& is) {
     nodes.reserve(joint_count);
 
     for (const auto& pos : points) {
-        auto node = vs.make_node(pos);
+        auto* node = vs.make_node(pos);
         nodes.push_back(node);
     }
 

@@ -81,8 +81,8 @@ int find_span(double x, const basis& b) {
 }
 
 void eval_basis(int i, double x, const basis& b, double* out, basis_eval_ctx& ctx) {
-    auto left = ctx.left();
-    auto right = ctx.right();
+    auto* left = ctx.left();
+    auto* right = ctx.right();
 
     out[0] = 1;
     for (int j = 1; j <= b.degree; ++j) {
@@ -103,8 +103,8 @@ void eval_basis_with_derivatives(int i, double x, const basis& b, double** out, 
                                  basis_eval_ctx& ctx) {
     auto& ndu = ctx.ndu;
     auto& a = ctx.a;
-    auto left = ctx.left();
-    auto right = ctx.right();
+    auto* left = ctx.left();
+    auto* right = ctx.right();
 
     ndu(0, 0) = 1;
     for (int j = 1; j <= b.degree; ++j) {

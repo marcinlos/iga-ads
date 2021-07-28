@@ -127,7 +127,7 @@ public:
     double** basis_vals() { return buffer_.data(); }
 
     ~eval_ders_ctx() {
-        for (auto b : buffer_) {
+        for (auto* b : buffer_) {
             delete[] b;
         }
     }

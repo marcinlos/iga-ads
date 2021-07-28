@@ -89,7 +89,7 @@ public:
     double init_state(double x, double y, double z) const {
         vec3d v{x, y, z};
         double dist = std::numeric_limits<double>::infinity();
-        for (auto& path : paths) {
+        for (const auto& path : paths) {
             dist = std::min(dist, path.dist(v));
         }
         double network = lerp(0.0, 1.0, falloff(0, 0.1, dist));

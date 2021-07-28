@@ -393,7 +393,7 @@ auto evaluate_basis(const std::vector<double>& points, const bspline_space& spac
 
     for (int q = 0; q < as_signed(points.size()); ++q) {
         const auto x = points[q];
-        const auto buffer = values.point_buffer(q);
+        auto* const buffer = values.point_buffer(q);
         const auto span = find_span(x, space.basis());
         eval_basis_with_derivatives(span, x, space.basis(), buffer, ders, context);
     }
@@ -469,7 +469,7 @@ auto evaluate_basis_at_point(double x, const bspline_space& space, int ders, int
     auto values = bspline_basis_values{1, dof_count, ders};
     auto context = bspline::eval_ctx{space.degree()};
 
-    const auto buffer = values.point_buffer(0);
+    auto* const buffer = values.point_buffer(0);
 
     eval_basis_with_derivatives(span, x, space.basis(), buffer, ders, context);
 
@@ -713,7 +713,7 @@ private:
     auto data_for_interval(interval target) const -> interval_quadrature_points {
         const auto size = length(target);
         const auto scale = size / 2;  // Gauss quadrature is defined for [-1, 1]
-        const auto weights = quad::gauss::Ws[point_count_];
+        const auto* weights = quad::gauss::Ws[point_count_];
 
         return {transform_points(target), weights, scale};
     }
@@ -2776,7 +2776,7 @@ private:
     auto data_for_interval(interval target) const -> interval_quadrature_points {
         const auto size = length(target);
         const auto scale = size / 2;  // Gauss quadrature is defined for [-1, 1]
-        const auto weights = quad::gauss::Ws[point_count_];
+        const auto* weights = quad::gauss::Ws[point_count_];
 
         return {transform_points(target), weights, scale};
     }
