@@ -1,0 +1,59 @@
+name: Coverity scan
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 1 * * 1' # Every Monday at 01:00 UTC
+
+env:
+  BUILD_PREFIX: ~/_build
+  INSTALL_PREFIX: ~/_install
+
+jobs:
+  coverity-scan:
+    name: Coverity scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download Coverity Scan Tool
+        run: scripts/coverity-download.sh
+        env:
+          TOKEN: ${{ secrets.COVERITY_TOKEN }}
+
+
+      - name: Prepare for building
+        id: prepare
+        uses: ./.github/actions/prepare
+        with:
+          cxx: Clang-12
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        id: cache-libs
+        with:
+          path: ${{ env.INSTALL_PREFIX }}
+          key: libs-${{ steps.prepare.outputs.cxx-family }}
+
+      - name: Build dependencies
+        if: steps.cache-libs.outputs.cache-hit != 'true'
+        run: scripts/install-dependencies.sh ${BUILD_PREFIX} ${INSTALL_PREFIX}
+
+      - name: Configure
+        uses: ./.github/actions/configure
+        with:
+          build-type: Debug
+          use-galois: ON
+          use-mumps: ON
+
+      - name: Build with cov-build
+        working-directory: build
+        run: cov-build --dir cov-int cmake --build .
+
+      - name: Submit results
+        working-directory: build
+        run: ${{ github.workspace }}/scripts/coverity-submit.sh
+        env:
+          TOKEN: ${{ secrets.COVERITY_TOKEN }}
