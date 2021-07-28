@@ -11,6 +11,7 @@
 #    include <dmumps_c.h>
 #    include <mpi.h>
 
+#    include <cstdint>
 #    include <cstring>
 #    include <iostream>
 #    include <vector>
@@ -209,7 +210,7 @@ private:
         }
     }
 
-    long handle_neg(int value) const {
+    std::int64_t handle_neg(int value) const {
         if (value >= 0) {
             return value;
         } else {
@@ -217,7 +218,7 @@ private:
         }
     }
 
-    double as_MB(long size) const {
+    double as_MB(std::int64_t size) const {
         return static_cast<double>(size) / (1024 * 1024) * sizeof(double);
     }
 
