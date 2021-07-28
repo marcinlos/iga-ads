@@ -4,6 +4,7 @@
 #ifndef ADS_LIN_BAND_MATRIX_HPP
 #define ADS_LIN_BAND_MATRIX_HPP
 
+#include <cassert>
 #include <cstddef>
 #include <iomanip>
 #include <iostream>
@@ -37,15 +38,13 @@ public:
     , row_offset(row_offset) { }
 
     double& operator()(int i, int j) {
-        int row = row_offset + ku + i - j;
-        int col = j;
-        return data_[col * column_size() + row];
+        assert(inside_band(i, j));
+        return data_[index_(i, j)];
     }
 
     double operator()(int i, int j) const {
         if (inside_band(i, j)) {
-            auto& self = const_cast<band_matrix&>(*this);
-            return self(i, j);
+            return data_[index_(i, j)];
         }
         return 0;
     }
@@ -65,6 +64,12 @@ public:
     int column_size() const { return row_offset + (ku + 1 + kl); }
 
 private:
+    int index_(int i, int j) const {
+        int row = row_offset + ku + i - j;
+        int col = j;
+        return col * column_size() + row;
+    }
+
     static int array_size_(int kl, int ku, int cols, int offset) {
         int rows = offset + (ku + 1 + kl);
         return rows * cols;
