@@ -50,7 +50,9 @@ jobs:
 
       - name: Build with cov-build
         working-directory: build
-        run: cov-build --dir cov-int cmake --build .
+        run: |
+          cov-configure --comptype gcc --template --compiler g++-9
+          cov-build --dir cov-int cmake --build .
 
       - name: Upload Coverity build log
         uses: actions/upload-artifact@v2
