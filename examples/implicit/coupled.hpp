@@ -91,7 +91,7 @@ private:
         }
     }
 
-    void matrix(lin::dense_matrix& K, const basis_data& d, double h) {
+    void matrix(lin::dense_matrix& K, const basis_data& d, double h) const {
         auto N = d.basis.dofs() - 1;
         for (element_id e = 0; e < d.elements; ++e) {
             for (int q = 0; q < d.quad_order; ++q) {

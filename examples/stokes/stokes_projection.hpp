@@ -25,13 +25,13 @@ struct prob_manufactured_poly {
 
     bool navier_stokes = false;
 
-    value_type exact_p(point_type p, double t) {
+    value_type exact_p(point_type p, double t) const {
         auto x = p[0];
         auto et = std::exp(-t);
         return {et * (x * (1 - x) - 1. / 6), et * (1 - 2 * x), 0.0};
     }
 
-    value_pair exact_v(point_type p, double t) {
+    value_pair exact_v(point_type p, double t) const {
         auto et = std::exp(-t);
 
         auto f = [](double x, double y) {
@@ -53,7 +53,7 @@ struct prob_manufactured_poly {
         return {et * vx, et * vy};
     }
 
-    point_type forcing(point_type p, double t) {
+    point_type forcing(point_type p, double t) const {
         double x = p[0], y = p[1];
         auto v = exact_v(p, t);
         auto et = std::exp(-t);
@@ -79,7 +79,7 @@ struct prob_manufactured_nonpoly {
 
     bool navier_stokes = false;
 
-    value_type exact_p(point_type p, double t) {
+    value_type exact_p(point_type p, double t) const {
         auto x = p[0], y = p[1];
         using std::cos;
         using std::sin;
@@ -87,7 +87,7 @@ struct prob_manufactured_nonpoly {
         return {cos(x) * sin(y + t), -sin(x) * sin(y + t), cos(x) * cos(y + t)};
     }
 
-    value_pair exact_v(point_type p, double t) {
+    value_pair exact_v(point_type p, double t) const {
         auto x = p[0], y = p[1];
         using std::cos;
         using std::sin;
@@ -98,7 +98,7 @@ struct prob_manufactured_nonpoly {
         return {vx, vy};
     }
 
-    point_type forcing(point_type p, double t) {
+    point_type forcing(point_type p, double t) const {
         auto x = p[0], y = p[1];
         using std::cos;
         using std::sin;
@@ -116,7 +116,7 @@ struct prob_manufactured_NS_nonpoly {
 
     bool navier_stokes = true;
 
-    value_type exact_p(point_type p, double t) {
+    value_type exact_p(point_type p, double t) const {
         auto x = p[0], y = p[1];
         using std::cos;
         using std::sin;
@@ -124,7 +124,7 @@ struct prob_manufactured_NS_nonpoly {
         return {cos(x) * sin(y + t), -sin(x) * sin(y + t), cos(x) * cos(y + t)};
     }
 
-    value_pair exact_v(point_type p, double t) {
+    value_pair exact_v(point_type p, double t) const {
         auto x = p[0], y = p[1];
         using std::cos;
         using std::sin;
@@ -135,7 +135,7 @@ struct prob_manufactured_NS_nonpoly {
         return {vx, vy};
     }
 
-    point_type forcing(point_type p, double t) {
+    point_type forcing(point_type p, double t) const {
         auto x = p[0], y = p[1];
         using std::cos;
         using std::sin;
@@ -155,9 +155,9 @@ struct prob_cavity_flow {
     double Re;
     bool navier_stokes;
 
-    value_type exact_p(point_type, double) { return {}; }
+    value_type exact_p(point_type, double) const { return {}; }
 
-    value_pair exact_v(point_type p, double) {
+    value_pair exact_v(point_type p, double) const {
         auto y = p[1];
         auto vy = value_type{};
         auto vx = value_type{};
@@ -168,7 +168,7 @@ struct prob_cavity_flow {
         return {vx, vy};
     }
 
-    point_type forcing(point_type, double) { return {0, 0}; }
+    point_type forcing(point_type, double) const { return {0, 0}; }
 };
 
 template <typename Problem>

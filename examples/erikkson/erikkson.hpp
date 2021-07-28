@@ -592,7 +592,7 @@ private:
         return u;
     }
 
-    double forcing(double x, double y, double /*t*/) {
+    double forcing(double x, double y, double /*t*/) const {
         // constexpr double pi = M_PI;
         // auto s = [](double a) { return std::sin(pi * a); };
         // auto c = [](double a) { return std::cos(pi * a); };

@@ -64,7 +64,7 @@ private:
         return 0.8 * (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
     }
 
-    double init_M(double x, double y) {
+    double init_M(double x, double y) const {
         auto lay = p.skin.layer_at(x, y, x);
         return lay == skin_model::layer::dermis ? 1 : p.init_M;
     }
