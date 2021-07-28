@@ -52,6 +52,12 @@ jobs:
         working-directory: build
         run: cov-build --dir cov-int cmake --build .
 
+      - name: Upload Coverity build log
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverity-log.txt
+          path: build/cov-int/build-log.txt
+
       - name: Submit results
         working-directory: build
         run: ${{ github.workspace }}/scripts/coverity-submit.sh
