@@ -5,7 +5,7 @@
 
 namespace ads::quad::gauss {
 
-const double* Xs[] = {
+const double* const Xs[] = {
     nullptr,           nullptr,           gauss_data<2>::X,  gauss_data<3>::X,  gauss_data<4>::X,
     gauss_data<5>::X,  gauss_data<6>::X,  gauss_data<7>::X,  gauss_data<8>::X,  gauss_data<9>::X,
     gauss_data<10>::X, gauss_data<11>::X, gauss_data<12>::X, gauss_data<13>::X, gauss_data<14>::X,
@@ -21,7 +21,7 @@ const double* Xs[] = {
     gauss_data<60>::X, gauss_data<61>::X, gauss_data<62>::X, gauss_data<63>::X, gauss_data<64>::X,
 };
 
-const double* Ws[] = {
+const double* const Ws[] = {
     nullptr,           nullptr,           gauss_data<2>::W,  gauss_data<3>::W,  gauss_data<4>::W,
     gauss_data<5>::W,  gauss_data<6>::W,  gauss_data<7>::W,  gauss_data<8>::W,  gauss_data<9>::W,
     gauss_data<10>::W, gauss_data<11>::W, gauss_data<12>::W, gauss_data<13>::W, gauss_data<14>::W,

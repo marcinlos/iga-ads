@@ -11,8 +11,8 @@ namespace ads::quad::gauss {
 template <std::size_t N>
 struct gauss_data;
 
-extern const double* Xs[65];
-extern const double* Ws[65];
+extern const double* const Xs[65];
+extern const double* const Ws[65];
 
 template <>
 struct gauss_data<2> {

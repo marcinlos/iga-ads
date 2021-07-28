@@ -7,7 +7,7 @@
 
 namespace ads {
 
-std::map<std::string, ads::scheme> schemes{
+const std::map<std::string, ads::scheme> schemes{
     {"AM-0", {0, {-1}, {1}}},
     {"AM-1", {1, {-1}, {0.5, 0.5}}},
     {"AM-2", {2, {-1, 0}, {5. / 12, 2. / 3, -1. / 12}}},
