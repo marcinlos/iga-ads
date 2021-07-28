@@ -2,6 +2,7 @@
 
 [![Build status](https://github.com/marcinlos/iga-ads/actions/workflows/build.yml/badge.svg)](https://github.com/marcinlos/iga-ads/actions?query=workflow%3ABuild+branch%3Adevelop)
 [![Codecov](https://codecov.io/gh/marcinlos/iga-ads/branch/develop/graph/badge.svg?token=rkZgDGLoTy)](https://codecov.io/gh/marcinlos/iga-ads)
+[![Codacy](https://img.shields.io/codacy/grade/b7a914bc4ba44b3ba5ef5226ee3273c0)](https://www.codacy.com/gh/marcinlos/iga-ads/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=marcinlos/iga-ads&amp;utm_campaign=Badge_Grade)
 [![License](https://img.shields.io/github/license/marcinlos/iga-ads)](https://raw.githubusercontent.com/marcinlos/iga-ads/develop/LICENSE)
 [![Language](https://img.shields.io/badge/C%2B%2B-17-b.svg?logo=cplusplus)](https://isocpp.org/)
 [![Latest release](https://img.shields.io/github/v/release/marcinlos/iga-ads)](https://github.com/marcinlos/iga-ads/releases)
