@@ -1,5 +1,6 @@
 # IGA-ADS
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/c944b7782411472e9d899f1a89075a1f)](https://app.codacy.com/gh/marcinlos/iga-ads?utm_source=github.com&utm_medium=referral&utm_content=marcinlos/iga-ads&utm_campaign=Badge_Grade_Settings)
 [![Build status](https://github.com/marcinlos/iga-ads/actions/workflows/build.yml/badge.svg)](https://github.com/marcinlos/iga-ads/actions?query=workflow%3ABuild+branch%3Adevelop)
 [![Codecov](https://codecov.io/gh/marcinlos/iga-ads/branch/develop/graph/badge.svg?token=rkZgDGLoTy)](https://codecov.io/gh/marcinlos/iga-ads)
 [![License](https://img.shields.io/github/license/marcinlos/iga-ads)](https://raw.githubusercontent.com/marcinlos/iga-ads/develop/LICENSE)
