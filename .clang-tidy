@@ -27,6 +27,9 @@ Checks: |
     -hicpp-braces-around-statements,
 
     misc-*,
+    # no reason to ban recursion,
+    -misc-no-recursion,
+
     performance-*,
     llvm-include-order,
 
