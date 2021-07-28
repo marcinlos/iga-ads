@@ -479,7 +479,7 @@ private:
         vasc.update(tumor, taf, iter, steps.dt);
     }
 
-    virtual void after() override {
+    void after() override {
         auto total = static_cast<double>(integration_timer.get());
         auto avg = total / steps.step_count;
 

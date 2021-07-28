@@ -105,7 +105,7 @@ private:
         integration_timer.stop();
     }
 
-    virtual void after() override {
+    void after() override {
         std::cout << "integration: " << static_cast<double>(integration_timer.get()) << std::endl;
     }
 };

@@ -94,7 +94,7 @@ private:
         integration_timer.stop();
     }
 
-    virtual void after() override {
+    void after() override {
         auto total = static_cast<double>(integration_timer.get());
         auto avg = total / steps.step_count;
         std::cout << "{ 'integration' : " << avg << "}" << std::endl;
