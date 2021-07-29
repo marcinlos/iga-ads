@@ -12,7 +12,7 @@
 #    include <mpi.h>
 
 #    include <cstdint>
-#    include <cstring>
+#    include <cstdio>
 #    include <iostream>
 #    include <vector>
 
@@ -133,7 +133,7 @@ public:
 
     void save_to_file(problem& problem, const char* output_path) {
         prepare_(problem);
-        strcpy(id.write_problem, output_path);
+        set_output_path(output_path);
 
         analyze_();
     }
@@ -142,7 +142,7 @@ public:
         prepare_(problem);
 
         if (output_path) {
-            strcpy(id.write_problem, output_path);
+            set_output_path(output_path);
         }
 
         analyze_();
@@ -194,6 +194,11 @@ private:
         id.job = 3;
         dmumps_c(&id);
         print_state("After solve_()");
+    }
+
+    void set_output_path(const char* output_path) {
+        constexpr auto size = sizeof(id.write_problem);
+        std::snprintf(id.write_problem, size, "%s", output_path);
     }
 
     void report_error(std::ostream& os, int info1, int info2) const {
