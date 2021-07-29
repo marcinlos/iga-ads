@@ -105,13 +105,11 @@ public:
 struct eval_ders_ctx : public basis_eval_ctx {
 private:
     std::vector<double*> buffer_;
-    int ders;
 
 public:
     eval_ders_ctx(int p, int ders)
     : basis_eval_ctx(p + 1)
-    , buffer_(p + 1)
-    , ders(ders) {
+    , buffer_(ders + 1) {
         for (int i = 0; i <= ders; ++i) {
             buffer_[i] = new double[p + 1];
         }
