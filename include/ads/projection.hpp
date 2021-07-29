@@ -18,7 +18,7 @@ struct projector {
 
     double jacobian(index_type e) const {
         double j = 1;
-        for (std::size_t i = 0u; i < N; ++i) {
+        for (auto i = 0U; i < N; ++i) {
             j *= bases[i].J[e[i]];
         }
         return j;
@@ -26,7 +26,7 @@ struct projector {
 
     double weight(index_type q) const {
         double w = 1;
-        for (std::size_t i = 0u; i < N; ++i) {
+        for (auto i = 0U; i < N; ++i) {
             w *= bases[i].w[q[i]];
         }
         return w;
@@ -34,7 +34,7 @@ struct projector {
 
     point_type point(index_type e, index_type q) const {
         point_type p;
-        for (std::size_t i = 0u; i < N; ++i) {
+        for (auto i = 0U; i < N; ++i) {
             p[i] = bases[i].x[e[i]][q[i]];
         }
         return p;
@@ -97,7 +97,7 @@ struct projector {
             } else {
                 double B = 1;
                 index_type idx = a;
-                for (std::size_t i = 0u; i < N; ++i) {
+                for (auto i = 0U; i < N; ++i) {
                     B *= proj.bases[i].b[e[i]][q[i]][0][a[i]];
                     idx[i] += proj.bases[i].first_dof(e[i]);
                 }

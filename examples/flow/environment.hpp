@@ -6,6 +6,7 @@
 
 #include <random>
 
+#include "ads/util.hpp"
 #include "flow.hpp"
 #include "geometry.hpp"
 
@@ -18,7 +19,7 @@ struct path {
 
     double dist(const vec3d& p) const {
         double dist = std::numeric_limits<double>::infinity();
-        for (auto i = 0u; i < points.size() - 1; ++i) {
+        for (auto i = 0; i < as_signed(points.size()) - 1; ++i) {
             dist = std::min(dist, dist_from_segment(p, points[i], points[i + 1]));
         }
         return dist;
@@ -44,7 +45,7 @@ class environment {
         return {dist(rng), dist(rng), dist(rng)};
     }
 
-    std::size_t random_path_length() const {
+    int random_path_length() const {
         std::uniform_int_distribution<> dist{MIN_PATH_LEN, MAX_PATH_LEN};
         return dist(rng);
     }
@@ -54,14 +55,14 @@ public:
     : rng{seed} {
         double step = 0.05;
 
-        for (auto i = 0u; i < PATH_COUNT; ++i) {
+        for (auto i = 0; i < PATH_COUNT; ++i) {
             auto length = random_path_length();
             std::vector<vec3d> path;
             auto p = random_vector(0.15, 0.85);
             auto dp = random_vector(-1, 1);
             path.push_back(p);
 
-            for (auto j = 1u; j < length; ++j) {
+            for (auto j = 1; j < length; ++j) {
                 auto ddp = random_vector(-1, 1);
                 double cos = dot(dp, ddp) / (len(dp) * len(ddp));
                 ddp = ddp - 0.2 * cos * dp;

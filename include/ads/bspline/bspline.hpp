@@ -22,7 +22,7 @@ struct basis {
     : knot{std::move(kn)}
     , degree{degree} {
         points.push_back(knot[0]);
-        for (auto i = 1u; i < knot.size(); ++i) {
+        for (auto i = 1; i < knot_size(); ++i) {
             if (knot[i] != knot[i - 1]) {
                 points.push_back(knot[i]);
             }
