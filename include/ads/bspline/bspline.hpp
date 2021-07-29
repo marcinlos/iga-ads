@@ -141,11 +141,11 @@ public:
  * @param p        - order of B-spline basis
  * @param elements - number of elements (spans)
  */
-basis create_basis(double a, double b, int degree, int elements);
+basis create_basis(double a, double b, int p, int elements);
 
-basis create_basis(double a, double b, int degree, int elements, int repeated_nodes);
+basis create_basis(double a, double b, int p, int elements, int repeated_nodes);
 
-basis create_basis_C0(double a, double b, int degree, int elements);
+basis create_basis_C0(double a, double b, int p, int elements);
 
 int find_span(double x, const basis& b);
 
