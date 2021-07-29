@@ -4,9 +4,11 @@
 #ifndef ADS_SIMULATION_BOUNDARY_HPP
 #define ADS_SIMULATION_BOUNDARY_HPP
 
+#include <type_traits>
+
 namespace ads {
 
-enum class boundary {
+enum class boundary : unsigned {
     left = 0x1,
     right = 0x2,
     bottom = 0x4,
@@ -23,7 +25,8 @@ inline constexpr bool operator!(boundary a) {
 }
 
 inline constexpr boundary operator&(boundary a, boundary b) {
-    return boundary(static_cast<int>(a) & static_cast<int>(b));
+    using T = std::underlying_type_t<boundary>;
+    return boundary(static_cast<T>(a) & static_cast<T>(b));
 }
 
 inline constexpr boundary& operator&=(boundary& a, boundary b) {
@@ -31,7 +34,8 @@ inline constexpr boundary& operator&=(boundary& a, boundary b) {
 }
 
 inline constexpr boundary operator|(boundary a, boundary b) {
-    return boundary(static_cast<int>(a) | static_cast<int>(b));
+    using T = std::underlying_type_t<boundary>;
+    return boundary(static_cast<T>(a) | static_cast<T>(b));
 }
 
 inline constexpr boundary& operator|=(boundary& a, boundary b) {
@@ -39,7 +43,8 @@ inline constexpr boundary& operator|=(boundary& a, boundary b) {
 }
 
 inline constexpr boundary operator^(boundary a, boundary b) {
-    return boundary(static_cast<int>(a) ^ static_cast<int>(b));
+    using T = std::underlying_type_t<boundary>;
+    return boundary(static_cast<T>(a) ^ static_cast<T>(b));
 }
 
 inline constexpr boundary& operator^=(boundary& a, boundary b) {
