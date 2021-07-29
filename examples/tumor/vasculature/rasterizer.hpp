@@ -4,6 +4,8 @@
 #ifndef TUMOR_VASCULATURE_RASTERIZER_HPP
 #define TUMOR_VASCULATURE_RASTERIZER_HPP
 
+#include <stdexcept>
+
 #include "defs.hpp"
 
 namespace tumor::vasc {
@@ -35,9 +37,9 @@ inline vector to_base_octant(int octant, vector v) {
     case 5: return {-v.y, -v.x};
     case 6: return {-v.y,  v.x};
     case 7: return { v.x, -v.y};
+    default: throw std::invalid_argument{"Octant must be between 0 and 7"};
     }
     // clang-format on
-    return v;
 }
 
 inline vector from_base_octant(int octant, vector v) {
@@ -51,9 +53,9 @@ inline vector from_base_octant(int octant, vector v) {
     case 5: return {-v.y, -v.x};
     case 6: return { v.y, -v.x};
     case 7: return { v.x, -v.y};
+    default: throw std::invalid_argument{"Octant must be between 0 and 7"};
     }
     // clang-format on
-    return v;
 }
 
 template <typename Array, typename Value>
