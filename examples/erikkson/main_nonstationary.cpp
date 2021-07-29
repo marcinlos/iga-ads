@@ -97,18 +97,17 @@ int main(int argc, char* argv[]) {
     // pollution_rotation{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run(); if (type == "split")
     // erikkson_mumps_split{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
     scheme method;
-    if (type == "BE")
+    if (type == "BE") {
         method = scheme::BE;
-    else if (type == "CN")
+    } else if (type == "CN") {
         method = scheme::CN;
-    else if (type == "PR")
+    } else if (type == "PR") {
         method = scheme::peaceman_rachford;
-    else if (type == "strang-BE")
+    } else if (type == "strang-BE") {
         method = scheme::strang_BE;
-    else if (type == "strang-CN")
+    } else if (type == "strang-CN") {
         method = scheme::strang_CN;
-
-    else {
+    } else {
         std::cerr << "Unknown scheme: " << type << std::endl;
         std::exit(1);
     }

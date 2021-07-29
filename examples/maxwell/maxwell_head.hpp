@@ -92,12 +92,13 @@ private:
     static int to_index(double t, int n) { return std::min(static_cast<int>(t * n), n - 1); }
 
     material as_material(byte n) const {
-        if (n <= 1)
+        if (n <= 1) {
             return AIR;
-        else if (n <= 240)
+        } else if (n <= 240) {
             return TISSUE;
-        else
+        } else {
             return BONE;
+        }
     }
 };
 
