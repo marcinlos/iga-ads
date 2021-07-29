@@ -42,7 +42,7 @@ int main(int argc, char* argv[]) {
         std::exit(1);
     }
     int n = std::atoi(argv[1]);
-    bool adapt = std::atoi(argv[2]);
+    bool adapt = std::atoi(argv[2]) != 0;
     int p_trial = std::atoi(argv[3]);
     int C_trial = std::atoi(argv[4]);
     int p_test = std::atoi(argv[5]);

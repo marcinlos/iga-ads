@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
     int ny = std::atoi(argv[3]);
 
     int subdivision = std::atoi(argv[4]);
-    bool adapt = std::atoi(argv[5]);
+    bool adapt = std::atoi(argv[5]) != 0;
 
     int p_trial = std::atoi(argv[6]);
     int C_trial = std::atoi(argv[7]);

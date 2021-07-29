@@ -146,7 +146,7 @@ public:
     void solve(problem& problem, const char* output_path = nullptr) {
         prepare_(problem);
 
-        if (output_path) {
+        if (output_path != nullptr) {
             set_output_path(output_path);
         }
 

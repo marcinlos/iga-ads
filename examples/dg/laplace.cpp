@@ -1966,7 +1966,7 @@ public:
 
     auto vx(point p) const noexcept -> double {
         const auto [x, y] = p;
-        return std::abs(y - 1) < 1e-5;
+        return std::abs(y - 1) < 1e-5 ? 1.0 : 0.0;
     }
 
     auto vy([[maybe_unused]] point p) const noexcept -> double { return 0.0; }
@@ -3646,7 +3646,7 @@ public:
 
     auto vx(point X) const noexcept -> double {
         const auto [x, y, z] = X;
-        return std::abs(y - 1) < 1e-5;
+        return std::abs(y - 1) < 1e-5 ? 1.0 : 0.0;
         // if (std::abs(y - 1) < 1e-5) {
         //     return sin(pi * x) * sin(pi * z);
         // } else {
