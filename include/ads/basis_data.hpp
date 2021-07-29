@@ -16,6 +16,8 @@ namespace ads {
 using element_id = int;
 using dof_id = int;
 
+// TODO: use proper multidimensional arrays
+// NOLINTNEXTLINE(cppcoreguidelines-special-member-functions, hicpp-special-member-functions)
 struct basis_data {
     using range_type = decltype(boost::counting_range(0, 0));
 
@@ -39,6 +41,12 @@ struct basis_data {
 
     basis_data(const basis_data& other);
 
+    basis_data& operator=(const basis_data& other) {
+        auto tmp = other;
+        swap(*this, tmp);
+        return *this;
+    }
+
     basis_data(bspline::basis basis, int derivatives)
     : basis_data{std::move(basis), derivatives, basis.degree + 1, 1} { }
 
@@ -56,6 +64,24 @@ struct basis_data {
 
     range_type element_range(dof_id dof) const {
         return boost::counting_range(element_ranges[dof].first, element_ranges[dof].second + 1);
+    }
+
+    friend void swap(basis_data& a, basis_data& b) noexcept {
+        using std::swap;
+        swap(a.first_dofs, b.first_dofs);
+        swap(a.element_ranges, b.element_ranges);
+        swap(a.degree, b.degree);
+        swap(a.elements, b.elements);
+        swap(a.dofs, b.dofs);
+        swap(a.derivatives, b.derivatives);
+        swap(a.quad_order, b.quad_order);
+        swap(a.elem_division, b.elem_division);
+        swap(a.points, b.points);
+        swap(a.basis, b.basis);
+        swap(a.b, b.b);
+        swap(a.x, b.x);
+        swap(a.w, b.w);
+        swap(a.J, b.J);
     }
 };
 
