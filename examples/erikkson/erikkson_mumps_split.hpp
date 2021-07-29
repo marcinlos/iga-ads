@@ -321,7 +321,7 @@ private:
         auto dt = steps.dt;
 
         auto f = [&](point_type x, double s) { return erikkson_forcing(x[0], x[1], epsilon, s); };
-        auto F = [&](double s) { return std::bind(f, _1, s); };
+        auto F = [&](double s) { return [&, s](point_type x) { return f(x, s); }; };
         auto Favg = [&](double s1, double s2) {
             return [=, &f](point_type x) { return 0.5 * (f(x, s1) + f(x, s2)); };
         };

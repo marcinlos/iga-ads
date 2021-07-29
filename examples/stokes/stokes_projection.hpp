@@ -529,7 +529,7 @@ public:
         using namespace std::placeholders;
         auto dt = steps.dt;
         auto f = [&](point_type x, double s) { return problem.forcing(x, s); };
-        auto F = [&](double s) { return std::bind(f, _1, s); };
+        auto F = [&](double s) { return [&, s](point_type x) { return f(x, s); }; };
         auto conv = problem.navier_stokes ? dt : 0;
 
         vector_type rhs_vx{{trial.U1x.dofs(), trial.U1y.dofs()}};
@@ -591,7 +591,7 @@ public:
         using namespace std::placeholders;
         auto dt = steps.dt;
         auto f = [&](point_type x, double s) { return problem.forcing(x, s); };
-        auto F = [&](double s) { return std::bind(f, _1, s); };
+        auto F = [&](double s) { return [&, s](point_type x) { return f(x, s); }; };
         auto conv = problem.navier_stokes ? dt / 2 : 0;
 
         vector_type rhs_vx{{trial.U1x.dofs(), trial.U1y.dofs()}};
@@ -653,7 +653,7 @@ public:
         using namespace std::placeholders;
         auto dt = steps.dt;
         auto f = [&](point_type x, double s) { return problem.forcing(x, s); };
-        auto F = [&](double s) { return std::bind(f, _1, s); };
+        auto F = [&](double s) { return [&, s](point_type x) { return f(x, s); }; };
         auto Re = problem.Re;
         auto conv = problem.navier_stokes ? dt / 2 : 0;
 
