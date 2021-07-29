@@ -198,6 +198,7 @@ private:
 
     void set_output_path(const char* output_path) {
         constexpr auto size = sizeof(id.write_problem);
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-vararg, hicpp-vararg)
         std::snprintf(id.write_problem, size, "%s", output_path);
     }
 
