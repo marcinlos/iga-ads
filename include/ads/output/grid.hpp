@@ -96,7 +96,7 @@ auto grid_from_containers(const Conts&... conts) ->
 
 template <typename... RangeIters>
 auto dims(const grid<RangeIters...>& grid) {
-    std::array<std::size_t, sizeof...(RangeIters)> dims;
+    std::array<std::size_t, sizeof...(RangeIters)> dims{};
     impl::size_array_helper<0, sizeof...(RangeIters)>::fill_dimension(dims, grid);
     return dims;
 }

@@ -12,7 +12,7 @@
 namespace ads {
 
 struct scheme {
-    int s;
+    int s = 0;
     std::vector<double> as;
     std::vector<double> bs;
 };

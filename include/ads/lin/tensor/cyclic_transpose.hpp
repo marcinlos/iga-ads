@@ -43,7 +43,7 @@ struct cyclic_transpose_helper<T, S, Rank, Impl1, Impl2, Rank, int, Indices...> 
 template <std::size_t N>
 auto cyclic_transpose_sizes(const std::array<int, N>& sizes) {
     // TODO: use std::rotate
-    std::array<int, N> new_sizes;
+    std::array<int, N> new_sizes{};
     for (std::size_t i = 0; i < N - 1; ++i) {
         new_sizes[i] = sizes[i + 1];
     }

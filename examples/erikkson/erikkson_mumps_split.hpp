@@ -47,6 +47,11 @@ private:
         vector_type data;
         const dimension* Vx;
         const dimension* Vy;
+
+        residuum(vector_type data, const dimension* Vx, const dimension* Vy)
+        : data{std::move(data)}
+        , Vx{Vx}
+        , Vy{Vy} { }
     };
 
     vector_type u;

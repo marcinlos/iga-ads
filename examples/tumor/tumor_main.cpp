@@ -7,6 +7,10 @@
 
 using namespace ads;
 
+// clang-tidy 12 complains about deleted default constructor not
+// initializing some members
+//
+// NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init, hicpp-member-init)
 struct sim_params {
     int p;                   // 2
     int elems;               // 80
