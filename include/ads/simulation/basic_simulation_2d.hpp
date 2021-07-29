@@ -21,6 +21,12 @@ class basic_simulation_2d {
 public:
     virtual ~basic_simulation_2d() = default;
 
+    basic_simulation_2d() = default;
+    basic_simulation_2d(const basic_simulation_2d&) = delete;
+    basic_simulation_2d& operator=(const basic_simulation_2d&) = delete;
+    basic_simulation_2d(basic_simulation_2d&&) = delete;
+    basic_simulation_2d& operator=(basic_simulation_2d&&) = delete;
+
 protected:
     using vector_type = lin::tensor<double, 2>;
     using vector_view = lin::tensor_view<double, 2>;

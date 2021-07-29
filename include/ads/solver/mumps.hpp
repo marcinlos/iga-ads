@@ -120,6 +120,11 @@ public:
         icntl(4) = 3;
     }
 
+    solver(const solver&) = delete;
+    solver& operator=(const solver&) = delete;
+    solver(solver&&) = delete;
+    solver& operator=(solver&&) = delete;
+
     void print_state(const char* text) const {
         if (id.info[0] != 0) {
             std::cout << text << ":" << std::endl;

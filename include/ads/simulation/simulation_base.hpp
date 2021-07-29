@@ -26,6 +26,11 @@ private:
 public:
     explicit simulation_base(const timesteps_config& steps);
 
+    simulation_base(const simulation_base&) = delete;
+    simulation_base(simulation_base&&) = delete;
+    simulation_base& operator=(const simulation_base&) = delete;
+    simulation_base& operator=(simulation_base&&) = delete;
+
     virtual ~simulation_base() = 0;
 
     void run();

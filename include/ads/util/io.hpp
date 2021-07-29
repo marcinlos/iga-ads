@@ -22,6 +22,11 @@ struct stream_state_saver {
         os.precision(orig_precision);
         os.flags(orig_flags);
     }
+
+    stream_state_saver(const stream_state_saver&) = delete;
+    stream_state_saver& operator=(const stream_state_saver&) = delete;
+    stream_state_saver(stream_state_saver&&) = delete;
+    stream_state_saver& operator=(stream_state_saver&&) = delete;
 };
 
 }  // namespace ads::util

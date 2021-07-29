@@ -21,6 +21,12 @@ class basic_simulation_3d {
 public:
     virtual ~basic_simulation_3d() = default;
 
+    basic_simulation_3d() = default;
+    basic_simulation_3d(const basic_simulation_3d&) = delete;
+    basic_simulation_3d& operator=(const basic_simulation_3d&) = delete;
+    basic_simulation_3d(basic_simulation_3d&&) = delete;
+    basic_simulation_3d& operator=(basic_simulation_3d&&) = delete;
+
 protected:
     using vector_type = lin::tensor<double, 3>;
     using vector_view = lin::tensor_view<double, 3>;

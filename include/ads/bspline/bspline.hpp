@@ -117,12 +117,10 @@ public:
         }
     }
 
-    eval_ders_ctx(eval_ders_ctx&& other) noexcept
-    : basis_eval_ctx(std::move(other))
-    , buffer_(std::move(other.buffer_))
-    , ders(other.ders) {
-        other.buffer_.clear();
-    }
+    eval_ders_ctx(const eval_ders_ctx&) = delete;
+    eval_ders_ctx& operator=(const eval_ders_ctx&) = delete;
+    eval_ders_ctx(eval_ders_ctx&&) = delete;
+    eval_ders_ctx& operator=(eval_ders_ctx&&) = delete;
 
     double** basis_vals() { return buffer_.data(); }
 
