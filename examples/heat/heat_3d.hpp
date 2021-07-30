@@ -14,7 +14,7 @@ private:
     vector_type u, u_prev;
 
 public:
-    heat_3d(const config_3d& config)
+    explicit heat_3d(const config_3d& config)
     : Base{config}
     , u{shape()}
     , u_prev{shape()} { }

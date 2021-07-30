@@ -33,7 +33,7 @@ private:
 public:
     using point_type = std::array<double, 3>;
 
-    maxwell_head_problem(const std::string& data_path)
+    explicit maxwell_head_problem(const std::string& data_path)
     : density_map{read_density_data(data_path)} { }
 
     auto init_E1() const { return init.E1_val_at(0); }
@@ -130,7 +130,7 @@ private:
     ads::output_manager<3> output;
 
 public:
-    maxwell_head(const config_3d& config)
+    explicit maxwell_head(const config_3d& config)
     : Base{config}
     , UE1x{x}
     , UE1y{y}

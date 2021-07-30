@@ -17,7 +17,7 @@ private:
     output_manager<1> output;
 
 public:
-    heat_1d(const config_1d& config)
+    explicit heat_1d(const config_1d& config)
     : Base{config}
     , u{shape()}
     , u_prev{shape()}

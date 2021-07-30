@@ -22,7 +22,7 @@ private:
         vector_type vx, vy;
         vector_type p;
 
-        state(std::array<int, 2> shape)
+        explicit state(std::array<int, 2> shape)
         : vx{{shape[0] + 1, shape[1]}}
         , vy{{shape[0], shape[1] + 1}}
         , p{shape} { }
@@ -48,7 +48,7 @@ private:
     static constexpr std::size_t RES = 400;
 
 public:
-    stokes_split(const config_2d& config)
+    explicit stokes_split(const config_2d& config)
     : Base{config}
     , now{shape()}
     , u{shape()}

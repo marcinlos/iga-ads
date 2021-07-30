@@ -40,7 +40,7 @@ private:
     ads::output_manager<3> output;
 
 public:
-    maxwell_galerkin(const config_3d& config)
+    explicit maxwell_galerkin(const config_3d& config)
     : Base{config}
     , UE1x{x}
     , UE1y{y}

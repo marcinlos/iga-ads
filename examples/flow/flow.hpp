@@ -26,7 +26,7 @@ private:
     output_manager<3> output;
 
 public:
-    flow(const config_3d& config)
+    explicit flow(const config_3d& config)
     : Base{config}
     , u{shape()}
     , u_prev{shape()}

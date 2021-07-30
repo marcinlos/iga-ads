@@ -35,7 +35,7 @@ private:
     double absorbed = 0.0;
 
 public:
-    pollution_2d(const config_2d& config)
+    explicit pollution_2d(const config_2d& config)
     : Base{config}
     , u{shape()}
     , u_prev{shape()}

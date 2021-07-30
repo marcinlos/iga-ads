@@ -19,7 +19,7 @@ class elasticity_pouria : public ads::simulation_2d {
     struct state {
         vector_type ux, uy;
         vector_type vx, vy;
-        state(std::array<int, 2> shape)
+        explicit state(std::array<int, 2> shape)
         : ux{shape}
         , uy{shape}
         , vx{shape}

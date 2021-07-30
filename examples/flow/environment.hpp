@@ -51,7 +51,7 @@ class environment {
     }
 
 public:
-    environment(std::mt19937::result_type seed)
+    explicit environment(std::mt19937::result_type seed)
     : rng{seed} {
         double step = 0.05;
 

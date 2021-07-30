@@ -30,7 +30,7 @@ public:
         vector position;
         std::vector<segment_ptr> segments;
 
-        node(vector p)
+        explicit node(vector p)
         : position(p) { }
     };
 

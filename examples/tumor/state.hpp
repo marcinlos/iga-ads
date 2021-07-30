@@ -18,7 +18,7 @@ struct state {
 
     field M, A;
 
-    state(std::array<int, Dim> shape)
+    explicit state(std::array<int, Dim> shape)
     : b{shape}
     , c{shape}
     , o{shape}

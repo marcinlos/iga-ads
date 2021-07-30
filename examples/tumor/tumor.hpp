@@ -51,7 +51,7 @@ private:
     struct constant {
         double value;
 
-        constant(double v)
+        explicit constant(double v)
         : value{v} { }
 
         double operator()(double, double) const { return value; }

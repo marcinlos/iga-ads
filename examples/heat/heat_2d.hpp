@@ -22,7 +22,7 @@ private:
     galois::StatTimer integration_timer{"integration"};
 
 public:
-    heat_2d(const config_2d& config)
+    explicit heat_2d(const config_2d& config)
     : Base{config}
     , u{shape()}
     , u_prev{shape()}

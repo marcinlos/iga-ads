@@ -37,7 +37,7 @@ private:
     double s = 40;
 
 public:
-    coupled(const config_2d& config)
+    explicit coupled(const config_2d& config)
     : Base{config}
     , sol(2 * (x.dofs() - 1) * (y.dofs() - 1))
     , buf(2 * (x.dofs() - 1) * (y.dofs() - 1))

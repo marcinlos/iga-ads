@@ -18,7 +18,7 @@ private:
 
 public:
     template <typename... Args>
-    ring(int size, Args&&... args)
+    explicit ring(int size, Args&&... args)
     : size_(size) {
         for (int i = 0; i < size; ++i) {
             buffer_.emplace_back(std::forward<Args>(args)...);

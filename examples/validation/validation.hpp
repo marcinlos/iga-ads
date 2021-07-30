@@ -19,7 +19,7 @@ private:
     galois_executor executor{8};
 
 public:
-    validation(const config_2d& config)
+    explicit validation(const config_2d& config)
     : Base{config}
     , u{shape()}
     , u_prev{shape()}

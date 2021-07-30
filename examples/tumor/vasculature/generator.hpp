@@ -24,7 +24,7 @@ private:
     using segment_ptr = vasculature::segment_ptr;
 
 public:
-    random_vasculature(config cfg, std::size_t seed = 0)
+    explicit random_vasculature(config cfg, std::size_t seed = 0)
     : rng{seed}
     , cfg{cfg} { }
 
