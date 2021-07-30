@@ -19,6 +19,8 @@ Checks: |
     -google-runtime-references,
     # covered by readability-*,
     -google-readability-braces-around-statements,
+    # no need for detailed info in todo messages,
+    -google-readability-todo,
 
     hicpp-*,
     # unnamed parameters are useful in lambdas that do not use all the data,
