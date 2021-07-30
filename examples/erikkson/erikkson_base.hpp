@@ -43,7 +43,8 @@ protected:
     void plot_horizontal(const char* filename, double y0, const vector_type& u, const dimension& Ux,
                          const dimension& Uy) const {
         std::ofstream out{filename};
-        bspline::eval_ctx ctx_x{Ux.B.degree}, ctx_y{Uy.B.degree};
+        auto ctx_x = bspline::eval_ctx{Ux.B.degree};
+        auto ctx_y = bspline::eval_ctx{Uy.B.degree};
 
         auto print = [&](double xx) {
             auto val = bspline::eval(xx, y0, u, Ux.B, Uy.B, ctx_x, ctx_y);
@@ -65,7 +66,8 @@ protected:
     void plot_vertical(const char* filename, double x0, const vector_type& u, const dimension& Ux,
                        const dimension& Uy) const {
         std::ofstream out{filename};
-        bspline::eval_ctx ctx_x{Ux.B.degree}, ctx_y{Uy.B.degree};
+        auto ctx_x = bspline::eval_ctx{Ux.B.degree};
+        auto ctx_y = bspline::eval_ctx{Uy.B.degree};
 
         auto print = [&](double yy) {
             auto val = bspline::eval(x0, yy, u, Ux.B, Uy.B, ctx_x, ctx_y);

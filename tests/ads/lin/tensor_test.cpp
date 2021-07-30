@@ -18,7 +18,8 @@ TEST_CASE("Tensor") {
     }
 
     SECTION("Equal tensors are ==") {
-        int p = 5, q = 3;
+        int p = 5;
+        int q = 3;
         auto a = tensor<double, 2>{{p, q}};
         auto b = tensor<double, 2>{{p, q}};
 
@@ -31,7 +32,8 @@ TEST_CASE("Tensor") {
     }
 
     SECTION("Reshaping") {
-        int p = 5, q = 3;
+        int p = 5;
+        int q = 3;
 
         double data[] = {
             1,  2,  3,  4,  5,   //
@@ -45,7 +47,9 @@ TEST_CASE("Tensor") {
     }
 
     SECTION("Cyclic transpose") {
-        int k = 2, n = 3, m = 2;
+        int k = 2;
+        int n = 3;
+        int m = 2;
 
         auto a = tensor<double, 3>{{k, n, m}};
         auto e = tensor<double, 3>{{n, m, k}};

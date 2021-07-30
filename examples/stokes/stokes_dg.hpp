@@ -90,8 +90,9 @@ public:
         // non-polynomial
         using std::exp;
         using std::pow;
-        auto x = p[0], y = p[1];
-        auto xx = x * x, yy = y * y;
+        const auto [x, y] = p;
+        auto xx = x * x;
+        auto yy = y * y;
         auto ex = exp(x);
         auto e = exp(1);
 
@@ -126,7 +127,7 @@ public:
         // non-polynomial
         using std::exp;
         using std::pow;
-        auto x = p[0], y = p[1];
+        const auto [x, y] = p;
         auto ex = exp(x);
 
         auto ux = value_type{
@@ -209,7 +210,7 @@ public:
     }
 
     point_type forcing(point_type p) const {
-        auto x = p[0], y = p[1];
+        const auto [x, y] = p;
 
         // auto fx = (12 - 24 * y) * x * x * x * x                         //
         //         + (-24 + 48 * y) * x * x * x                            //
@@ -230,7 +231,8 @@ public:
         // non-polynomial
         using std::exp;
         using std::pow;
-        auto xx = x * x, yy = y * y;
+        auto xx = x * x;
+        auto yy = y * y;
         auto ex = exp(x);
 
         auto px = ex * (y - 1) * y

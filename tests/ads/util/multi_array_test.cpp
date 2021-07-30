@@ -8,7 +8,8 @@
 using namespace ads;
 
 TEST_CASE("Multiarray") {
-    int n = 2, m = 5;
+    int n = 2;
+    int m = 5;
     auto buffer = std::vector<int>(n * m);
     ads::multi_array_wrapper<int, 2, int*> a(buffer.data(), {n, m});
 
@@ -37,7 +38,10 @@ TEST_CASE("Multiarray") {
     }
 
     SECTION("Size") {
-        constexpr int p = 2, q = 5, r = 3, s = 2;
+        const int p = 2;
+        const int q = 5;
+        const int r = 3;
+        const int s = 2;
         auto large_buffer = std::vector<int>(p * q * r * s);
         ads::multi_array_wrapper<int, 4, int*> aa(large_buffer.data(), {p, q, r, s});
 

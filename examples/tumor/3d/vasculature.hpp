@@ -215,7 +215,9 @@ public:
     void to_file(const std::string& name) const {
         using namespace ads;
         output::vtk output{ads::DEFAULT_FMT};
-        std::vector<double> px, py, pz;
+        std::vector<double> px;
+        std::vector<double> py;
+        std::vector<double> pz;
         for (int i = 0; i < sx; ++i) {
             px.push_back(i);
         }

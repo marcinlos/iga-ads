@@ -46,7 +46,7 @@ struct prob_manufactured_poly {
             return x * x * (1 - x) * (1 - x) * (2 - 12 * y + 12 * y * y);
         };
 
-        double x = p[0], y = p[1];
+        const auto [x, y] = p;
         value_type vx = {f(x, y), dfx(x, y), dfy(x, y)};
         value_type vy = {-f(y, x), -dfy(y, x), -dfx(y, x)};
 
@@ -54,7 +54,7 @@ struct prob_manufactured_poly {
     }
 
     point_type forcing(point_type p, double t) const {
-        double x = p[0], y = p[1];
+        const auto [x, y] = p;
         auto v = exact_v(p, t);
         auto et = std::exp(-t);
 
@@ -80,7 +80,7 @@ struct prob_manufactured_nonpoly {
     bool navier_stokes = false;
 
     value_type exact_p(point_type p, double t) const {
-        auto x = p[0], y = p[1];
+        const auto [x, y] = p;
         using std::cos;
         using std::sin;
 
@@ -88,7 +88,7 @@ struct prob_manufactured_nonpoly {
     }
 
     value_pair exact_v(point_type p, double t) const {
-        auto x = p[0], y = p[1];
+        const auto [x, y] = p;
         using std::cos;
         using std::sin;
 
@@ -99,7 +99,7 @@ struct prob_manufactured_nonpoly {
     }
 
     point_type forcing(point_type p, double t) const {
-        auto x = p[0], y = p[1];
+        const auto [x, y] = p;
         using std::cos;
         using std::sin;
 
@@ -117,7 +117,7 @@ struct prob_manufactured_NS_nonpoly {
     bool navier_stokes = true;
 
     value_type exact_p(point_type p, double t) const {
-        auto x = p[0], y = p[1];
+        const auto [x, y] = p;
         using std::cos;
         using std::sin;
 
@@ -125,7 +125,7 @@ struct prob_manufactured_NS_nonpoly {
     }
 
     value_pair exact_v(point_type p, double t) const {
-        auto x = p[0], y = p[1];
+        const auto [x, y] = p;
         using std::cos;
         using std::sin;
 
@@ -136,7 +136,7 @@ struct prob_manufactured_NS_nonpoly {
     }
 
     point_type forcing(point_type p, double t) const {
-        auto x = p[0], y = p[1];
+        const auto [x, y] = p;
         using std::cos;
         using std::sin;
 

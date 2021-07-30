@@ -162,7 +162,9 @@ private:
         }
 
         using edge_type = ads::lin::tensor<double, 1>;
-        edge_type ex{{x.dofs()}}, ey{{y.dofs()}}, ez{{z.dofs()}};
+        auto ex = edge_type{{x.dofs()}};
+        auto ey = edge_type{{y.dofs()}};
+        auto ez = edge_type{{z.dofs()}};
 
         ads::compute_projection(ex, x.basis, [&](double t) { return f(t, y.a, z.a); });
         for (int i = 0; i < x.dofs(); ++i) {

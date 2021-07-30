@@ -487,7 +487,8 @@ private:
 
     void plot_middle(const char* filename) {
         std::ofstream out{filename};
-        bspline::eval_ctx ctx_x{Ux.B.degree}, ctx_y{Uy.B.degree};
+        auto ctx_x = bspline::eval_ctx{Ux.B.degree};
+        auto ctx_y = bspline::eval_ctx{Uy.B.degree};
 
         auto print = [&](double xx) {
             auto val = bspline::eval(xx, 0.5, u, Ux.B, Uy.B, ctx_x, ctx_y);

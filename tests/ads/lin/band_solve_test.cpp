@@ -48,7 +48,8 @@ TEST_CASE("Banded matrix") {
     SECTION("Vector multiplication") {
         band_matrix A{1, 1, 4, 3};
         A(0, 0) = A(1, 1) = A(2, 2) = A(3, 2) = 1;
-        std::vector<double> x{1, 2, 3, 4, 5, 6}, y(4 * 2);
+        std::vector<double> x{1, 2, 3, 4, 5, 6};
+        std::vector<double> y(4 * 2);
 
         multiply(A, x, y, 2);
 

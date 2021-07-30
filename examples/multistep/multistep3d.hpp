@@ -236,7 +236,10 @@ private:
         executor.for_each(elements(), [&](index_type e) {
             auto U = element_rhs();
             std::vector<value_type> uvals(us.size());
-            std::vector<double> dxy(us.size()), dyz(us.size()), dxz(us.size()), dxyz(us.size());
+            std::vector<double> dxy(us.size());
+            std::vector<double> dyz(us.size());
+            std::vector<double> dxz(us.size());
+            std::vector<double> dxyz(us.size());
 
             double tau = steps.dt;
             double tt = t + tau;

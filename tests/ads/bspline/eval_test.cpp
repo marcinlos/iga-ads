@@ -15,7 +15,8 @@ TEST_CASE("B-spline evaluation", "[splines]") {
     const int elements = 5;
     const int dofs = elements + p;
 
-    double a = 0, b = 1;
+    double a = 0;
+    double b = 1;
     basis basis = create_basis(a, b, p, elements);
     eval_ctx ctx(p);
 

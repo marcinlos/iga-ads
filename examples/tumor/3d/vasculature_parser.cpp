@@ -9,9 +9,12 @@ namespace tumor {
 
 void normalize_positions(std::vector<vessels::point_type>& points) {
     auto inf = std::numeric_limits<double>::infinity();
-    double xmin = inf, xmax = -inf;
-    double ymin = inf, ymax = -inf;
-    double zmin = inf, zmax = -inf;
+    double xmin = inf;
+    double xmax = -inf;
+    double ymin = inf;
+    double ymax = -inf;
+    double zmin = inf;
+    double zmax = -inf;
     for (const auto& p : points) {
         xmin = std::min(xmin, p.x);
         xmax = std::max(xmax, p.x);
@@ -51,7 +54,9 @@ vessels parse_vessels(std::istream& is) {
     points.reserve(joint_count);
 
     for (int i = 0; i < joint_count; ++i) {
-        double x, y, z;
+        double x;
+        double y;
+        double z;
         is >> x >> y >> z;
         points.push_back(point{x, y, z});
     }
@@ -75,7 +80,8 @@ vessels parse_vessels(std::istream& is) {
 
     for (int i = 0; i < line_count; ++i) {
         skip_word();
-        int j, k;
+        int j;
+        int k;
         is >> j >> k;
         lines.emplace_back(j, k);
     }

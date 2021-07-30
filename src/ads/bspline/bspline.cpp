@@ -125,11 +125,13 @@ void eval_basis_with_derivatives(int i, double x, const basis& b, double** out, 
         out[0][j] = ndu(j, b.degree);
     }
     for (int r = 0; r <= b.degree; ++r) {
-        int s1 = 0, s2 = 1;
+        int s1 = 0;
+        int s2 = 1;
         a(0, 0) = 1;
         for (int k = 1; k <= der; ++k) {
             double d = 0;
-            int rk = r - k, pk = b.degree - k;
+            int rk = r - k;
+            int pk = b.degree - k;
             if (r >= k) {
                 a(s2, 0) = a(s1, 0) / ndu(pk + 1, rk);
                 d = a(s2, 0) * ndu(rk, pk);

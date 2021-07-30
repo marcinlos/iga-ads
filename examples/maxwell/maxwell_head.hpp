@@ -61,12 +61,17 @@ private:
         try {
             input.open(path);
 
-            int nx, ny, nz;
+            int nx;
+            int ny;
+            int nz;
             input >> nz >> ny >> nx;
             auto data = density_data{{nx, ny, nz}};
 
             for (int i = 0; i < nx * ny * nz; ++i) {
-                int ix, iy, iz, val;
+                int ix;
+                int iy;
+                int iz;
+                int val;
                 input >> iz >> iy >> ix >> val;
                 data(ix, iy, iz) = static_cast<byte>(val);
             }

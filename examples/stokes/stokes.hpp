@@ -73,7 +73,7 @@ public:
             return x * x * (1 - x) * (1 - x) * (2 - 12 * y + 12 * y * y);
         };
 
-        double x = p[0], y = p[1];
+        const auto [x, y] = p;
         value_type vx = {f(x, y), dfx(x, y), dfy(x, y)};
         value_type vy = {-f(y, x), -dfy(y, x), -dfx(y, x)};
 
@@ -92,7 +92,7 @@ public:
             return (12 * x * x - 12 * x + 2) * (2 * y - 6 * y * y + 4 * y * y * y);
         };
 
-        double x = p[0], y = p[1];
+        const auto [x, y] = p;
         double dx = dfxx(x, y) - dfxy(y, x);
         double dy = dfxy(x, y) - dfxx(y, x);
 
@@ -196,7 +196,7 @@ public:
     }
 
     point_type forcing(point_type p) const {
-        double x = p[0], y = p[1];
+        const auto [x, y] = p;
 
         auto fx = (12 - 24 * y) * x * x * x * x                         //
                 + (-24 + 48 * y) * x * x * x                            //

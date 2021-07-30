@@ -20,7 +20,8 @@ class diff_computer2d : public simulation_2d {
             throw std::invalid_argument{path};
         }
         while (in) {
-            int i, j;
+            int i;
+            int j;
             double val;
             in >> i >> j >> val;
             u(i, j) = val;
@@ -86,13 +87,17 @@ class diff_computer3d : public simulation_3d {
 
     state read_solution(const std::string& path) {
         std::array<int, 3> dims{{x.dofs(), y.dofs(), z.dofs()}};
-        vector_type ux{dims}, uy{dims}, uz{dims};
+        vector_type ux{dims};
+        vector_type uy{dims};
+        vector_type uz{dims};
         std::ifstream in{path};
         if (!in) {
             throw std::invalid_argument{path};
         }
         while (in) {
-            int i, j, k;
+            int i;
+            int j;
+            int k;
             in >> i >> j >> k;
             in >> ux(i, j, k) >> uy(i, j, k) >> uz(i, j, k);
         }

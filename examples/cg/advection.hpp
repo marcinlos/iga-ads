@@ -548,7 +548,8 @@ private:
     vector_view substep_CG(const vector_type& dc) {
         vector_type u_prev = u;
 
-        auto p = dc, q = dc;
+        auto p = dc;
+        auto q = dc;
         auto theta = vector_type{{Vx.dofs(), Vy.dofs()}};
         auto delta = theta;
 
@@ -968,8 +969,10 @@ private:
     }
 
     point_type boundary_point(double t, boundary side) {
-        double x0 = Ux.a, x1 = Ux.b;
-        double y0 = Uy.a, y1 = Uy.b;
+        double x0 = Ux.a;
+        double x1 = Ux.b;
+        double y0 = Uy.a;
+        double y1 = Uy.b;
         switch (side) {
         case boundary::left: return {x0, t};
         case boundary::right: return {x1, t};

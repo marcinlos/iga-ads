@@ -50,7 +50,8 @@ int main(int argc, char* argv[]) {
     int nsteps = std::atoi(argv[7]);
 
     int quad = std::max(p_trial, p_test) + 1;
-    double a = 0, b = 5000;
+    double a = 0;
+    double b = 5000;
     dim_config trial{p_trial, n, a, b, quad, p_trial - 1 - C_trial};
     dim_config test{p_test, n, a, b, quad, p_test - 1 - C_test};
 

@@ -21,7 +21,9 @@ public:
         using std::max;
 
         auto sizes = c.sizes();
-        int sx = sizes[0], sy = sizes[1], sz = sizes[2];
+        int sx = sizes[0];
+        int sy = sizes[1];
+        int sz = sizes[2];
 
         auto d = b - a;
 
