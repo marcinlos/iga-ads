@@ -10,8 +10,7 @@
 #include "ads/util/ring.hpp"
 #include "multistep_base.hpp"
 
-namespace ads {
-namespace problems {
+namespace ads::problems {
 
 class multistep2d : public simulation_2d, public multistep_base {
 private:
@@ -233,7 +232,6 @@ private:
     double init_state(double x, double y) const { return solution(x, y, 0).val; }
 };
 
-}  // namespace problems
-}  // namespace ads
+}  // namespace ads::problems
 
 #endif  // MULTISTEP_MULTISTEP2D_HPP
