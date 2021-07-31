@@ -10,7 +10,7 @@
 #include "ads/lin/band_matrix.hpp"
 #include "ads/lin/tensor.hpp"
 
-using namespace ads::lin;
+namespace lin = ads::lin;
 
 TEST_CASE("Banded matrix") {
     SECTION("Solver") {
@@ -19,8 +19,8 @@ TEST_CASE("Banded matrix") {
         int n = 6;
         int d = 4;
 
-        band_matrix m(kl, ku, n);
-        matrix b({n, d});
+        lin::band_matrix m(kl, ku, n);
+        lin::matrix b({n, d});
 
         for (int i = 0; i < n; ++i) {
             for (int j = std::max(0, i - kl); j < std::min(n, i + ku + 1); ++j) {
@@ -32,21 +32,21 @@ TEST_CASE("Banded matrix") {
         }
 
         double solution[] = {0.230377, -0.126052, -0.0016554, -0.00111222, 0.203603, -0.109609};
-        matrix x({n, d});
+        lin::matrix x({n, d});
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j < d; ++j) {
                 x(i, j) = (j + 1) * solution[i];
             }
         }
 
-        solver_ctx ctx(m);
-        solve(m, b, ctx);
+        lin::solver_ctx ctx(m);
+        lin::solve(m, b, ctx);
 
         CHECK(approx_equal(x, b, 1e-5));
     }
 
     SECTION("Vector multiplication") {
-        band_matrix A{1, 1, 4, 3};
+        ads::lin::band_matrix A{1, 1, 4, 3};
         A(0, 0) = A(1, 1) = A(2, 2) = A(3, 2) = 1;
         std::vector<double> x{1, 2, 3, 4, 5, 6};
         std::vector<double> y(4 * 2);

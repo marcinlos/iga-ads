@@ -8,12 +8,10 @@
 #include "ads/bspline/bspline.hpp"
 #include "stokes.hpp"
 
-using namespace ads;
-
-dimension make_dimension(int p, int c, int n, int quad, int ders) {
+ads::dimension make_dimension(int p, int c, int n, int quad, int ders) {
     int rep = p - 1 - c;
-    auto basis = bspline::create_basis(0, 1, p, n, rep);
-    return dimension{basis, quad, ders, 1};
+    auto basis = ads::bspline::create_basis(0, 1, p, n, rep);
+    return ads::dimension{basis, quad, ders, 1};
 }
 
 int main(int argc, char* argv[]) {
@@ -58,7 +56,7 @@ int main(int argc, char* argv[]) {
 
     int quad = p_max + 1;
 
-    timesteps_config steps{1, 0};
+    ads::timesteps_config steps{1, 0};
     int ders = 2;
 
     // Trial
@@ -81,9 +79,9 @@ int main(int argc, char* argv[]) {
     auto test_x = make_dimension(pp_test_x, pc_test_x, n, quad, ders);
     auto test_y = make_dimension(pp_test_y, pc_test_y, n, quad, ders);
 
-    auto trial = space_set{U1_trial_x, U1_trial_y, U2_trial_x, U2_trial_y, trial_x, trial_y};
+    auto trial = ads::space_set{U1_trial_x, U1_trial_y, U2_trial_x, U2_trial_y, trial_x, trial_y};
 
-    auto test = space_set{U1_test_x, U1_test_y, U2_test_x, U2_test_y, test_x, test_y};
+    auto test = ads::space_set{U1_test_x, U1_test_y, U2_test_x, U2_test_y, test_x, test_y};
 
     // Sanity check
     auto trial_dim = total_dimension(trial);
@@ -109,11 +107,11 @@ int main(int argc, char* argv[]) {
     auto ref_x = make_dimension(pp_trial_x, pc_trial_x, n, quad, ders);
     auto ref_y = make_dimension(pp_trial_y, pc_trial_y, n, quad, ders);
 
-    auto ref = space_set{U1_ref_x, U1_ref_y, U2_ref_x, U2_ref_y, ref_x, ref_y};
+    auto ref = ads::space_set{U1_ref_x, U1_ref_y, U2_ref_x, U2_ref_y, ref_x, ref_y};
 
     // auto sim = stokes_conforming{trial, test, steps};
     // auto sim = stokes_constrained{trial, test, steps};
 
-    auto sim = stokes{trial, test, ref, steps};
+    auto sim = ads::stokes{trial, test, ref, steps};
     sim.run();
 }

@@ -8,7 +8,7 @@
 #include "ads/bspline/bspline.hpp"
 #include "ads/util.hpp"
 
-using namespace ads::bspline;
+namespace bsp = ads::bspline;
 
 TEST_CASE("B-spline evaluation", "[splines]") {
     const int p = 2;
@@ -17,8 +17,8 @@ TEST_CASE("B-spline evaluation", "[splines]") {
 
     double a = 0;
     double b = 1;
-    basis basis = create_basis(a, b, p, elements);
-    eval_ctx ctx(p);
+    bsp::basis basis = bsp::create_basis(a, b, p, elements);
+    bsp::eval_ctx ctx(p);
 
     SECTION("Partition of unity property holds") {
         const int N = 100;

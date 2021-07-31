@@ -1447,7 +1447,7 @@ struct H10 {
     using computation_method = element_integral;
 
     auto operator()(const ads::value_type& v) const noexcept -> double {
-        using namespace ads;
+        using ads::dot, ads::grad;
         return dot(grad(v), grad(v));
     }
 };
@@ -1457,7 +1457,7 @@ struct H1 {
     using computation_method = element_integral;
 
     auto operator()(const ads::value_type& v) const noexcept -> double {
-        using namespace ads;
+        using ads::dot, ads::grad;
         return v.val * v.val + dot(grad(v), grad(v));
     }
 };

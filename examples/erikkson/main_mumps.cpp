@@ -9,18 +9,16 @@
 #include "erikkson_supg_weak.hpp"
 #include "pollution_rotation.hpp"
 
-using namespace ads;
-
 double shishkin_const(int n, double eps) {
     return std::log(n) / std::log(2) * eps;
 }
 
-bspline::basis create_basis(double a, double b, int p, int elements, int repeated_nodes, bool adapt,
-                            double d) {
+ads::bspline::basis create_basis(double a, double b, int p, int elements, int repeated_nodes,
+                                 bool adapt, double d) {
     int points = elements + 1;
     int r = repeated_nodes + 1;
     int knot_size = 2 * (p + 1) + (points - 2) * r;
-    bspline::knot_vector knot(knot_size);
+    ads::bspline::knot_vector knot(knot_size);
 
     for (int i = 0; i <= p; ++i) {
         knot[i] = a;
@@ -31,22 +29,23 @@ bspline::basis create_basis(double a, double b, int p, int elements, int repeate
     auto y0 = 1 - d;
 
     for (int i = 1; i < points - 1; ++i) {
-        auto t = lerp(i, elements, 0.0, 1.0);
+        auto t = ads::lerp(i, elements, 0.0, 1.0);
 
         auto s = adapt ? (t < x0 ? t / x0 * y0 : (t - x0) / (1 - x0) * (1 - y0) + y0) : t;
         for (int j = 0; j < r; ++j) {
-            knot[p + 1 + (i - 1) * r + j] = lerp(s, a, b);
+            knot[p + 1 + (i - 1) * r + j] = ads::lerp(s, a, b);
         }
     }
 
     return {std::move(knot), p};
 }
 
-bspline::basis basis_from_points(const std::vector<double>& points, int p, int repeated_nodes) {
-    auto elems = narrow_cast<int>(points.size() - 1);
+ads::bspline::basis basis_from_points(const std::vector<double>& points, int p,
+                                      int repeated_nodes) {
+    auto elems = ads::narrow_cast<int>(points.size() - 1);
     int r = repeated_nodes + 1;
     int size = (elems - 1) * r + 2 * (p + 1);
-    auto knot = bspline::knot_vector(size);
+    auto knot = ads::bspline::knot_vector(size);
 
     for (int i = 0; i <= p; ++i) {
         knot[i] = points[0];
@@ -79,13 +78,13 @@ std::vector<double> make_points(int n) {
     return points;
 }
 
-bspline::basis create_checkboard_basis(double a, double b, int p, int elements, int repeated_nodes,
-                                       bool /*adapt*/) {
+ads::bspline::basis create_checkboard_basis(double a, double b, int p, int elements,
+                                            int repeated_nodes, bool /*adapt*/) {
     int total_elements = 2 * elements + 2;
     int points = total_elements + 1;
     int r = repeated_nodes + 1;
     int knot_size = 2 * (p + 1) + (points - 2) * r;
-    bspline::knot_vector knot(knot_size);
+    ads::bspline::knot_vector knot(knot_size);
 
     for (int i = 0; i <= p; ++i) {
         knot[i] = a;
@@ -101,16 +100,16 @@ bspline::basis create_checkboard_basis(double a, double b, int p, int elements, 
     for (int i = 1; i < points - 1; ++i) {
         double s;
         if (i <= elements) {
-            auto t = lerp(i, elements, 0.0, 1.0);
-            s = lerp(t, x0, x1);
+            auto t = ads::lerp(i, elements, 0.0, 1.0);
+            s = ads::lerp(t, x0, x1);
         } else {
-            auto t = lerp(i - elements - 1, elements, 0.0, 1.0);
-            s = lerp(t, x2, x3);
+            auto t = ads::lerp(i - elements - 1, elements, 0.0, 1.0);
+            s = ads::lerp(t, x2, x3);
         }
         std::cout << s << std::endl;
 
         for (int j = 0; j < r; ++j) {
-            knot[p + 1 + (i - 1) * r + j] = lerp(s, a, b);
+            knot[p + 1 + (i - 1) * r + j] = ads::lerp(s, a, b);
         }
     }
 
@@ -148,7 +147,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << "adaptations: " << std::boolalpha << adapt << std::endl;
 
-    timesteps_config steps{nsteps, dt};
+    ads::timesteps_config steps{nsteps, dt};
     int ders = 2;
 
     bool bd_layer_x = true;
@@ -169,25 +168,25 @@ int main(int argc, char* argv[]) {
     auto trial_basis_x = create_basis(0, S, p_trial, nx, p_trial - 1 - C_trial, adapt_x, d);
     // auto trial_basis_x = create_checkboard_basis(0, S, p_trial, n, p_trial - 1 - C_trial,
     // adapt_x);
-    auto dtrial_x = dimension{trial_basis_x, quad, ders, subdivision};
+    auto dtrial_x = ads::dimension{trial_basis_x, quad, ders, subdivision};
 
     auto trial_basis_y = create_basis(-S, S, p_trial, ny, p_trial - 1 - C_trial, adapt_y, d);
     // auto trial_basis_y = create_checkboard_basis(0, S, p_trial, n, p_trial - 1 - C_trial,
     // adapt_y);
-    auto dtrial_y = dimension{trial_basis_y, quad, ders, subdivision};
+    auto dtrial_y = ads::dimension{trial_basis_y, quad, ders, subdivision};
 
     // auto test_basis_x = basis_from_points(points_x, p_test, p_test - 1 - C_test);
     auto test_basis_x =
         create_basis(0, S, p_test, subdivision * nx, p_test - 1 - C_test, adapt_x, d);
     // auto test_basis_x = create_checkboard_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test,
     // adapt_x);
-    auto dtest_x = dimension{test_basis_x, quad, ders, 1};
+    auto dtest_x = ads::dimension{test_basis_x, quad, ders, 1};
 
     auto test_basis_y =
         create_basis(-S, S, p_test, subdivision * ny, p_test - 1 - C_test, adapt_y, d);
     // auto test_basis_y = create_checkboard_basis(0, S, p_test, subdivision*n, p_test - 1 - C_test,
     // adapt_y);
-    auto dtest_y = dimension{test_basis_y, quad, ders, 1};
+    auto dtest_y = ads::dimension{test_basis_y, quad, ders, 1};
 
     auto trial_dim = dtrial_x.dofs() * dtrial_y.dofs();
     auto test_dim = dtest_x.dofs() * dtest_y.dofs();
@@ -204,17 +203,17 @@ int main(int argc, char* argv[]) {
     }
 
     if (type == "igrm-mumps")
-        erikkson_mumps{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
+        ads::erikkson_mumps{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
     if (type == "igrm-cg")
-        erikkson_CG{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
+        ads::erikkson_CG{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
     if (type == "igrm-cg-weak")
-        erikkson_CG_weak{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
+        ads::erikkson_CG_weak{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
     if (type == "supg")
-        erikkson_supg{dtrial_x, dtrial_y, steps}.run();
+        ads::erikkson_supg{dtrial_x, dtrial_y, steps}.run();
     if (type == "supg-weak")
-        erikkson_supg_weak{dtrial_x, dtrial_y, steps}.run();
+        ads::erikkson_supg_weak{dtrial_x, dtrial_y, steps}.run();
     if (type == "pollution")
-        pollution_rotation{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
+        ads::pollution_rotation{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
     // if (type == "split") erikkson_mumps_split{dtrial_x, dtrial_y, dtest_x, dtest_y, steps}.run();
 
     // erikkson_mumps_split sim{dtrial_x, dtrial_y, dtest_x, dtest_y, steps};

@@ -5,9 +5,6 @@
 
 #include "maxwell_galerkin.hpp"
 
-using namespace ads;
-using namespace clara;
-
 int main(int argc, char* argv[]) {
     int n;
     int p;
@@ -15,13 +12,14 @@ int main(int argc, char* argv[]) {
     int step_count;
 
     bool help = false;
+    using clara::Help, clara::Arg;
     auto cli = Help(help)              //
              | Arg(n, "N").required()  //
              | Arg(p, "p").required()  //
              | Arg(c, "c").required()  //
              | Arg(step_count, "steps").required();
 
-    auto result = cli.parse(Args(argc, argv));
+    auto result = cli.parse(clara::Args(argc, argv));
 
     if (!result) {
         std::cerr << "Error: " << result.errorMessage() << std::endl;
@@ -40,11 +38,11 @@ int main(int argc, char* argv[]) {
 
     auto T = 1.0;
     auto dt = T / step_count;
-    auto steps = timesteps_config{step_count, dt};
+    auto steps = ads::timesteps_config{step_count, dt};
 
-    auto dim = dim_config{p, n};
-    auto cfg = config_3d{dim, dim, dim, steps, 1};
+    auto dim = ads::dim_config{p, n};
+    auto cfg = ads::config_3d{dim, dim, dim, steps, 1};
 
-    auto sim = maxwell_galerkin{cfg};
+    auto sim = ads::maxwell_galerkin{cfg};
     sim.run();
 }

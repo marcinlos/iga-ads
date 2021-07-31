@@ -8,8 +8,6 @@
 #include "tumor_3d.hpp"
 #include "vasculature_parser.hpp"
 
-using namespace ads;
-
 int main(int argc, char* argv[]) {
     if (argc < 5) {
         std::cerr << "Usage: tumor_3d threads p n vasc_size steps" << std::endl;
@@ -26,13 +24,13 @@ int main(int argc, char* argv[]) {
 
     auto vasc = tumor::vasculature{vasc_size, vasc_size, vasc_size, std::move(vessels)};
 
-    dim_config dim{p, n, 0, 5000.0};
-    dim_config dimz{p, n, 0, 5000.0};
+    ads::dim_config dim{p, n, 0, 5000.0};
+    ads::dim_config dimz{p, n, 0, 5000.0};
 
     int ders = 1;
 
-    timesteps_config steps{nsteps, 0.1};  // 200h
-    config_3d c{dim, dim, dimz, steps, ders};
+    ads::timesteps_config steps{nsteps, 0.1};  // 200h
+    ads::config_3d c{dim, dim, dimz, steps, ders};
 
     tumor::params par;
 

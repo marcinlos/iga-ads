@@ -5,16 +5,14 @@
 #include "tumor.hpp"
 #include "vasculature.hpp"
 
-using namespace ads;
-
 // clang-tidy 12 complains about deleted default constructor not
 // initializing some members
 //
 // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init, hicpp-member-init)
 struct sim_params {
-    int p;                   // 2
-    int elems;               // 80
-    timesteps_config steps;  // 10000, 0.1
+    int p;                        // 2
+    int elems;                    // 80
+    ads::timesteps_config steps;  // 10000, 0.1
     int plot_every;
     tumor::params tumor_params;
     tumor::vasc::config vasc_config;
@@ -85,10 +83,10 @@ sim_params parse_params(char* args[], int idx) {
 int main(int /*argc*/, char* argv[]) {
     sim_params sp = parse_params(argv, 1);
 
-    dim_config dim{sp.p, sp.elems, 0, 3000.0};
+    ads::dim_config dim{sp.p, sp.elems, 0, 3000.0};
     int ders = 1;
 
-    config_2d c{dim, dim, sp.steps, ders};
+    ads::config_2d c{dim, dim, sp.steps, ders};
 
     tumor::vasc::random_vasculature rand_vasc{sp.vasc_config, 0};
     tumor::tumor_2d sim{c, sp.tumor_params, sp.plot_every, rand_vasc()};

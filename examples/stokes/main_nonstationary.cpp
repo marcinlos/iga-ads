@@ -8,12 +8,10 @@
 #include "ads/bspline/bspline.hpp"
 #include "stokes_dg_split.hpp"
 
-using namespace ads;
-
-dimension make_dimension(int p, int c, int n, int quad, int ders) {
+ads::dimension make_dimension(int p, int c, int n, int quad, int ders) {
     int rep = p - 1 - c;
-    auto basis = bspline::create_basis(0, 1, p, n, rep);
-    return dimension{basis, quad, ders, 1};
+    auto basis = ads::bspline::create_basis(0, 1, p, n, rep);
+    return ads::dimension{basis, quad, ders, 1};
 }
 
 int main(int argc, char* argv[]) {
@@ -61,7 +59,7 @@ int main(int argc, char* argv[]) {
     int quad = p_max + 1;
 
     double dt = 2.0 / nsteps;
-    timesteps_config steps{nsteps, dt};
+    ads::timesteps_config steps{nsteps, dt};
     int ders = 2;
 
     // Trial
@@ -84,13 +82,13 @@ int main(int argc, char* argv[]) {
     auto test_x = make_dimension(pp_test_x, pc_test_x, n, quad, ders);
     auto test_y = make_dimension(pp_test_y, pc_test_y, n, quad, ders);
 
-    auto trial = space_set{
+    auto trial = ads::space_set{
         U1_trial_x, U1_trial_y,  //
         U2_trial_x, U2_trial_y,  //
         trial_x,    trial_y,     //
     };
 
-    auto test = space_set{
+    auto test = ads::space_set{
         U1_test_x, U1_test_y,  //
         U2_test_x, U2_test_y,  //
         test_x,    test_y,     //
@@ -108,22 +106,22 @@ int main(int argc, char* argv[]) {
         std::cout << "dim(U) = " << trial_dim << ", dim(V) = " << test_dim << std::endl;
     }
 
-    scheme method;
+    ads::scheme method;
     if (type == "BE") {
-        method = scheme::BE;
+        method = ads::scheme::BE;
     } else if (type == "CN") {
-        method = scheme::CN;
+        method = ads::scheme::CN;
     } else if (type == "PR") {
-        method = scheme::peaceman_rachford;
+        method = ads::scheme::peaceman_rachford;
     } else if (type == "strang-BE") {
-        method = scheme::strang_BE;
+        method = ads::scheme::strang_BE;
     } else if (type == "strang-CN") {
-        method = scheme::strang_CN;
+        method = ads::scheme::strang_CN;
     } else {
         std::cerr << "Unknown scheme: " << type << std::endl;
         std::exit(1);
     }
 
-    auto sim = stokes_dg_split{method, trial, test, steps};
+    auto sim = ads::stokes_dg_split{method, trial, test, steps};
     sim.run();
 }

@@ -642,7 +642,7 @@ private:
             }
         }
 
-        using namespace std;
+        using std::setw, std::setprecision;
 
         total /= 1000;          // g -> kg
         emission_rate /= 1000;  // g -> kg

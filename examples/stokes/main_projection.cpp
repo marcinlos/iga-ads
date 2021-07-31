@@ -8,30 +8,28 @@
 #include "ads/bspline/bspline.hpp"
 #include "stokes_projection.hpp"
 
-using namespace ads;
-
-dimension make_dimension(int p, int c, int n, int quad, int ders) {
+ads::dimension make_dimension(int p, int c, int n, int quad, int ders) {
     int rep = p - 1 - c;
-    auto basis = bspline::create_basis(0, 1, p, n, rep);
-    return dimension{basis, quad, ders, 1};
+    auto basis = ads::bspline::create_basis(0, 1, p, n, rep);
+    return ads::dimension{basis, quad, ders, 1};
 }
 
 template <typename Fun>
 void with_problem(const std::string& name, double Re, Fun&& fun) {
     if (name == "cavity") {
-        auto problem = prob_cavity_flow{Re, false};
+        auto problem = ads::prob_cavity_flow{Re, false};
         fun(problem);
     } else if (name == "cavity-NS") {
-        auto problem = prob_cavity_flow{Re, true};
+        auto problem = ads::prob_cavity_flow{Re, true};
         fun(problem);
     } else if (name == "mf-poly") {
-        auto problem = prob_manufactured_poly{Re};
+        auto problem = ads::prob_manufactured_poly{Re};
         fun(problem);
     } else if (name == "mf-nonpoly") {
-        auto problem = prob_manufactured_nonpoly{Re};
+        auto problem = ads::prob_manufactured_nonpoly{Re};
         fun(problem);
     } else if (name == "mf-nonpoly-NS") {
-        auto problem = prob_manufactured_NS_nonpoly{Re};
+        auto problem = ads::prob_manufactured_NS_nonpoly{Re};
         fun(problem);
     } else {
         std::cerr << "Unknown problem: " << name << std::endl;
@@ -85,7 +83,7 @@ int main(int argc, char* argv[]) {
     int quad = p_max + 1;
 
     double dt = 2.0 / nsteps;
-    timesteps_config steps{nsteps, dt};
+    ads::timesteps_config steps{nsteps, dt};
     int ders = 2;
 
     // Trial
@@ -108,9 +106,17 @@ int main(int argc, char* argv[]) {
     auto test_x = make_dimension(pp_test_x, pc_test_x, n, quad, ders);
     auto test_y = make_dimension(pp_test_y, pc_test_y, n, quad, ders);
 
-    auto trial = space_set{U1_trial_x, U1_trial_y, U2_trial_x, U2_trial_y, trial_x, trial_y};
+    auto trial = ads::space_set{
+        U1_trial_x, U1_trial_y,  //
+        U2_trial_x, U2_trial_y,  //
+        trial_x,    trial_y,     //
+    };
 
-    auto test = space_set{U1_test_x, U1_test_y, U2_test_x, U2_test_y, test_x, test_y};
+    auto test = ads::space_set{
+        U1_test_x, U1_test_y,  //
+        U2_test_x, U2_test_y,  //
+        test_x,    test_y,     //
+    };
 
     // Sanity check
     auto trial_dim = total_dimension(trial);
@@ -126,7 +132,7 @@ int main(int argc, char* argv[]) {
 
     with_problem(problem, Re, [&](auto prob) {
         using Prob = decltype(prob);
-        auto sim = stokes_projection<Prob>{trial, test, steps, prob};
+        auto sim = ads::stokes_projection<Prob>{trial, test, steps, prob};
         sim.run();
     });
 }

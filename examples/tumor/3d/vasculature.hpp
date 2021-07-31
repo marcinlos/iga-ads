@@ -213,8 +213,8 @@ public:
     }
 
     void to_file(const std::string& name) const {
-        using namespace ads;
-        output::vtk output{ads::DEFAULT_FMT};
+        namespace out = ads::output;
+        out::vtk output{ads::DEFAULT_FMT};
 
         std::vector<double> px;
         px.reserve(sx);
@@ -234,10 +234,10 @@ public:
             pz.push_back(i);
         }
 
-        auto rx = output::from_container(px);
-        auto ry = output::from_container(py);
-        auto rz = output::from_container(pz);
-        auto grid = output::make_grid(rx, ry, rz);
+        auto rx = out::from_container(px);
+        auto ry = out::from_container(py);
+        auto rz = out::from_container(pz);
+        auto grid = out::make_grid(rx, ry, rz);
         std::ofstream os{name};
         output.print(os, grid, src);
     }

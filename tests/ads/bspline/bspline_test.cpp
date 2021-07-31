@@ -5,11 +5,11 @@
 
 #include <catch2/catch.hpp>
 
-using namespace ads::bspline;
-using namespace Catch::Matchers;
+namespace bsp = ads::bspline;
+using Catch::Matchers::Equals;
 
 TEST_CASE("B-spline basis", "[splines]") {
-    basis b = create_basis(0.0, 1.0, 2, 4);
+    bsp::basis b = bsp::create_basis(0.0, 1.0, 2, 4);
 
     SECTION("Knot vector is correct after creation") {
         REQUIRE_THAT(b.knot, Equals<double>({0, 0, 0, 0.25, 0.5, 0.75, 1, 1, 1}));
@@ -38,7 +38,7 @@ TEST_CASE("B-spline basis", "[splines]") {
     }
 
     SECTION("Finding span with repeated nodes") {
-        basis b_rep({0, 0, 0, 0, 1, 1, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5}, 3);
+        bsp::basis b_rep({0, 0, 0, 0, 1, 1, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5}, 3);
 
         SECTION("point outside domain") {
             CHECK(find_span(-4, b_rep) == 3);

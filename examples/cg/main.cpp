@@ -8,14 +8,12 @@
 #include "problems.hpp"
 #include "shishkin.hpp"
 
-using namespace ads;
-using namespace clara;
-
-bspline::basis basis_from_points(const std::vector<double>& points, int p, int repeated_nodes) {
-    auto elems = narrow_cast<int>(points.size()) - 1;
+ads::bspline::basis basis_from_points(const std::vector<double>& points, int p,
+                                      int repeated_nodes) {
+    auto elems = ads::narrow_cast<int>(points.size()) - 1;
     int r = repeated_nodes + 1;
     int size = (elems - 1) * r + 2 * (p + 1);
-    auto knot = bspline::knot_vector(size);
+    auto knot = ads::bspline::knot_vector(size);
 
     for (int i = 0; i <= p; ++i) {
         knot[i] = points[0];
@@ -71,7 +69,8 @@ void print_dofs(const ads::dimension& trial, const ads::dimension& test) {
     std::cout << "DOFs : " << dofs << std::endl;
 }
 
-auto make_config_parser(advection_config& cfg) {
+auto make_config_parser(ads::advection_config& cfg) {
+    using clara::Opt;
     return Opt(cfg.tol_outer, "outer iterations tolerance")["--tol-outer"]
          | Opt(cfg.tol_inner, "inner iterations tolerance")["--tol-inner"]
          | Opt(cfg.max_outer_iters, "maximum # of outer iterations")["--max-outer-iters"]
@@ -121,9 +120,10 @@ int main(int argc, char* argv[]) {
     bool print_dof_count = false;
     bool print_dims = false;
 
-    advection_config cfg;
+    ads::advection_config cfg;
 
     bool help = false;
+    using clara::Help, clara::Arg, clara::Opt;
     auto cli = Help(help)                                              //
              | Arg(problem, "problem").required()                      //
              | Arg(nx, "Nx").required()                                //
@@ -140,7 +140,7 @@ int main(int argc, char* argv[]) {
              | Opt(print_dims, "print dimensions of spacs")["--dims"]  //
              | make_config_parser(cfg);
 
-    auto result = cli.parse(Args(argc, argv));
+    auto result = cli.parse(clara::Args(argc, argv));
 
     if (!result) {
         std::cerr << "Error: " << result.errorMessage() << std::endl;
@@ -166,18 +166,18 @@ int main(int argc, char* argv[]) {
     auto make_dim = [&](int p, int n, int rep, bool adapt) {
         int ders = 1;
         auto basis = create_basis(0.0, 1.0, p, n, rep, adapt, bd_layer);
-        return dimension{basis, quad, ders, 1};
+        return ads::dimension{basis, quad, ders, 1};
     };
 
     auto points_x = make_points(nx);
 
     auto trial_basis_x = basis_from_points(points_x, p_trial, rep_trial);
-    auto dtrial_x = dimension{trial_basis_x, quad, 1, 1};
+    auto dtrial_x = ads::dimension{trial_basis_x, quad, 1, 1};
     // auto dtrial_x = make_dim(p_trial, nx, rep_trial, adapt_x);
     auto dtrial_y = make_dim(p_trial, ny, rep_trial, adapt_y);
 
     auto test_basis_x = basis_from_points(points_x, p_test, rep_test);
-    auto dtest_x = dimension{test_basis_x, quad, 1, 1};
+    auto dtest_x = ads::dimension{test_basis_x, quad, 1, 1};
     // auto dtest_x = make_dim(p_test, nx, rep_test, adapt_x);
     auto dtest_y = make_dim(p_test, ny, rep_test, adapt_y);
 
@@ -188,7 +188,8 @@ int main(int argc, char* argv[]) {
 
     with_problem(problem, peclet, [&](auto prob) {
         using Problem = decltype(prob);
-        auto sim = advection<Problem>{dtrial_x, dtrial_y, dtest_x, dtest_y, peclet, eta, cfg, prob};
+        auto sim =
+            ads::advection<Problem>{dtrial_x, dtrial_y, dtest_x, dtest_y, peclet, eta, cfg, prob};
         sim.run();
     });
 }

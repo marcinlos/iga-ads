@@ -3,15 +3,12 @@
 
 #include "heat_3d.hpp"
 
-using namespace ads;
-using namespace ads::problems;
-
 int main() {
-    dim_config dim{2, 12};
-    timesteps_config steps{5000, 1e-7};
+    ads::dim_config dim{2, 12};
+    ads::timesteps_config steps{5000, 1e-7};
     int ders = 1;
 
-    config_3d c{dim, dim, dim, steps, ders};
-    heat_3d sim{c};
+    ads::config_3d c{dim, dim, dim, steps, ders};
+    ads::problems::heat_3d sim{c};
     sim.run();
 }

@@ -659,7 +659,6 @@ public:
     }
 
     void step(int /*iter*/, double t) override {
-        using namespace std::placeholders;
         auto dt = steps.dt;
 
         auto f = [&](point_type x, double s) { return forcing(x, s); };

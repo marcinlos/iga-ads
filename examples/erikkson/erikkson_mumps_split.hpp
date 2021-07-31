@@ -314,7 +314,6 @@ private:
     }
 
     void step(int /*iter*/, double t) override {
-        using namespace std::placeholders;
         // bool xref = true;
         // bool yref = true;
 

@@ -10,7 +10,7 @@
 #include "ads/lin/dense_matrix.hpp"
 #include "ads/lin/tensor.hpp"
 
-using namespace ads::lin;
+namespace lin = ads::lin;
 
 TEST_CASE("Dense matrix") {
     SECTION("Solver") {
@@ -19,8 +19,8 @@ TEST_CASE("Dense matrix") {
         int n = 6;
         int d = 4;
 
-        dense_matrix m(n, n);
-        matrix b({n, d});
+        lin::dense_matrix m(n, n);
+        lin::matrix b({n, d});
 
         for (int i = 0; i < n; ++i) {
             for (int j = std::max(0, i - kl); j < std::min(n, i + ku + 1); ++j) {
@@ -32,16 +32,16 @@ TEST_CASE("Dense matrix") {
         }
 
         double solution[] = {0.230377, -0.126052, -0.0016554, -0.00111222, 0.203603, -0.109609};
-        matrix x({n, d});
+        lin::matrix x({n, d});
         for (int i = 0; i < n; ++i) {
             for (int j = 0; j < d; ++j) {
                 x(i, j) = (j + 1) * solution[i];
             }
         }
 
-        solver_ctx ctx(m);
-        factorize(m, ctx);
-        solve_with_factorized(m, b, ctx);
+        lin::solver_ctx ctx(m);
+        lin::factorize(m, ctx);
+        lin::solve_with_factorized(m, b, ctx);
 
         CHECK(approx_equal(x, b, 1e-5));
     }

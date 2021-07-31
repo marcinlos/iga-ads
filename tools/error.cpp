@@ -8,7 +8,7 @@
 #include "ads/executor/galois.hpp"
 #include "ads/simulation.hpp"
 
-using namespace ads;
+namespace ads {
 
 class diff_computer2d : public simulation_2d {
     galois_executor executor{4};
@@ -157,6 +157,8 @@ public:
     }
 };
 
+}  // namespace ads
+
 int main(int argc, char* argv[]) {
     if (argc < 6) {
         std::cerr << "Usage: ./error <dim> <p> <n> <file1> <file2>" << std::endl;
@@ -168,18 +170,18 @@ int main(int argc, char* argv[]) {
     auto* file1 = argv[4];
     auto* file2 = argv[5];
 
-    dim_config dim{p, n};
+    ads::dim_config dim{p, n};
     int ders = 1;
 
-    timesteps_config steps{4000, 2.7e-2};
+    ads::timesteps_config steps{4000, 2.7e-2};
 
     if (d == 2) {
-        config_2d c{dim, dim, steps, ders};
-        diff_computer2d diff{c};
+        ads::config_2d c{dim, dim, steps, ders};
+        ads::diff_computer2d diff{c};
         std::cout << diff.error_L2(file1, file2) << ' ' << diff.error_H1(file1, file2) << std::endl;
     } else if (d == 3) {
-        config_3d c{dim, dim, dim, steps, ders};
-        diff_computer3d diff{c};
+        ads::config_3d c{dim, dim, dim, steps, ders};
+        ads::diff_computer3d diff{c};
         std::cout << diff.error_L2(file1, file2) << ' ' << diff.error_H1(file1, file2) << std::endl;
     }
 }

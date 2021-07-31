@@ -5,7 +5,7 @@
 
 #include <catch2/catch.hpp>
 
-using namespace ads;
+using Catch::Matchers::Equals;
 
 TEST_CASE("Multiarray") {
     int n = 2;
@@ -21,13 +21,13 @@ TEST_CASE("Multiarray") {
 
     SECTION("Buffer is filled correctly") {
         auto expected = std::vector<int>({11, 12, 13, 14, 15, 21, 22, 23, 24, 25});
-        CHECK_THAT(buffer, Catch::Matchers::Equals(expected));
+        CHECK_THAT(buffer, Equals(expected));
     }
 
     SECTION("Reshaping") {
         ads::multi_array_wrapper<int, 1, int*> a1(buffer.data(), {n * m});
         a1(7) = 7;
-        ads::multi_array_wrapper<int, 2, int*> a2 = reshape<2>(a, n, m);
+        ads::multi_array_wrapper<int, 2, int*> a2 = ads::reshape<2>(a, n, m);
         CHECK(a2(1, 2) == 7);
     }
 

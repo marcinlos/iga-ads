@@ -526,7 +526,6 @@ public:
     }
 
     void update_velocity_minev(double t) {
-        using namespace std::placeholders;
         auto dt = steps.dt;
         auto f = [&](point_type x, double s) { return problem.forcing(x, s); };
         auto F = [&](double s) { return [&, s](point_type x) { return f(x, s); }; };
@@ -588,7 +587,6 @@ public:
     }
 
     void update_velocity_galerkin(double t) {
-        using namespace std::placeholders;
         auto dt = steps.dt;
         auto f = [&](point_type x, double s) { return problem.forcing(x, s); };
         auto F = [&](double s) { return [&, s](point_type x) { return f(x, s); }; };
@@ -650,7 +648,6 @@ public:
     }
 
     void update_velocity_igrm(int /*i*/, double t) {
-        using namespace std::placeholders;
         auto dt = steps.dt;
         auto f = [&](point_type x, double s) { return problem.forcing(x, s); };
         auto F = [&](double s) { return [&, s](point_type x) { return f(x, s); }; };

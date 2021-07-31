@@ -7,9 +7,6 @@
 #include "multistep3d.hpp"
 #include "scheme.hpp"
 
-using namespace ads;
-using namespace ads::problems;
-
 int main(int argc, char* argv[]) {
     if (argc < 8) {
         std::cerr << "Usage: multistep <dim> <p> <n> <scheme> <order> <steps> <dt>" << std::endl;
@@ -24,20 +21,20 @@ int main(int argc, char* argv[]) {
     auto nsteps = std::atoi(argv[6]);
     auto dt = std::atof(argv[7]);
 
-    dim_config dim{p, n};
-    timesteps_config steps{nsteps, dt};
+    ads::dim_config dim{p, n};
+    ads::timesteps_config steps{nsteps, dt};
     int ders = 1;
 
     auto scm = ads::get_scheme(scheme_name);
     // std::cout << "Scheme: " << scm << std::endl;
 
     if (D == 2) {
-        config_2d c{dim, dim, steps, ders};
-        multistep2d sim{c, scm, order};
+        ads::config_2d c{dim, dim, steps, ders};
+        ads::problems::multistep2d sim{c, scm, order};
         sim.run();
     } else if (D == 3) {
-        config_3d c{dim, dim, dim, steps, ders};
-        multistep3d sim{c, scm, order};
+        ads::config_3d c{dim, dim, dim, steps, ders};
+        ads::problems::multistep3d sim{c, scm, order};
         sim.run();
     }
 }

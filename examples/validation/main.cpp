@@ -3,9 +3,6 @@
 
 #include "validation.hpp"
 
-using namespace ads;
-using namespace ads::problems;
-
 int main(int argc, char* argv[]) {
     if (argc < 4) {
         std::cerr << "Usage: validation <p> <n> <nsteps>" << std::endl;
@@ -24,11 +21,11 @@ int main(int argc, char* argv[]) {
     nsteps /= 10;
     // nsteps += 1;
 
-    dim_config dim{p, n};
-    timesteps_config steps{nsteps, dt};
+    ads::dim_config dim{p, n};
+    ads::timesteps_config steps{nsteps, dt};
     int ders = 1;
 
-    config_2d c{dim, dim, steps, ders};
-    validation sim{c};
+    ads::config_2d c{dim, dim, steps, ders};
+    ads::problems::validation sim{c};
     sim.run();
 }
