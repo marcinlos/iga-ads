@@ -215,18 +215,25 @@ public:
     void to_file(const std::string& name) const {
         using namespace ads;
         output::vtk output{ads::DEFAULT_FMT};
+
         std::vector<double> px;
-        std::vector<double> py;
-        std::vector<double> pz;
+        px.reserve(sx);
         for (int i = 0; i < sx; ++i) {
             px.push_back(i);
         }
+
+        std::vector<double> py;
+        py.reserve(sy);
         for (int i = 0; i < sy; ++i) {
             py.push_back(i);
         }
+
+        std::vector<double> pz;
+        pz.reserve(sz);
         for (int i = 0; i < sz; ++i) {
             pz.push_back(i);
         }
+
         auto rx = output::from_container(px);
         auto ry = output::from_container(py);
         auto rz = output::from_container(pz);
