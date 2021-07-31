@@ -51,14 +51,14 @@ struct vtk : output_base {
         auto spacing = repeat(1, paraview_dim);
 
         os << "<?xml version=\"1.0\"?>" << std::endl;
-        os << "<VTKFile type=\"ImageData\" version=\"0.1\">" << std::endl;
-        os << format("  <ImageData WholeExtent=\"%s\" origin=\"%s\" spacing=\"%s\">") % extent
-                  % origin % spacing
+        os << R"(<VTKFile type="ImageData" version="0.1">)" << std::endl;
+        os << format(R"(  <ImageData WholeExtent="%s" origin="%s" spacing="%s">)") % extent % origin
+                  % spacing
            << std::endl;
         os << format("    <Piece Extent=\"%s\">") % extent << std::endl;
         os << "      <PointData Scalars=\"Result\">" << std::endl;
-        os << format("        <DataArray Name=\"Result\"  type=\"Float32\" "
-                     "format=\"ascii\" NumberOfComponents=\"%d\">")
+        os << format(R"(        <DataArray Name="Result"  type="Float32" )"
+                     R"(format="ascii" NumberOfComponents="%d">)")
                   % value_count
            << std::endl;
     }
