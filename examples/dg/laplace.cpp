@@ -1651,14 +1651,19 @@ void DG_stokes_3D();
 void DGiGRM_stokes_3D();
 
 int main() {
-    // DG_poisson();
-    // DG_stokes();
-    // DGiGRM_stokes();
+    try {
+        // DG_poisson();
+        // DG_stokes();
+        // DGiGRM_stokes();
 
-    // poisson_3D();
-    // DG_poisson_3D();
-    // DG_stokes_3D();
-    DGiGRM_stokes_3D();
+        // poisson_3D();
+        // DG_poisson_3D();
+        // DG_stokes_3D();
+        DGiGRM_stokes_3D();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        std::exit(1);
+    }
 }
 
 void DG_poisson() {
