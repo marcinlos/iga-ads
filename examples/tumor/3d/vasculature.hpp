@@ -62,12 +62,15 @@ public:
     vessels() {
         auto xysize = 5000.0;
         auto zsize = 3000.0;
-        auto dh = 200.0 / xysize;
         auto zmin = 300 / zsize;
         auto zmax = 2400 / zsize;
 
-        for (auto x = dh / 2; x < 1; x += dh) {
-            for (auto y = dh / 2; y < 1; y += dh) {
+        auto dh = 200;
+
+        for (auto i = dh / 2; i < xysize; i += dh) {
+            auto x = i / xysize;
+            for (auto j = dh / 2; j < xysize; j += dh) {
+                auto y = j / xysize;
                 make_line({x, y, zmin}, {x, y, zmax}, 10);
             }
         }
