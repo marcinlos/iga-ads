@@ -14,8 +14,6 @@
 #include "problems.hpp"
 #include "state.hpp"
 
-namespace ads {
-
 class maxwell_head_problem {
 private:
     maxwell_manufactured1 init{1, 1};
@@ -26,7 +24,7 @@ private:
     static constexpr double mu_vals[] = {1.0, 1.0, 1.0};
 
     using byte = std::uint8_t;
-    using density_data = lin::tensor<byte, 3>;
+    using density_data = ads::lin::tensor<byte, 3>;
 
     density_data density_map;
 
@@ -107,12 +105,14 @@ private:
     }
 };
 
-class maxwell_head : public simulation_3d {
+using ads::dimension;
+
+class maxwell_head : public ads::simulation_3d {
 private:
-    using Base = simulation_3d;
+    using Base = ads::simulation_3d;
     using Problem = maxwell_head_problem;
 
-    galois_executor executor{4};
+    ads::galois_executor executor{4};
 
     dimension UE1x, UE1y, UE1z;
     dimension UE2x, UE2y, UE2z;
@@ -124,18 +124,18 @@ private:
 
     dimension Vx, Vy, Vz;
 
-    mumps::problem E1_1, E2_1, E3_1;
-    mumps::problem E1_2, E2_2, E3_2;
+    ads::mumps::problem E1_1, E2_1, E3_1;
+    ads::mumps::problem E1_2, E2_2, E3_2;
 
     state prev, half, now;
 
     Problem problem{"mri.dat"};
-    mumps::solver solver;
+    ads::mumps::solver solver;
 
     ads::output_manager<3> output;
 
 public:
-    explicit maxwell_head(const config_3d& config)
+    explicit maxwell_head(const ads::config_3d& config)
     : Base{config}
     , UE1x{x}
     , UE1y{y}
@@ -170,16 +170,20 @@ public:
     , output{Vx.B, Vy.B, Vz.B, 50} { }
 
 private:
-    void fix_dof(int k, const dimension& dim, lin::band_matrix& K) {
-        int last = dim.dofs() - 1;
-        for (int i = clamp(k - dim.p, 0, last); i <= clamp(k + dim.p, 0, last); ++i) {
+    void fix_dof(int k, const ads::dimension& dim, ads::lin::band_matrix& K) {
+        auto last = dim.dofs() - 1;
+
+        auto low = std::clamp(k - dim.p, 0, last);
+        auto high = std::clamp(k + dim.p, 0, last);
+
+        for (int i = low; i <= high; ++i) {
             K(k, i) = 0;
         }
         K(k, k) = 1;
     }
 
     template <typename BC>
-    void matrix(mumps::problem& A, double tau, double cx, double cy, double cz, BC&& bc) {
+    void matrix(ads::mumps::problem& A, double tau, double cx, double cy, double cz, BC&& bc) {
         using shape = std::array<int, 6>;
         auto shape_loc = shape{
             Vx.basis.dofs_per_element(), Vy.basis.dofs_per_element(), Vz.basis.dofs_per_element(),
@@ -188,7 +192,7 @@ private:
 
         for (auto e : elements(Vx, Vy, Vz)) {
             auto J = jacobian(e, Vx, Vy, Vz);
-            using buffer_type = lin::tensor<double, 6>;
+            using buffer_type = ads::lin::tensor<double, 6>;
             auto loc = buffer_type{shape_loc};
 
             for (auto q : quad_points(Vx, Vy, Vz)) {
@@ -600,7 +604,5 @@ private:
         std::cout << "  |div H| = " << div_H << std::endl;
     }
 };
-
-}  // namespace ads
 
 #endif  // MAXWELL_MAXWELL_HEAD_HPP

@@ -43,6 +43,6 @@ int main(int argc, char* argv[]) {
     auto dim = ads::dim_config{p, n};
     auto cfg = ads::config_3d{dim, dim, dim, steps, 1};
 
-    auto sim = ads::maxwell_galerkin{cfg};
+    auto sim = maxwell_galerkin{cfg};
     sim.run();
 }

@@ -11,14 +11,14 @@
 #include "problems.hpp"
 #include "state.hpp"
 
-namespace ads {
+using ads::dimension;
 
-class maxwell_galerkin : public simulation_3d {
+class maxwell_galerkin : public ads::simulation_3d {
 private:
-    using Base = simulation_3d;
+    using Base = ads::simulation_3d;
     using Problem = maxwell_manufactured1;
 
-    galois_executor executor{4};
+    ads::galois_executor executor{4};
 
     dimension UE1x, UE1y, UE1z;
     dimension UE2x, UE2y, UE2z;
@@ -32,15 +32,15 @@ private:
 
     state prev, half, now;
 
-    lin::band_matrix Bx, By, Bz;
-    lin::solver_ctx Bx_ctx, By_ctx, Bz_ctx;
+    ads::lin::band_matrix Bx, By, Bz;
+    ads::lin::solver_ctx Bx_ctx, By_ctx, Bz_ctx;
 
     Problem problem{1, 1};
 
     ads::output_manager<3> output;
 
 public:
-    explicit maxwell_galerkin(const config_3d& config)
+    explicit maxwell_galerkin(const ads::config_3d& config)
     : Base{config}
     , UE1x{x}
     , UE1y{y}
@@ -75,9 +75,13 @@ public:
     , output{Vx.B, Vy.B, Vz.B, 50} { }
 
 private:
-    void fix_dof(int k, const dimension& dim, lin::band_matrix& K) {
-        int last = dim.dofs() - 1;
-        for (int i = clamp(k - dim.p, 0, last); i <= clamp(k + dim.p, 0, last); ++i) {
+    void fix_dof(int k, const ads::dimension& dim, ads::lin::band_matrix& K) {
+        auto last = dim.dofs() - 1;
+
+        auto low = std::clamp(k - dim.p, 0, last);
+        auto high = std::clamp(k + dim.p, 0, last);
+
+        for (int i = low; i <= high; ++i) {
             K(k, i) = 0;
         }
         K(k, k) = 1;
@@ -145,9 +149,9 @@ private:
         fix_dof(0, Vz, Bz);
         fix_dof(Vz.dofs() - 1, Vz, Bz);
 
-        lin::factorize(Bx, Bx_ctx);
-        lin::factorize(By, By_ctx);
-        lin::factorize(Bz, Bz_ctx);
+        ads::lin::factorize(Bx, Bx_ctx);
+        ads::lin::factorize(By, By_ctx);
+        ads::lin::factorize(Bz, Bz_ctx);
     }
 
     void before() override {
@@ -236,7 +240,7 @@ private:
                         return (E[X].val + a * (H[Z].dy - H[Y].dz)) * v.val + b * E[Y].dx * v.dy;
                     });
         zero_sides("yz", rhs_E1, UE1x, UE1y, UE1z);
-        ads_solve(rhs_E1, buffer, UE1x.data(), dim_data{By, By_ctx}, UE1z.data());
+        ads_solve(rhs_E1, buffer, UE1x.data(), ads::dim_data{By, By_ctx}, UE1z.data());
 
         auto rhs_E2 = vector_type{shape_E2};
         compute_rhs(rhs_E2, prev, prev.E1, prev.E2, prev.E3, UE2x, UE2y, UE2z,
@@ -244,7 +248,7 @@ private:
                         return (E[Y].val + a * (H[X].dz - H[Z].dx)) * v.val + b * E[Z].dy * v.dz;
                     });
         zero_sides("xz", rhs_E2, UE2x, UE2y, UE2z);
-        ads_solve(rhs_E2, buffer, UE2x.data(), UE2y.data(), dim_data{Bz, Bz_ctx});
+        ads_solve(rhs_E2, buffer, UE2x.data(), UE2y.data(), ads::dim_data{Bz, Bz_ctx});
 
         auto rhs_E3 = vector_type{shape_E3};
         compute_rhs(rhs_E3, prev, prev.E1, prev.E2, prev.E3, UE3x, UE3y, UE3z,
@@ -252,7 +256,7 @@ private:
                         return (E[Z].val + a * (H[Y].dx - H[X].dy)) * v.val + b * E[X].dz * v.dx;
                     });
         zero_sides("xy", rhs_E3, UE3x, UE3y, UE3z);
-        ads_solve(rhs_E3, buffer, dim_data{Bx, Bx_ctx}, UE3y.data(), UE3z.data());
+        ads_solve(rhs_E3, buffer, ads::dim_data{Bx, Bx_ctx}, UE3y.data(), UE3z.data());
 
         // First substep - H
         auto rhs_H1 = vector_type{shape_H1};
@@ -293,21 +297,21 @@ private:
                         return (E[X].val + a * (H[Z].dy - H[Y].dz)) * v.val + b * E[Z].dx * v.dz;
                     });
         zero_sides("yz", now.E1, UE1x, UE1y, UE1z);
-        ads_solve(now.E1, buffer, UE1x.data(), UE1y.data(), dim_data{Bz, Bz_ctx});
+        ads_solve(now.E1, buffer, UE1x.data(), UE1y.data(), ads::dim_data{Bz, Bz_ctx});
 
         compute_rhs(now.E2, prev, prev.E1, prev.E2, prev.E3, UE2x, UE2y, UE2z,
                     [=](auto E, auto, auto H, auto v) {
                         return (E[Y].val + a * (H[X].dz - H[Z].dx)) * v.val + b * E[X].dy * v.dx;
                     });
         zero_sides("xz", now.E2, UE2x, UE2y, UE2z);
-        ads_solve(now.E2, buffer, dim_data{Bx, Bx_ctx}, UE2y.data(), UE2z.data());
+        ads_solve(now.E2, buffer, ads::dim_data{Bx, Bx_ctx}, UE2y.data(), UE2z.data());
 
         compute_rhs(now.E3, prev, prev.E1, prev.E2, prev.E3, UE3x, UE3y, UE3z,
                     [=](auto E, auto, auto H, auto v) {
                         return (E[Z].val + a * (H[Y].dx - H[X].dy)) * v.val + b * E[Y].dz * v.dy;
                     });
         zero_sides("xy", now.E3, UE3x, UE3y, UE3z);
-        ads_solve(now.E3, buffer, UE3x.data(), dim_data{By, By_ctx}, UE3z.data());
+        ads_solve(now.E3, buffer, UE3x.data(), ads::dim_data{By, By_ctx}, UE3z.data());
 
         // Second substep - H
         compute_rhs(now.H1, prev, now.E1, now.E2, now.E3, UH1x, UH1y, UH1z,
@@ -472,7 +476,5 @@ private:
         std::cout << "  H err rot = " << H_err_rot << std::endl;
     }
 };
-
-}  // namespace ads
 
 #endif  // MAXWELL_MAXWELL_GALERKIN_HPP

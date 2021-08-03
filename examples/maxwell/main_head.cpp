@@ -5,6 +5,8 @@
 
 #include "maxwell_head.hpp"
 
+// Example invocation:
+// prog 8 2 1 100
 int main(int argc, char* argv[]) {
     int n;
     int p;
@@ -43,6 +45,6 @@ int main(int argc, char* argv[]) {
     auto dim = ads::dim_config{p, n};
     auto cfg = ads::config_3d{dim, dim, dim, steps, 1};
 
-    auto sim = ads::maxwell_head{cfg};
+    auto sim = maxwell_head{cfg};
     sim.run();
 }

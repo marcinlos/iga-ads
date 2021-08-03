@@ -9,9 +9,7 @@
 
 #include "ads/util/function_value.hpp"
 
-namespace ads {
-
-using value_type = function_value_3d;
+using value_type = ads::function_value_3d;
 using point_type = std::array<double, 3>;
 using value_vec = std::array<value_type, 3>;
 
@@ -181,6 +179,5 @@ struct maxwell_manufactured1 {
         return [this, t](point_type x) { return H3(x, t).val; };
     }
 };
-}  // namespace ads
 
 #endif  // MAXWELL_PROBLEMS_HPP

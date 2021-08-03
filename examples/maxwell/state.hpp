@@ -6,8 +6,6 @@
 
 #include "ads/lin/tensor.hpp"
 
-namespace ads {
-
 struct state {
     using field = ads::lin::tensor<double, 3>;
 
@@ -37,7 +35,5 @@ struct state {
         zero(H3);
     }
 };
-
-}  // namespace ads
 
 #endif  // MAXWELL_STATE_HPP
