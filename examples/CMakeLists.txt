@@ -129,6 +129,8 @@ add_example(maxwell GALOIS
 add_example(maxwell_head MUMPS GALOIS
   SRC
   maxwell/main_head.cpp
+  maxwell/head_data.cpp
+  maxwell/maxwell_head_problem.cpp
   LIBS clara::clara)
 
 add_example(tumor GALOIS
