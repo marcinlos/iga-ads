@@ -4,6 +4,8 @@
 #ifndef MAXWELL_STATE_HPP
 #define MAXWELL_STATE_HPP
 
+#include <array>
+
 #include "ads/lin/tensor.hpp"
 
 struct state {
