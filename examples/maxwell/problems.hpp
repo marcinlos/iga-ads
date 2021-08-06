@@ -13,7 +13,70 @@ using value_type = ads::function_value_3d;
 using point_type = std::array<double, 3>;
 using value_vec = std::array<value_type, 3>;
 
-struct maxwell_manufactured1 {
+template <typename Self>
+class maxwell_problem {
+private:
+    auto self() const -> Self const& { return static_cast<Self const&>(*this); };
+
+public:
+    auto E1_at(double t) const {
+        return [this, t](point_type x) { return self().E1(x, t); };
+    }
+
+    auto E2_at(double t) const {
+        return [this, t](point_type x) { return self().E2(x, t); };
+    }
+
+    auto E3_at(double t) const {
+        return [this, t](point_type x) { return self().E3(x, t); };
+    }
+
+    auto H1_at(double t) const {
+        return [this, t](point_type x) { return self().H1(x, t); };
+    }
+
+    auto H2_at(double t) const {
+        return [this, t](point_type x) { return self().H2(x, t); };
+    }
+
+    auto H3_at(double t) const {
+        return [this, t](point_type x) { return self().H3(x, t); };
+    }
+
+    auto E1_val_at(double t) const {
+        return [this, t](point_type x) { return self().E1(x, t).val; };
+    }
+
+    auto E2_val_at(double t) const {
+        return [this, t](point_type x) { return self().E2(x, t).val; };
+    }
+
+    auto E3_val_at(double t) const {
+        return [this, t](point_type x) { return self().E3(x, t).val; };
+    }
+
+    auto H1_val_at(double t) const {
+        return [this, t](point_type x) { return self().H1(x, t).val; };
+    }
+
+    auto H2_val_at(double t) const {
+        return [this, t](point_type x) { return self().H2(x, t).val; };
+    }
+
+    auto H3_val_at(double t) const {
+        return [this, t](point_type x) { return self().H3(x, t).val; };
+    }
+
+    auto init_E1() const { return E1_val_at(0); }
+    auto init_E2() const { return E2_val_at(0); }
+    auto init_E3() const { return E3_val_at(0); }
+
+    auto init_H1() const { return H1_val_at(0); }
+    auto init_H2() const { return H2_val_at(0); }
+    auto init_H3() const { return H3_val_at(0); }
+};
+
+struct maxwell_manufactured1 : maxwell_problem<maxwell_manufactured1> {
     double k;
     double l;
     double d;
@@ -129,54 +192,6 @@ struct maxwell_manufactured1 {
         auto v2 = value_type{val2, dv2x1, dv2x2, dv2x3};
 
         return ((k / d) * v1 + 2 * (-k / d) * v2) * time;
-    }
-
-    auto E1_at(double t) const {
-        return [this, t](point_type x) { return E1(x, t); };
-    }
-
-    auto E2_at(double t) const {
-        return [this, t](point_type x) { return E2(x, t); };
-    }
-
-    auto E3_at(double t) const {
-        return [this, t](point_type x) { return E3(x, t); };
-    }
-
-    auto H1_at(double t) const {
-        return [this, t](point_type x) { return H1(x, t); };
-    }
-
-    auto H2_at(double t) const {
-        return [this, t](point_type x) { return H2(x, t); };
-    }
-
-    auto H3_at(double t) const {
-        return [this, t](point_type x) { return H3(x, t); };
-    }
-
-    auto E1_val_at(double t) const {
-        return [this, t](point_type x) { return E1(x, t).val; };
-    }
-
-    auto E2_val_at(double t) const {
-        return [this, t](point_type x) { return E2(x, t).val; };
-    }
-
-    auto E3_val_at(double t) const {
-        return [this, t](point_type x) { return E3(x, t).val; };
-    }
-
-    auto H1_val_at(double t) const {
-        return [this, t](point_type x) { return H1(x, t).val; };
-    }
-
-    auto H2_val_at(double t) const {
-        return [this, t](point_type x) { return H2(x, t).val; };
-    }
-
-    auto H3_val_at(double t) const {
-        return [this, t](point_type x) { return H3(x, t).val; };
     }
 };
 
