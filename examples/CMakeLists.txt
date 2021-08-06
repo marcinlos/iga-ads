@@ -124,11 +124,13 @@ add_example(cg MUMPS GALOIS
 add_example(maxwell GALOIS
   SRC
   maxwell/main.cpp
+  maxwell/state.cpp
   LIBS clara::clara)
 
 add_example(maxwell_head MUMPS GALOIS
   SRC
   maxwell/main_head.cpp
+  maxwell/state.cpp
   maxwell/head_data.cpp
   maxwell/maxwell_head_problem.cpp
   LIBS clara::clara)
