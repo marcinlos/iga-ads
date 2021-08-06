@@ -127,6 +127,7 @@ add_example(maxwell GALOIS
   maxwell/state.cpp
   maxwell/spaces.cpp
   maxwell/results.cpp
+  maxwell/maxwell_base.cpp
   LIBS clara::clara)
 
 add_example(maxwell_head MUMPS GALOIS
@@ -135,6 +136,7 @@ add_example(maxwell_head MUMPS GALOIS
   maxwell/state.cpp
   maxwell/spaces.cpp
   maxwell/results.cpp
+  maxwell/maxwell_base.cpp
   maxwell/head_data.cpp
   maxwell/maxwell_head_problem.cpp
   LIBS clara::clara)

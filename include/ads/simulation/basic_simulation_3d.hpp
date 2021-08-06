@@ -398,17 +398,19 @@ protected:
     }
 
     template <typename Sol>
-    double norm_rot(const Sol& X, const Sol& Y, const Sol& Z, const dimension& Ux,
-                    const dimension& Uy, const dimension& Uz) const {
+    double norm_rot(const Sol& X, const Sol& Y, const Sol& Z,                          //
+                    const dimension& U1x, const dimension& U1y, const dimension& U1z,  //
+                    const dimension& U2x, const dimension& U2y, const dimension& U2z,  //
+                    const dimension& U3x, const dimension& U3y, const dimension& U3z) const {
         double val = 0;
 
-        for (auto e : elements(Ux, Uy, Uz)) {
-            double J = jacobian(e, Ux, Uy, Uz);
-            for (auto q : quad_points(Ux, Uy, Uz)) {
-                double w = weight(q, Ux, Uy, Uz);
-                auto x = eval(X, e, q, Ux, Uy, Uz);
-                auto y = eval(Y, e, q, Ux, Uy, Uz);
-                auto z = eval(Z, e, q, Ux, Uy, Uz);
+        for (auto e : elements(U1x, U1y, U1z)) {
+            double J = jacobian(e, U1x, U1y, U1z);
+            for (auto q : quad_points(U1x, U1y, U1z)) {
+                double w = weight(q, U1x, U1y, U1z);
+                auto x = eval(X, e, q, U1x, U1y, U1z);
+                auto y = eval(Y, e, q, U2x, U2y, U2z);
+                auto z = eval(Z, e, q, U3x, U3y, U3z);
 
                 auto rx = z.dy - y.dz;
                 auto ry = x.dz - z.dx;
@@ -421,11 +423,11 @@ protected:
     }
 
     template <typename Sol, typename FunX, typename FunY, typename FunZ>
-    double error_rot(const Sol& X, const Sol& Y, const Sol& Z, const dimension& U1x,
-                     const dimension& U1y, const dimension& U1z, const dimension& U2x,
-                     const dimension& U2y, const dimension& U2z, const dimension& U3x,
-                     const dimension& U3y, const dimension& U3z, FunX&& fx, FunY&& fy,
-                     FunZ&& fz) const {
+    double error_rot(const Sol& X, const Sol& Y, const Sol& Z,                          //
+                     const dimension& U1x, const dimension& U1y, const dimension& U1z,  //
+                     const dimension& U2x, const dimension& U2y, const dimension& U2z,  //
+                     const dimension& U3x, const dimension& U3y, const dimension& U3z,  //
+                     FunX&& fx, FunY&& fy, FunZ&& fz) const {
         double val = 0;
 
         for (auto e : elements(U1x, U1y, U1z)) {
@@ -448,17 +450,19 @@ protected:
     }
 
     template <typename Sol>
-    double norm_div(const Sol& X, const Sol& Y, const Sol& Z, const dimension& Ux,
-                    const dimension& Uy, const dimension& Uz) const {
+    double norm_div(const Sol& X, const Sol& Y, const Sol& Z,                          //
+                    const dimension& U1x, const dimension& U1y, const dimension& U1z,  //
+                    const dimension& U2x, const dimension& U2y, const dimension& U2z,  //
+                    const dimension& U3x, const dimension& U3y, const dimension& U3z) const {
         double val = 0;
 
-        for (auto e : elements(Ux, Uy, Uz)) {
-            double J = jacobian(e, Ux, Uy, Uz);
-            for (auto q : quad_points(Ux, Uy, Uz)) {
-                double w = weight(q, Ux, Uy, Uz);
-                auto x = eval(X, e, q, Ux, Uy, Uz);
-                auto y = eval(Y, e, q, Ux, Uy, Uz);
-                auto z = eval(Z, e, q, Ux, Uy, Uz);
+        for (auto e : elements(U1x, U1y, U1z)) {
+            double J = jacobian(e, U1x, U1y, U1z);
+            for (auto q : quad_points(U1x, U1y, U1z)) {
+                double w = weight(q, U1x, U1y, U1z);
+                auto x = eval(X, e, q, U1x, U1y, U1z);
+                auto y = eval(Y, e, q, U2x, U2y, U2z);
+                auto z = eval(Z, e, q, U3x, U3y, U3z);
 
                 auto v = x.dx + y.dy + z.dz;
                 val += v * v * w * J;

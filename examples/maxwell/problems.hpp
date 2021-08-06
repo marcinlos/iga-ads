@@ -81,13 +81,14 @@ struct maxwell_manufactured1 : maxwell_problem<maxwell_manufactured1> {
     double l;
     double d;
 
-    double eps = 1;
-    double mu = 1;
-
     maxwell_manufactured1(double k, double l)
     : k{k}
     , l{l}
     , d{std::hypot(k, l)} { }
+
+    auto eps(point_type) const noexcept -> double { return 1.0; }
+
+    auto mu(point_type) const noexcept -> double { return 1.0; }
 
     value_type E1(point_type x, double t) const {
         using std::cos;
