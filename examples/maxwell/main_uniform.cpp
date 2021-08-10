@@ -6,7 +6,7 @@
 
 #include <clara.hpp>
 
-#include "maxwell_galerkin.hpp"
+#include "maxwell_uniform.hpp"
 
 auto parse_args(int argc, char* argv[]) {
     struct {
@@ -53,6 +53,6 @@ int main(int argc, char* argv[]) {
     auto const dim = ads::dim_config{args.p, args.n};
     auto const cfg = ads::config_3d{dim, dim, dim, steps, 1};
 
-    auto sim = maxwell_galerkin{cfg};
+    auto sim = maxwell_uniform{cfg};
     sim.run();
 }

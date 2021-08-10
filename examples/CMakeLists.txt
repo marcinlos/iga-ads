@@ -121,9 +121,9 @@ add_example(cg MUMPS GALOIS
   cg/shishkin.cpp
   LIBS clara::clara)
 
-add_example(maxwell GALOIS
+add_example(maxwell_uniform GALOIS
   SRC
-  maxwell/main.cpp
+  maxwell/main_uniform.cpp
   maxwell/state.cpp
   maxwell/spaces.cpp
   maxwell/results.cpp

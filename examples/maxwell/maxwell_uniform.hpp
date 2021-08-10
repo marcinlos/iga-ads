@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef MAXWELL_MAXWELL_GALERKIN_HPP
-#define MAXWELL_MAXWELL_GALERKIN_HPP
+#ifndef MAXWELL_MAXWELL_UNIFORM_HPP
+#define MAXWELL_MAXWELL_UNIFORM_HPP
 
 #include <iostream>
 #include <utility>
@@ -15,7 +15,7 @@
 #include "spaces.hpp"
 #include "state.hpp"
 
-class maxwell_galerkin : public maxwell_base {
+class maxwell_uniform : public maxwell_base {
 private:
     using Base = maxwell_base;
     using Problem = maxwell_manufactured1;
@@ -33,7 +33,7 @@ private:
     ads::output_manager<3> output;
 
 public:
-    explicit maxwell_galerkin(const ads::config_3d& config)
+    explicit maxwell_uniform(const ads::config_3d& config)
     : Base{config}
     , V{x, y, z}
     , U{V, V, V, V, V, V}
@@ -149,4 +149,4 @@ private:
     }
 };
 
-#endif  // MAXWELL_MAXWELL_GALERKIN_HPP
+#endif  // MAXWELL_MAXWELL_UNIFORM_HPP
