@@ -5,7 +5,7 @@
 #define MAXWELL_MAXWELL_HEAD_PROBLEM_HPP
 
 #include <cmath>
-#include <string>
+#include <string_view>
 
 #include "head_data.hpp"
 #include "problems.hpp"
@@ -18,7 +18,7 @@ private:
 public:
     using point_type = head_data::point_type;
 
-    explicit maxwell_head_problem(const std::string& data_path)
+    explicit maxwell_head_problem(std::string_view data_path)
     : data_{read_density_data(data_path)} { }
 
     auto init_E1() const { return init_state_.init_E1(); }

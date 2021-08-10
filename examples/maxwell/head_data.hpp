@@ -8,7 +8,7 @@
 #include <array>
 #include <cstdint>
 #include <iosfwd>
-#include <string>
+#include <string_view>
 #include <utility>
 
 #include "ads/lin/tensor/tensor.hpp"
@@ -69,6 +69,6 @@ private:
 
 auto read_density_data(std::istream& input) -> ads::lin::tensor<std::uint8_t, 3>;
 
-auto read_density_data(const std::string& path) -> ads::lin::tensor<std::uint8_t, 3>;
+auto read_density_data(std::string_view path) -> ads::lin::tensor<std::uint8_t, 3>;
 
 #endif  // MAXWELL_HEAD_DATA_HPP

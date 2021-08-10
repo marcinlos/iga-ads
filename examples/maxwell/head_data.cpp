@@ -27,11 +27,11 @@ auto read_density_data(std::istream& input) -> ads::lin::tensor<std::uint8_t, 3>
     return data;
 }
 
-auto read_density_data(const std::string& path) -> ads::lin::tensor<std::uint8_t, 3> {
+auto read_density_data(std::string_view path) -> ads::lin::tensor<std::uint8_t, 3> {
     std::ifstream input;
     input.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     try {
-        input.open(path);
+        input.open(std::string{path});
         return read_density_data(input);
     } catch (const std::system_error& e) {
         std::cerr << "Error reading " << path << ":\n" << e.code().message() << std::endl;
