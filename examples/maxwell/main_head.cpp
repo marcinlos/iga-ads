@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <string>
 
 #include <clara.hpp>
 
@@ -12,6 +13,7 @@ auto parse_args(int argc, char* argv[]) {
     struct {
         int n, p, c, step_count;
         double T;
+        std::string data_file;
     } args;
 
     bool help = false;
@@ -23,6 +25,7 @@ auto parse_args(int argc, char* argv[]) {
                    | Arg(args.c, "c").required()                  //
                    | Arg(args.step_count, "steps").required()     //
                    | Arg(args.T, "T").required()                  //
+                   | Arg(args.data_file, "data_file").required()  //
         ;
 
     auto const result = cli.parse({argc, argv});
@@ -35,7 +38,7 @@ auto parse_args(int argc, char* argv[]) {
         cli.writeToStream(std::cout);
         std::exit(0);
     }
-    if (argc < 6) {
+    if (argc < 7) {
         cli.writeToStream(std::cout);
         std::exit(1);
     }
@@ -53,6 +56,6 @@ int main(int argc, char* argv[]) {
     auto const dim = ads::dim_config{args.p, args.n};
     auto const cfg = ads::config_3d{dim, dim, dim, steps, 1};
 
-    auto sim = maxwell_head{cfg};
+    auto sim = maxwell_head{cfg, args.data_file};
     sim.run();
 }

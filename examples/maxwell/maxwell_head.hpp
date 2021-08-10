@@ -29,13 +29,13 @@ private:
 
     state prev, half, now;
 
-    Problem problem{"mri.dat"};
+    Problem problem;
     ads::mumps::solver solver;
 
     ads::output_manager<3> output;
 
 public:
-    explicit maxwell_head(const ads::config_3d& config)
+    explicit maxwell_head(const ads::config_3d& config, std::string_view data_file)
     : Base{config}
     , V{x, y, z}
     , U{V, V, V, V, V, V}
@@ -48,6 +48,7 @@ public:
     , prev{vector_shape(V)}
     , half{vector_shape(V)}
     , now{vector_shape(V)}
+    , problem{data_file}
     , output{V.x.B, V.y.B, V.z.B, 50} { }
 
 private:
