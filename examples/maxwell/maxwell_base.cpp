@@ -67,3 +67,10 @@ auto set_boundary_conditions(space_set& s) -> void {
     zero(s.H2.y);
     zero(s.H3.z);
 }
+
+auto dof_support(int dof, ads::dimension const& V) -> interval {
+    auto const [first, last] = V.basis.element_ranges[dof];
+    auto const a = V.B.points[first];
+    auto const b = V.B.points[last + 1];
+    return {a, b};
+}

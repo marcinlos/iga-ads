@@ -4,6 +4,7 @@
 #ifndef MAXWELL_MAXWELL_BASE_HPP
 #define MAXWELL_MAXWELL_BASE_HPP
 
+#include <array>
 #include <cmath>
 #include <string_view>
 
@@ -23,6 +24,12 @@ auto fix_dof(int k, ads::dimension const& dim, ads::lin::band_matrix& K) -> void
 auto zero_sides(std::string_view dims, ads::lin::tensor<double, 3>& rhs, space const& U) -> void;
 
 auto set_boundary_conditions(space_set& s) -> void;
+
+struct interval {
+    double a, b;
+};
+
+auto dof_support(int dof, ads::dimension const& V) -> interval;
 
 template <typename Fun>
 auto project(ads::lin::tensor<double, 3>& rhs, space& V, Fun&& fun) -> void {
@@ -53,6 +60,16 @@ private:
 protected:
     explicit maxwell_base(ads::config_3d const& config)
     : Base{config} { }
+
+    auto dof_support(index_type dof, space const& V) const -> std::array<interval, 3> {
+        auto const [ix, iy, iz] = dof;
+        using ::dof_support;
+        return {
+            dof_support(ix, V.x),
+            dof_support(iy, V.y),
+            dof_support(iz, V.z),
+        };
+    }
 
     template <typename A, typename B>
     auto substep1_fill_E(state& rhs, state& prev, space_set const& U, A&& a, B&& b) -> void {
