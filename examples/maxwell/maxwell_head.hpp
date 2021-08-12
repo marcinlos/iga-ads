@@ -32,10 +32,12 @@ private:
     Problem problem;
     ads::mumps::solver solver;
 
+    bool avg_material_data;
+
     ads::output_manager<3> output;
 
 public:
-    explicit maxwell_head(const ads::config_3d& config, std::string_view data_file)
+    maxwell_head(const ads::config_3d& config, std::string_view data_file, bool avg_material_data)
     : Base{config}
     , V{x, y, z}
     , U{V, V, V, V, V, V}
@@ -49,6 +51,7 @@ public:
     , half{vector_shape(V)}
     , now{vector_shape(V)}
     , problem{data_file}
+    , avg_material_data{avg_material_data}
     , output{V.x.B, V.y.B, V.z.B, 50} { }
 
 private:
@@ -64,19 +67,20 @@ private:
             for (auto q : quad_points(V.x, V.y, V.z)) {
                 auto W = weight(q, V.x, V.y, V.z);
                 auto x = point(e, q, V.x, V.y, V.z);
-                double eps = problem.eps(x);
-                double mu = problem.mu(x);
 
                 for (auto i : dofs_on_element(e, V.x, V.y, V.z)) {
                     auto il = dof_global_to_local(e, i, V.x, V.y, V.z);
                     auto v = eval_basis(e, q, i, V.x, V.y, V.z);
+
+                    double a = stiffness_coeff(tau, x, i);
+
                     for (auto j : dofs_on_element(e, V.x, V.y, V.z)) {
                         auto jl = dof_global_to_local(e, j, V.x, V.y, V.z);
                         auto u = eval_basis(e, q, j, V.x, V.y, V.z);
 
                         auto M = u.val * v.val;
                         auto S = cx * u.dx * v.dx + cy * u.dy * v.dy + cz * u.dz * v.dz;
-                        auto form = M + tau * tau / (4 * eps * mu) * S;
+                        auto form = M + a * S;
                         loc(il[0], il[1], il[2], jl[0], jl[1], jl[2]) += form * W * J;
                     }
                 }
@@ -98,7 +102,24 @@ private:
                 }
             }
         }
-        // Dirichlet BC
+        apply_dirichlet_bc(A, bc);
+    }
+
+    auto stiffness_coeff(double tau, point_type x, index_type test) const -> double {
+        point_type xx;
+        if (avg_material_data) {
+            auto const [rx, ry, rz] = dof_support(test, V);
+            xx = point_type{(rx.a + rx.b) / 2, (ry.a + ry.b) / 2, (rz.a + rz.b) / 2};
+        } else {
+            xx = x;
+        }
+        double eps = problem.eps(xx);
+        double mu = problem.mu(xx);
+        return tau * tau / (4 * eps * mu);
+    }
+
+    template <typename BC>
+    auto apply_dirichlet_bc(ads::mumps::problem& A, BC&& bc) const -> void {
         for (auto i : dofs(V.x, V.y, V.z)) {
             if (bc(i)) {
                 int ii = linear_index(i, V.x, V.y, V.z) + 1;

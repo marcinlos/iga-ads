@@ -14,11 +14,12 @@ auto parse_args(int argc, char* argv[]) {
         int n, p, c, step_count;
         double T;
         std::string data_file;
+        bool avg_material_data = false;
     } args;
 
     bool help = false;
 
-    using clara::Help, clara::Arg;
+    using clara::Help, clara::Arg, clara::Opt;
     auto const cli = Help(help)                                   //
                    | Arg(args.n, "N").required()                  //
                    | Arg(args.p, "p").required()                  //
@@ -26,6 +27,7 @@ auto parse_args(int argc, char* argv[]) {
                    | Arg(args.step_count, "steps").required()     //
                    | Arg(args.T, "T").required()                  //
                    | Arg(args.data_file, "data_file").required()  //
+                   | Opt(args.avg_material_data)["--average"]     //
         ;
 
     auto const result = cli.parse({argc, argv});
@@ -47,7 +49,7 @@ auto parse_args(int argc, char* argv[]) {
 }
 
 // Example invocation:
-// <prog> 8 2 1 10 0.1
+// <prog> 8 2 1 10 0.1 mri.dat --average
 int main(int argc, char* argv[]) {
     auto const args = parse_args(argc, argv);
     auto const dt = args.T / args.step_count;
@@ -56,6 +58,6 @@ int main(int argc, char* argv[]) {
     auto const dim = ads::dim_config{args.p, args.n};
     auto const cfg = ads::config_3d{dim, dim, dim, steps, 1};
 
-    auto sim = maxwell_head{cfg, args.data_file};
+    auto sim = maxwell_head{cfg, args.data_file, args.avg_material_data};
     sim.run();
 }
