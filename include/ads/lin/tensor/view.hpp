@@ -34,6 +34,11 @@ tensor_view<T, sizeof...(Sizes)> as_tensor(T* data, Sizes... sizes) {
     return {data, sz};
 }
 
+template <typename T, std::size_t Rank>
+auto as_tensor(T* data, std::array<int, Rank> const& sizes) -> tensor_view<T, Rank> {
+    return {data, sizes};
+}
+
 }  // namespace ads::lin
 
 #endif  // ADS_LIN_TENSOR_VIEW_HPP
