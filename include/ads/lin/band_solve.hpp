@@ -20,10 +20,14 @@ inline void factorize(band_matrix& a, solver_ctx& ctx) {
 template <typename Rhs>
 inline void solve_with_factorized(const band_matrix& a, Rhs& b, solver_ctx& ctx) {
     int nrhs = b.size() / b.size(0);
+    solve_with_factorized(a, b.data(), ctx, nrhs);
+}
+
+inline void solve_with_factorized(const band_matrix& a, double* b, solver_ctx& ctx, int nrhs) {
     const char* trans = "No transpose";
 
-    dgbtrs_(trans, &a.cols, &a.kl, &a.ku, &nrhs, a.full_buffer(), &ctx.lda, ctx.pivot(), b.data(),
-            &a.cols, &ctx.info);
+    dgbtrs_(trans, &a.cols, &a.kl, &a.ku, &nrhs, a.full_buffer(), &ctx.lda, ctx.pivot(), b, &a.cols,
+            &ctx.info);
 }
 
 template <typename Rhs>
