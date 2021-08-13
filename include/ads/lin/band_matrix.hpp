@@ -20,11 +20,13 @@ private:
     std::vector<double> data_;
 
 public:
-    int kl;
-    int ku;
-    int rows;
-    int cols;
-    int row_offset;
+    int kl = 0;
+    int ku = 0;
+    int rows = 0;
+    int cols = 0;
+    int row_offset = 0;
+
+    band_matrix() = default;
 
     band_matrix(int kl, int ku, int n)
     : band_matrix(kl, ku, n, n, kl) { }
