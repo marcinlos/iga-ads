@@ -141,6 +141,18 @@ add_example(maxwell_head MUMPS GALOIS
   maxwell/maxwell_head_problem.cpp
   LIBS clara::clara)
 
+add_example(maxwell_ads MUMPS GALOIS
+  SRC
+  maxwell/main_ads.cpp
+  maxwell/state.cpp
+  maxwell/spaces.cpp
+  maxwell/results.cpp
+  maxwell/maxwell_base.cpp
+  maxwell/head_data.cpp
+  maxwell/maxwell_head_problem.cpp
+  LIBS clara::clara)
+
+
 add_example(tumor GALOIS
   SRC
   tumor/vasculature/plot.cpp
