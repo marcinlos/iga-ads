@@ -11,7 +11,6 @@
 
 using value_type = ads::function_value_3d;
 using point_type = std::array<double, 3>;
-using value_vec = std::array<value_type, 3>;
 
 template <typename Self>
 class maxwell_problem {
