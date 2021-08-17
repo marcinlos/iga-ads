@@ -12,7 +12,7 @@ auto parse_args(int argc, char* argv[]) {
     struct {
         int n, p, c, step_count;
         double T;
-    } args;
+    } args{};
 
     bool help = false;
 

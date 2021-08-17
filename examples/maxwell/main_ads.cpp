@@ -14,7 +14,7 @@ auto parse_args(int argc, char* argv[]) {
         int n, p, c, step_count;
         double T;
         std::string data_file;
-    } args;
+    } args{};
 
     bool help = false;
 

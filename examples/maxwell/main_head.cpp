@@ -15,7 +15,7 @@ auto parse_args(int argc, char* argv[]) {
         double T;
         std::string data_file;
         bool avg_material_data = false;
-    } args;
+    } args{};
 
     bool help = false;
 
