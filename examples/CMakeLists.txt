@@ -121,37 +121,45 @@ add_example(cg MUMPS GALOIS
   cg/shishkin.cpp
   LIBS clara::clara)
 
-add_example(maxwell_uniform GALOIS
-  SRC
-  maxwell/main_uniform.cpp
+add_library(ads-example-maxwell-common OBJECT
   maxwell/state.cpp
   maxwell/spaces.cpp
   maxwell/results.cpp
   maxwell/maxwell_base.cpp
-  LIBS clara::clara)
+)
+
+target_link_libraries(ads-example-maxwell-common PRIVATE
+  ADS
+  ads-options-private
+)
+
+add_example(maxwell_uniform GALOIS
+  SRC
+    maxwell/main_uniform.cpp
+  LIBS
+    ads-example-maxwell-common
+    clara::clara
+)
 
 add_example(maxwell_head MUMPS GALOIS
   SRC
-  maxwell/main_head.cpp
-  maxwell/state.cpp
-  maxwell/spaces.cpp
-  maxwell/results.cpp
-  maxwell/maxwell_base.cpp
-  maxwell/head_data.cpp
-  maxwell/maxwell_head_problem.cpp
-  LIBS clara::clara)
+    maxwell/main_head.cpp
+    maxwell/head_data.cpp
+    maxwell/maxwell_head_problem.cpp
+  LIBS
+    ads-example-maxwell-common
+    clara::clara
+)
 
 add_example(maxwell_ads MUMPS GALOIS
   SRC
-  maxwell/main_ads.cpp
-  maxwell/state.cpp
-  maxwell/spaces.cpp
-  maxwell/results.cpp
-  maxwell/maxwell_base.cpp
-  maxwell/head_data.cpp
-  maxwell/maxwell_head_problem.cpp
-  LIBS clara::clara)
-
+    maxwell/main_ads.cpp
+    maxwell/head_data.cpp
+    maxwell/maxwell_head_problem.cpp
+  LIBS
+    ads-example-maxwell-common
+    clara::clara
+)
 
 add_example(tumor GALOIS
   SRC
