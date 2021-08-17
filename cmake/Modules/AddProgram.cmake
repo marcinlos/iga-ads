@@ -1,5 +1,5 @@
 function(add_program name)
-  cmake_parse_arguments(PROGRAM "MUMPS;GALOIS" "LIBS" "SRC" ${ARGN})
+  cmake_parse_arguments(PROGRAM "MUMPS;GALOIS" "" "LIBS;SRC" ${ARGN})
 
   set(OK TRUE)
   if (PROGRAM_GALOIS AND NOT ADS_USE_GALOIS)
