@@ -1047,7 +1047,29 @@ public:
     , ctx_x_{space->space_x().degree()}
     , ctx_y_{space->space_y().degree()} { }
 
-    auto operator()(point p) const noexcept -> double {
+    auto operator()(point p) const noexcept -> double { return eval_(p); }
+
+    auto operator()(point p, const regular_mesh::edge_data& edge) const noexcept
+        -> facet_value<double> {
+        // TODO: implement this correctly
+        if (edge.type == facet_type::interior) {
+            const auto [px, py] = p;
+            const auto [nx, ny] = edge.normal;
+            const auto eps = 1e-16;
+            const auto before = point{px - eps * nx, py - eps * ny};
+            const auto after = point{px + eps * nx, py + eps * ny};
+
+            const auto v0 = eval_(before);
+            const auto v1 = eval_(after);
+            return {0.5 * (v0 + v1), v0 - v1};
+        } else {
+            const auto v = eval_(p);
+            return {v, v};
+        }
+    }
+
+private:
+    auto eval_(point p) const noexcept -> double {
         const auto [x, y] = p;
 
         auto coeffs = [this](int i, int j) {
@@ -1060,25 +1082,6 @@ public:
 
         std::scoped_lock guard{ctx_lock_};
         return bspline::eval(x, y, coeffs, bx, by, ctx_x_, ctx_y_);
-    }
-
-    auto operator()(point p, const regular_mesh::edge_data& edge) const noexcept
-        -> facet_value<double> {
-        // TODO: implement this correctly
-        if (edge.type == facet_type::interior) {
-            const auto [px, py] = p;
-            const auto [nx, ny] = edge.normal;
-            const auto eps = 1e-16;
-            const auto before = point{px - eps * nx, py - eps * ny};
-            const auto after = point{px + eps * nx, py + eps * ny};
-
-            const auto v0 = (*this)(before);
-            const auto v1 = (*this)(after);
-            return {0.5 * (v0 + v1), v0 - v1};
-        } else {
-            const auto v = (*this)(p);
-            return {v, v};
-        }
     }
 };
 
@@ -1405,7 +1408,8 @@ struct L2 {
     constexpr auto operator()(double v) const noexcept -> double { return v * v; }
 
     constexpr auto operator()(const ads::value_type& v) const noexcept -> double {
-        return (*this)(v.val);
+        const auto& self = *this;
+        return self(v.val);
     }
 };
 
@@ -3208,7 +3212,29 @@ public:
     , ctx_y_{space->space_y().degree()}
     , ctx_z_{space->space_z().degree()} { }
 
-    auto operator()(point p) const noexcept -> double {
+    auto operator()(point p) const noexcept -> double { return eval_(p); }
+
+    auto operator()(point p, const regular_mesh3::face_data& face) const noexcept
+        -> facet_value<double> {
+        // TODO: implement this correctly
+        if (face.type == facet_type::interior) {
+            const auto [px, py, pz] = p;
+            const auto [nx, ny, nz] = face.normal;
+            const auto eps = 1e-16;
+            const auto before = point{px - eps * nx, py - eps * ny, pz - eps * nz};
+            const auto after = point{px + eps * nx, py + eps * ny, pz + eps * nz};
+
+            const auto v0 = eval_(before);
+            const auto v1 = eval_(after);
+            return {0.5 * (v0 + v1), v0 - v1};
+        } else {
+            const auto v = eval_(p);
+            return {v, v};
+        }
+    }
+
+private:
+    auto eval_(point p) const noexcept -> double {
         const auto [x, y, z] = p;
 
         auto coeffs = [this](int i, int j, int k) {
@@ -3222,25 +3248,6 @@ public:
 
         std::scoped_lock guard{ctx_lock_};
         return bspline::eval(x, y, z, coeffs, bx, by, bz, ctx_x_, ctx_y_, ctx_z_);
-    }
-
-    auto operator()(point p, const regular_mesh3::face_data& face) const noexcept
-        -> facet_value<double> {
-        // TODO: implement this correctly
-        if (face.type == facet_type::interior) {
-            const auto [px, py, pz] = p;
-            const auto [nx, ny, nz] = face.normal;
-            const auto eps = 1e-16;
-            const auto before = point{px - eps * nx, py - eps * ny, pz - eps * nz};
-            const auto after = point{px + eps * nx, py + eps * ny, pz + eps * nz};
-
-            const auto v0 = (*this)(before);
-            const auto v1 = (*this)(after);
-            return {0.5 * (v0 + v1), v0 - v1};
-        } else {
-            const auto v = (*this)(p);
-            return {v, v};
-        }
     }
 };
 
