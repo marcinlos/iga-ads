@@ -21,6 +21,7 @@ target_sources(ads-suite
     ads/lin/band_solve_test.cpp
     ads/lin/dense_solve_test.cpp
     ads/lin/tensor_test.cpp
+    ads/solver_test.cpp
 )
 
 target_include_directories(ads-suite PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
