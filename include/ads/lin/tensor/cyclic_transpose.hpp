@@ -4,6 +4,7 @@
 #ifndef ADS_LIN_TENSOR_CYCLIC_TRANSPOSE_HPP
 #define ADS_LIN_TENSOR_CYCLIC_TRANSPOSE_HPP
 
+#include <algorithm>
 #include <cstddef>
 
 #include "ads/lin/tensor/base.hpp"
@@ -41,14 +42,10 @@ struct cyclic_transpose_helper<T, S, Rank, Impl1, Impl2, Rank, int, Indices...> 
 };
 
 template <std::size_t N>
-auto cyclic_transpose_sizes(const std::array<int, N>& sizes) {
-    // TODO: use std::rotate
-    std::array<int, N> new_sizes{};
-    for (std::size_t i = 0; i < N - 1; ++i) {
-        new_sizes[i] = sizes[i + 1];
-    }
-    new_sizes[N - 1] = sizes[0];
-    return new_sizes;
+auto cyclic_transpose_sizes(const std::array<int, N>& sizes) -> std::array<int, N> {
+    auto tmp = sizes;
+    std::rotate(begin(tmp), begin(tmp) + 1, end(tmp));
+    return tmp;
 }
 
 }  // namespace detail
