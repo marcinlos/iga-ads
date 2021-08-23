@@ -575,7 +575,7 @@ private:
         // zero(u);
 
         // std::cout << "Step " << (iter + 1) << std::endl;
-        constexpr auto max_iters = 1;
+        constexpr auto max_iters = 30;
         for (int i = 1;; ++i) {
             auto norm = substep(true, true, t);
             // std::cout << "  substep " << i << ": |eta| = " << norm << std::endl;
