@@ -96,7 +96,7 @@ protected:
 public:
     explicit simulation_1d(const config_1d& config);
 
-    simulation_1d(dimension x, const timesteps_config& steps);
+    simulation_1d(const dimension& x, const timesteps_config& steps);
 };
 
 }  // namespace ads

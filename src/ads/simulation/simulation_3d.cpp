@@ -13,11 +13,12 @@ simulation_3d::simulation_3d(const config_3d& config)
     config.steps,
 } { }
 
-simulation_3d::simulation_3d(dimension x, dimension y, dimension z, const timesteps_config& steps)
+simulation_3d::simulation_3d(const dimension& x, const dimension& y, const dimension& z,
+                             const timesteps_config& steps)
 : simulation_base{steps}
-, x{std::move(x)}
-, y{std::move(y)}
-, z{std::move(z)}
+, x{x}
+, y{y}
+, z{z}
 , buffer{shape()} { }
 
 }  // namespace ads

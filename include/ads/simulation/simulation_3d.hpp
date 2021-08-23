@@ -146,7 +146,8 @@ public:
 
     explicit simulation_3d(const config_3d& config);
 
-    simulation_3d(dimension x, dimension y, dimension z, const timesteps_config& steps);
+    simulation_3d(const dimension& x, const dimension& y, const dimension& z,
+                  const timesteps_config& steps);
 };
 
 }  // namespace ads
