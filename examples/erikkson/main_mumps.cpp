@@ -150,10 +150,10 @@ int main(int argc, char* argv[]) {
     ads::timesteps_config steps{nsteps, dt};
     int ders = 2;
 
-    bool bd_layer_x = true;
-    bool bd_layer_y = false;
-    bool adapt_x = bd_layer_x && adapt;
-    bool adapt_y = bd_layer_y && adapt;
+    bool const bd_layer_x = true;
+    bool const bd_layer_y = false;
+    bool const adapt_x = bd_layer_x && adapt;
+    bool const adapt_y = bd_layer_y && adapt;
 
     // auto d = 1e-4;
     auto d = shishkin_const(nx, 1e-6);

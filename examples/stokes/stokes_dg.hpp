@@ -359,8 +359,8 @@ public:
         auto trial_p = shifted(D + dU1 + dU2, D + dU1 + dU2, problem);
 
         // auto N = D + dU1 + dU2 + dP;
-        bool bc = false;
-        bool fix_p = false;
+        bool const bc = false;
+        bool const fix_p = false;
 
         // auto hh = h * h;
 
@@ -796,8 +796,8 @@ public:
         // auto trial_p = shifted(D + dU1 + dU2, D + dU1 + dU2, problem);
 
         // auto N = D + dU1 + dU2 + dP;
-        bool bc = false;
-        bool fix_p = false;
+        bool const bc = false;
+        bool const fix_p = false;
 
         // Gram matrix
         // G(w, u)
