@@ -1058,9 +1058,6 @@ public:
     double integrate_over_skeleton(index_type i, index_type j, const dimension& Ux,
                                    const dimension& Uy, const dimension& Vx, const dimension& Vy,
                                    Form&& form) const {
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        return 0;
-
         // TODO: restrict the range
         auto rUx = Ux.basis.element_ranges[i[0]];
         auto rVx = Vx.basis.element_ranges[j[0]];
@@ -1093,9 +1090,6 @@ public:
     double integrate_over_internal_skeleton(index_type i, index_type j, const dimension& Ux,
                                             const dimension& Uy, const dimension& Vx,
                                             const dimension& Vy, Form&& form) const {
-        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        return 0;
-
         double val = 0;
         // TODO: restrict the range
         for (int ix = 1; ix < Ux.elements; ++ix) {
