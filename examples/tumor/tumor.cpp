@@ -8,7 +8,7 @@ using ads::config_2d;
 namespace tumor {
 
 tumor_2d::tumor_2d(const config_2d& config, const params& params, int save_every,
-                   vasc::vasculature vasculature)
+                   vasc::vasculature&& vasculature)
 : Base{config}
 , now{shape()}
 , prev{shape()}

@@ -45,10 +45,10 @@ private:
     output_manager<2> outputU1, outputU2, outputP;
 
 public:
-    stokes_dg(space_set trial_, space_set test_, const timesteps_config& steps)
+    stokes_dg(const space_set& trial_, const space_set& test_, const timesteps_config& steps)
     : Base{test_.Px, test_.Py, steps}
-    , trial{std::move(trial_)}
-    , test{std::move(test_)}
+    , trial{trial_}
+    , test{test_}
     , h{element_diam(trial.Px, trial.Py)}
     , outputU1{trial.U1x.B, trial.U1y.B, 500}
     , outputU2{trial.U2x.B, trial.U2y.B, 500}

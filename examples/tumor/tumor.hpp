@@ -45,7 +45,7 @@ private:
 
 public:
     tumor_2d(const ads::config_2d& config, const params& params, int save_every,
-             vasc::vasculature vasculature);
+             vasc::vasculature&& vasculature);
 
 private:
     struct constant {

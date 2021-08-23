@@ -47,7 +47,7 @@ private:
     galois::StatTimer init_timer{"init"};
 
 public:
-    tumor_3d(const ads::config_3d& config, const params& params, vasculature vasc, int threads)
+    tumor_3d(const ads::config_3d& config, const params& params, vasculature&& vasc, int threads)
     : Base{config}
     , now{shape()}
     , prev{shape()}

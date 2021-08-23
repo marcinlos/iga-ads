@@ -53,8 +53,8 @@ private:
     output_manager<2> output;
 
 public:
-    erikkson_supg(dimension trial_x, dimension trial_y, const timesteps_config& steps)
-    : Base{std::move(trial_x), std::move(trial_y), steps}
+    erikkson_supg(const dimension& trial_x, const dimension& trial_y, const timesteps_config& steps)
+    : Base{trial_x, trial_y, steps}
     , Mx{x.p, x.p, x.dofs(), x.dofs(), 0}
     , My{y.p, y.p, y.dofs(), y.dofs(), 0}
     , Kx{x.p, x.p, x.dofs(), x.dofs(), 0}

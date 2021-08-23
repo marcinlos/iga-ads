@@ -87,12 +87,13 @@ private:
     boundary dirichlet;
 
 public:
-    advection(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y,
-              double peclet, double eta, const advection_config& cfg, Problem problem)
-    : Base{std::move(test_x), std::move(test_y), timesteps_config(1, 0.0)}
+    advection(const dimension& trial_x, const dimension& trial_y,  //
+              const dimension& test_x, const dimension& test_y, double peclet, double eta,
+              const advection_config& cfg, Problem problem)
+    : Base{test_x, test_y, timesteps_config(1, 0.0)}
     , executor{cfg.threads}
-    , Ux{std::move(trial_x)}
-    , Uy{std::move(trial_y)}
+    , Ux{trial_x}
+    , Uy{trial_y}
     , Vx{x}
     , Vy{y}
     , MVx{Vx.p, Vx.p, Vx.dofs(), Vx.dofs(), 0}

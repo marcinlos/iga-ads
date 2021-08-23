@@ -34,10 +34,11 @@ private:
     output_manager<2> outputU1, outputU2, outputP;
 
 public:
-    stokes_dg_split(scheme method, space_set trial_, space_set test_, const timesteps_config& steps)
+    stokes_dg_split(scheme method, const space_set& trial_, const space_set& test_,
+                    const timesteps_config& steps)
     : Base{test_.Px, test_.Py, steps}
-    , trial{std::move(trial_)}
-    , test{std::move(test_)}
+    , trial{trial_}
+    , test{test_}
     , method{method}
     , vx{{trial.U1x.dofs(), trial.U1y.dofs()}}
     , vy{{trial.U2x.dofs(), trial.U2y.dofs()}}

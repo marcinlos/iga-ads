@@ -30,11 +30,12 @@ private:
     output_manager<2> outputU1, outputU2, outputP;
 
 public:
-    stokes(space_set trial, space_set test, space_set ref, const timesteps_config& steps)
+    stokes(const space_set& trial, const space_set& test, const space_set& ref,
+           const timesteps_config& steps)
     : Base{trial.U1x, trial.U1y, steps}
-    , trial{std::move(trial)}
-    , test{std::move(test)}
-    , ref{std::move(ref)}
+    , trial{trial}
+    , test{test}
+    , ref{ref}
     , h{element_diam(this->trial.Px, this->trial.Py)}
     , outputU1{this->trial.U1x.B, this->trial.U1y.B, 500}
     , outputU2{this->trial.U2x.B, this->trial.U2y.B, 500}

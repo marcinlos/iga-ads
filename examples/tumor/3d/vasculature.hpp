@@ -197,7 +197,7 @@ private:
     rasterizer raster;
 
 public:
-    vasculature(int sx, int sy, int sz, vessels vs)
+    vasculature(int sx, int sy, int sz, vessels&& vs)
     : src{{sx, sy, sz}}
     , sx{sx}
     , sy{sy}

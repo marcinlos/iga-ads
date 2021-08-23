@@ -87,11 +87,11 @@ private:
     galois::StatTimer solver_timer{"solver"};
 
 public:
-    erikkson_CG_weak(dimension trial_x, dimension trial_y, dimension test_x, dimension test_y,
-                     const timesteps_config& steps)
-    : Base{std::move(test_x), std::move(test_y), steps}
-    , Ux{std::move(trial_x)}
-    , Uy{std::move(trial_y)}
+    erikkson_CG_weak(const dimension& trial_x, const dimension& trial_y, const dimension& test_x,
+                     const dimension& test_y, const timesteps_config& steps)
+    : Base{test_x, test_y, steps}
+    , Ux{trial_x}
+    , Uy{trial_y}
     , Vx{x}
     , Vy{y}
     , MVx{Vx.p, Vx.p, Vx.dofs(), Vx.dofs(), 0}
