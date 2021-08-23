@@ -1,6 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
+#include <cstdlib>
+#include <exception>
 #include <iostream>
 
 #include "multistep2d.hpp"
@@ -25,16 +27,21 @@ int main(int argc, char* argv[]) {
     ads::timesteps_config steps{nsteps, dt};
     int ders = 1;
 
-    auto scm = ads::get_scheme(scheme_name);
-    // std::cout << "Scheme: " << scm << std::endl;
+    try {
+        auto scm = ads::get_scheme(scheme_name);
+        // std::cout << "Scheme: " << scm << std::endl;
 
-    if (D == 2) {
-        ads::config_2d c{dim, dim, steps, ders};
-        ads::problems::multistep2d sim{c, scm, order};
-        sim.run();
-    } else if (D == 3) {
-        ads::config_3d c{dim, dim, dim, steps, ders};
-        ads::problems::multistep3d sim{c, scm, order};
-        sim.run();
+        if (D == 2) {
+            ads::config_2d c{dim, dim, steps, ders};
+            ads::problems::multistep2d sim{c, scm, order};
+            sim.run();
+        } else if (D == 3) {
+            ads::config_3d c{dim, dim, dim, steps, ders};
+            ads::problems::multistep3d sim{c, scm, order};
+            sim.run();
+        }
+    } catch (std::exception const& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        std::exit(1);
     }
 }
