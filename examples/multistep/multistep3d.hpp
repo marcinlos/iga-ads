@@ -298,11 +298,11 @@ private:
     }
 
     double errorL2(const vector_type& u, double t) const {
-        return error_relative(u, x, y, z, L2{}, exact(t));
+        return error_relative(u, x, y, z, L2{}, exact(t)) * 100;
     }
 
     double errorH1(const vector_type& u, double t) const {
-        return error_relative(u, x, y, z, H1{}, exact(t));
+        return error_relative(u, x, y, z, H1{}, exact(t)) * 100;
     }
 
     // Problem definition
