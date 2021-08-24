@@ -352,7 +352,7 @@ protected:
     template <typename Sol, typename Fun, typename Norm>
     double error_relative(const Sol& u, const dimension& Ux, const dimension& Uy, Norm&& norm,
                           Fun&& fun) const {
-        return error(u, Ux, Uy, norm, fun) / this->norm(Ux, Uy, norm, fun) * 100;
+        return error(u, Ux, Uy, norm, fun) / this->norm(Ux, Uy, norm, fun);
     }
 
     template <typename Sol, typename Fun>
