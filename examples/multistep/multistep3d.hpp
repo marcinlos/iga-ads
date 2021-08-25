@@ -104,6 +104,8 @@ private:
         apply_bc(us[0]);
 
         ads_solve(us[0], buffer, dim_data{Ax, Ax_ctx}, dim_data{Ay, Ay_ctx}, dim_data{Az, Az_ctx});
+
+        adjust_solution(us);
     }
 
     void after() override {
@@ -262,18 +264,23 @@ private:
                         double ti = tt - i * tau;
                         val += tau * bs[i] * force(x, ti) * v.val;
                     }
+
+                    auto const form = [this](auto u, auto v) { return grad_dot(u, v); };
+
                     for (int i = 1; i <= s; ++i) {
                         auto u = uvals[i];
-                        val -= as[i - 1] * u.val * v.val + tau * bs[i] * grad_dot(u, v);
+                        val -= as[i - 1] * u.val * v.val + tau * bs[i] * form(u, v);
                     }
                     if (s == 0) {
                         val -= as[s] * uvals[s + 1].val * v.val;
                     }
 
                     // Correction to get higher order
+                    // We apply M + eta K to solutions from previous time steps and add it
+                    // to RHS, multiplied by finite difference coefficients
                     for (int i = 1; i < order; ++i) {
-                        val -= fibo[i] * eta * eta * (dxy[i] * vxy + dxz[i] * vxz + dyz[i] * vyz);
-                        val -= fibo[i] * eta * eta * eta * dxyz[i] * vxyz;
+                        auto u = uvals[i];
+                        val += fibo[i] * (u.val * v.val + eta * form(u, v));
                     }
 
                     U(aa[0], aa[1], aa[2]) += val * w * J;

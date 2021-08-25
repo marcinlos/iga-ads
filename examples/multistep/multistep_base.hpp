@@ -77,6 +77,20 @@ protected:
             f[i] = buf(d - 1, i);
         }
     }
+
+    template <typename SolutionList>
+    void adjust_solution(SolutionList& us) {
+        auto const dof_count = us[0].size();
+        auto* u = us[0].data();
+
+        for (int i = 1; i < order; ++i) {
+            auto const* u_old = us[i].data();
+
+            for (int j = 0; j < dof_count; ++j) {
+                u[j] -= fibo[i] * u_old[j];
+            }
+        }
+    }
 };
 
 }  // namespace problems
