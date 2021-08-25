@@ -130,108 +130,12 @@ private:
         }
     }
 
-    double eval_basis_dxy(index_type e, index_type q, index_type a) const {
-        auto loc = dof_global_to_local(e, a);
-        const auto& bx = x.basis;
-        const auto& by = y.basis;
-        const auto& bz = z.basis;
-
-        double dB1 = bx.b[e[0]][q[0]][1][loc[0]];
-        double dB2 = by.b[e[1]][q[1]][1][loc[1]];
-        double B3 = bz.b[e[2]][q[2]][0][loc[2]];
-
-        return dB1 * dB2 * B3;
-    }
-
-    double eval_basis_dyz(index_type e, index_type q, index_type a) const {
-        auto loc = dof_global_to_local(e, a);
-        const auto& bx = x.basis;
-        const auto& by = y.basis;
-        const auto& bz = z.basis;
-
-        double B1 = bx.b[e[0]][q[0]][0][loc[0]];
-        double dB2 = by.b[e[1]][q[1]][1][loc[1]];
-        double dB3 = bz.b[e[2]][q[2]][1][loc[2]];
-
-        return B1 * dB2 * dB3;
-    }
-
-    double eval_basis_dxz(index_type e, index_type q, index_type a) const {
-        auto loc = dof_global_to_local(e, a);
-        const auto& bx = x.basis;
-        const auto& by = y.basis;
-        const auto& bz = z.basis;
-
-        double dB1 = bx.b[e[0]][q[0]][1][loc[0]];
-        double B2 = by.b[e[1]][q[1]][0][loc[1]];
-        double dB3 = bz.b[e[2]][q[2]][1][loc[2]];
-
-        return dB1 * B2 * dB3;
-    }
-
-    double eval_basis_dxyz(index_type e, index_type q, index_type a) const {
-        auto loc = dof_global_to_local(e, a);
-        const auto& bx = x.basis;
-        const auto& by = y.basis;
-        const auto& bz = z.basis;
-
-        double dB1 = bx.b[e[0]][q[0]][1][loc[0]];
-        double dB2 = by.b[e[1]][q[1]][1][loc[1]];
-        double dB3 = bz.b[e[2]][q[2]][1][loc[2]];
-
-        return dB1 * dB2 * dB3;
-    }
-
-    double eval_fun_dxy(const vector_type& v, index_type e, index_type q) const {
-        double u = 0;
-        for (auto b : dofs_on_element(e)) {
-            double c = v(b[0], b[1], b[2]);
-            double B = eval_basis_dxy(e, q, b);
-            u += c * B;
-        }
-        return u;
-    }
-
-    double eval_fun_dyz(const vector_type& v, index_type e, index_type q) const {
-        double u = 0;
-        for (auto b : dofs_on_element(e)) {
-            double c = v(b[0], b[1], b[2]);
-            double B = eval_basis_dyz(e, q, b);
-            u += c * B;
-        }
-        return u;
-    }
-
-    double eval_fun_dxz(const vector_type& v, index_type e, index_type q) const {
-        double u = 0;
-        for (auto b : dofs_on_element(e)) {
-            double c = v(b[0], b[1], b[2]);
-            double B = eval_basis_dxz(e, q, b);
-            u += c * B;
-        }
-        return u;
-    }
-
-    double eval_fun_dxyz(const vector_type& v, index_type e, index_type q) const {
-        double u = 0;
-        for (auto b : dofs_on_element(e)) {
-            double c = v(b[0], b[1], b[2]);
-            double B = eval_basis_dxyz(e, q, b);
-            u += c * B;
-        }
-        return u;
-    }
-
     void compute_rhs(vector_type& rhs, double t) {
         zero(rhs);
 
         executor.for_each(elements(), [&](index_type e) {
             auto U = element_rhs();
             std::vector<value_type> uvals(us.size());
-            std::vector<double> dxy(us.size());
-            std::vector<double> dyz(us.size());
-            std::vector<double> dxz(us.size());
-            std::vector<double> dxyz(us.size());
 
             double tau = steps.dt;
             double tt = t + tau;
@@ -244,19 +148,11 @@ private:
 
                 for (int i = 1; i < us.size(); ++i) {
                     uvals[i] = eval_fun(us[i], e, q);
-                    dxy[i] = eval_fun_dxy(us[i], e, q);
-                    dyz[i] = eval_fun_dyz(us[i], e, q);
-                    dxz[i] = eval_fun_dxz(us[i], e, q);
-                    dxyz[i] = eval_fun_dxyz(us[i], e, q);
                 }
 
                 for (auto a : dofs_on_element(e)) {
                     auto aa = dof_global_to_local(e, a);
                     value_type v = eval_basis(e, q, a);
-                    double vxy = eval_basis_dxy(e, q, a);
-                    double vyz = eval_basis_dyz(e, q, a);
-                    double vxz = eval_basis_dxz(e, q, a);
-                    double vxyz = eval_basis_dxyz(e, q, a);
 
                     double val = 0;
 
