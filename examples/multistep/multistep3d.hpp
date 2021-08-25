@@ -78,13 +78,6 @@ private:
         prepare_spaces();
         prepare_matrices();
 
-        // Single initial step is enough only for two-step methods
-
-        // auto init = [this](double x, double y) { return init_state(x, y); };
-        // projection(us[0], init);
-        // apply_bc(us[0]);
-        // solve(us[0]);
-
         int needed = us.size() - 1;
         for (int i = 0; i < needed; ++i) {
             double t = i * steps.dt;
@@ -96,8 +89,6 @@ private:
             apply_bc(us[0]);
             solve(us[0]);
 
-            // std::cout << "Initial state " << t << " ";
-            // print_errors(us[0], t);
             us.rotate();
         }
         us.rotate();
@@ -324,8 +315,6 @@ private:
             e * M_PI * std::sin(x * M_PI) * std::sin(y * M_PI) * std::cos(z * M_PI),
         };
     }
-
-    double init_state(double x, double y, double z) const { return solution(x, y, z, 0).val; }
 };
 
 }  // namespace ads::problems
