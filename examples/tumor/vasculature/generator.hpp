@@ -95,9 +95,9 @@ private:
             connect(prev, n, 1);
 
             nodes.push_back(n);
-            node_ptr neighor = find_neighbor(n, prev, segment_length * 0.5);
-            if (neighor != nullptr) {
-                connect(neighor, n, 1);
+            node_ptr neighbor = find_neighbor(n, prev, segment_length * 0.5);
+            if (neighbor != nullptr) {
+                connect(neighbor, n, 1);
                 break;
             }
 
