@@ -119,9 +119,11 @@ add_example(demkowicz GALOIS
 
 add_example(cg MUMPS GALOIS
   SRC
-  cg/main.cpp
-  cg/shishkin.cpp
-  LIBS clara::clara)
+    cg/main.cpp
+    cg/shishkin.cpp
+  LIBS
+    bfg::lyra
+)
 
 add_library(ads-example-maxwell-common OBJECT
   maxwell/state.cpp

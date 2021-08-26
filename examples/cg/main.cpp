@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#include <clara.hpp>
+#include <lyra/lyra.hpp>
 
 #include "ads/util.hpp"
 #include "advection.hpp"
@@ -70,23 +70,36 @@ void print_dofs(const ads::dimension& trial, const ads::dimension& test) {
 }
 
 auto make_config_parser(ads::advection_config& cfg) {
-    using clara::Opt;
-    return Opt(cfg.tol_outer, "outer iterations tolerance")["--tol-outer"]
-         | Opt(cfg.tol_inner, "inner iterations tolerance")["--tol-inner"]
-         | Opt(cfg.max_outer_iters, "maximum # of outer iterations")["--max-outer-iters"]
-         | Opt(cfg.max_inner_iters, "maximum # of inner iterations")["--max-inner-iters"]
-         | Opt(cfg.use_cg, "use CG solver?")["--cg"]
-         | Opt(cfg.weak_bc, "impose Dirichlet BC weakly?")["--weak-bc"]
-         | Opt(cfg.print_inner, "print errors for inner iterations?")["--print-inner"]
-         | Opt(cfg.print_inner_count, "print number of inner iterations?")["--print-inner-count"]
-         | Opt(cfg.print_outer, "print errors for outer iterations?")["--print-outer"]
-         | Opt(cfg.print_outer_count, "print number of outer iterations?")["--print-outer-count"]
-         | Opt(cfg.print_inner_total,
-               "print total number of inner iterations?")["--print-inner-total"]
-         | Opt(cfg.print_times, "print integration and solver times?")["--print-times"]
-         | Opt(cfg.print_errors, "print solution errors?")["--print-errors"]
-         | Opt(cfg.plot, "save data for plots?")["--plots"]
-         | Opt(cfg.threads, "number of threads")["--threads"];
+    return lyra::opt(cfg.tol_outer, "eps")["--tol-outer"]  //
+           ("outer iterations tolerance")
+         | lyra::opt(cfg.tol_inner, "eps")["--tol-inner"]  //
+           ("inner iterations tolerance")
+         | lyra::opt(cfg.max_outer_iters, "N")["--max-outer-iters"]  //
+           ("maximum # of outer iterations")
+         | lyra::opt(cfg.max_inner_iters, "N")["--max-inner-iters"]  //
+           ("maximum # of inner iterations")
+         | lyra::opt(cfg.use_cg)["--cg"]  //
+           ("use CG solver?")
+         | lyra::opt(cfg.weak_bc)["--weak-bc"]  //
+           ("impose Dirichlet BC weakly?")
+         | lyra::opt(cfg.print_inner)["--print-inner"]  //
+           ("print errors for inner iterations?")
+         | lyra::opt(cfg.print_inner_count)["--print-inner-count"]  //
+           ("print number of inner iterations?")
+         | lyra::opt(cfg.print_outer)["--print-outer"]  //
+           ("print errors for outer iterations?")
+         | lyra::opt(cfg.print_outer_count)["--print-outer-count"]  //
+           ("print number of outer iterations?")
+         | lyra::opt(cfg.print_inner_total)["--print-inner-total"]  //
+           ("print total number of inner iterations?")
+         | lyra::opt(cfg.print_times)["--print-times"]  //
+           ("print integration and solver times?")
+         | lyra::opt(cfg.print_errors)["--print-errors"]  //
+           ("print solution errors?")
+         | lyra::opt(cfg.plot)["--plots"]  //
+           ("save data for plots?")
+         | lyra::opt(cfg.threads, "N")["--threads"]  //
+           ("number of threads");
 }
 
 template <typename Fun>
@@ -122,38 +135,35 @@ int main(int argc, char* argv[]) {
 
     ads::advection_config cfg;
 
-    bool help = false;
-    using clara::Help, clara::Arg, clara::Opt;
-    auto cli = Help(help)                                              //
-             | Arg(problem, "problem").required()                      //
-             | Arg(nx, "Nx").required()                                //
-             | Arg(ny, "Ny").required()                                //
-             | Arg(p_trial, "p trial").required()                      //
-             | Arg(C_trial, "C trial").required()                      //
-             | Arg(p_test, "p test").required()                        //
-             | Arg(C_test, "C test").required()                        //
-             | Opt(adapt_x, "adapt in x direction")["--adaptx"]        //
-             | Opt(adapt_y, "adapt in y direction")["--adapty"]        //
-             | Opt(peclet, "Peclet number")["--Pe"]                    //
-             | Opt(eta, "eta (solver parameter)")["--eta"]             //
-             | Opt(print_dof_count, "print # of DOFs")["--dofs"]       //
-             | Opt(print_dims, "print dimensions of spacs")["--dims"]  //
-             | make_config_parser(cfg);
+    bool show_help = false;
+    auto const cli =                                                                 //
+        lyra::help(show_help)                                                        //
+        | lyra::arg(problem, "problem")("problem to solve").required()               //
+        | lyra::arg(nx, "Nx")("mesh resolution in x direction").required()           //
+        | lyra::arg(ny, "Ny")("mesh resolution in y direction").required()           //
+        | lyra::arg(p_trial, "p trial")("B-spline order of trial space").required()  //
+        | lyra::arg(C_trial, "C trial")("continuity of trial space").required()      //
+        | lyra::arg(p_test, "p test")("B-spline order of test space").required()     //
+        | lyra::arg(C_test, "C test")("continuity of test space").required()         //
+        | lyra::opt(adapt_x)["--adaptx"]("adapt in x direction")                     //
+        | lyra::opt(adapt_y)["--adapty"]("adapt in y direction")                     //
+        | lyra::opt(peclet, "val")["--Pe"]("Peclet number")                          //
+        | lyra::opt(eta, "val")["--eta"]("eta (solver parameter)")                   //
+        | lyra::opt(print_dof_count)["--dofs"]("print # of DOFs")                    //
+        | lyra::opt(print_dims)["--dims"]("print dimensions of spacs")               //
+        | make_config_parser(cfg);
 
-    auto result = cli.parse(clara::Args(argc, argv));
+    auto const result = cli.parse({argc, argv});
 
     if (!result) {
         std::cerr << "Error: " << result.errorMessage() << std::endl;
+        std::cerr << cli << std::endl;
         std::exit(1);
     }
-    if (help) {
-        cli.writeToStream(std::cout);
-        return 0;
-    }
-    if (argc < 8) {
-        std::cerr << "Usage: cg <problem> <Nx> <Ny> <p trial> <C trial> <p test> <C test>"
-                  << std::endl;
-        std::exit(1);
+
+    if (show_help) {
+        std::cout << cli << std::endl;
+        std::exit(0);
     }
 
     int quad = std::max(p_trial, p_test) + 1;
