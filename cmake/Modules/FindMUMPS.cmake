@@ -16,7 +16,7 @@ find_package_handle_standard_args(MUMPS
 
 set(MUMPS_LIBRARIES ${MUMPS_LIBRARY})
 
-# mumps_common may be a separate library
+# mumps_common is a separate library
 find_library(MUMPS_COMMON_LIBRARY NAMES mumps_common)
 
 if (MUMPS_COMMON_LIBRARY)
@@ -24,14 +24,24 @@ if (MUMPS_COMMON_LIBRARY)
 endif()
 
 # Find scalapack
-find_library(MUMPS_SCALAPACK NAMES scalapack)
+find_library(MUMPS_SCALAPACK NAMES scalapack scalapack-openmpi)
 
 if (MUMPS_SCALAPACK)
   list(APPEND MUMPS_LIBRARIES ${MUMPS_SCALAPACK})
 endif()
 
+# Find BLAS and LAPACK
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
+
+list(APPEND MUMPS_LIBRARIES ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+
 # Try to find ordering libraries
-set(ORDERING_LIBS metis parmetis ptesmumps scotch ptscotch ptscotcherr pord)
+set(ORDERING_LIBS
+  pord
+  metis scotch scotcherr esmumps
+  parmetis ptscotch ptscotcherr ptesmumps
+)
 
 foreach (lib IN LISTS ORDERING_LIBS)
   find_library(MUMPS_${lib}_LIBRARY NAMES ${lib})
