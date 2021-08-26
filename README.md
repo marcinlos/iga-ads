@@ -30,6 +30,7 @@ time-dependent and stationary PDEs using isogeometric finite element method.
   (**recommended**)
 - [MUMPS](http://mumps.enseeiht.fr/) - used for stationary problems
 - [Catch2](https://github.com/catchorg/Catch2) - required to build test suite
+- [Lyra](https://github.com/bfgroup/Lyra) - argument parser used by some examples
 
 ### Compilation
 
