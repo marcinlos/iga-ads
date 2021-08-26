@@ -4,8 +4,9 @@
 #include <cstdlib>
 #include <iostream>
 
-#include <clara.hpp>
+#include <lyra/lyra.hpp>
 
+#include "maxwell_base.hpp"
 #include "maxwell_uniform.hpp"
 
 auto parse_args(int argc, char* argv[]) {
@@ -14,32 +15,17 @@ auto parse_args(int argc, char* argv[]) {
         double T;
     } args{};
 
-    bool help = false;
+    bool show_help = false;
 
-    using clara::Help, clara::Arg;
-    auto const cli = Help(help)                                //
-                   | Arg(args.n, "N").required()               //
-                   | Arg(args.p, "p").required()               //
-                   | Arg(args.c, "c").required()               //
-                   | Arg(args.step_count, "steps").required()  //
-                   | Arg(args.T, "T").required()               //
+    auto const desc = "Solver for non-stationary Maxwell equations with uniform material data\n"
+                      "using ADS";
+
+    auto const cli = lyra::help(show_help).description(desc)  //
+                   | common_arg_parser(args)                  //
         ;
 
     auto const result = cli.parse({argc, argv});
-
-    if (!result) {
-        std::cerr << "Error: " << result.errorMessage() << std::endl;
-        std::exit(1);
-    }
-    if (help) {
-        cli.writeToStream(std::cout);
-        std::exit(0);
-    }
-    if (argc < 6) {
-        cli.writeToStream(std::cout);
-        std::exit(1);
-    }
-
+    validate_args(cli, result, show_help);
     return args;
 }
 

@@ -8,6 +8,8 @@
 #include <cmath>
 #include <string_view>
 
+#include <lyra/lyra.hpp>
+
 #include "ads/executor/galois.hpp"
 #include "ads/lin/band_matrix.hpp"
 #include "ads/lin/tensor.hpp"
@@ -18,6 +20,19 @@
 #include "results.hpp"
 #include "spaces.hpp"
 #include "state.hpp"
+
+auto validate_args(lyra::cli const& cli, lyra::parse_result const& result, bool show_help) -> void;
+
+template <typename Args>
+auto common_arg_parser(Args& args) -> lyra::cli {
+    return lyra::cli()                                                            //
+         | lyra::arg(args.n, "N")("mesh resolution").required()                   //
+         | lyra::arg(args.p, "p")("B-spline order").required()                    //
+         | lyra::arg(args.c, "c")("basis continuity").required()                  //
+         | lyra::arg(args.step_count, "steps")("# of time steps").required()      //
+         | lyra::arg(args.T, "T")("time interval [0, T] to simulate").required()  //
+        ;
+}
 
 auto fix_dof(int k, ads::dimension const& dim, ads::lin::band_matrix& K) -> void;
 

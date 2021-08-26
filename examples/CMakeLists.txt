@@ -18,6 +18,8 @@ function(add_example name)
   endif()
 endfunction()
 
+find_package(lyra REQUIRED)
+
 # --------------------------------------------------------------------
 # Problem definitions
 # --------------------------------------------------------------------
@@ -128,9 +130,10 @@ add_library(ads-example-maxwell-common OBJECT
   maxwell/maxwell_base.cpp
 )
 
-target_link_libraries(ads-example-maxwell-common PRIVATE
+target_link_libraries(ads-example-maxwell-common PUBLIC
   ADS
   ads-options-private
+  bfg::lyra
 )
 
 add_example(maxwell_uniform GALOIS
@@ -138,7 +141,6 @@ add_example(maxwell_uniform GALOIS
     maxwell/main_uniform.cpp
   LIBS
     ads-example-maxwell-common
-    clara::clara
 )
 
 add_example(maxwell_head MUMPS GALOIS
@@ -148,7 +150,6 @@ add_example(maxwell_head MUMPS GALOIS
     maxwell/maxwell_head_problem.cpp
   LIBS
     ads-example-maxwell-common
-    clara::clara
 )
 
 add_example(maxwell_ads MUMPS GALOIS
@@ -158,7 +159,6 @@ add_example(maxwell_ads MUMPS GALOIS
     maxwell/maxwell_head_problem.cpp
   LIBS
     ads-example-maxwell-common
-    clara::clara
 )
 
 add_example(tumor GALOIS

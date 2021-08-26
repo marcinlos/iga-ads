@@ -5,9 +5,10 @@
 #include <iostream>
 #include <string>
 
-#include <clara.hpp>
+#include <lyra/lyra.hpp>
 
 #include "maxwell_ads.hpp"
+#include "maxwell_base.hpp"
 
 auto parse_args(int argc, char* argv[]) {
     struct {
@@ -16,33 +17,18 @@ auto parse_args(int argc, char* argv[]) {
         std::string data_file;
     } args{};
 
-    bool help = false;
+    bool show_help = false;
 
-    using clara::Help, clara::Arg, clara::Opt;
-    auto const cli = Help(help)                                   //
-                   | Arg(args.n, "N").required()                  //
-                   | Arg(args.p, "p").required()                  //
-                   | Arg(args.c, "c").required()                  //
-                   | Arg(args.step_count, "steps").required()     //
-                   | Arg(args.T, "T").required()                  //
-                   | Arg(args.data_file, "data_file").required()  //
+    auto const desc = "Solver for non-stationary Maxwell equations with non-uniform material\n"
+                      "data using generalized ADS";
+
+    auto const cli = lyra::help(show_help).description(desc)                                  //
+                   | common_arg_parser(args)                                                  //
+                   | lyra::arg(args.data_file, "file")("file with material data").required()  //
         ;
 
     auto const result = cli.parse({argc, argv});
-
-    if (!result) {
-        std::cerr << "Error: " << result.errorMessage() << std::endl;
-        std::exit(1);
-    }
-    if (help) {
-        cli.writeToStream(std::cout);
-        std::exit(0);
-    }
-    if (argc < 7) {
-        cli.writeToStream(std::cout);
-        std::exit(1);
-    }
-
+    validate_args(cli, result, show_help);
     return args;
 }
 

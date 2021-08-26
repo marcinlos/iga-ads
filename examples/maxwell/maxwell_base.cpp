@@ -5,6 +5,18 @@
 
 #include <algorithm>
 
+void validate_args(lyra::cli const& cli, lyra::parse_result const& result, bool show_help) {
+    if (!result) {
+        std::cerr << "Error: " << result.errorMessage() << std::endl;
+        std::cerr << cli << std::endl;
+        std::exit(1);
+    }
+    if (show_help) {
+        std::cout << cli << std::endl;
+        std::exit(0);
+    }
+}
+
 auto fix_dof(int k, ads::dimension const& dim, ads::lin::band_matrix& K) -> void {
     auto const last = dim.dofs() - 1;
 
