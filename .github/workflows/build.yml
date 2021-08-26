@@ -43,7 +43,7 @@ jobs:
         id: cache-libs
         with:
           path: ${{ env.INSTALL_PREFIX }}
-          key: libs-${{ steps.prepare.outputs.cxx-family }}
+          key: libs-v2-${{ steps.prepare.outputs.cxx-family }}
 
       - name: Build dependencies
         if: steps.cache-libs.outputs.cache-hit != 'true'
@@ -113,7 +113,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.INSTALL_PREFIX }}
-          key: libs-${{ steps.prepare.outputs.cxx-family }}
+          key: libs-v2-${{ steps.prepare.outputs.cxx-family }}
 
       - name: Configure
         uses: ./.github/actions/configure
@@ -158,7 +158,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.INSTALL_PREFIX }}
-          key: libs-${{ steps.prepare.outputs.cxx-family }}
+          key: libs-v2-${{ steps.prepare.outputs.cxx-family }}
 
       - name: Configure
         uses: ./.github/actions/configure
@@ -193,7 +193,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.INSTALL_PREFIX }}
-          key: libs-${{ steps.prepare.outputs.cxx-family }}
+          key: libs-v2-${{ steps.prepare.outputs.cxx-family }}
 
       - name: Setup tools
         run: |
