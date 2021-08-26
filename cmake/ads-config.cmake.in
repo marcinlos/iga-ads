@@ -8,8 +8,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/Modules")
 find_dependency(BLAS)
 find_dependency(LAPACK)
 
-find_dependency(Boost)
-find_dependency(fmt)
+find_dependency(Boost 1.58.0)
+find_dependency(fmt 7.1)
 
 if (ADS_USE_GALOIS)
   find_dependency(Galois 6.0)
