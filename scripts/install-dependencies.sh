@@ -57,6 +57,25 @@ cmake \
 cmake --build fmt/build
 cmake --install fmt/build
 
+# Install Lyra
+LYRA_VER=1.5.1
+curl -sL https://github.com/bfgroup/Lyra/archive/refs/tags/${LYRA_VER}.tar.gz -o lyra.tar.gz
+tar xzf lyra.tar.gz
+rm lyra.tar.gz
+mv Lyra-${LYRA_VER} Lyra
+
+mkdir -p Lyra/build
+
+cmake \
+  -S Lyra \
+  -B Lyra/build \
+  -D CMAKE_BUILD_TYPE=${BUILD_TYPE} \
+  -D CMAKE_INSTALL_PREFIX="${INSTALL_DIR}" \
+  -D CMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+cmake --build Lyra/build
+cmake --install Lyra/build
+
 # Install Galois
 GALOIS_VER=6.0
 git clone --branch release-${GALOIS_VER} --depth=1 --quiet https://github.com/IntelligentSoftwareSystems/Galois
