@@ -19,8 +19,9 @@ auto parse_args(int argc, char* argv[]) {
 
     bool show_help = false;
 
-    auto const desc = "Solver for non-stationary Maxwell equations with non-uniform material\n"
-                      "data using generalized ADS";
+    auto const* const desc =
+        "Solver for non-stationary Maxwell equations with non-uniform material\n"
+        "data using generalized ADS";
 
     auto const cli = lyra::help(show_help).description(desc)                                  //
                    | common_arg_parser(args)                                                  //
