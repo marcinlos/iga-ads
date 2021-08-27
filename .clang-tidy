@@ -92,6 +92,9 @@ CheckOptions:
   # Single statements don't have to be braced
   - { key: readability-braces-around-statements.ShortStatementLines, value: 2 }
 
+  # Warn about arguments passed to ctors by value and not moved from
+  - { key: modernize-pass-by-value.ValuesOnly, value: true }
+
 # Check all headers
 HeaderFilterRegex: .*
 
