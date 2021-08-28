@@ -1,0 +1,3 @@
+[codespell]
+skip = .git,external,*build*
+quiet-level = 7
