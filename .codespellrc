@@ -1,3 +1,4 @@
 [codespell]
 skip = .git,external,*build*
 quiet-level = 7
+ignore-words-list = dof
