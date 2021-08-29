@@ -239,9 +239,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install codespell
-        run: |
-          sudo apt-get update
-          sudo apt-get install codespell
+        run: sudo pip install codespell
 
       - name: Run codespell
         run: scripts/spelling.sh
