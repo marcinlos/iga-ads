@@ -19,7 +19,7 @@ class linear_elasticity : public ads::simulation_3d {
     struct state {
         vector_type ux, uy, uz;
         vector_type vx, vy, vz;
-        state(std::array<int, 3> shape)
+        explicit state(std::array<int, 3> shape)
         : ux{shape}
         , uy{shape}
         , uz{shape}
@@ -46,7 +46,7 @@ class linear_elasticity : public ads::simulation_3d {
     }
 
 public:
-    linear_elasticity(const ads::config_3d& config)
+    explicit linear_elasticity(const ads::config_3d& config)
     : Base{config}
     , now{shape()}
     , prev{shape()}
