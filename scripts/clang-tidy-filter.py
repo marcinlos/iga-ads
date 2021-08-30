@@ -3,6 +3,7 @@
 
 import re
 from dataclasses import dataclass
+from operator import itemgetter
 from typing import Tuple
 from pathlib import Path
 import argparse
@@ -157,6 +158,37 @@ def make_matcher(args):
     return satisfied
 
 
+def print_warnings(warnings, args):
+    """Print a list of warning occurrences."""
+
+    def key(warning):
+        return (warning.file, warning.line, warning.column)
+
+    warnings.sort(key=key)
+
+    for warning in warnings:
+        if args.first_line:
+            text = warning.text.partition("\n")[0] + "\n"
+        else:
+            text = warning.text
+        print(text, end="")
+
+
+def print_summary(warnings):
+    """Print a summary with warning names and occurrence counts."""
+
+    counts = {}
+
+    for warning in warnings:
+        for c in warning.codes:
+            counts[c] = counts.get(c, 0) + 1
+
+    pairs = sorted(counts.items(), key=itemgetter(1), reverse=True)
+
+    for name, count in pairs:
+        print(f"{count:5}  {name}")
+
+
 def main():
     """Entry point of the script."""
     parser = argparse.ArgumentParser()
@@ -165,6 +197,7 @@ def main():
     parser.add_argument("--files", "-f")
     parser.add_argument("--exclude")
     parser.add_argument("--first-line", action="store_true")
+    parser.add_argument("--summary", action="store_true")
     args = parser.parse_args()
 
     warnings = read_warnings(args.file)
@@ -172,17 +205,10 @@ def main():
     pred = make_matcher(args)
     matching = list(filter(pred, warnings))
 
-    def key(warning):
-        return (warning.file, warning.line, warning.column)
-
-    matching.sort(key=key)
-
-    for warning in matching:
-        if args.first_line:
-            text = warning.text.partition("\n")[0] + "\n"
-        else:
-            text = warning.text
-        print(text, end="")
+    if args.summary:
+        print_summary(matching)
+    else:
+        print_warnings(matching, args)
 
     print(f"\x1B[0mTotal: {len(matching)}")
 
