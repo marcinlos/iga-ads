@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""
-Script for deduplicating and filtering clang-tidy output.
-"""
+"""Script for deduplicating and filtering clang-tidy output."""
 
 import re
 from dataclasses import dataclass
@@ -32,15 +30,15 @@ class WarningInfo:
 
     @property
     def data(self):
-        """Complete, non-redundant set of attributes identifying the
-        warning occurrence.
-        """
+        """Complete set of attributes uniquely identifying the occurrence."""
         return (self.codes, self.file, self.position)
 
     def __eq__(self, other):
+        """Equality comparison based on data property."""
         return self.data == other.data
 
     def __hash__(self):
+        """Hash based on data property."""
         return hash(self.data)
 
 
@@ -56,7 +54,7 @@ LOCATION_PAT = re.compile(r"^(\x1B\[[0-9;]+m)*(.*):(\d+):(\d+):")
 
 
 def extract_codes(text: str) -> Tuple[str, ...]:
-    """Extracts names of warnings from full warning text."""
+    """Extract names of warnings from full warning text."""
     match = CODES_PAT.search(text)
     if not match:
         raise ValueError("No warning code found")
@@ -64,7 +62,7 @@ def extract_codes(text: str) -> Tuple[str, ...]:
 
 
 def find_location(text: str) -> re.Match:
-    """Finds the location information in the full warning text."""
+    """Find the location information in the full warning text."""
     match = LOCATION_PAT.search(text)
     if not match:
         raise ValueError("No location information found")
@@ -72,7 +70,7 @@ def find_location(text: str) -> re.Match:
 
 
 def extract_location(match: re.Match) -> Tuple[Path, Tuple[int, int]]:
-    """Creates a tuple with warning occurrence location data."""
+    """Create a tuple with warning occurrence location data."""
     path = Path(match.group(2)).resolve()
     path = relative_to_project(path)
     line = int(match.group(3))
@@ -81,14 +79,14 @@ def extract_location(match: re.Match) -> Tuple[Path, Tuple[int, int]]:
 
 
 def replace_location(match: re.Match, location: str) -> str:
-    """Replaces location data in the warning string."""
+    """Replace location data in the warning string."""
     text = match.string
     start, end = match.span(2)
     return text[:start] + location + text[end:]
 
 
 def parse_warning(text: str) -> WarningInfo:
-    """Creates a WarningInfo object from the full warning text."""
+    """Create a WarningInfo object from the full warning text."""
     codes = extract_codes(text)
     match = find_location(text)
     file, pos = extract_location(match)
@@ -97,12 +95,13 @@ def parse_warning(text: str) -> WarningInfo:
 
 
 def starts_new_warning(line) -> bool:
-    """Returns true if the line starts a new warning."""
+    """Return true if the line starts a new warning."""
     return "warning:" in line
 
 
 def matches(pattern):
-    """Creates a predicate that accepts strings matching the pattern."""
+    """Create a predicate that accepts strings matching the pattern."""
+
     def predicate(text):
         match = re.search(pattern, text)
         return match is not None
@@ -111,8 +110,8 @@ def matches(pattern):
 
 
 def read_warnings(path):
-    """Parses clang-tidy output and returns a set of WarningInfo objects."""
-    with open(path, "r") as file:
+    """Parse clang-tidy output and returns a set of WarningInfo objects."""
+    with open(path, "r", encoding="utf-8") as file:
         lines = file.readlines()
 
     warnings = set()
@@ -140,7 +139,7 @@ def read_warnings(path):
 
 
 def make_matcher(args):
-    """Returns a warning filter based on the CLI arguments."""
+    """Return a warning filter based on the CLI arguments."""
     checks = []
 
     if args.code:
