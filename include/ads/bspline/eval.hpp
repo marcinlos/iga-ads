@@ -44,7 +44,6 @@ struct evaluator {
 
         index_type idx;
         return eval(p, spans, bufs, idx, 1, 0);
-        return 0;
     }
 
     template <typename Point>
