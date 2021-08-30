@@ -35,7 +35,7 @@ jobs:
         id: cache-libs
         with:
           path: ${{ env.INSTALL_PREFIX }}
-          key: libs-${{ steps.prepare.outputs.cxx-family }}
+          key: libs-v2-${{ steps.prepare.outputs.cxx-family }}
 
       - name: Build dependencies
         if: steps.cache-libs.outputs.cache-hit != 'true'
