@@ -56,7 +56,7 @@ def validate_guards(path, lines):
         match_endif = ENDIF_PATTERN.match(lines[-1])
         matches = (match_ifndef, match_define, match_endif)
 
-        ensure(all(matches), f"Missing some lines of guards")
+        ensure(all(matches), "Missing some lines of guards")
 
         names = {m.group(1) for m in matches}
 
