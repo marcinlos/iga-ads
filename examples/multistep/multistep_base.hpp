@@ -21,10 +21,10 @@ protected:
     std::vector<int> fibo;
 
 public:
-    multistep_base(scheme scm, int order)
+    multistep_base(const scheme& scm, int order)
     : s{scm.s}
-    , as{std::move(scm.as)}
-    , bs{std::move(scm.bs)}
+    , as{scm.as}
+    , bs{scm.bs}
     , order{order}
     , fibo(order) {
         compute_fib(fibo, order);
