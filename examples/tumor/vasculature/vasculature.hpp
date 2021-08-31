@@ -53,7 +53,7 @@ private:
     std::mt19937 rng;
 
 public:
-    vasculature(std::vector<node_ptr> roots, config cfg);
+    vasculature(std::vector<node_ptr> roots, const config& cfg);
 
     void plot_veins(const std::string& file) const { plot(file, veins); }
 

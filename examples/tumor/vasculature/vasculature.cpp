@@ -5,7 +5,7 @@
 
 namespace tumor::vasc {
 
-vasculature::vasculature(std::vector<node_ptr> roots, config cfg)
+vasculature::vasculature(std::vector<node_ptr> roots, const config& cfg)
 : cfg{cfg}
 , roots{std::move(roots)} {
     std::queue<node_ptr> q;
