@@ -88,6 +88,21 @@ add_example(erikkson_mumps MUMPS GALOIS
   SRC
   erikkson/main_mumps.cpp)
 
+add_example(erikkson_inverse MUMPS GALOIS
+  SRC
+    erikkson/main_inverse.cpp
+    erikkson/inverse.cpp
+  LIBS
+    bfg::lyra
+)
+
+add_example(inverse_postprocess MUMPS GALOIS
+  SRC
+    erikkson/inverse_postprocess.cpp
+    erikkson/inverse.cpp
+  LIBS
+    bfg::lyra
+)
 add_example(erikkson_nonstationary MUMPS GALOIS
   SRC
   erikkson/main_nonstationary.cpp)
