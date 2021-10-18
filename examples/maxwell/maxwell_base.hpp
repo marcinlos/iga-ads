@@ -103,10 +103,6 @@ protected:
         compute_rhs(rhs.E3, prev, prev, U, U.E3, [=](auto E, auto, auto H, auto v, auto x) {
             return (E[Z].val + a(x) * (H[Y].dx - H[X].dy)) * v.val + b(x) * E[X].dz * v.dx;
         });
-
-        zero_sides("yz", rhs.E1, U.E1);
-        zero_sides("xz", rhs.E2, U.E2);
-        zero_sides("xy", rhs.E3, U.E3);
     }
 
     template <typename C>
@@ -126,10 +122,6 @@ protected:
         compute_rhs(rhs.H3, prev, mid, U, U.H3, [=](auto E, auto En, auto H, auto v, auto x) {
             return (H[Z].val - c(x) * (E[Y].dx - En[X].dy)) * v.val;
         });
-
-        zero_sides("x", rhs.H1, U.H1);
-        zero_sides("y", rhs.H2, U.H2);
-        zero_sides("z", rhs.H3, U.H3);
     }
 
     template <typename A, typename B>
@@ -149,10 +141,6 @@ protected:
         compute_rhs(rhs.E3, prev, prev, U, U.E3, [=](auto E, auto, auto H, auto v, auto x) {
             return (E[Z].val + a(x) * (H[Y].dx - H[X].dy)) * v.val + b(x) * E[Y].dz * v.dy;
         });
-
-        zero_sides("yz", rhs.E1, U.E1);
-        zero_sides("xz", rhs.E2, U.E2);
-        zero_sides("xy", rhs.E3, U.E3);
     }
 
     template <typename C>
@@ -172,7 +160,15 @@ protected:
         compute_rhs(rhs.H3, prev, mid, U, U.H3, [=](auto E, auto En, auto H, auto v, auto x) {
             return (H[Z].val - c(x) * (En[Y].dx - E[X].dy)) * v.val;
         });
+    }
 
+    auto apply_bc_E(state& rhs, space_set const& U) const -> void {
+        zero_sides("yz", rhs.E1, U.E1);
+        zero_sides("xz", rhs.E2, U.E2);
+        zero_sides("xy", rhs.E3, U.E3);
+    }
+
+    auto apply_bc_H(state& rhs, space_set const& U) const -> void {
         zero_sides("x", rhs.H1, U.H1);
         zero_sides("y", rhs.H2, U.H2);
         zero_sides("z", rhs.H3, U.H3);

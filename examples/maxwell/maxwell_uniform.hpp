@@ -123,16 +123,20 @@ private:
 
         // First substep
         substep1_fill_E(mid, prev, U, a, b);
+        apply_bc_E(mid, U);
         substep1_solve_E(mid, buffer);
 
         substep1_fill_H(mid, prev, mid, U, c);
+        apply_bc_H(mid, U);
         solve_H(mid, buffer);
 
         // Second substep
         substep2_fill_E(now, mid, U, a, b);
+        apply_bc_E(now, U);
         substep2_solve_E(now, buffer);
 
         substep2_fill_H(now, mid, now, U, c);
+        apply_bc_H(now, U);
         solve_H(now, buffer);
     }
 
