@@ -169,7 +169,7 @@ add_example(maxwell_head MUMPS GALOIS
     ads-example-maxwell-common
 )
 
-add_example(maxwell_ads MUMPS GALOIS
+add_example(maxwell_ads GALOIS
   SRC
     maxwell/main_ads.cpp
     maxwell/head_data.cpp
