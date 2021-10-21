@@ -69,10 +69,6 @@ private:
         factorize_matrices(U);
         factorize_matrices(V);
 
-        Bx.zero();
-        By.zero();
-        Bz.zero();
-
         auto tau = steps.dt;
         auto h = tau * tau / (4 * problem.eps({0.5, 0.5}) * problem.mu({0.5, 0.5}));
         auto form = [h](auto u, auto v) { return u.val * v.val + h * u.dx * v.dx; };
@@ -113,7 +109,9 @@ private:
     void step(int /*iter*/, double t) override {
         const auto tau = steps.dt;
         const auto a = [this, tau](auto x) { return tau / (2 * problem.eps(x)); };
-        const auto b = [this, tau](auto x) { return tau * tau / (4 * problem.eps(x)); };
+        const auto b = [this, tau](auto x) {
+            return tau * tau / (4 * problem.eps(x) * problem.mu(x));
+        };
         const auto c = [this, tau](auto x) { return tau / (2 * problem.mu(x)); };
 
         const auto shape = vector_shape(V);
@@ -138,6 +136,49 @@ private:
 
         substep2_fill_H(now, mid, now, U, c);
         solve_H(now, buffer);
+
+        // zero(now.E1);
+        // zero(now.E2);
+        // zero(now.E3);
+        // integrate_U(t, now);
+
+        // zero(now.E1);
+        // zero(now.E2);
+        // zero(now.E3);
+        // zero(now.H1);
+        // zero(now.H2);
+        // zero(now.H3);
+
+        // project(now.E1, U.E1, problem.E1_val_at(t));
+        // project(now.E2, U.E2, problem.E2_val_at(t));
+        // project(now.E3, U.E3, problem.E3_val_at(t));
+
+        // project(now.H1, U.H1, problem.H1_val_at(t));
+        // project(now.H2, U.H2, problem.H2_val_at(t));
+        // project(now.H3, U.H3, problem.H3_val_at(t));
+    }
+
+    auto integrate_U(double t, state& rhs) -> void {
+        auto out = [](auto& buf) { return [&buf](int J, double val) { buf.data()[J] += val; }; };
+
+        assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E1),
+                     [&](auto v, auto xx, auto const& face) {
+                         auto const x = as_array(xx);
+                         auto const f = problem.U1(x, t) * problem.eta;
+                         return f * v.val;
+                     });
+        assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E2),
+                     [&](auto v, auto xx, auto const& face) {
+                         auto const x = as_array(xx);
+                         auto const f = problem.U2(x, t) * problem.eta;
+                         return f * v.val;
+                     });
+        assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E3),
+                     [&](auto v, auto xx, auto const& face) {
+                         auto const x = as_array(xx);
+                         auto const f = problem.U3(x, t) * problem.eta;
+                         return f * v.val;
+                     });
     }
 
     auto substep1_boundary_E(double t, state& rhs, state& prev, state& pprev) -> void {
@@ -145,7 +186,7 @@ private:
         const auto a = [this, tau](auto x) {
             return -tau * tau / (4 * problem.eps(x) * problem.mu(x));
         };
-        // const auto b = [this](auto x) { return std::sqrt(problem.mu(x) / problem.eps(x)); };
+        const auto mu = [this](auto x) { return problem.mu(x); };
         const auto b = [this](auto x) { return problem.mu(x) / problem.eta; };
 
         auto out = [](auto& buf) { return [&buf](int J, double val) { buf.data()[J] += val; }; };
@@ -166,7 +207,7 @@ private:
                      [&](auto v, auto xx, auto const& face) {
                          auto const x = as_array(xx);
                          auto const ok = std::abs(std::get<1>(face.normal));
-                         auto const f = problem.U1(x, t) + b(x) * dE1_dt(xx);
+                         auto const f = mu(x) * problem.U1(x, t) + b(x) * dE1_dt(xx);
                          return ok * a(x) * f * v.val;
                      });
 
@@ -174,7 +215,7 @@ private:
                      [&](auto v, auto xx, auto const& face) {
                          auto const x = as_array(xx);
                          auto const ok = std::abs(std::get<2>(face.normal));
-                         auto const f = problem.U2(x, t) + b(x) * dE2_dt(xx);
+                         auto const f = mu(x) * problem.U2(x, t) + b(x) * dE2_dt(xx);
                          return ok * a(x) * f * v.val;
                      });
 
@@ -182,7 +223,7 @@ private:
                      [&](auto v, auto xx, auto const& face) {
                          auto const x = as_array(xx);
                          auto const ok = std::abs(std::get<0>(face.normal));
-                         auto const f = problem.U3(x, t) + b(x) * dE3_dt(xx);
+                         auto const f = mu(x) * problem.U3(x, t) + b(x) * dE3_dt(xx);
                          return ok * a(x) * f * v.val;
                      });
     }
@@ -192,7 +233,7 @@ private:
         const auto a = [this, tau](auto x) {
             return -tau * tau / (4 * problem.eps(x) * problem.mu(x));
         };
-        // const auto b = [this](auto x) { return std::sqrt(problem.mu(x) / problem.eps(x)); };
+        const auto mu = [this](auto x) { return problem.mu(x); };
         const auto b = [this](auto x) { return problem.mu(x) / problem.eta; };
 
         auto out = [](auto& buf) { return [&buf](int J, double val) { buf.data()[J] += val; }; };
@@ -213,7 +254,7 @@ private:
                      [&](auto v, auto xx, auto const& face) {
                          auto const x = as_array(xx);
                          auto const ok = std::abs(std::get<2>(face.normal));
-                         auto const f = problem.U1(x, t) + b(x) * dE1_dt(xx);
+                         auto const f = mu(x) * problem.U1(x, t) + b(x) * dE1_dt(xx);
                          return ok * a(x) * f * v.val;
                      });
 
@@ -221,7 +262,7 @@ private:
                      [&](auto v, auto xx, auto const& face) {
                          auto const x = as_array(xx);
                          auto const ok = std::abs(std::get<0>(face.normal));
-                         auto const f = problem.U2(x, t) + b(x) * dE2_dt(xx);
+                         auto const f = mu(x) * problem.U2(x, t) + b(x) * dE2_dt(xx);
                          return ok * a(x) * f * v.val;
                      });
 
@@ -229,7 +270,7 @@ private:
                      [&](auto v, auto xx, auto const& face) {
                          auto const x = as_array(xx);
                          auto const ok = std::abs(std::get<1>(face.normal));
-                         auto const f = problem.U3(x, t) + b(x) * dE3_dt(xx);
+                         auto const f = mu(x) * problem.U3(x, t) + b(x) * dE3_dt(xx);
                          return ok * a(x) * f * v.val;
                      });
     }
@@ -242,12 +283,41 @@ private:
         const auto i = iter + 1;
         const auto tt = t + steps.dt;
 
-        if (i % 10 == 0)
+        if (i % 1 == 0)
             output_solution(output, i, now);
 
         const auto res = compute_norms(now, U, problem, tt);
         std::cout << "After step " << i << ", t = " << tt << '\n';
         print_result_info(res);
+
+        constexpr int n = 4;
+        auto print_face = [this, n, t](auto make_point) {
+            for (int i = 1; i <= n; ++i) {
+                for (int j = 1; j <= n; ++j) {
+                    auto const a = static_cast<double>(i) / (n + 1);
+                    auto const b = static_cast<double>(j) / (n + 1);
+                    auto const s = problem.eta / problem.omega;
+                    auto const p = make_point(a, b);
+                    auto const U1 = problem.U1(p, t);
+                    auto const U2 = problem.U2(p, t);
+                    auto const U3 = problem.U3(p, t);
+                    fmt::print("({:.2f}, {:.2f}, {:.2f}) -> {} x [{}, {}, {}]\n", p[0], p[1], p[2],
+                               1 / s, U1 * s, U2 * s, U3 * s);
+                }
+            }
+        };
+        fmt::print(">>>>> n = -X\n");
+        print_face([](double a, double b) { return point_type{0, a, b}; });
+        fmt::print(">>>>> n = +X\n");
+        print_face([](double a, double b) { return point_type{1, a, b}; });
+        fmt::print(">>>>> n = -Y\n");
+        print_face([](double a, double b) { return point_type{a, 0, b}; });
+        fmt::print(">>>>> n = +Y\n");
+        print_face([](double a, double b) { return point_type{a, 1, b}; });
+        fmt::print(">>>>> n = -Z\n");
+        print_face([](double a, double b) { return point_type{a, b, 0}; });
+        fmt::print(">>>>> n = +Z\n");
+        print_face([](double a, double b) { return point_type{a, b, 1}; });
     }
 };
 

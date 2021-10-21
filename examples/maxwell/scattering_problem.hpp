@@ -17,21 +17,23 @@ class scattering_problem : public maxwell_problem<scattering_problem> {
 public:
     static constexpr double pi = M_PI;
 
-    static constexpr double c = 3 * 1e8;
     static constexpr double eps0 = 8.854e-12;
     static constexpr double mu0 = 12.556e-7;
-    static constexpr double Z = c * mu0;  // 120 * pi;
-    static constexpr double eta = Z;      // std::sqrt(mu0 * eps0);
+    static constexpr double c = 1 / std::sqrt(eps0 * mu0);
+    static constexpr double eta = c * mu0;
 
-    static constexpr double f = 3 * 1e8;
+    static constexpr double f = 2 * c;
     static constexpr double omega = 2 * pi * f;
     static constexpr double k = omega / c;
+    static constexpr double T0 = 1 / f;
+    static constexpr double tau = 2 * T0;
 
     auto eps(point_type /*x*/) const -> double { return eps0; }
     auto mu(point_type /*x*/) const -> double { return mu0; }
 
     auto E1(point_type x, double t) const -> value_type {
-        auto const val = std::cos(omega * t - k * x[2]) * excitation(t);
+        auto const z = x[2];
+        auto const val = std::cos(omega * t - k * z) * excitation(t - z / c);
         return {val, 0, 0, 0};
     }
 
@@ -42,26 +44,28 @@ public:
     auto H1(point_type /*x*/, double /*t*/) const -> value_type { return {}; }
 
     auto H2(point_type x, double t) const -> value_type {
-        auto const val = 1 / Z * std::cos(omega * t - k * x[2]) * excitation(t);
+        auto const z = x[2];
+        auto const val = 1 / eta * std::cos(omega * t - k * z) * excitation(t - z / c);
         return {val, 0, 0, 0};
     }
 
     auto H3(point_type /*x*/, double /*t*/) const -> value_type { return {}; }
 
-    auto Uval(point_type x, double t) const -> double {
-        return omega / eta * std::sin(omega * t - k * x[2]);
-    }
-
     auto excitation(double t) const -> double {
-        constexpr double tau = 1 / omega;
-        return (1 - std::exp(-t / tau)) * std::sin(omega * t);
+        return t > 0 ? (1 - std::exp(-t / tau)) : 0;
         // return 1.0;
     }
 
     auto dexcitation(double t) const -> double {
-        constexpr double tau = 1 / omega;
-        return 1 / tau * std::exp(-t / tau) * std::sin(omega * t)
-             + (1 - std::exp(-t / tau)) * omega * std::cos(omega * t);
+        return t > 0 ? (1 / tau * std::exp(-t / tau)) : 0;
+        // return 0;
+    }
+
+    auto A(point_type x, double t) const -> double {
+        auto const z = x[2];
+        auto const sin = std::sin(omega * t - k * z);
+        auto const cos = std::cos(omega * t - k * z);
+        return omega * sin * excitation(t - z / c) - cos * dexcitation(t - z / c);
     }
 
     auto normal(point_type x) const -> ads::math::vec<3> {
@@ -85,15 +89,8 @@ public:
         auto const xx = ads::math::vec<3>{1, 0, 0};
         auto const yy = ads::math::vec<3>{0, 1, 0};
         auto const n = normal(x);
-        auto const e = excitation(t);
-        auto const de = dexcitation(t);
-        auto const sin = std::sin(omega * t - k * x[2]);
-        auto const cos = std::cos(omega * t - k * x[2]);
 
-        auto const curlE = k * sin;
-        auto const dE_dt = -omega / eta * sin * e + cos * de;
-
-        return cross(n, yy) * curlE / mu0 + cross(n, cross(n, xx)) * dE_dt;
+        return (cross(n, yy) - cross(n, cross(n, xx))) * A(x, t) / eta;
     }
 
     auto U1(point_type x, double t) const -> double { return U(x, t).x; };
