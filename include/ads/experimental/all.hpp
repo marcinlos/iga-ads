@@ -1028,7 +1028,7 @@ private:
     auto linearized(dof_index dof, std::array<int, 2> bounds) const noexcept -> simple_index {
         const auto [ix, iy] = dof;
         const auto [nx, ny] = bounds;
-        const auto order = standard_ordering<2>{{nx, ny}};
+        const auto order = reverse_ordering<2>{{nx, ny}};
         return order.linear_index(ix, iy);
     }
 };
@@ -1878,7 +1878,7 @@ private:
     auto linearized(dof_index dof, std::array<int, 3> bounds) const noexcept -> simple_index {
         const auto [ix, iy, iz] = dof;
         const auto [nx, ny, nz] = bounds;
-        const auto order = standard_ordering<3>{{nx, ny, nz}};
+        const auto order = reverse_ordering<3>{{nx, ny, nz}};
         return order.linear_index(ix, iy, iz);
     }
 };
