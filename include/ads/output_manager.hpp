@@ -86,11 +86,15 @@ private:
 
 public:
     output_manager(const bspline::basis& bx, const bspline::basis& by, const bspline::basis& bz,
-                   std::size_t n)
-    : x{bx, n}
-    , y{by, n}
-    , z{bz, n}
+                   std::size_t nx, std::size_t ny, std::size_t nz)
+    : x{bx, nx}
+    , y{by, ny}
+    , z{bz, nz}
     , vals{{x.size(), y.size(), z.size()}} { }
+
+    output_manager(const bspline::basis& bx, const bspline::basis& by, const bspline::basis& bz,
+                   std::size_t n)
+    : output_manager{bx, by, bz, n, n, n} { }
 
     using output_manager_base::to_file;
 
