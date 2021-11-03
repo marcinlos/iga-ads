@@ -38,13 +38,20 @@ int main(int argc, char* argv[]) {
     auto const dt = args.T / args.step_count;
     auto const steps = ads::timesteps_config{args.step_count, dt};
 
-    auto const dim = ads::dim_config{args.p, args.n};
-    auto const cfg = ads::config_3d{dim, dim, dim, steps, 1};
+    auto const nx = 1;
+    auto const ny = 1;
+    auto const nz = 160;
+    auto const end_z = 20.0;
+
+    auto const dim_x = ads::dim_config{args.p, nx};
+    auto const dim_y = ads::dim_config{args.p, ny};
+    auto const dim_z = ads::dim_config{args.p, nz, 0.0, end_z};
+    auto const cfg = ads::config_3d{dim_x, dim_y, dim_z, steps, 1};
 
     // new interface
-    auto xs = ads::evenly_spaced(0.0, 1.0, args.n);
-    auto ys = ads::evenly_spaced(0.0, 1.0, args.n);
-    auto zs = ads::evenly_spaced(0.0, 1.0, args.n);
+    auto xs = ads::evenly_spaced(0.0, 1.0, nx);
+    auto ys = ads::evenly_spaced(0.0, 1.0, ny);
+    auto zs = ads::evenly_spaced(0.0, end_z, nz);
 
     auto bx = ads::make_bspline_basis(xs, args.p, args.c);
     auto by = ads::make_bspline_basis(ys, args.p, args.c);

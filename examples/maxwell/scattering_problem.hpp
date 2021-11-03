@@ -27,6 +27,7 @@ public:
     static constexpr double k = omega / c;
     static constexpr double T0 = 1 / f;
     static constexpr double tau = 2 * T0;
+    static constexpr double t0 = 4 * tau;
 
     auto eps(point_type /*x*/) const -> double { return eps0; }
     auto mu(point_type /*x*/) const -> double { return mu0; }
@@ -52,12 +53,14 @@ public:
     auto H3(point_type /*x*/, double /*t*/) const -> value_type { return {}; }
 
     auto excitation(double t) const -> double {
-        return t > 0 ? (1 - std::exp(-t / tau)) : 0;
+        // return t > 0 ? (1 - std::exp(-t / tau)) : 0;
+        return t > 0 ? std::exp(-0.5 * std::pow((t - t0) / tau, 2)) : 0;
         // return 1.0;
     }
 
     auto dexcitation(double t) const -> double {
-        return t > 0 ? (1 / tau * std::exp(-t / tau)) : 0;
+        // return t > 0 ? (1 / tau * std::exp(-t / tau)) : 0;
+        return t > 0 ? -(t - t0) / (tau * tau) * std::exp(-0.5 * std::pow((t - t0) / tau, 2)) : 0;
         // return 0;
     }
 
@@ -91,6 +94,7 @@ public:
         auto const n = normal(x);
 
         return (cross(n, yy) - cross(n, cross(n, xx))) * A(x, t) / eta;
+        // return cross(n, yy) * A(x, t) / eta;
     }
 
     auto U1(point_type x, double t) const -> double { return U(x, t).x; };

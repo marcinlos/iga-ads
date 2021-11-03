@@ -57,8 +57,8 @@ public:
     , Bx_ctx{Bx}
     , By_ctx{By}
     , Bz_ctx{Bz}
-    , output{V.x.B, V.y.B, V.z.B, 50} { }
     , Bz_E1_ctx{Bz_E1}
+    , output{V.x.B, V.y.B, V.z.B, 2, 2, 400} { }
 
     void before_step(int /*iter*/, double /*t*/) override {
         using std::swap;
