@@ -30,8 +30,8 @@ private:
 
     state pprev, prev, half, now;
 
-    ads::lin::band_matrix Bx, By, Bz;
-    ads::lin::solver_ctx Bx_ctx, By_ctx, Bz_ctx;
+    ads::lin::band_matrix Bx, By, Bz, Bz_E1;
+    ads::lin::solver_ctx Bx_ctx, By_ctx, Bz_ctx, Bz_E1_ctx;
 
     Problem problem;
 
@@ -53,10 +53,12 @@ public:
     , Bx{V.x.p, V.x.p, V.x.dofs()}
     , By{V.y.p, V.y.p, V.y.dofs()}
     , Bz{V.z.p, V.z.p, V.z.dofs()}
+    , Bz_E1{V.z.p, V.z.p, V.z.dofs()}
     , Bx_ctx{Bx}
     , By_ctx{By}
     , Bz_ctx{Bz}
     , output{V.x.B, V.y.B, V.z.B, 50} { }
+    , Bz_E1_ctx{Bz_E1}
 
     void before_step(int /*iter*/, double /*t*/) override {
         using std::swap;
@@ -73,6 +75,8 @@ private:
         zero(U.E2.x);
         zero(U.E3.x);
 
+        U.E1.z.fix_right();
+
         factorize_matrices(U);
         factorize_matrices(V);
 
@@ -83,13 +87,17 @@ private:
         form_matrix(Bx, V.x.basis, form);
         form_matrix(By, V.y.basis, form);
         form_matrix(Bz, V.z.basis, form);
+        form_matrix(Bz_E1, V.z.basis, form);
 
         fix_dof(0, V.x, Bx);
         fix_dof(V.x.dofs() - 1, V.x, Bx);
 
+        fix_dof(V.z.dofs() - 1, V.z, Bz_E1);
+
         ads::lin::factorize(Bx, Bx_ctx);
         ads::lin::factorize(By, By_ctx);
         ads::lin::factorize(Bz, Bz_ctx);
+        ads::lin::factorize(Bz_E1, Bz_E1_ctx);
     }
 
     void before() override {
@@ -105,7 +113,7 @@ private:
     }
 
     auto substep2_solve_E(state& rhs, vector_type& buffer) -> void {
-        ads_solve(rhs.E1, buffer, U.E1.x.data(), U.E1.y.data(), ads::dim_data{Bz, Bz_ctx});
+        ads_solve(rhs.E1, buffer, U.E1.x.data(), U.E1.y.data(), ads::dim_data{Bz_E1, Bz_E1_ctx});
         ads_solve(rhs.E2, buffer, ads::dim_data{Bx, Bx_ctx}, U.E2.y.data(), U.E2.z.data());
         ads_solve(rhs.E3, buffer, U.E3.x.data(), ads::dim_data{By, By_ctx}, U.E3.z.data());
     }
@@ -136,6 +144,7 @@ private:
         substep1_boundary_E(t, mid, prev, pprev);
         zero_sides("x", mid.E2, U.E2);
         zero_sides("x", mid.E3, U.E3);
+        zero_z_up(mid.E1, U.E1);
         substep1_solve_E(mid, buffer);
 
         substep1_fill_H(mid, prev, mid, U, c);
@@ -146,6 +155,7 @@ private:
         substep2_boundary_E(t, now, mid, prev);
         zero_sides("x", now.E2, U.E2);
         zero_sides("x", now.E3, U.E3);
+        zero_z_up(now.E1, U.E1);
         substep2_solve_E(now, buffer);
 
         substep2_fill_H(now, mid, now, U, c);
@@ -170,6 +180,15 @@ private:
         // project(now.H1, U.H1, problem.H1_val_at(t));
         // project(now.H2, U.H2, problem.H2_val_at(t));
         // project(now.H3, U.H3, problem.H3_val_at(t));
+    }
+
+    auto zero_z_up(vector_type& rhs, space const& U) const -> void {
+        auto const nz = U.z.dofs();
+        for (int i = 0; i < U.x.dofs(); ++i) {
+            for (int j = 0; j < U.x.dofs(); ++j) {
+                rhs(i, j, nz - 1) = 0;
+            }
+        }
     }
 
     auto integrate_U(double t, state& rhs) -> void {
