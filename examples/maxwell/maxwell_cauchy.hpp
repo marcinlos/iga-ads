@@ -324,35 +324,6 @@ private:
         const auto res = compute_norms(now, U, problem, tt);
         std::cout << "After step " << i << ", t = " << tt << '\n';
         print_result_info(res);
-
-        constexpr int n = 4;
-        auto print_face = [this, n, t](auto make_point) {
-            for (int i = 1; i <= n; ++i) {
-                for (int j = 1; j <= n; ++j) {
-                    auto const a = static_cast<double>(i) / (n + 1);
-                    auto const b = static_cast<double>(j) / (n + 1);
-                    auto const s = problem.eta / problem.omega;
-                    auto const p = make_point(a, b);
-                    auto const U1 = problem.U1(p, t);
-                    auto const U2 = problem.U2(p, t);
-                    auto const U3 = problem.U3(p, t);
-                    fmt::print("({:.2f}, {:.2f}, {:.2f}) -> {} x [{}, {}, {}]\n", p[0], p[1], p[2],
-                               1 / s, U1 * s, U2 * s, U3 * s);
-                }
-            }
-        };
-        fmt::print(">>>>> n = -X\n");
-        print_face([](double a, double b) { return point_type{0, a, b}; });
-        fmt::print(">>>>> n = +X\n");
-        print_face([](double a, double b) { return point_type{1, a, b}; });
-        fmt::print(">>>>> n = -Y\n");
-        print_face([](double a, double b) { return point_type{a, 0, b}; });
-        fmt::print(">>>>> n = +Y\n");
-        print_face([](double a, double b) { return point_type{a, 1, b}; });
-        fmt::print(">>>>> n = -Z\n");
-        print_face([](double a, double b) { return point_type{a, b, 0}; });
-        fmt::print(">>>>> n = +Z\n");
-        print_face([](double a, double b) { return point_type{a, b, 1}; });
     }
 };
 
