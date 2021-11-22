@@ -72,10 +72,10 @@ private:
             dim.fix_left();
             dim.fix_right();
         };
-        zero(U.E2.x);
-        zero(U.E3.x);
+        // zero(U.E2.x);
+        // zero(U.E3.x);
 
-        U.E1.z.fix_right();
+        // U.E1.z.fix_right();
 
         factorize_matrices(U);
         factorize_matrices(V);
@@ -89,10 +89,10 @@ private:
         form_matrix(Bz, V.z.basis, form);
         form_matrix(Bz_E1, V.z.basis, form);
 
-        fix_dof(0, V.x, Bx);
-        fix_dof(V.x.dofs() - 1, V.x, Bx);
+        // fix_dof(0, V.x, Bx);
+        // fix_dof(V.x.dofs() - 1, V.x, Bx);
 
-        fix_dof(V.z.dofs() - 1, V.z, Bz_E1);
+        // fix_dof(V.z.dofs() - 1, V.z, Bz_E1);
 
         ads::lin::factorize(Bx, Bx_ctx);
         ads::lin::factorize(By, By_ctx);
@@ -142,9 +142,9 @@ private:
         // First substep
         substep1_fill_E(mid, prev, U, a, b);
         substep1_boundary_E(t, mid, prev, pprev);
-        zero_sides("x", mid.E2, U.E2);
-        zero_sides("x", mid.E3, U.E3);
-        zero_z_up(mid.E1, U.E1);
+        // zero_sides("x", mid.E2, U.E2);
+        // zero_sides("x", mid.E3, U.E3);
+        // zero_z_up(mid.E1, U.E1);
         substep1_solve_E(mid, buffer);
 
         substep1_fill_H(mid, prev, mid, U, c);
@@ -153,9 +153,9 @@ private:
         // Second substep
         substep2_fill_E(now, mid, U, a, b);
         substep2_boundary_E(t, now, mid, prev);
-        zero_sides("x", now.E2, U.E2);
-        zero_sides("x", now.E3, U.E3);
-        zero_z_up(now.E1, U.E1);
+        // zero_sides("x", now.E2, U.E2);
+        // zero_sides("x", now.E3, U.E3);
+        // zero_z_up(now.E1, U.E1);
         substep2_solve_E(now, buffer);
 
         substep2_fill_H(now, mid, now, U, c);
@@ -236,30 +236,30 @@ private:
         auto dE2_dt = [&](auto x) { return (E2_prev(x) - E2_pprev(x)) / tau; };
         auto dE3_dt = [&](auto x) { return (E3_prev(x) - E3_pprev(x)) / tau; };
 
-        // assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E1),
-        //              [&](auto v, auto xx, auto const& face) {
-        //                  auto const x = as_array(xx);
-        //                  auto const ok = std::abs(std::get<1>(face.normal));
-        //                  auto const f = mu(x) * problem.U1(x, t) + b(x) * dE1_dt(xx);
-        //                  return ok * a(x) * f * v.val;
-        //              });
+        assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E1),
+                     [&](auto v, auto xx, auto const& face) {
+                         auto const x = as_array(xx);
+                         auto const ok = std::abs(std::get<1>(face.normal));
+                         auto const f = mu(x) * problem.U1(x, t) + b(x) * dE1_dt(xx);
+                         return ok * a(x) * f * v.val;
+                     });
 
         assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E2),
                      [&](auto v, auto xx, auto const& face) {
                          auto const x = as_array(xx);
-                         // auto const ok = std::abs(std::get<2>(face.normal));
-                         auto const ok = static_cast<double>(std::get<2>(face.normal) == -1);
+                         auto const ok = std::abs(std::get<2>(face.normal));
+                         // auto const ok = static_cast<double>(std::get<2>(face.normal) == -1);
                          auto const f = mu(x) * problem.U2(x, t) + b(x) * dE2_dt(xx);
                          return ok * a(x) * f * v.val;
                      });
 
-        // assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E3),
-        //              [&](auto v, auto xx, auto const& face) {
-        //                  auto const x = as_array(xx);
-        //                  auto const ok = std::abs(std::get<0>(face.normal));
-        //                  auto const f = mu(x) * problem.U3(x, t) + b(x) * dE3_dt(xx);
-        //                  return ok * a(x) * f * v.val;
-        //              });
+        assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E3),
+                     [&](auto v, auto xx, auto const& face) {
+                         auto const x = as_array(xx);
+                         auto const ok = std::abs(std::get<0>(face.normal));
+                         auto const f = mu(x) * problem.U3(x, t) + b(x) * dE3_dt(xx);
+                         return ok * a(x) * f * v.val;
+                     });
     }
 
     auto substep2_boundary_E(double t, state& rhs, state& prev, state& pprev) -> void {
@@ -287,27 +287,27 @@ private:
         assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E1),
                      [&](auto v, auto xx, auto const& face) {
                          auto const x = as_array(xx);
-                         // auto const ok = std::abs(std::get<2>(face.normal));
-                         auto const ok = static_cast<double>(std::get<2>(face.normal) == -1);
+                         auto const ok = std::abs(std::get<2>(face.normal));
+                         // auto const ok = static_cast<double>(std::get<2>(face.normal) == -1);
                          auto const f = mu(x) * problem.U1(x, t) + b(x) * dE1_dt(xx);
                          return ok * a(x) * f * v.val;
                      });
 
-        // assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E2),
-        //              [&](auto v, auto xx, auto const& face) {
-        //                  auto const x = as_array(xx);
-        //                  auto const ok = std::abs(std::get<0>(face.normal));
-        //                  auto const f = mu(x) * problem.U2(x, t) + b(x) * dE2_dt(xx);
-        //                  return ok * a(x) * f * v.val;
-        //              });
+        assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E2),
+                     [&](auto v, auto xx, auto const& face) {
+                         auto const x = as_array(xx);
+                         auto const ok = std::abs(std::get<0>(face.normal));
+                         auto const f = mu(x) * problem.U2(x, t) + b(x) * dE2_dt(xx);
+                         return ok * a(x) * f * v.val;
+                     });
 
-        // assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E3),
-        //              [&](auto v, auto xx, auto const& face) {
-        //                  auto const x = as_array(xx);
-        //                  auto const ok = std::abs(std::get<1>(face.normal));
-        //                  auto const f = mu(x) * problem.U3(x, t) + b(x) * dE3_dt(xx);
-        //                  return ok * a(x) * f * v.val;
-        //              });
+        assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E3),
+                     [&](auto v, auto xx, auto const& face) {
+                         auto const x = as_array(xx);
+                         auto const ok = std::abs(std::get<1>(face.normal));
+                         auto const f = mu(x) * problem.U3(x, t) + b(x) * dE3_dt(xx);
+                         return ok * a(x) * f * v.val;
+                     });
     }
 
     auto as_array(ads::point3_t x) const -> point_type {
