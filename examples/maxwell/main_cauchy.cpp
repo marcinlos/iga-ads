@@ -43,9 +43,10 @@ int main(int argc, char* argv[]) {
     auto const nz = 160;
     auto const end_z = 20.0;
 
-    auto const dim_x = ads::dim_config{args.p, nx};
-    auto const dim_y = ads::dim_config{args.p, ny};
-    auto const dim_z = ads::dim_config{args.p, nz, 0.0, end_z};
+    auto const rep = args.p - args.c - 1;
+    auto const dim_x = ads::dim_config{args.p, nx, 0.0, 1.0, args.p + 1, rep};
+    auto const dim_y = ads::dim_config{args.p, ny, 0.0, 1.0, args.p + 1, rep};
+    auto const dim_z = ads::dim_config{args.p, nz, 0.0, end_z, args.p + 1, rep};
     auto const cfg = ads::config_3d{dim_x, dim_y, dim_z, steps, 1};
 
     // new interface
