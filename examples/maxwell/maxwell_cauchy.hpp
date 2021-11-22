@@ -195,19 +195,19 @@ private:
         auto out = [](auto& buf) { return [&buf](int J, double val) { buf.data()[J] += val; }; };
 
         assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E1),
-                     [&](auto v, auto xx, auto const& face) {
+                     [&](auto v, auto xx, auto const&) {
                          auto const x = as_array(xx);
                          auto const f = problem.U1(x, t) * problem.eta;
                          return f * v.val;
                      });
         assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E2),
-                     [&](auto v, auto xx, auto const& face) {
+                     [&](auto v, auto xx, auto const&) {
                          auto const x = as_array(xx);
                          auto const f = problem.U2(x, t) * problem.eta;
                          return f * v.val;
                      });
         assemble_rhs(mesh_.boundary_facets(), space_, quad_, out(rhs.E3),
-                     [&](auto v, auto xx, auto const& face) {
+                     [&](auto v, auto xx, auto const&) {
                          auto const x = as_array(xx);
                          auto const f = problem.U3(x, t) * problem.eta;
                          return f * v.val;
