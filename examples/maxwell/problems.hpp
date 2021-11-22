@@ -8,9 +8,35 @@
 #include <cmath>
 
 #include "ads/util/function_value.hpp"
+#include "ads/util/math/vec.hpp"
 
 using value_type = ads::function_value_3d;
 using point_type = std::array<double, 3>;
+
+inline auto near(double a, double b) -> bool {
+    return std::abs(a - b) < 1e-8;
+}
+
+inline auto normal(point_type x) -> ads::math::vec<3> {
+    if (near(x[0], 0))
+        return {-1, 0, 0};
+    else if (near(x[0], 1))
+        return {1, 0, 0};
+    else if (near(x[1], 0))
+        return {0, -1, 0};
+    else if (near(x[1], 1))
+        return {0, 1, 0};
+    else if (near(x[2], 0))
+        return {0, 0, -1};
+    else if (near(x[2], 1))
+        return {0, 0, 1};
+    else
+        return {0, 0, 0};
+}
+
+inline auto dot(ads::math::vec<3> a, point_type b) -> double {
+    return a.x * b[0] + a.y * b[1] + a.z * b[2];
+}
 
 template <typename Self>
 class maxwell_problem {

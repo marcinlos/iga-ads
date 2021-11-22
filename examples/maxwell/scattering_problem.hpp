@@ -6,12 +6,7 @@
 
 #include <cmath>
 
-#include "ads/util/math/vec.hpp"
 #include "problems.hpp"
-
-auto near(double a, double b) -> bool {
-    return std::abs(a - b) < 1e-8;
-}
 
 class scattering_problem : public maxwell_problem<scattering_problem> {
 public:
@@ -69,23 +64,6 @@ public:
         auto const sin = std::sin(omega * t - k * z);
         auto const cos = std::cos(omega * t - k * z);
         return omega * sin * excitation(t - z / c) - cos * dexcitation(t - z / c);
-    }
-
-    auto normal(point_type x) const -> ads::math::vec<3> {
-        if (near(x[0], 0))
-            return {-1, 0, 0};
-        else if (near(x[0], 1))
-            return {1, 0, 0};
-        else if (near(x[1], 0))
-            return {0, -1, 0};
-        else if (near(x[1], 1))
-            return {0, 1, 0};
-        else if (near(x[2], 0))
-            return {0, 0, -1};
-        else if (near(x[2], 1))
-            return {0, 0, 1};
-        else
-            return {0, 0, 0};
     }
 
     auto U(point_type x, double t) const -> ads::math::vec<3> {
