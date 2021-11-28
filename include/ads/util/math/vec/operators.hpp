@@ -9,31 +9,31 @@
 namespace ads::math {
 
 template <std::size_t D>
-vec<D> operator+(vec<D> x, const vec<D>& v) {
+constexpr vec<D> operator+(vec<D> x, const vec<D>& v) {
     x += v;
     return x;
 }
 
 template <std::size_t D>
-vec<D> operator-(vec<D> x, const vec<D>& v) {
+constexpr vec<D> operator-(vec<D> x, const vec<D>& v) {
     x -= v;
     return x;
 }
 
 template <std::size_t D>
-vec<D> operator*(double a, vec<D> u) {
+constexpr vec<D> operator*(double a, vec<D> u) {
     u *= a;
     return u;
 }
 
 template <std::size_t D>
-vec<D> operator*(vec<D> u, double a) {
+constexpr vec<D> operator*(vec<D> u, double a) {
     u *= a;
     return u;
 }
 
 template <std::size_t D>
-vec<D> operator/(vec<D> u, double a) {
+constexpr vec<D> operator/(vec<D> u, double a) {
     u /= a;
     return u;
 }

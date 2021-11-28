@@ -12,37 +12,37 @@ struct vec<3> {
 
     double x, y, z;
 
-    vec_type& operator+=(const vec_type& v) {
+    constexpr vec_type& operator+=(const vec_type& v) {
         x += v.x;
         y += v.y;
         z += v.z;
         return *this;
     }
 
-    vec_type& operator-=(const vec_type& v) {
+    constexpr vec_type& operator-=(const vec_type& v) {
         x -= v.x;
         y -= v.y;
         z -= v.z;
         return *this;
     }
 
-    vec_type operator-() const { return {-x, -y, -z}; }
+    constexpr vec_type operator-() const { return {-x, -y, -z}; }
 
-    vec_type& operator*=(double a) {
+    constexpr vec_type& operator*=(double a) {
         x *= a;
         y *= a;
         z *= a;
         return *this;
     }
 
-    vec_type& operator/=(double a) {
+    constexpr vec_type& operator/=(double a) {
         double inv = 1 / a;
         return (*this) *= inv;
     }
 
-    double dot(const vec_type& v) const { return x * v.x + y * v.y + z * v.z; }
+    constexpr double dot(const vec_type& v) const { return x * v.x + y * v.y + z * v.z; }
 
-    double norm_sq() const { return x * x + y * y + z * z; }
+    constexpr double norm_sq() const { return x * x + y * y + z * z; }
 };
 
 }  // namespace ads::math

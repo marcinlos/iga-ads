@@ -14,34 +14,34 @@ struct vec<2> {
 
     double x, y;
 
-    vec_type& operator+=(const vec_type& v) {
+    constexpr vec_type& operator+=(const vec_type& v) {
         x += v.x;
         y += v.y;
         return *this;
     }
 
-    vec_type& operator-=(const vec_type& v) {
+    constexpr vec_type& operator-=(const vec_type& v) {
         x -= v.x;
         y -= v.y;
         return *this;
     }
 
-    vec_type operator-() const { return {-x, -y}; }
+    constexpr vec_type operator-() const { return {-x, -y}; }
 
-    vec_type& operator*=(double a) {
+    constexpr vec_type& operator*=(double a) {
         x *= a;
         y *= a;
         return *this;
     }
 
-    vec_type& operator/=(double a) {
+    constexpr vec_type& operator/=(double a) {
         double inv = 1 / a;
         return (*this) *= inv;
     }
 
-    double dot(const vec_type& v) const { return x * v.x + y * v.y; }
+    constexpr double dot(const vec_type& v) const { return x * v.x + y * v.y; }
 
-    double norm_sq() const { return x * x + y * y; }
+    constexpr double norm_sq() const { return x * x + y * y; }
 };
 
 }  // namespace ads::math
