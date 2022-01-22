@@ -11,6 +11,7 @@
 #include "ads/form_matrix.hpp"
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
+#include "antenna.hpp"
 #include "maxwell_base.hpp"
 #include "plane_wave_problem.hpp"
 #include "scattering_problem.hpp"
@@ -36,6 +37,7 @@ private:
     ads::lin::solver_ctx Bx_ctx, By_ctx, Bz_ctx, Bz_E1_ctx;
 
     Problem problem;
+    antenna source;
 
     ads::output_manager<3> output;
 
@@ -60,6 +62,7 @@ public:
     , By_ctx{By}
     , Bz_ctx{Bz}
     , Bz_E1_ctx{Bz_E1}
+    , source{problem.omega, problem.tau}
     , output{V.x.B, V.y.B, V.z.B, 40, 40, 40} { }
 
     void before_step(int /*iter*/, double /*t*/) override {
@@ -153,7 +156,7 @@ private:
 
         // First substep
         substep1_fill_E(mid, prev, U, a, b);
-        apply_forcing(t, mid, V);
+        source.apply_forcing(t, mid, V);
         substep1_boundary_E(t, mid, prev, pprev);
         // z Ex dir
         // zero_sides("x", mid.E2, U.E2);
@@ -172,7 +175,7 @@ private:
 
         // Second substep
         substep2_fill_E(now, mid, U, a, b);
-        apply_forcing(t, now, V);
+        source.apply_forcing(t, now, V);
         substep2_boundary_E(t, now, mid, prev);
         // z Ex dir
         // zero_sides("x", now.E2, U.E2);
@@ -341,100 +344,6 @@ private:
                          auto const f = mu(x) * problem.U3(x, t) + b(x) * dE3_dt(xx);
                          return ok * a(x) * f * v.val;
                      });
-    }
-
-    auto apply_forcing(double t, state& rhs, space const& V) -> void {
-        auto const l = 0.1 / 5;
-        auto const x0 = point_type{1.0, 1.0, 1.0 - l / 2};
-        auto const x1 = point_type{1.0, 1.0, 1.0 + l / 2};
-        auto const len = dist(x0, x1);
-
-        auto const q = 20;
-        auto const points = quad_points(x0, x1, q);
-        auto const* weigths = ads::quad::gauss::Ws[q];
-        auto const scale = len / 2;
-
-        for (int i = 0; i < q; ++i) {
-            auto const& x = points[i];
-            auto const W = weigths[i] * scale;
-            auto const F = forcing(t, x);
-
-            for (auto const e : elements(V.x, V.y, V.z)) {
-                if (!is_inside(x, e, V))
-                    continue;
-
-                for (auto const a : dofs_on_element(e, V.x, V.y, V.z)) {
-                    auto const v = eval_basis_at(x, a, V);
-                    rhs.E1(a[0], a[1], a[2]) += F[0] * v.val * W;
-                    rhs.E2(a[0], a[1], a[2]) += F[1] * v.val * W;
-                    rhs.E3(a[0], a[1], a[2]) += F[2] * v.val * W;
-                }
-            }
-        }
-    }
-
-    auto quad_points(point_type const x0, point_type const x1, int q) -> std::vector<point_type> {
-        auto points = std::vector<point_type>(q);
-        for (int i = 0; i < q; ++i) {
-            const auto t = ads::quad::gauss::Xs[q][i];
-            const auto s = (t + 1) / 2;
-            const auto x = ads::lerp(s, x0[0], x1[0]);
-            const auto y = ads::lerp(s, x0[1], x1[1]);
-            const auto z = ads::lerp(s, x0[2], x1[2]);
-            points[i] = point_type{x, y, z};
-        }
-        return points;
-    }
-
-    auto dist(point_type a, point_type b) const -> double {
-        auto const dx = a[0] - b[0];
-        auto const dy = a[1] - b[1];
-        auto const dz = a[2] - b[2];
-        return std::hypot(dx, dy, dz);
-    }
-
-    auto is_inside(point_type x, index_type e, space const& V) const -> bool {
-        return V.x.B.points[e[0]] <= x[0] && x[0] <= V.x.B.points[e[0] + 1]
-            && V.y.B.points[e[1]] <= x[1] && x[1] <= V.y.B.points[e[1] + 1]
-            && V.z.B.points[e[2]] <= x[2] && x[2] <= V.z.B.points[e[2] + 1];
-    }
-
-    auto eval_basis_at(point_type p, index_type dof, space const& V) const -> value_type {
-        const auto spanx = ads::bspline::find_span(p[0], V.x.B);
-        const auto spany = ads::bspline::find_span(p[1], V.y.B);
-        const auto spanz = ads::bspline::find_span(p[2], V.z.B);
-
-        ads::bspline::eval_ders_ctx cx{x.p, 1};
-        ads::bspline::eval_ders_ctx cy{y.p, 1};
-        ads::bspline::eval_ders_ctx cz{z.p, 1};
-
-        double** bvx = cx.basis_vals();
-        double** bvy = cy.basis_vals();
-        double** bvz = cz.basis_vals();
-
-        eval_basis_with_derivatives(spanx, p[0], V.x.B, bvx, 1, cx);
-        eval_basis_with_derivatives(spany, p[1], V.y.B, bvy, 1, cy);
-        eval_basis_with_derivatives(spanz, p[2], V.z.B, bvz, 1, cz);
-
-        int offsetx = spanx - V.x.p;
-        int offsety = spany - V.y.p;
-        int offsetz = spanz - V.z.p;
-
-        int ix = dof[0] - offsetx;
-        int iy = dof[1] - offsety;
-        int iz = dof[2] - offsetz;
-
-        auto value = bvx[0][ix] * bvy[0][iy] * bvz[0][iz];
-        auto dx = bvx[1][ix] * bvy[0][iy] * bvz[0][iz];
-        auto dy = bvx[0][ix] * bvy[1][iy] * bvz[0][iz];
-        auto dz = bvx[0][ix] * bvy[0][iy] * bvz[1][iz];
-
-        return {value, dx, dy, dz};
-    }
-
-    auto forcing(double t, point_type /*x*/) -> point_type {
-        auto const s = problem.excitation(t) * std::sin(problem.omega * t);
-        return {0, 0, s};
     }
 
     auto as_array(ads::point3_t x) const -> point_type {
