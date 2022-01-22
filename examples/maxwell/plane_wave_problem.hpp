@@ -106,7 +106,7 @@ public:
         // 0; return 0;
     }
 
-    auto U(point_type x, double t) const -> vec3 {
+    auto U(point_type /*x*/, double /*t*/) const -> vec3 {
         // auto const n = normal(x);
         // auto const cE = curlE(x, t);
         // auto const dtE = dE(x, t);
