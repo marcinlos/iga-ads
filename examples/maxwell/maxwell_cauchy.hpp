@@ -86,8 +86,8 @@ private:
         // zero(U.E3.y);
 
         // y Ez dir
-        zero(U.E1.z);
-        zero(U.E2.z);
+        // zero(U.E1.z);
+        // zero(U.E2.z);
 
         // U.E1.z.fix_right();
 
