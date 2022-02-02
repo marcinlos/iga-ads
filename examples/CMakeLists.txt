@@ -167,6 +167,14 @@ add_example(maxwell_cauchy GALOIS
     ads-example-maxwell-common
 )
 
+add_example(maxwell_cauchy_head GALOIS
+  SRC
+    maxwell/main_cauchy_head.cpp
+    maxwell/head_data.cpp
+  LIBS
+    ads-example-maxwell-common
+)
+
 add_example(maxwell_head MUMPS GALOIS
   SRC
     maxwell/main_head.cpp
