@@ -38,23 +38,29 @@ int main(int argc, char* argv[]) {
     auto const dt = args.T / args.step_count;
     auto const steps = ads::timesteps_config{args.step_count, dt};
 
-    auto const nx = 4;
-    auto const ny = 4;
+    auto const n = 100;
+    auto const nx = n;
+    auto const ny = n;
+    auto const nz = n;
+    // auto const nx = 1;
+    // auto const ny = 1000;
+    // auto const nz = 1;
     // auto const nz = 160;
     // auto const nz = 320;
     // auto const nz = 640;
-    auto const nz = 1000;
-    auto const end_z = 20.0;
+    auto const end_x = 2.0;
+    auto const end_y = 2.0;
+    auto const end_z = 2.0;
 
     auto const rep = args.p - args.c - 1;
-    auto const dim_x = ads::dim_config{args.p, nx, 0.0, 1.0, args.p + 1, rep};
-    auto const dim_y = ads::dim_config{args.p, ny, 0.0, 1.0, args.p + 1, rep};
+    auto const dim_x = ads::dim_config{args.p, nx, 0.0, end_x, args.p + 1, rep};
+    auto const dim_y = ads::dim_config{args.p, ny, 0.0, end_y, args.p + 1, rep};
     auto const dim_z = ads::dim_config{args.p, nz, 0.0, end_z, args.p + 1, rep};
     auto const cfg = ads::config_3d{dim_x, dim_y, dim_z, steps, 1};
 
     // new interface
-    auto xs = ads::evenly_spaced(0.0, 1.0, nx);
-    auto ys = ads::evenly_spaced(0.0, 1.0, ny);
+    auto xs = ads::evenly_spaced(0.0, end_x, nx);
+    auto ys = ads::evenly_spaced(0.0, end_y, ny);
     auto zs = ads::evenly_spaced(0.0, end_z, nz);
 
     auto bx = ads::make_bspline_basis(xs, args.p, args.c);

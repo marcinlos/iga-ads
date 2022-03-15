@@ -26,8 +26,20 @@ public:
 
     using vec3 = ads::math::vec<3>;
 
-    static constexpr vec3 E0 = {1, 0, 0};
-    static constexpr vec3 k_hat = {0, 0, 1};
+    // static constexpr vec3 E0 = normalized(vec3{0, 0, 1});
+    // static constexpr vec3 k_hat = normalized(vec3{1, 1, 0});
+
+    // z Ex direction
+    // static constexpr vec3 E0 = normalized(vec3{1, 0, 0});
+    // static constexpr vec3 k_hat = normalized(vec3{0, 0, 1});
+
+    // x Ey direction
+    // static constexpr vec3 E0 = normalized(vec3{0, 1, 0});
+    // static constexpr vec3 k_hat = normalized(vec3{1, 0, 0});
+
+    // y Ez
+    static constexpr vec3 E0 = normalized(vec3{0, 0, 1});
+    static constexpr vec3 k_hat = normalized(vec3{0, 1, 0});
 
     auto eps(point_type /*x*/) const -> double { return eps0; }
     auto mu(point_type /*x*/) const -> double { return mu0; }
@@ -83,22 +95,23 @@ public:
     auto H3(point_type x, double t) const -> value_type { return {H(x, t).z, 0, 0, 0}; }
 
     auto excitation(double t) const -> double {
-        // return t > 0 ? (1 - std::exp(-t / tau)) : 0;
-        return t > 0 ? std::exp(-0.5 * std::pow((t - t0) / tau, 2)) : 0;
+        return t > 0 ? (1 - std::exp(-t / tau)) : 0;
+        // return t > 0 ? std::exp(-0.5 * std::pow((t - t0) / tau, 2)) : 0;
         // return 1.0;
     }
 
     auto dexcitation(double t) const -> double {
-        // return t > 0 ? (1 / tau * std::exp(-t / tau)) : 0;
-        return t > 0 ? -(t - t0) / (tau * tau) * std::exp(-0.5 * std::pow((t - t0) / tau, 2)) : 0;
-        // return 0;
+        return t > 0 ? (1 / tau * std::exp(-t / tau)) : 0;
+        // return t > 0 ? -(t - t0) / (tau * tau) * std::exp(-0.5 * std::pow((t - t0) / tau, 2)) :
+        // 0; return 0;
     }
 
     auto U(point_type x, double t) const -> vec3 {
-        auto const n = normal(x);
-        auto const cE = curlE(x, t);
-        auto const dtE = dE(x, t);
-        return cross(n, cE) / mu0 + cross(n, cross(n, dtE)) / eta;
+        // auto const n = normal(x);
+        // auto const cE = curlE(x, t);
+        // auto const dtE = dE(x, t);
+        // return cross(n, cE) / mu0 + cross(n, cross(n, dtE)) / eta;
+        return {0, 0, 0};
     }
 
     auto U1(point_type x, double t) const -> double { return U(x, t).x; };

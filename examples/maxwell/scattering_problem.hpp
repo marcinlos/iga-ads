@@ -37,6 +37,16 @@ public:
 
     auto E3(point_type /*x*/, double /*t*/) const -> value_type { return {}; }
 
+    auto dE1(point_type x, double t) const -> double {
+        auto const z = x[2];
+        return -omega * std::sin(omega * t - k * z) * excitation(t - z / c)
+             + std::cos(omega * t - k * z) * dexcitation(t - z / c);
+    }
+
+    auto dE2(point_type /*x*/, double /*t*/) const -> double { return {}; }
+
+    auto dE3(point_type /*x*/, double /*t*/) const -> double { return {}; }
+
     auto H1(point_type /*x*/, double /*t*/) const -> value_type { return {}; }
 
     auto H2(point_type x, double t) const -> value_type {
