@@ -160,6 +160,13 @@ add_example(maxwell_uniform GALOIS
     ads-example-maxwell-common
 )
 
+add_example(maxwell_cauchy GALOIS
+  SRC
+    maxwell/main_cauchy.cpp
+  LIBS
+    ads-example-maxwell-common
+)
+
 add_example(maxwell_head MUMPS GALOIS
   SRC
     maxwell/main_head.cpp
