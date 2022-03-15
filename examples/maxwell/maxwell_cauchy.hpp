@@ -16,6 +16,43 @@
 #include "spaces.hpp"
 #include "state.hpp"
 
+auto radius(double x, double y, double z) -> double {
+    return std::hypot(x, y, z);
+}
+
+auto theta(double x, double y, double z) -> double {
+    auto const r = std::hypot(x, y, z);
+    return std::acos(z / r);
+}
+
+auto phi(double x, double y, double z) -> double {
+    return std::atan2(y, x);
+}
+
+auto spherical(ads::point3_t p, ads::point3_t v) -> ads::point3_t {
+    auto const [x, y, z] = p;
+    auto const [vx, vy, vz] = v;
+
+    auto const r = std::hypot(x, y, z);
+    auto const theta = std::acos(z / r);
+    auto const phi = std::atan2(y, x);
+
+    auto const sphi = std::sin(phi);
+    auto const cphi = std::cos(phi);
+    auto const sth = std::sin(theta);
+    auto const cth = std::cos(theta);
+
+    double const A[3][3] = {
+        {sth * cphi, sth * sphi, cth},
+        {cth * cphi, cth * sphi, -sth},
+        {-sphi, cphi, 0},
+    };
+    auto const sr = A[0][0] * vx + A[0][1] * vy + A[0][2] * vz;
+    auto const st = A[1][0] * vx + A[1][1] * vy + A[1][2] * vz;
+    auto const sp = A[2][0] * vx + A[2][1] * vy + A[2][2] * vz;
+
+    return {sr, st, sp};
+}
 class maxwell_cauchy : public maxwell_base {
 private:
     using Base = maxwell_base;
