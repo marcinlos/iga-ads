@@ -1098,6 +1098,10 @@ auto evenly_spaced(double a, double b, int elems) -> partition {
     return xs;
 }
 
+auto evenly_spaced(interval range, int elems) -> partition {
+    return evenly_spaced(range.left, range.right, elems);
+}
+
 auto make_bspline_basis(const partition& points, int p, int c) -> bspline::basis {
     const auto n = as_signed(points.size());
     const auto r = p - c;
