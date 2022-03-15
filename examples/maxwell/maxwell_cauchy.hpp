@@ -53,6 +53,75 @@ auto spherical(ads::point3_t p, ads::point3_t v) -> ads::point3_t {
 
     return {sr, st, sp};
 }
+
+template <typename Vx, typename Vy, typename Vz>
+auto maxwell_to_file(const std::string& path,    //
+                     Vx&& Ex, Vy&& Ey, Vz&& Ez,  //
+                     Vx&& Hx, Vy&& Hy, Vz&& Hz   //
+                     ) -> void {
+    constexpr auto res = 50;
+    auto extent = fmt::format("0 {0} 0 {0} 0 {0}", res);
+    auto const rx = ads::interval{0, 2};
+    auto const ry = ads::interval{0, 2};
+    auto const rz = ads::interval{0, 2};
+
+    auto const for_all_points = [&](auto&& fun) {
+        for (auto z : ads::evenly_spaced(rx, res)) {
+            for (auto y : ads::evenly_spaced(ry, res)) {
+                for (auto x : ads::evenly_spaced(rz, res)) {
+                    const auto X = ads::point3_t{x, y, z};
+                    fun(X);
+                }
+            }
+        }
+    };
+
+    auto out = fmt::output_file(path);
+    out.print("<?xml version=\"1.0\"?>\n");
+    out.print("<VTKFile type=\"ImageData\" version=\"0.1\">\n");
+    out.print("  <ImageData WholeExtent=\"{}\" origin=\"0 0 0\" spacing=\"1 1 1\">\n", extent);
+    out.print("    <Piece Extent=\"{}\">\n", extent);
+    out.print("      <PointData Scalars=\"r\" Vectors=\"E\">\n", extent);
+
+    out.print("        <DataArray Name=\"E\" type=\"Float32\" format=\"ascii\" "
+              "NumberOfComponents=\"3\">\n");
+    for_all_points([&](auto X) { out.print("{:.7} {:.7} {:.7}\n", Ex(X), Ey(X), Ez(X)); });
+    out.print("        </DataArray>\n");
+
+    out.print("        <DataArray Name=\"H\" type=\"Float32\" format=\"ascii\" "
+              "NumberOfComponents=\"3\">\n");
+    for_all_points([&](auto X) { out.print("{:.7} {:.7} {:.7}\n", Hx(X), Hy(X), Hz(X)); });
+    out.print("        </DataArray>\n");
+
+    // out.print("        <DataArray Name=\"radius\" type=\"Float32\" format=\"ascii\" "
+    //           "NumberOfComponents=\"1\">\n");
+    // for_all_points([&](auto X) { out.print("{:.7}\n", radius(Ex(X), Ey(X), Ez(X))); });
+    // out.print("        </DataArray>\n");
+
+    // out.print("        <DataArray Name=\"theta\" type=\"Float32\" format=\"ascii\" "
+    //           "NumberOfComponents=\"1\">\n");
+    // for_all_points([&](auto X) { out.print("{:.7}\n", theta(Ex(X), Ey(X), Ez(X))); });
+    // out.print("        </DataArray>\n");
+
+    // out.print("        <DataArray Name=\"phi\" type=\"Float32\" format=\"ascii\" "
+    //           "NumberOfComponents=\"1\">\n");
+    // for_all_points([&](auto X) { out.print("{:.7}\n", phi(Ex(X), Ey(X), Ez(X))); });
+    // out.print("        </DataArray>\n");
+
+    out.print("        <DataArray Name=\"spherical\" type=\"Float32\" format=\"ascii\" "
+              "NumberOfComponents=\"3\">\n");
+    for_all_points([&](auto X) {
+        auto const [r, theta, phi] = spherical(X, {Ex(X), Ey(X), Ez(X)});
+        out.print("{:.7} {:.7} {:.7}\n", r, theta, phi);
+    });
+    out.print("        </DataArray>\n");
+
+    out.print("      </PointData>\n");
+    out.print("    </Piece>\n");
+    out.print("  </ImageData>\n");
+    out.print("</VTKFile>\n");
+}
+
 class maxwell_cauchy : public maxwell_base {
 private:
     using Base = maxwell_base;
