@@ -39,6 +39,10 @@ public:
 
     auto mu(point_type x) const -> double { return mu0 * data_.mu(map(x)); }
 
+    auto sigma(point_type x) const -> double { return eps0 * omega * data_.sigma(map(x)); }
+
+    auto empty(point_type x) const -> bool { return data_.empty(x); }
+
     auto map(point_type x) const -> point_type {
         auto const rx = ads::interval{0.4, 0.8};
         auto const ry = ads::interval{0.8, 1.2};

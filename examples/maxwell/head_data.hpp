@@ -24,6 +24,7 @@ private:
 
     static constexpr std::array<double, 3> eps_vals = {1.0, 45.8, 16.6};
     static constexpr std::array<double, 3> mu_vals = {1.0, 1.0, 1.0};
+    static constexpr std::array<double, 3> sigma_vals = {1.0, 15.31, 4.8};
 
     density_data density_map_;
 
@@ -34,6 +35,10 @@ public:
     auto eps(point_type x) const -> double { return eps_vals[index_at(x)]; }
 
     auto mu(point_type x) const -> double { return mu_vals[index_at(x)]; }
+
+    auto sigma(point_type x) const -> double { return sigma_vals[index_at(x)]; }
+
+    auto empty(point_type x) const -> bool { return material_at(x) == material::air; }
 
 private:
     auto density(point_type x) const -> byte {
@@ -46,11 +51,9 @@ private:
 
     auto as_index(material m) const noexcept -> int { return static_cast<int>(m); }
 
-    auto index_at(point_type x) const noexcept -> int {
-        const auto n = density(x);
-        const auto mat = as_material(n);
-        return as_index(mat);
-    }
+    auto material_at(point_type x) const noexcept -> material { return as_material(density(x)); }
+
+    auto index_at(point_type x) const noexcept -> int { return as_index(material_at(x)); }
 
     static auto discretize(double t, int n) noexcept -> int {
         return std::min(static_cast<int>(t * n), n - 1);

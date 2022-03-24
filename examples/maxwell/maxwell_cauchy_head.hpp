@@ -303,8 +303,10 @@ private:
             save(i);
         }
 
-        const auto res = compute_norms(now, U, problem, tt);
+        auto const res = compute_norms(now, U, problem, tt);
+        auto const q_sar = compute_q_sar(now, U);
         std::cout << "After step " << i << ", t = " << tt << '\n';
+        std::cout << "q_sar = " << q_sar << '\n';
         print_result_info(res);
     }
 
@@ -320,6 +322,27 @@ private:
         auto H3 = ads::bspline_function3(&space_, now.H3.data());
 
         maxwell_to_file(name, E1, E2, E3, H1, H2, H3);
+    }
+
+    auto compute_q_sar(state const& s, space_set const& U) const -> double {
+        double val = 0;
+
+        for (auto const e : elements(U.E1.x, U.E1.y, U.E1.z)) {
+            double const J = jacobian(e, U.E1.x, U.E1.y, U.E1.z);
+            for (auto const q : quad_points(U.E1.x, U.E1.y, U.E1.z)) {
+                double const w = weight(q, U.E1.x, U.E1.y, U.E1.z);
+                auto const x = point(e, q, U.E1.x, U.E1.y, U.E1.z);
+                auto const sigma = problem.empty(x) ? 0 : problem.sigma(x);
+
+                auto const E1 = eval(s.E1, e, q, U.E1.x, U.E1.y, U.E1.z);
+                auto const E2 = eval(s.E2, e, q, U.E2.x, U.E2.y, U.E2.z);
+                auto const E3 = eval(s.E3, e, q, U.E3.x, U.E3.y, U.E1.z);
+
+                auto const EE = E1.val * E1.val + E2.val * E2.val + E3.val * E3.val;
+                val += 0.5 * EE * sigma * w * J;
+            }
+        }
+        return val;
     }
 };
 
