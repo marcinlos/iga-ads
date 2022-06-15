@@ -54,16 +54,18 @@ auto maxwell_to_file(const std::string& path,    //
                      Vx&& Ex, Vy&& Ey, Vz&& Ez,  //
                      Vx&& Hx, Vy&& Hy, Vz&& Hz   //
                      ) -> void {
-    constexpr auto res = 50;
-    auto extent = fmt::format("0 {0} 0 {0} 0 {0}", res);
-    auto const rx = ads::interval{0, 2};
-    auto const ry = ads::interval{0, 2};
-    auto const rz = ads::interval{0, 2};
+    constexpr auto res_x = 50 * 3;
+    constexpr auto res_y = 50 * 3;
+    constexpr auto res_z = 50;
+    auto extent = fmt::format("0 {} 0 {} 0 {}", res_x, res_y, res_z);
+    auto const rx = ads::interval{0, 450e3};
+    auto const ry = ads::interval{0, 450e3};
+    auto const rz = ads::interval{0, 150e3};
 
     auto const for_all_points = [&](auto&& fun) {
-        for (auto z : ads::evenly_spaced(rx, res)) {
-            for (auto y : ads::evenly_spaced(ry, res)) {
-                for (auto x : ads::evenly_spaced(rz, res)) {
+        for (auto z : ads::evenly_spaced(rz, res_z)) {
+            for (auto y : ads::evenly_spaced(ry, res_y)) {
+                for (auto x : ads::evenly_spaced(rx, res_x)) {
                     const auto X = ads::point3_t{x, y, z};
                     fun(X);
                 }

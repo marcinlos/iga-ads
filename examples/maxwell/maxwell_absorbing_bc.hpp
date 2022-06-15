@@ -1,8 +1,8 @@
 // SPDX-FileCopyrightText: 2015 - 2021 Marcin Łoś <marcin.los.91@gmail.com>
 // SPDX-License-Identifier: MIT
 
-#ifndef MAXWELL_MAXWELL_CAUCHY_HEAD_HPP
-#define MAXWELL_MAXWELL_CAUCHY_HEAD_HPP
+#ifndef MAXWELL_MAXWELL_ABSORBING_BC_HPP
+#define MAXWELL_MAXWELL_ABSORBING_BC_HPP
 
 #include <iostream>
 #include <utility>
@@ -10,18 +10,16 @@
 #include "ads/experimental/all.hpp"
 #include "ads/form_matrix.hpp"
 #include "ads/simulation.hpp"
-#include "antenna.hpp"
-#include "head_antenna_problem.hpp"
 #include "maxwell_base.hpp"
 #include "solver_phase.hpp"
 #include "spaces.hpp"
 #include "state.hpp"
 #include "utils.hpp"
 
-class maxwell_cauchy_head : public maxwell_base {
+template <typename Problem, typename Source>
+class maxwell_absorbing_bc : public maxwell_base {
 private:
     using Base = maxwell_base;
-    using Problem = head_antenna_problem;
 
     space V;
     space_set U;
@@ -33,15 +31,16 @@ private:
     state pprev, prev, half, now;
 
     ads::lin::tensor<double, 3> stiffness_coeffs;
+    ads::lin::tensor<double, 3> mass_coeffs;
     solver_phase Bx, By, Bz;
 
     Problem problem;
-    antenna source;
+    Source source;
 
 public:
-    explicit maxwell_cauchy_head(ads::config_3d const& config, ads::regular_mesh3 const& mesh,
-                                 ads::quadrature3 const& quad, ads::space3& space,
-                                 std::string_view data_file)
+    explicit maxwell_absorbing_bc(ads::config_3d const& config, ads::regular_mesh3 const& mesh,
+                                  ads::quadrature3 const& quad, ads::space3& space, Problem problem,
+                                  Source source)
     : Base{config}
     , V{x, y, z}
     , U{V, V, V, V, V, V}
@@ -53,11 +52,12 @@ public:
     , half{vector_shape(V)}
     , now{vector_shape(V)}
     , stiffness_coeffs{vector_shape(V)}
+    , mass_coeffs{vector_shape(V)}
     , Bx{V.y.dofs(), V.z.dofs()}
     , By{V.z.dofs(), V.y.dofs()}
     , Bz{V.x.dofs(), V.y.dofs()}
-    , problem{data_file}
-    , source{problem.omega, problem.tau} { }
+    , problem{std::move(problem)}
+    , source{std::move(source)} { }
 
     void before_step(int /*iter*/, double /*t*/) override {
         using std::swap;
@@ -74,6 +74,17 @@ private:
             auto const eps = problem.eps(x);
             auto const mu = problem.mu(x);
             stiffness_coeffs(i[0], i[1], i[2]) = tau * tau / (4 * eps * mu);
+        }
+    }
+
+    auto compute_mass_coeffs() -> void {
+        auto const tau = steps.dt;
+        for (auto const i : dofs(V.x, V.y, V.z)) {
+            auto const [rx, ry, rz] = dof_support(i, V);
+            auto const x = point_type{(rx.a + rx.b) / 2, (ry.a + ry.b) / 2, (rz.a + rz.b) / 2};
+            auto const eps = problem.eps(x);
+            auto const s = problem.sigma(x);
+            mass_coeffs(i[0], i[1], i[2]) = 1 + tau / 2 * s / eps;
         }
     }
 
@@ -100,22 +111,23 @@ private:
         }
     }
 
-    template <typename CoeffFun>
+    template <typename MassCoeff, typename GradCoeff>
     auto fill_solver_phase(solver_phase& phase, ads::dimension const& special_dim,
-                           ads::dimension const& dim2, ads::dimension const& dim3, CoeffFun&& coeff)
-        -> void {
+                           ads::dimension const& dim2, ads::dimension const& dim3, MassCoeff&& a,
+                           GradCoeff&& b) -> void {
         for (int i = 0; i < dim2.dofs(); ++i) {
             for (int j = 0; j < dim3.dofs(); ++j) {
                 auto M = ads::lin::band_matrix{special_dim.p, special_dim.p, special_dim.dofs()};
 
-                auto const form = [i, j, &coeff](auto u, auto v, auto dof) {
-                    auto const h = coeff(dof, i, j);
-                    return u.val * v.val + h * u.dx * v.dx;
+                auto const form = [i, j, &a, &b](auto u, auto v, auto dof) {
+                    auto const av = a(dof, i, j);
+                    auto const bv = b(dof, i, j);
+                    return av * u.val * v.val + bv * u.dx * v.dx;
                 };
                 form_matrix(M, special_dim.basis, form);
 
-                fix_dof(0, special_dim, M);
-                fix_dof(special_dim.dofs() - 1, special_dim, M);
+                // fix_dof(0, special_dim, M);
+                // fix_dof(special_dim.dofs() - 1, special_dim, M);
 
                 phase.set_matrix(i, j, M);
             }
@@ -123,18 +135,25 @@ private:
     }
 
     auto fill_solver_phases() -> void {
-        fill_solver_phase(Bx, V.x, V.y, V.z,
-                          [this](int ix, int iy, int iz) { return stiffness_coeffs(ix, iy, iz); });
-        fill_solver_phase(By, V.y, V.z, V.x,
-                          [this](int iy, int iz, int ix) { return stiffness_coeffs(ix, iy, iz); });
-        fill_solver_phase(Bz, V.z, V.x, V.y,
-                          [this](int iz, int ix, int iy) { return stiffness_coeffs(ix, iy, iz); });
+        fill_solver_phase(
+            Bx, V.x, V.y, V.z,  //
+            [this](int ix, int iy, int iz) { return mass_coeffs(ix, iy, iz); },
+            [this](int ix, int iy, int iz) { return stiffness_coeffs(ix, iy, iz); });
+        fill_solver_phase(
+            By, V.y, V.z, V.x,  //
+            [this](int iy, int iz, int ix) { return mass_coeffs(ix, iy, iz); },
+            [this](int iy, int iz, int ix) { return stiffness_coeffs(ix, iy, iz); });
+        fill_solver_phase(
+            Bz, V.z, V.x, V.y,  //
+            [this](int iz, int ix, int iy) { return mass_coeffs(ix, iy, iz); },
+            [this](int iz, int ix, int iy) { return stiffness_coeffs(ix, iy, iz); });
     }
     void prepare_matrices() {
         factorize_matrices(U);
         factorize_matrices(V);
 
         compute_stiffness_coeffs();
+        compute_mass_coeffs();
         fill_solver_phases();
     }
 
@@ -179,22 +198,37 @@ private:
 
         // First substep
         substep1_fill_E(mid, prev, U, a, b);
-        source.apply_forcing(t, mid, V);
+        // source.apply_forcing(t, mid, V);
+        apply_forcing(t, mid, prev, U, V);
         substep1_boundary_E(t, mid, prev, pprev);
         substep1_solve_E(mid, buffer);
 
         substep1_fill_H(mid, prev, mid, U, c);
         solve_H(mid, buffer);
-
         // Second substep
         substep2_fill_E(now, mid, U, a, b);
-        source.apply_forcing(t, now, V);
+        // source.apply_forcing(t, now, V);
+        apply_forcing(t, now, mid, U, V);
         substep2_boundary_E(t, now, mid, prev);
         substep2_solve_E(now, buffer);
 
         substep2_fill_H(now, mid, now, U, c);
         solve_H(now, buffer);
+    }
 
+    auto apply_forcing(double t, state& rhs, state& prev, space_set const& U, space const& V)
+        -> void {
+        source.apply_forcing(t, rhs, V);
+
+        add_to_rhs(rhs.E1, prev, prev, U, V, [=](auto /*E*/, auto, auto /*H*/, auto v, auto x) {
+            return -1 / problem.eps(x) * problem.J1(x, t) * v.val;
+        });
+        add_to_rhs(rhs.E2, prev, prev, U, V, [=](auto /*E*/, auto, auto /*H*/, auto v, auto x) {
+            return -1 / problem.eps(x) * problem.J2(x, t) * v.val;
+        });
+        add_to_rhs(rhs.E3, prev, prev, U, V, [=](auto /*E*/, auto, auto /*H*/, auto v, auto x) {
+            return -1 / problem.eps(x) * problem.J3(x, t) * v.val;
+        });
     }
 
     auto substep1_boundary_E(double t, state& rhs, state& prev, state& pprev) -> void {
@@ -300,17 +334,17 @@ private:
         const auto tt = t + steps.dt;
 
         if (i % 1 == 0) {
-            save(i);
+            save(i, tt);
         }
 
-        auto const res = compute_norms(now, U, problem, tt);
-        auto const q_sar = compute_q_sar(now, U);
-        std::cout << "After step " << i << ", t = " << tt << '\n';
-        std::cout << "q_sar = " << q_sar << '\n';
-        print_result_info(res);
+        // auto const res = compute_norms(now, U, problem, tt);
+        // auto const q_sar = compute_q_sar(now, U);
+        // std::cout << "After step " << i << ", t = " << tt << '\n';
+        // std::cout << "q_sar = " << q_sar << '\n';
+        // print_result_info(res);
     }
 
-    auto save(int iter) -> void {
+    auto save(int iter, double t) -> void {
         const auto name = fmt::format("out_{}.vti", iter);
 
         auto E1 = ads::bspline_function3(&space_, now.E1.data());
@@ -320,6 +354,10 @@ private:
         auto H1 = ads::bspline_function3(&space_, now.H1.data());
         auto H2 = ads::bspline_function3(&space_, now.H2.data());
         auto H3 = ads::bspline_function3(&space_, now.H3.data());
+
+        auto x = ads::point3_t{225e3, 225e3, 60e3};
+        fmt::print("{:8.5f}   {:10.5e} {:10.5e} {:10.5e}   {:10.5e} {:10.5e} {:10.5e}\n",  //
+                   t, E1(x), E2(x), E3(x), H1(x), H2(x), H3(x));
 
         maxwell_to_file(name, E1, E2, E3, H1, H2, H3);
     }
@@ -346,4 +384,4 @@ private:
     }
 };
 
-#endif  // MAXWELL_MAXWELL_CAUCHY_HEAD_HPP
+#endif  // MAXWELL_MAXWELL_ABSORBING_BC_HPP

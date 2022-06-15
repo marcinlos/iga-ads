@@ -7,27 +7,25 @@
 #include <lyra/lyra.hpp>
 
 #include "ads/experimental/all.hpp"
-#include "antenna.hpp"
-#include "head_antenna_problem.hpp"
 #include "maxwell_absorbing_bc.hpp"
 #include "maxwell_base.hpp"
+#include "mt_problem.hpp"
+#include "mt_source.hpp"
 
 auto parse_args(int argc, char* argv[]) {
     struct {
         int n, p, c, step_count;
         double T;
-        std::string data_file;
     } args{};
 
     bool show_help = false;
 
     auto const* const desc =
-        "Solver for non-stationary Maxwell equations with non-uniform material \n"
-        "data and Cauchy-type BC using ADS";
+        "Solver for non-stationary Maxwell equations for magnetotelluric problem \n"
+        "with absorbing BC using ADS";
 
-    auto const cli = lyra::help(show_help).description(desc)                                  //
-                   | common_arg_parser(args)                                                  //
-                   | lyra::arg(args.data_file, "file")("file with material data").required()  //
+    auto const cli = lyra::help(show_help).description(desc)  //
+                   | common_arg_parser(args)                  //
         ;
 
     auto const result = cli.parse({argc, argv});
@@ -43,12 +41,12 @@ int main(int argc, char* argv[]) {
     auto const steps = ads::timesteps_config{args.step_count, dt};
 
     auto const n = args.n;
-    auto const nx = n;
-    auto const ny = n;
+    auto const nx = n * 3;
+    auto const ny = n * 3;
     auto const nz = n;
-    auto const end_x = 2.0;
-    auto const end_y = 2.0;
-    auto const end_z = 2.0;
+    auto const end_x = 450e3;
+    auto const end_y = 450e3;
+    auto const end_z = 150e3;
 
     auto const rep = args.p - args.c - 1;
     auto const dim_x = ads::dim_config{args.p, nx, 0.0, end_x, args.p + 1, rep};
@@ -68,10 +66,10 @@ int main(int argc, char* argv[]) {
     auto mesh = ads::regular_mesh3{xs, ys, zs};
     auto quad = ads::quadrature3{&mesh, std::max(args.p + 1, 2)};
 
-    using Problem = head_antenna_problem;
-    using Source = antenna;
-    auto problem = Problem{args.data_file};
-    auto source = Source{problem.omega, problem.tau};
+    using Problem = mt_problem;
+    using Source = mt_source;
+    auto problem = Problem{};
+    auto source = Source{};
 
     auto space = ads::space3{&mesh, bx, by, bz};
 

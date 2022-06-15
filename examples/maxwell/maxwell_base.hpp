@@ -178,6 +178,12 @@ protected:
     void compute_rhs(RHS& rhs, state const& prev, state const& mid, space_set const& U,
                      space const& V, Form&& form) {
         zero(rhs);
+        add_to_rhs(rhs, prev, mid, U, V, std::forward<Form>(form));
+    }
+
+    template <typename RHS, typename Form>
+    void add_to_rhs(RHS& rhs, state const& prev, state const& mid, space_set const& U,
+                    space const& V, Form&& form) {
         auto const shape = ::local_shape(V);
 
         executor.for_each(elements(V.x, V.y, V.z), [&](auto const e) {

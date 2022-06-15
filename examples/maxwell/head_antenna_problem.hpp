@@ -85,6 +85,10 @@ public:
     auto U1(point_type /*x*/, double /*t*/) const -> double { return 0; };
     auto U2(point_type /*x*/, double /*t*/) const -> double { return 0; };
     auto U3(point_type /*x*/, double /*t*/) const -> double { return 0; };
+
+    auto J1(point_type /*x*/, double /*t*/) const -> double { return 0; };
+    auto J2(point_type /*x*/, double /*t*/) const -> double { return 0; };
+    auto J3(point_type /*x*/, double /*t*/) const -> double { return 0; };
 };
 
 #endif  // MAXWELL_HEAD_ANTENNA_PROBLEM_HPP
