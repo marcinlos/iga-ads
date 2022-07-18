@@ -18,6 +18,7 @@ class antenna {
 private:
     double omega;
     double tau;
+    double J0;
 
     using point_type = std::array<double, 3>;
     using index_type = std::array<int, 3>;
@@ -27,9 +28,10 @@ private:
     using value_type = ads::function_value_3d;
 
 public:
-    antenna(double omega, double tau)
+    antenna(double omega, double tau, double J0 = 1)
     : omega{omega}
-    , tau{tau} { }
+    , tau{tau}
+    , J0{J0} { }
 
     auto apply_forcing(double t, state& rhs, space const& V) -> void {
         auto const l = 0.1 / 5;
@@ -137,7 +139,7 @@ private:
 
     auto forcing(double t, point_type /*x*/) -> point_type {
         auto const s = excitation(t) * std::sin(omega * t);
-        return {0, 0, s};
+        return {0, 0, J0 * s};
     }
 
     auto excitation(double t) const -> double {

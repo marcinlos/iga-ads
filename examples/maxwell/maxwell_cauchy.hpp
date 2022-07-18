@@ -12,6 +12,7 @@
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
 #include "antenna.hpp"
+#include "antenna_problem.hpp"
 #include "maxwell_base.hpp"
 #include "plane_wave_problem.hpp"
 #include "scattering_problem.hpp"
@@ -22,7 +23,8 @@
 class maxwell_cauchy : public maxwell_base {
 private:
     using Base = maxwell_base;
-    using Problem = plane_wave_problem;
+    // using Problem = plane_wave_problem;
+    using Problem = antenna_problem;
 
     space V;
     space_set U;
@@ -62,7 +64,7 @@ public:
     , By_ctx{By}
     , Bz_ctx{Bz}
     , Bz_E1_ctx{Bz_E1}
-    , source{problem.omega, problem.tau}
+    , source{problem.omega, problem.tau, 1 / problem.eps0}
     , output{V.x.B, V.y.B, V.z.B, 40, 40, 40} { }
 
     void before_step(int /*iter*/, double /*t*/) override {
@@ -355,8 +357,7 @@ private:
         const auto tt = t + steps.dt;
 
         if (i % 1 == 0) {
-            // output_solution(output, i, now);
-            save(i);
+            save(i, t);
         }
 
         const auto res = compute_norms(now, U, problem, tt);
@@ -364,7 +365,7 @@ private:
         print_result_info(res);
     }
 
-    auto save(int iter) -> void {
+    auto save(int iter, double t) -> void {
         const auto name = fmt::format("out_{}.vti", iter);
 
         auto E1 = ads::bspline_function3(&space_, now.E1.data());
@@ -375,7 +376,18 @@ private:
         auto H2 = ads::bspline_function3(&space_, now.H2.data());
         auto H3 = ads::bspline_function3(&space_, now.H3.data());
 
-        maxwell_to_file(name, E1, E2, E3, H1, H2, H3);
+        auto const wrap = [](auto f) {
+            return [f](auto x) {
+                auto const [a, b, c] = x;
+                return f(point_type{a, b, c});
+            };
+        };
+
+        maxwell_to_file_with_ref(
+            name,                                                                                //
+            E1, E2, E3, H1, H2, H3,                                                              //
+            wrap(problem.E1_val_at(t)), wrap(problem.E2_val_at(t)), wrap(problem.E3_val_at(t)),  //
+            wrap(problem.H1_val_at(t)), wrap(problem.H2_val_at(t)), wrap(problem.H3_val_at(t)));
     }
 };
 
