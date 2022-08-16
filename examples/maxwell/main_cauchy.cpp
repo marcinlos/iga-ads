@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
     auto const dt = args.T / args.step_count;
     auto const steps = ads::timesteps_config{args.step_count, dt};
 
-    auto const n = 100;
+    auto const n = args.n;
     auto const nx = n;
     auto const ny = n;
     auto const nz = n;

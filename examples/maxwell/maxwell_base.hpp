@@ -71,7 +71,7 @@ private:
     using Base = ads::simulation_3d;
 
 protected:
-    ads::galois_executor executor{4};
+    ads::galois_executor executor{8};
 
     explicit maxwell_base(ads::config_3d const& config)
     : Base{config} { }

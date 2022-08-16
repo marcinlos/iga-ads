@@ -95,9 +95,9 @@ auto maxwell_to_file(const std::string& path,       //
     // auto const rx = ads::interval{0, 450e3};
     // auto const ry = ads::interval{0, 450e3};
     // auto const rz = ads::interval{0, 150e3};
-    constexpr auto res_x = 50;
-    constexpr auto res_y = 50;
-    constexpr auto res_z = 50;
+    constexpr auto res_x = 49;
+    constexpr auto res_y = 49;
+    constexpr auto res_z = 49;
     auto extent = fmt::format("0 {} 0 {} 0 {}", res_x, res_y, res_z);
     auto const rx = ads::interval{0, 2};
     auto const ry = ads::interval{0, 2};
