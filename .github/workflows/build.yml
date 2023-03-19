@@ -26,7 +26,7 @@ jobs:
         cxx: [GCC-10, Clang-12]
 
     name: Build dependencies
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout code
@@ -96,7 +96,7 @@ jobs:
       (${{ matrix.galois == 'ON' && 'Galois' || '' }}
       ${{ matrix.mumps == 'ON' && 'MUMPS' || '' }})
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: prepare-dependencies
 
     steps:
@@ -141,7 +141,7 @@ jobs:
 
   sanitize:
     name: "Sanitizers"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: prepare-dependencies
 
     steps:
@@ -176,7 +176,7 @@ jobs:
 
   coverage:
     name: "Code coverage"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs: prepare-dependencies
 
     steps:
@@ -233,7 +233,7 @@ jobs:
 
   check-spelling:
     name: "Spelling"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -246,7 +246,7 @@ jobs:
 
   check-header-guards:
     name: "Header guards"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -256,7 +256,7 @@ jobs:
 
   check-copyright:
     name: "Copyright"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
