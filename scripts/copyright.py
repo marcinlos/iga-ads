@@ -94,7 +94,7 @@ def rewrite_header(path, header):
 def main():
     """Entry point of the script."""
     year_from = 2015
-    year_to = 2021
+    year_to = 2023
     email = "marcin.los.91@gmail.com"
     holder = f"Marcin Łoś <{email}>"
     license_type = "MIT"
