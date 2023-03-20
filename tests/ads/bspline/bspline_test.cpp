@@ -3,7 +3,7 @@
 
 #include "ads/bspline/bspline.hpp"
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 namespace bsp = ads::bspline;
 using Catch::Matchers::Equals;

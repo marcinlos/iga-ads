@@ -8,7 +8,7 @@
 #include <utility>
 #include <vector>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "ads/lin/band_matrix.hpp"
 #include "ads/lin/band_solve.hpp"

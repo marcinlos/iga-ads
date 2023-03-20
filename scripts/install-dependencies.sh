@@ -99,7 +99,7 @@ cmake --install Galois/build --component lib
 cmake --install Galois/build --component tools
 
 # Install Catch2
-CATCH2_VER=2.13.6
+CATCH2_VER=3.3.2
 curl -sL https://github.com/catchorg/Catch2/archive/refs/tags/v${CATCH2_VER}.tar.gz -o catch2.tar.gz
 tar xzf catch2.tar.gz
 mv Catch2-${CATCH2_VER} Catch2

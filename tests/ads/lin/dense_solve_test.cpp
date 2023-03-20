@@ -5,7 +5,7 @@
 
 #include <algorithm>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "ads/lin/dense_matrix.hpp"
 #include "ads/lin/tensor.hpp"

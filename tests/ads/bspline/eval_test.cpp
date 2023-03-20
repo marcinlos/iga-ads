@@ -3,12 +3,13 @@
 
 #include <numeric>
 
-#include <catch2/catch.hpp>
+#include <catch2/catch_all.hpp>
 
 #include "ads/bspline/bspline.hpp"
 #include "ads/util.hpp"
 
 namespace bsp = ads::bspline;
+using Catch::Approx;
 
 TEST_CASE("B-spline evaluation", "[splines]") {
     const int p = 2;

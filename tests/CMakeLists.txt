@@ -13,7 +13,6 @@ set_target_properties(ads-suite PROPERTIES OUTPUT_NAME suite)
 
 target_sources(ads-suite
   PRIVATE
-    main.cpp
     ads/bspline/bspline_test.cpp
     ads/bspline/eval_test.cpp
     ads/basis_data_test.cpp
@@ -26,6 +25,6 @@ target_sources(ads-suite
 
 target_include_directories(ads-suite PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(ads-suite PRIVATE ads-objects ads-options-private Catch2::Catch2)
+target_link_libraries(ads-suite PRIVATE ads-objects ads-options-private Catch2::Catch2WithMain)
 
 catch_discover_tests(ads-suite PROPERTIES LABELS "ADS")
