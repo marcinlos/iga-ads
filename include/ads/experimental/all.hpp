@@ -195,6 +195,8 @@ public:
         orientation direction;
         facet_type type;
         point normal;
+        std::optional<element_data> element1;
+        std::optional<element_data> element2;
     };
 
     using facet_data = edge_data;
@@ -261,13 +263,27 @@ public:
             const auto [y, type, ny] = mesh_y_.facet(iy);
             const auto span = mesh_x_.subinterval(ix);
             const auto normal = point{0, ny};
-            return {span, y, dir, type, normal};
+            const auto elem1 = maybe_element_({ix, iy - 1});
+            const auto elem2 = maybe_element_({ix, iy});
+            return {span, y, dir, type, normal, elem1, elem2};
         } else {
             assert(dir == orientation::vertical && "Invalid edge orientation");
             const auto [x, type, nx] = mesh_x_.facet(ix);
             const auto span = mesh_y_.subinterval(iy);
             const auto normal = point{nx, 0};
-            return {span, x, dir, type, normal};
+            const auto elem1 = maybe_element_({ix - 1, iy});
+            const auto elem2 = maybe_element_({ix, iy});
+            return {span, x, dir, type, normal, elem1, elem2};
+        }
+    }
+
+private:
+    auto maybe_element_(element_index e) const noexcept -> std::optional<element_data> {
+        const auto [ix, iy] = e;
+        if (0 <= ix && ix < mesh_x_.element_count() && 0 <= iy && iy < mesh_y_.element_count()) {
+            return element(e);
+        } else {
+            return std::nullopt;
         }
     }
 };
