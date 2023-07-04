@@ -103,6 +103,8 @@ public:
     explicit interval_mesh(partition points) noexcept
     : points_{std::move(points)} { }
 
+    auto points() const noexcept -> partition const& { return points_; }
+
     auto elements() const noexcept -> element_range { return range(0, element_count()); }
 
     auto element_count() const noexcept -> int { return narrow_cast<int>(points_.size()) - 1; }
@@ -177,6 +179,10 @@ public:
         const auto ry = mesh_y_.elements();
         return util::product_range<element_index>(rx, ry);
     }
+
+    auto mesh_x() const noexcept -> interval_mesh const& { return mesh_x_; }
+
+    auto mesh_y() const noexcept -> interval_mesh const& { return mesh_y_; }
 
     struct element_data {
         interval span_x;
