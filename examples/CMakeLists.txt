@@ -201,3 +201,10 @@ add_example(coupled GALOIS
 add_example(dg_laplace MUMPS GALOIS
   SRC
   dg/laplace.cpp)
+
+add_example(spacetime-heat MUMPS GALOIS
+  SRC
+    spacetime/heat.cpp
+  LIBS
+    bfg::lyra
+)
