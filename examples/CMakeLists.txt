@@ -201,3 +201,9 @@ add_example(coupled GALOIS
 add_example(dg_laplace MUMPS GALOIS
   SRC
   dg/laplace.cpp)
+add_example(cip-advection-diffusion MUMPS GALOIS
+  SRC
+    dg/cip_advection_diffusion.cpp
+  LIBS
+    bfg::lyra
+)
