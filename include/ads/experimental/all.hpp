@@ -1003,6 +1003,50 @@ private:
                 return {avg, jump};
             }
         }
+
+        auto normal_derivative(dof_index dof, point_index q, int der, point normal) const noexcept
+            -> facet_value<double> {
+            const auto [ix, iy] = space_->index_on_facet(dof, facet_);
+            const auto [nx, ny] = normal;
+
+            if (facet_.dir == orientation::horizontal) {
+                auto const vx = vals_interval_(q, ix, 0);
+                auto const dx = vals_interval_(q, ix, der);
+                auto const vy_avg = vals_point_.average(iy, 0);
+                auto const dy_avg = vals_point_.average(iy, der);
+                auto const vy_jump = vals_point_.jump(iy, 0, ny);
+                auto const dy_jump = vals_point_.jump(iy, der, ny);
+
+                auto const dnx_avg = dx * vy_avg;
+                auto const dnx_jump = dx * vy_jump;
+
+                auto const dny_avg = vx * dy_avg;
+                auto const dny_jump = vx * dy_jump;
+
+                auto const avg = point{dnx_avg, dny_avg};
+                auto const jump = point{dnx_jump, dny_jump};
+
+                return {dot(normal, avg), dot(normal, jump)};
+            } else {
+                auto const vy = vals_interval_(q, iy, 0);
+                auto const dy = vals_interval_(q, iy, der);
+                auto const vx_avg = vals_point_.average(ix, 0);
+                auto const dx_avg = vals_point_.average(ix, der);
+                auto const vx_jump = vals_point_.jump(ix, 0, nx);
+                auto const dx_jump = vals_point_.jump(ix, der, nx);
+
+                auto const dnx_avg = dx_avg * vy;
+                auto const dnx_jump = dx_jump * vy;
+
+                auto const dny_avg = vx_avg * dy;
+                auto const dny_jump = vx_jump * dy;
+
+                auto const avg = point{dnx_avg, dny_avg};
+                auto const jump = point{dnx_jump, dny_jump};
+
+                return {dot(normal, avg), dot(normal, jump)};
+            }
+        }
     };
 
     auto index_on_element(dof_index dof, element_index e) const noexcept -> dof_index {
