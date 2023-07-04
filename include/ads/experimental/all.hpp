@@ -680,7 +680,7 @@ public:
 
 class quadrature {
 private:
-    regular_mesh* mesh_;
+    regular_mesh const* mesh_;
     int point_count_;
 
 public:
@@ -690,7 +690,7 @@ public:
     using point_set = tensor_quadrature_points;
     using edge_point_set = edge_quadrature_points;
 
-    quadrature(regular_mesh* mesh, int point_count)
+    quadrature(regular_mesh const* mesh, int point_count)
     : mesh_{mesh}
     , point_count_{point_count} {
         assert(point_count_ >= 2 && "Too few quadrature points");
@@ -780,7 +780,7 @@ inline auto eval_tensor_basis(const ValsX& vals_x, const ValsY& vals_y) noexcept
 
 class space {
 private:
-    regular_mesh* mesh_;
+    regular_mesh const* mesh_;
     bspline_space space_x_;
     bspline_space space_y_;
     global_dof dof_offset_;
@@ -796,7 +796,7 @@ public:
     using dof_iterator = index_types::index_iterator;
     using dof_range = index_types::index_range;
 
-    space(regular_mesh* mesh, bspline::basis bx, bspline::basis by,
+    space(regular_mesh const* mesh, bspline::basis bx, bspline::basis by,
           global_dof dof_offset = 0) noexcept
     : mesh_{mesh}
     , space_x_{std::move(bx)}
@@ -1440,7 +1440,7 @@ public:
 
 class quadrature3 {
 private:
-    regular_mesh3* mesh_;
+    regular_mesh3 const* mesh_;
     int point_count_;
 
 public:
@@ -1450,7 +1450,7 @@ public:
     using point_set = tensor_quadrature_points3;
     using face_point_set = face_quadrature_points;
 
-    quadrature3(regular_mesh3* mesh, int point_count) noexcept
+    quadrature3(regular_mesh3 const* mesh, int point_count) noexcept
     : mesh_{mesh}
     , point_count_{point_count} {
         assert(point_count_ >= 2 && "Too few quadrature points");
@@ -1533,7 +1533,7 @@ inline auto eval_tensor_basis(const ValsX& vals_x, const ValsY& vals_y,
 
 class space3 {
 private:
-    regular_mesh3* mesh_;
+    regular_mesh3 const* mesh_;
     bspline_space space_x_;
     bspline_space space_y_;
     bspline_space space_z_;
@@ -1550,7 +1550,7 @@ public:
     using dof_iterator = index_types3::index_iterator;
     using dof_range = index_types3::index_range;
 
-    space3(regular_mesh3* mesh, bspline::basis bx, bspline::basis by, bspline::basis bz,
+    space3(regular_mesh3 const* mesh, bspline::basis bx, bspline::basis by, bspline::basis bz,
            global_dof dof_offset = 0) noexcept
     : mesh_{mesh}
     , space_x_{std::move(bx)}
