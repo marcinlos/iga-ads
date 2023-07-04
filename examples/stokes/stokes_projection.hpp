@@ -171,6 +171,26 @@ struct prob_cavity_flow {
     point_type forcing(point_type, double) const { return {0, 0}; }
 };
 
+struct prob_cavity_flow_accelerating {
+    double Re;
+    bool navier_stokes;
+
+    value_type exact_p(point_type, double) const { return {}; }
+
+    value_pair exact_v(point_type p, double t) const {
+        auto y = p[1];
+        auto vy = value_type{};
+        auto vx = value_type{};
+
+        if (y == 1) {
+            vx.val = t;
+        }
+        return {vx, vy};
+    }
+
+    point_type forcing(point_type, double) const { return {0, 0}; }
+};
+
 template <typename Problem>
 class stokes_projection : public simulation_2d {
 private:
@@ -1005,8 +1025,8 @@ public:
         auto p_exact_avg = average_value(trial.Px, trial.Py, e_p);
         shift_pressure(p, p_exact_avg - p_avg);
 
-        if (i % 10 == 0) {
-            // save_to_file(i);
+        if (i % 1 == 0) {
+            save_to_file(i);
             // output_exact(i, tt);
         }
 
@@ -1041,11 +1061,11 @@ public:
                   << " |phi| = " << phi_norm_L2                      //
                   << std::endl;
 
-        if (v_norm_L2 > 1e3 || std::isnan(v_norm_L2)) {
-            std::cout << "Divergence detected" << std::endl;
-            after();
-            std::exit(1);
-        }
+        // if (v_norm_L2 > 1e3 || std::isnan(v_norm_L2)) {
+        //     std::cout << "Divergence detected" << std::endl;
+        //     after();
+        //     std::exit(1);
+        // }
     }
 
     void after() override {

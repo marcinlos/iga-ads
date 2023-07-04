@@ -22,6 +22,9 @@ void with_problem(const std::string& name, double Re, Fun&& fun) {
     } else if (name == "cavity-NS") {
         auto problem = ads::prob_cavity_flow{Re, true};
         fun(problem);
+    } else if (name == "cavity-NS-accel") {
+        auto problem = ads::prob_cavity_flow_accelerating{Re, true};
+        fun(problem);
     } else if (name == "mf-poly") {
         auto problem = ads::prob_manufactured_poly{Re};
         fun(problem);
