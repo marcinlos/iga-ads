@@ -97,6 +97,33 @@ auto refine_single_dimension(ads::partition const& mesh, std::vector<int> mark) 
     return new_mesh;
 }
 
+auto refine_single_dimension(ads::partition const& mesh) -> ads::partition {
+    auto const n = ads::as_signed(mesh.size()) - 1;
+    auto elems = std::vector<int>(n);
+    std::fill(begin(elems), end(elems), 1);
+    return refine_single_dimension(mesh, elems);
+}
+
+auto minimum_diameter(ads::partition const& xs) -> double {
+    auto h = std::numeric_limits<double>::max();
+    for (int i = 0; i < ads::as_signed(xs.size()) - 1; ++i) {
+        auto dx = xs[i + 1] - xs[i];
+        h = std::min(h, dx);
+    }
+    return h;
+}
+
+auto ensure_aspect_ratio(ads::partition const& xs, ads::partition const& ys, double ratio)
+    -> ads::partition {
+    auto const diam_x = minimum_diameter(xs);
+    auto const diam_y = minimum_diameter(ys);
+    if (diam_y / diam_x <= ratio) {
+        return ys;
+    } else {
+        return refine_single_dimension(ys);
+    }
+}
+
 template <typename Facets, typename Space, typename Quad, typename Out, typename Form>
 auto assemble_facets(const Facets& facets, const Space& space, const Quad& quad, int ders, Out out,
                      Form&& form) -> void {
@@ -817,10 +844,11 @@ auto parse_args_adaptive_igrm(int argc, char* argv[]) {
 }
 
 auto igrm_with_refinement_step(adaptive_igrm_args const& args, ads::partition const& xs,
-                               ads::mumps::solver& solver) -> ads::partition {
+                               ads::partition const& ys, ads::mumps::solver& solver)
+    -> ads::partition {
     // auto const elems_x = args.nx;
     auto const strong_test = args.strong_test;
-    auto const elems_y = args.ny;
+    // auto const elems_y = args.ny;
     auto const p = args.p;
     auto const c = args.c;
     auto const eps = args.eps;
@@ -833,7 +861,7 @@ auto igrm_with_refinement_step(adaptive_igrm_args const& args, ads::partition co
     auto const c_test = args.C;
 
     // auto const xs = ads::evenly_spaced(0.0, 1.0, elems_x);
-    auto const ys = ads::evenly_spaced(0.0, 1.0, elems_y);
+    // auto const ys = ads::evenly_spaced(0.0, 1.0, elems_y);
 
     auto const bx = ads::make_bspline_basis(xs, p, c);
     auto const by = ads::make_bspline_basis(ys, p, c);
@@ -869,25 +897,44 @@ auto igrm_with_refinement_step(adaptive_igrm_args const& args, ads::partition co
 
     using ads::dot, ads::grad;
 
-    auto const d = 2;
-    auto const g = (p + 1) * (p + d) / static_cast<double>(d);
-
-    auto const der_jump_form = [=](auto /*u*/, auto /*v*/, auto u_nder, auto v_nder, auto /*x*/,
-                                   const auto& edge) {
-        auto const& n = edge.normal;
-        auto const h = length(edge.span);
-        auto const hfac = std::pow(h, 2 * c + 2);
-        auto const bn = std::abs(dot(beta, n));
-        return gamma * hfac * bn * jump(u_nder) * jump(v_nder);
+    auto const area = [](auto const& element) {
+        return 2 * (length(element.span_x) + length(element.span_y));
+    };
+    auto const volume = [](auto const& element) {
+        return length(element.span_x) * length(element.span_y);
+    };
+    auto const coeff = [&](auto const& maybe_element) {
+        if (maybe_element) {
+            auto const& e = maybe_element.value();
+            return area(e) / volume(e);
+        } else {
+            return 0.0;
+        }
     };
 
-    auto const dg_jump_form = [=](auto u, auto v, auto /*x*/, auto const& edge) {
+    auto const eta_e = [&](auto const& edge) {
+        auto const d = 2;
+        auto const g = (p + 1) * (p + d) / static_cast<double>(d);
+
+        auto const a = coeff(edge.element1);
+        auto const b = coeff(edge.element2);
+
+        if (a > 0 && b > 0) {
+            return g * (a + b) / 2;
+        } else {
+            return g * (a + b);
+        }
+    };
+
+    auto const der_jump_form = [&](auto /*u*/, auto /*v*/, auto u_nder, auto v_nder, auto /*x*/,
+                                   const auto& edge) {
         auto const& n = edge.normal;
-        auto const h = length(edge.span);
+        auto const eta = eta_e(edge);
+        auto const hp1 = std::pow(1.0 / eta, 2 * c + 1);
+        auto const hp2 = std::pow(1.0 / eta, 2 * c + 2);
         auto const bn = std::abs(dot(beta, n));
-        auto const etaF = g * 4 / h;
-        // return (gamma / h + bn / 2) * jump(u).val * jump(v).val;
-        return (etaF + bn / 2) * jump(u).val * jump(v).val;
+        auto const jumps = jump(u_nder) * jump(v_nder);
+        return (0.5 * hp2 * bn + eps * hp1) * jumps;
     };
 
     auto t_before_integration = std::chrono::steady_clock::now();
@@ -896,24 +943,26 @@ auto igrm_with_refinement_step(adaptive_igrm_args const& args, ads::partition co
     auto const test_product_int_form = [=](auto u, auto v, auto /*x*/) {
         auto const beta_inf = 1;
         auto const L = 1;
-        auto const h_T = 1.0 / elems_y;
-        return eps * dot(grad(u), grad(v))   //
-             + beta_inf / L * u.val * v.val  //
-             + h_T / beta_inf * dot(beta, grad(u)) * dot(beta, grad(v));
+        return eps * dot(grad(u), grad(v)) + beta_inf / L * u.val * v.val;
     };
     assemble(V, quad, G, test_product_int_form);
 
-    if (c_test == -1) {
-        assemble_facets(mesh.interior_facets(), V, quad, G, dg_jump_form);
-    } else {
-        assemble_facets(mesh.interior_facets(), V, quad, c_test + 1, G, der_jump_form);
-    }
+    assemble_facets(mesh.interior_facets(), V, quad, c_test + 1, G, der_jump_form);
 
     // Bilinear form of the problem
     assemble(U, V, quad, B, [eps, beta](auto u, auto v, auto /*x*/) {
         return eps * dot(grad(u), grad(v)) + dot(grad(u), beta) * v.val;
     });
     assemble_facets(mesh.interior_facets(), U, V, quad, c_test + 1, B, der_jump_form);
+
+    // For discontinuous test only
+    auto const missing_form = [=](auto u, auto v, auto /*x*/, auto const& edge) {
+        auto const& n = edge.normal;
+        auto const uu = avg(u);
+        auto const vv = jump(v);
+        return -eps * dot(grad(uu), n) * vv.val;
+    };
+    assemble_facets(mesh.interior_facets(), U, V, quad, B, missing_form);
 
     // RHS
     assemble_rhs(V, quad, rhs, [problem](auto v, auto x) { return problem.f(x) * v.val; });
@@ -922,27 +971,25 @@ auto igrm_with_refinement_step(adaptive_igrm_args const& args, ads::partition co
 
     auto const test_prod_bd_form = [=](auto u, auto v, auto /*x*/, const auto& edge) {
         auto const& n = edge.normal;
-        auto const h = length(edge.span);
-        auto const etaF = g * 4 / h;
-        auto const scale = eps * etaF + 0.5 * abs(dot(beta, n));
-        return eta * scale * avg(u).val * avg(v).val;
+        auto const eta = eta_e(edge);
+        auto const hp1 = 1.0 / eta;
+        auto const hp2 = 1.0;
+        auto const bn = std::abs(dot(beta, n));
+        auto const jumps = u.val * v.val;
+        return (0.5 * hp2 * bn + eps * hp1) * jumps;
+    };
+    auto const lhs_form = [=](auto u, auto v, auto x, auto const& edge) {
+        return test_prod_bd_form(avg(u), avg(v), x, edge);
     };
 
     if (args.weak_bc || !strong_test) {
-        assemble_facets(mesh.boundary_facets(), V, quad, G, test_prod_bd_form);
-
-        auto const a_bd = [=](auto u, auto v, auto const& edge) {
-            auto const& n = edge.normal;
-            auto const h = length(edge.span);
-            auto const etaF = g * 4 / h;
-            auto const scale = eps * etaF + neg_part(dot(beta, n));
-            return eta * scale * u.val * v.val;
-        };
-
-        auto const lhs_form = [=](auto u, auto v, auto /*x*/, auto const& edge) {
-            return a_bd(avg(u), avg(v), edge);
-        };
+        assemble_facets(mesh.boundary_facets(), V, quad, G, lhs_form);
         assemble_facets(mesh.boundary_facets(), U, V, quad, B, lhs_form);
+
+        auto const rhs_form = [=](auto v, auto x, auto const& edge) {
+            return test_prod_bd_form(problem.u_with_grad(x), v, x, edge);
+        };
+        assemble_rhs(mesh.boundary_facets(), V, quad, rhs, rhs_form);
 
         auto const lhs_sym = [=](auto u, auto v, auto /*x*/, auto const& edge) {
             auto const& n = edge.normal;
@@ -951,11 +998,6 @@ auto igrm_with_refinement_step(adaptive_igrm_args const& args, ads::partition co
             return -eps * (dot(grad(uu), n) * vv.val + dot(grad(vv), n) * uu.val);
         };
         assemble_facets(mesh.boundary_facets(), U, V, quad, B, lhs_sym);
-
-        auto const rhs_form = [=](auto v, auto x, auto const& edge) {
-            return a_bd(problem.u_with_grad(x), v, edge);
-        };
-        assemble_rhs(mesh.boundary_facets(), V, quad, rhs, rhs_form);
 
         auto const rhs_sym = [=](auto v, auto x, auto const& edge) {
             auto const& n = edge.normal;
@@ -1036,8 +1078,7 @@ auto igrm_with_refinement_step(adaptive_igrm_args const& args, ads::partition co
             return test_product_int_form(v, v, 0);
         },
         [=](auto const& v, auto x, auto const& facet) {
-            auto const fv = ads::facet_value<ads::value_type>{v, v};
-            return test_prod_bd_form(fv, fv, x, facet);
+            return test_prod_bd_form(v, v, x, facet);
         });
 
     auto const res_norm = norm_using_matrix(F.data(), test_mat);
@@ -1057,18 +1098,14 @@ auto igrm_with_refinement_step(adaptive_igrm_args const& args, ads::partition co
 
     local_contribution_facets(F.data(), mesh.interior_facets(), V, quad, c_test + 1, apply_facet,
                               [=](auto v, auto der, auto x, auto const& facet) {
-                                  if (c_test == -1) {
-                                      return dg_jump_form(v, v, x, facet);
-                                  } else {
-                                      return der_jump_form(v, v, der, der, x, facet);
-                                  }
+                                  return der_jump_form(v, v, der, der, x, facet);
                               });
 
     if (args.weak_bc || !strong_test) {
         local_contribution_facets(F.data(), mesh.boundary_facets(), V, quad, c_test + 1,
                                   apply_facet,
                                   [=](auto v, auto /*der*/, auto x, auto const& facet) {
-                                      return test_prod_bd_form(v, v, x, facet);
+                                      return lhs_form(v, v, x, facet);
                                   });
     }
 
@@ -1124,12 +1161,43 @@ auto igrm_with_refinement_step(adaptive_igrm_args const& args, ads::partition co
 auto igrm_with_refinement(int argc, char* argv[]) -> void {
     auto const args = parse_args_adaptive_igrm(argc, argv);
     auto const elems_x = args.nx;
+    auto const elems_y = args.ny;
     auto solver = ads::mumps::solver{};
 
     auto xs = ads::evenly_spaced(0.0, 1.0, elems_x);
+    auto ys = ads::evenly_spaced(0.0, 1.0, elems_y);
+
     for (int i = 0; i < args.steps; ++i) {
         fmt::print("After {} refinement steps\n", i);
-        xs = igrm_with_refinement_step(args, xs, solver);
+        xs = igrm_with_refinement_step(args, xs, ys, solver);
+        ys = ensure_aspect_ratio(xs, ys, 8);
+        fmt::print("Y mesh size: {}\n", ys.size() - 1);
+
+        auto const p = args.p;
+        auto const c = args.c;
+        auto const p_test = args.P;
+        auto const c_test = args.C;
+
+        auto const bx = ads::make_bspline_basis(xs, p, c);
+        auto const by = ads::make_bspline_basis(ys, p, c);
+
+        auto const Bx = ads::make_bspline_basis(xs, p_test, c_test);
+        auto const By = ads::make_bspline_basis(ys, p_test, c_test);
+
+        auto const mesh = ads::regular_mesh{xs, ys};
+
+        auto const U = ads::space{&mesh, bx, by};
+        auto const V = ads::space{&mesh, Bx, By};
+
+        auto const n = U.dof_count();
+        auto const N = V.dof_count();
+        fmt::print("Dimension: {} + {} = {}\n", n, N, n + N);
+
+        auto dim = n + N;
+        if (dim > 100000) {
+            fmt::print("Space too large ({}), aborting\n", dim);
+            break;
+        }
     }
 }
 
