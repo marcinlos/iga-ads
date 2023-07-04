@@ -177,7 +177,8 @@ public:
                 ++it;
         }
 
-        for (segment_ptr s : segments) {
+        auto segments_copy = segments;
+        for (segment_ptr s : segments_copy) {
             vector c = center(s);
             double b = tumor(c.x, c.y);
             if (b > 1) {
