@@ -1039,6 +1039,8 @@ private:
     const double* coefficients_;
     mutable bspline::eval_ctx ctx_x_;
     mutable bspline::eval_ctx ctx_y_;
+    mutable bspline::eval_ders_ctx ctx_ders_x_;
+    mutable bspline::eval_ders_ctx ctx_ders_y_;
     mutable std::mutex ctx_lock_;
 
 public:
@@ -1048,7 +1050,9 @@ public:
     : space_{space}
     , coefficients_{coefficients}
     , ctx_x_{space->space_x().degree()}
-    , ctx_y_{space->space_y().degree()} { }
+    , ctx_y_{space->space_y().degree()}
+    , ctx_ders_x_{space->space_x().degree(), 1}
+    , ctx_ders_y_{space->space_y().degree(), 1} { }
 
     auto operator()(point p) const noexcept -> double { return eval_(p); }
 
@@ -1071,6 +1075,12 @@ public:
         }
     }
 
+    auto with_grad(point p) const noexcept -> value_type { return eval_with_grad_(p); }
+
+    auto with_grad() const noexcept {
+        return [this](point p) { return with_grad(p); };
+    }
+
 private:
     auto eval_(point p) const noexcept -> double {
         const auto [x, y] = p;
@@ -1085,6 +1095,21 @@ private:
 
         std::scoped_lock guard{ctx_lock_};
         return bspline::eval(x, y, coeffs, bx, by, ctx_x_, ctx_y_);
+    }
+
+    auto eval_with_grad_(point p) const noexcept -> value_type {
+        const auto [x, y] = p;
+
+        auto coeffs = [this](int i, int j) {
+            const auto idx = space_->global_index({i, j});
+            return coefficients_[idx];
+        };
+
+        const auto& bx = space_->space_x().basis();
+        const auto& by = space_->space_y().basis();
+
+        std::scoped_lock guard{ctx_lock_};
+        return bspline::eval_ders(x, y, coeffs, bx, by, ctx_ders_x_, ctx_ders_y_);
     }
 };
 
