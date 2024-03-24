@@ -222,6 +222,13 @@ auto parse_args(int argc, char* argv[]) {
     return args;
 }
 
+auto save_to_file(std::vector<double> const& data, std::string const& path) {
+    std::ofstream out{path};
+    for (auto v : data) {
+        out << v << '\n';
+    }
+}
+
 auto stabilized_main(int argc, char* argv[]) -> void {
     auto const args = parse_args(argc, argv);
 
@@ -358,16 +365,23 @@ auto stabilized_main(int argc, char* argv[]) -> void {
     //     auto const [x, y, t] = p;
     //     return v.val * std::sin(x) * std::sin(y);
     // });
-    F[U.global_index({elems_x / 2, elems_y / 2, 0})] = 1;
-    F[U.global_index({elems_x / 2 + 1, elems_y / 2, 0})] = 1;
-    F[U.global_index({elems_x / 2 + 1, elems_y / 2 + 1, 0})] = 1;
-    F[U.global_index({elems_x / 2, elems_y / 2 + 1, 0})] = 1;
+    auto dim_x = U.space_x().dof_count();
+    auto dim_y = U.space_y().dof_count();
+    auto mid_x = dim_x / 2;
+    auto mid_y = dim_y / 2;
+    // fmt::print("From {} to {}\n", mid_x - dim_x / 4 + 1, mid_x + dim_x / 4);
+
+    for (auto i = mid_x - dim_x / 4 + 1; i <= mid_x + dim_x / 4; ++i) {
+        for (auto j = mid_y - dim_y / 4 + 1; j <= mid_y + dim_y / 4; ++j) {
+            F[U.global_index({i, j, 0})] = 1;
+        }
+    }
 
     mat.mumpsify(problem);
     fmt::print("Non-zeros: {}\n", problem.nonzero_entries());
 
-    fmt::print("Saving matrix to file\n");
-    solver.save_to_file(problem, "matrix");
+    // fmt::print("Saving matrix to file\n");
+    // solver.save_to_file(problem, "matrix");
 
     fmt::print("Solving\n");
     solver.solve(problem);
@@ -375,10 +389,77 @@ auto stabilized_main(int argc, char* argv[]) -> void {
     auto u = ads::bspline_function3(&U, F.data());
     fmt::print("Saving\n");
     save_heat_to_file("dup-full.vti", T, u);
+    save_to_file(F, fmt::format("coeffs_{}.data", args.nx));
     fmt::print("Done\n");
+}
+
+struct packed_solution {
+    std::vector<double> data;
+    std::unique_ptr<ads::space3 const> space;
+    std::unique_ptr<ads::regular_mesh3 const> mesh;
+    ads::bspline_function3 solution;
+};
+
+auto read_solution(int n) -> packed_solution {
+    auto const p = 2;
+    auto const c = 1;
+    auto const xs = ads::evenly_spaced(0.0, 1.0, n);
+    auto const ys = ads::evenly_spaced(0.0, 1.0, n);
+    auto const ts = ads::evenly_spaced(0.0, 1.0, n);
+
+    auto mesh = std::make_unique<ads::regular_mesh3 const>(xs, ys, ts);
+    auto quad = std::make_unique<ads::quadrature3 const>(mesh.get(), std::max(p + 1, 2));
+
+    auto const bx = ads::make_bspline_basis(xs, p, c);
+    auto const by = ads::make_bspline_basis(ys, p, c);
+    auto const bt = ads::make_bspline_basis(ts, p, c);
+
+    auto const Bx = ads::make_bspline_basis(xs, p, c);
+    auto const By = ads::make_bspline_basis(ys, p, c);
+    auto const Bt = ads::make_bspline_basis(ts, p, c);
+
+    auto spaces = ads::space_factory{};
+
+    auto U = std::make_unique<ads::space3>(spaces.next<ads::space3>(mesh.get(), bx, by, bt));
+    auto const Vt = spaces.next<ads::space3>(mesh.get(), bx, by, bt);
+    auto const Vx = spaces.next<ads::space3>(mesh.get(), bx, by, bt);
+    auto const Vy = spaces.next<ads::space3>(mesh.get(), bx, by, bt);
+    auto const L = spaces.next<ads::space3>(mesh.get(), Bx, By, Bt);
+
+    auto const dim = spaces.dim();
+
+    auto F = std::vector<double>(dim);
+    std::ifstream input{fmt::format("coeffs_{}.data", n)};
+    for (int i = 0; i < dim; ++i) {
+        input >> F[i];
+    }
+    auto const* F_data = F.data();
+    auto const* U_ptr = U.get();
+    return {std::move(F), std::move(U), std::move(mesh), ads::bspline_function3{U_ptr, F_data}};
+}
+
+auto relative_errors() -> void {
+    auto const p = 2;
+    auto sol_ref = read_solution(32);
+    auto quad = ads::quadrature3(sol_ref.mesh.get(), p + 1);
+
+    auto error_for = [&](int n) {
+        auto sol = read_solution(n);
+        auto const err = error(*sol_ref.mesh, quad, L2{}, sol.solution, sol_ref.solution);
+        fmt::print("n = {} : {}\n", n, err);
+    };
+
+    error_for(4);
+    error_for(8);
+    error_for(12);
+    error_for(16);
+    error_for(20);
+    error_for(24);
+    error_for(32);
 }
 
 auto main(int argc, char* argv[]) -> int {
     // galerkin_main(argc, argv);
-    stabilized_main(argc, argv);
+    // stabilized_main(argc, argv);
+    relative_errors();
 }
