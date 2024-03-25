@@ -140,6 +140,13 @@ add_example(cg MUMPS GALOIS
     bfg::lyra
 )
 
+add_example(advection-skew MUMPS GALOIS
+  SRC
+    advection/skew.cpp
+  LIBS
+    bfg::lyra
+)
+
 add_library(ads-example-maxwell-common OBJECT
   maxwell/state.cpp
   maxwell/spaces.cpp

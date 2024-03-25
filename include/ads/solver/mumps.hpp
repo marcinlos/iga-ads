@@ -104,7 +104,7 @@ public:
         // icntl(29) = 2;
 
         // extra space factor
-        icntl(14) = 100;
+        icntl(14) = 220;
 
         // null pivot detection
         icntl(24) = 1;
