@@ -35,6 +35,7 @@ RUN rm -fr /src
 
 FROM iga-ads-build AS iga-ads
 
+RUN echo "alias compile='cmake -S /src -B /build -D CMAKE_PREFIX_PATH=\"\${DEPS};/src/libtorch\" && make -C /build'" >> ~/.bashrc
 WORKDIR /src
 VOLUME /src
 VOLUME /build
