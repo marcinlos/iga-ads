@@ -150,6 +150,55 @@ struct prob_manufactured_NS_nonpoly {
     }
 };
 
+// Non-polynomial manufactured solution with variable Reynolds number
+struct prob_manufactured_NS_nonpoly_varying_Re {
+    double Re = 1.0;
+    bool navier_stokes = true;
+
+    double reynolds(double t) const {
+        const auto s = t / 2;  // normalized to [0, 1] range
+        const auto m = 1.0;
+        const auto M = 2000.0;
+        return (1 - s) * m + s * M;
+    }
+
+    value_type exact_p(point_type p, double t) const {
+        const auto [x, y] = p;
+        using std::cos;
+        using std::sin;
+
+        return {cos(x) * sin(y + t), -sin(x) * sin(y + t), cos(x) * cos(y + t)};
+    }
+
+    value_pair exact_v(point_type p, double t) const {
+        const auto [x, y] = p;
+        using std::cos;
+        using std::sin;
+
+        value_type vx = {sin(x) * sin(y + t), cos(x) * sin(y + t), sin(x) * cos(y + t)};
+        value_type vy = {cos(x) * cos(y + t), -sin(x) * cos(y + t), -cos(x) * sin(y + t)};
+
+        return {vx, vy};
+    }
+
+    point_type forcing(point_type p, double t) {
+        // HACK - update Reynolds number
+        Re = reynolds(t);
+
+        const auto [x, y] = p;
+        using std::cos;
+        using std::sin;
+
+        auto fx = sin(x) * cos(y + t) + 2 / Re * sin(x) * sin(y + t) - sin(x) * sin(y + t)
+                + sin(x) * cos(x);
+
+        auto fy = -cos(x) * sin(y + t) + 2 / Re * cos(x) * cos(y + t) + cos(x) * cos(y + t)
+                - sin(y + t) * cos(y + t);
+
+        return {fx, fy};
+    }
+};
+
 // Cavity flow
 struct prob_cavity_flow {
     double Re;

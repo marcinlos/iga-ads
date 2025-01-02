@@ -34,6 +34,9 @@ void with_problem(const std::string& name, double Re, Fun&& fun) {
     } else if (name == "mf-nonpoly-NS") {
         auto problem = ads::prob_manufactured_NS_nonpoly{Re};
         fun(problem);
+    } else if (name == "mf-nonpoly-NS-varying-Re") {
+        auto problem = ads::prob_manufactured_NS_nonpoly_varying_Re{};
+        fun(problem);
     } else {
         std::cerr << "Unknown problem: " << name << std::endl;
         std::exit(-1);
