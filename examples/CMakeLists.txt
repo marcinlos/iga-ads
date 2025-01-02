@@ -201,3 +201,7 @@ add_example(coupled GALOIS
 add_example(dg_laplace MUMPS GALOIS
   SRC
   dg/laplace.cpp)
+
+add_example(poisson_2d MUMPS GALOIS
+  SRC
+  poisson/main.cpp)
