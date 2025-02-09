@@ -107,7 +107,7 @@ public:
         icntl(14) = 20;
 
         // null pivot detection
-        icntl(24) = 1;
+        //icntl(24) = 1;
         cntl(3) = 1e-5;
 
         // out-of-core

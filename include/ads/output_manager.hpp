@@ -20,7 +20,7 @@
 
 namespace ads {
 
-const output::output_format DEFAULT_FMT = output::fixed_format(10, 18);
+const output::output_format DEFAULT_FMT = output::fixed_format(10, 30);
 
 template <std::size_t Dim>
 struct output_manager;

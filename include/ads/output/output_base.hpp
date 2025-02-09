@@ -23,6 +23,7 @@ struct output_base {
     void print_one(T value, std::ostream& os) const {
         os.width(format.width());
         os << value;
+        os << ' ';
     }
 
     template <typename Value, typename... Values>
