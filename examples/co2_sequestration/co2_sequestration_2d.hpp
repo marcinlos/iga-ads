@@ -23,21 +23,23 @@ private:
     galois::StatTimer integration_timer{"integration"};
     ads::mumps::solver solver;
     // parameters
-    const double mu_w; //= 1.25;
-    const double mu_g; //= 2;
-    const double K; //= 1;
-    const double phi; //= 1;
-    const double rho_w; //= 2;
-    const double rho_g; //= 1;
-    const double g; //= 1;
-    // constants for now - will be functions later
-
+    const double mu_w; // brine viscosity
+    const double mu_g; // gas viscosity
+    const double K; // permeability tensor
+    const double phi; // porosity
+    const double rho_w; // brine density
+    const double rho_g; // gas density
+    const double g; // gravitational acceleration
+    const double qg_x; // gas injection location - x
+    const double qg_y; // gas injection location - y
+    const double qg_rate; // gas injection rate
     bool verbose;
 
 public:
     explicit co2_sequestration_2d(const config_2d& config, 
     const double mu_w, const double mu_g, const double K, const double phi, 
-    const double rho_w, const double rho_g, const double g, bool verbose)
+    const double rho_w, const double rho_g, const double g, 
+    const double qg_x, const double qg_y, const double qg_rate, bool verbose)
     : Base{config}
     , p{shape()}
     , s{shape()}
@@ -50,6 +52,9 @@ public:
     , rho_w{rho_w}
     , rho_g{rho_g}
     , g{g}
+    , qg_x{qg_x}
+    , qg_y{qg_y} 
+    , qg_rate{qg_rate}
     , verbose{verbose}
     , output{x.B, y.B, 2 * config.x.elements, 2 * config.y.elements} { }
 
@@ -63,10 +68,10 @@ public:
     };
 
     double source_g(double x, double y, double t) {
-        double dx = x - 50;
-        double dy = y - 16;
+        double dx = x - qg_x;
+        double dy = y - qg_y;
         double r2 = std::min(0.5 * (dx * dx + dy * dy), 1.0);
-        return 1e-6 * ((r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1));
+        return qg_rate * ((r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1));
     }
 
     double source_w(double x, double y, double t) {

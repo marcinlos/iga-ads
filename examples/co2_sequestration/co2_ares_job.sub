@@ -1,0 +1,22 @@
+#!/bin/bash
+#SBATCH --job-name=job_name
+#SBATCH --time=01:00:00
+#SBATCH --account=plgigacrvpinn-cpu
+#SBATCH --partition=plgrid
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=16G
+#SBATCH --output="joblog_test-%j.txt"
+#SBATCH --error="joberr_test-%j.txt"
+
+nx=250
+ny=250
+tstep=10
+n_its=10000
+
+mpirun ./co2_sequestration_2d $nx $ny $n_its $tstep --verbose --rho_g 479 --rho_w 1035 --mu_g 4e-5 --mu_w 25e-5 --g 9.81 --K 2e-12
+
+module load python
+srun python co2_movie.py --n_iter $(($n_its/10)) --t_step $tstep --fps 5
+

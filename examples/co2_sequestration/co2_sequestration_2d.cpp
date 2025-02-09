@@ -5,20 +5,6 @@
 #include <iostream>
 #include <lyra/lyra.hpp>
 
-// UI example for parsing arguments - look into 'iga-ads/examples/cg/main.cpp'
-
-/*
-int main() {
-    ads::dim_config dim{2, 50}; // {P, N} 2 - number of B-splines (P); higher P - more precision; 2-3 is okay; 40 - size of the mesh (N)
-    ads::timesteps_config steps{10000, 1e-4};
-    int ders = 1; // order of derivative 
-
-    ads::config_2d c{dim, dim, steps, ders};
-    ads::problems::co2_sequestration_2d sim{c};
-    sim.run();
-}
-*/
-
 int main(int argc, char* argv[]) {
 
     double mesh_x;
@@ -36,6 +22,9 @@ int main(int argc, char* argv[]) {
     double rho_w = 2;
     double rho_g = 1;
     double g = 1;
+    double qg_x = -1;
+    double qg_y = -1;
+    double qg_rate = 1e-6;
 
     auto cli = lyra::help(show_help)  //
                | lyra::arg(mesh_x, "mesh_size - x")("mesh resolution in the x direction").required()  //
@@ -49,6 +38,9 @@ int main(int argc, char* argv[]) {
                | lyra::opt(rho_w, "rho_w")["--rho_w"]("rho_w (parameter) - density of the brine") //
                | lyra::opt(rho_g, "rho_g")["--rho_g"]("rho_g (parameter) - density of the gas") // 
                | lyra::opt(g, "g")["--g"]("g (parameter) - gravitational acceleration") //
+               | lyra::opt(qg_x, "qg_x")["--qg_x"]("qg_x (parameter) - gas injection location in x direction") //
+               | lyra::opt(qg_y, "qg_y")["--qg_y"]("qg_y (parameter) - gas injection location in y direction") //
+               | lyra::opt(qg_rate, "qg_rate")["--qg_rate"]("qg_rate (parameter) - gas injection rate") //
                | lyra::opt(verbose)["--verbose"];
 
     auto const result = cli.parse({argc, argv});
@@ -62,6 +54,15 @@ int main(int argc, char* argv[]) {
     if (show_help) {
         std::cout << cli << std::endl;
         std::exit(0);
+    }
+
+    // if the user does not specify gas injection location - set it to the middle of the mesh
+    if (qg_x == -1) {
+        qg_x = mesh_x / 2;
+    }
+
+    if (qg_y == -1) {
+        qg_y = mesh_y / 2;
     }
 
     if (verbose) {
@@ -78,14 +79,13 @@ int main(int argc, char* argv[]) {
         std::cout << "rho_w: " << rho_w << std::endl;
         std::cout << "rho_g: " << rho_g << std::endl;
         std::cout << "g: " << g << std::endl;
-
+        std::cout << "qg_x: " << qg_x << std::endl;
+        std::cout << "qg_y: " << qg_y << std::endl;
+        std::cout << "qg_rate: " << qg_rate << std::endl;
     }
 
-    int n_elem_x;
-    int n_elem_y;
-
-    n_elem_x = static_cast<int>(mesh_x);
-    n_elem_y = static_cast<int>(mesh_y);
+    int n_elem_x = static_cast<int>(mesh_x);
+    int n_elem_y = static_cast<int>(mesh_y);
 
     ads::dim_config dim_x{2, 2 * n_elem_x, 0, mesh_x}; // {P, N} 2 - number of B-splines (P); higher P - more precision; 2-3 is okay
     ads::dim_config dim_y{2, 2 * n_elem_y, 0, mesh_y}; 
@@ -93,6 +93,6 @@ int main(int argc, char* argv[]) {
     int ders = 1; // order of derivative 
 
     ads::config_2d c{dim_x, dim_y, steps, ders};
-    auto sim = ads::problems::co2_sequestration_2d(c, mu_w, mu_g, K, phi, rho_w, rho_g, g, verbose);
+    auto sim = ads::problems::co2_sequestration_2d(c, mu_w, mu_g, K, phi, rho_w, rho_g, g, qg_x, qg_y, qg_rate, verbose);
     sim.run();
 }

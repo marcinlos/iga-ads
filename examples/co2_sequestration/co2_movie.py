@@ -9,10 +9,12 @@ import argparse
 parser = argparse.ArgumentParser(description='Create a movie of CO2 sequestration simulation')
 parser.add_argument('--n_iter', type=int, default=100, help='Number of iterations')
 parser.add_argument('--t_step', type=float, default=1, help='Time step, s')
+parser.add_argument('--fps', type=int, default=3, help='Frames per second')
 args = parser.parse_args()
 
 n_iter = args.n_iter
 t_step = args.t_step 
+fps = args.fps
 
 plt.rcParams['font.size'] = 16
 plt.rcParams['axes.labelsize'] = 18
@@ -84,6 +86,6 @@ ax[1].set_ylabel('Y-axis')
 ax[1].set_title('Saturation')
 
 ani = FuncAnimation(fig, animate, frames=tqdm(range(n_iter)), interval=100)
-ani.save('heatmap.mp4', writer='ffmpeg', fps=3)
+ani.save('heatmap.mp4', writer='ffmpeg', fps=fps)
 
 
