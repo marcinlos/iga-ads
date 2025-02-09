@@ -202,6 +202,10 @@ add_example(dg_laplace MUMPS GALOIS
   SRC
   dg/laplace.cpp)
 
+add_example(poisson_2d MUMPS GALOIS
+  SRC
+  poisson/main.cpp)
+
 add_example(co2_sequestration_2d
   SRC
   co2_sequestration/co2_sequestration_2d.cpp)

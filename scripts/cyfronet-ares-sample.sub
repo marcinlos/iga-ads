@@ -1,0 +1,14 @@
+#!/bin/bash
+#SBATCH --job-name=job_name
+#SBATCH --time=00:00:15
+#SBATCH --account=plgigacrvpinn-cpu
+#SBATCH --partition=plgrid
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=4
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=10G
+#SBATCH --output="joblog_test-%j.txt"
+#SBATCH --error="joberr_test-%j.txt"
+
+module load python
+srun python cyfronet-ares-test.py
