@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) {
     bool verbose = false;
 
     double mu_w = 1.25;
-    double mu_g = 2;
+    double mu_g = 0.2;
     double K = 1;
     double phi = 1;
     double rho_w = 2;

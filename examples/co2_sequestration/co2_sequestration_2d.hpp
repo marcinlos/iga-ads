@@ -31,8 +31,6 @@ private:
     const double rho_g; //= 1;
     const double g; //= 1;
     // constants for now - will be functions later
-    const double q_w = 0;
-    const double q_g = 0;
 
     bool verbose;
 
@@ -56,12 +54,25 @@ public:
     , output{x.B, y.B, 2 * config.x.elements, 2 * config.y.elements} { }
 
     double init_state(double x, double y) {
-        double dx = x - 50;
+        /*double dx = x - 50;
         double dy = y - 8;
         double r2 = std::min(0.25 * (dx * dx + dy * dy), 1.0);
         return 0.5 * ((r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1));
-        // return 0;
+        */
+        return 0;
     };
+
+    double source_g(double x, double y, double t) {
+        double dx = x - 50;
+        double dy = y - 16;
+        double r2 = std::min(0.5 * (dx * dx + dy * dy), 1.0);
+        return 1e-6 * ((r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1));
+    }
+
+    double source_w(double x, double y, double t) {
+        double val = 0;
+        return val;
+    }
 
 private:
     void solve(vector_type& v) {
@@ -76,8 +87,10 @@ private:
     void prepare_matrices() {
         x.fix_left();
         x.fix_right();
-        y.fix_left();
-        y.fix_right();
+        //y.fix_left();
+        //y.fix_right();
+
+        // !!all the bcs are Dirichlet for now - this is not correct for the final version!!
         Base::prepare_matrices();
     }
 
@@ -103,27 +116,30 @@ private:
         swap(s, s_prev);
     }
 
-    void step(int /*iter*/, double /*t*/) override {
+    void step(int /*iter*/, double t) override {
 
         //solve for p
-        compute_rhs_p();
+        compute_rhs_p(t);
+        //compute_rhs_simple(t);
+        //p(0, 0) = 0;
+
         dirichlet_bc(p, boundary::left, x, y, [](double t) { return 0; });
         dirichlet_bc(p, boundary::right, x, y, [](double t) { return 0; });
-
+        
         ads::mumps::problem problem_p(p.data(), p.size());
         assemble_problem(problem_p);
         solver.solve(problem_p);
 
         // once p is solved, we can solve for s and move to the next iteration afterwards
 
-        //zero(p);
-        compute_rhs();
-        for_boundary_dofs(x, y, [&](index_type i) { p(i[0], i[1]) = 0; });
+        compute_rhs(t);
+        dirichlet_bc(s, boundary::left, x, y, [](double t) { return 0; });
+        dirichlet_bc(s, boundary::right, x, y, [](double t) { return 0; });
         solve(s);
     }
 
     void after_step(int iter, double /*t*/) override {
-        if (iter % 100 == 0) {
+        if (iter % 10 == 0) {
             output.to_file(p, "p.out_%d.data", iter);
             output.to_file(s, "s.out_%d.data", iter);
             if (verbose) {
@@ -131,7 +147,41 @@ private:
         }
     }
 
-    void compute_rhs() {
+    void compute_rhs_simple(double t) {
+        integration_timer.start();
+        auto& rhs = p;
+
+        zero(rhs);
+
+        executor.for_each(elements(), [&](index_type e) {
+            auto U = element_rhs();
+
+            double J = jacobian(e);
+            for (auto q : quad_points()) {
+                double w = weight(q);
+                auto x = point(e, q);
+                for (auto a : dofs_on_element(e)) {
+                    auto aa = dof_global_to_local(e, a);
+                    value_type v = eval_basis(e, q, a);
+
+                    //double const n = 8.0 / 100.0;
+                    //double const m = 11.0 / 16.0;
+                    //auto const pi = M_PI;
+
+                    //auto const lambda = pi * pi * (n * n + m * m);
+                    auto fval = source_g(x[0], x[1], t);
+
+                    double val = fval * v.val;
+                    U(aa[0], aa[1]) += val * w * J;
+                }
+            }
+
+            executor.synchronized([&]() { update_global_rhs(rhs, U, e); });
+        });
+        integration_timer.stop();
+    }
+
+    void compute_rhs(double t) {
         integration_timer.start();
         auto& rhs = s;
 
@@ -143,17 +193,22 @@ private:
             double J = jacobian(e);
             for (auto q : quad_points()) {
                 double w = weight(q);
+                auto x = point(e, q);
                 for (auto a : dofs_on_element(e)) {
                     auto aa = dof_global_to_local(e, a);
                     value_type v = eval_basis(e, q, a);
                     value_type s = eval_fun(s_prev, e, q);
                     value_type p_here = eval_fun(p, e, q);
 
-                    double term_1 = s.val * grad_dot(p_here, v) * K / mu_g;
-                    double term_2 = s.val * v.dy * K * rho_g * g / mu_g;
-                    double term_3 = v.val * q_g;
+                    double s_val = std::clamp(s.val, 0.0, 1.0);
+                    double term_1 = s_val * grad_dot(p_here, v) * K / mu_g;
+                    double term_2 = s_val * v.dy * K * rho_g * g / mu_g;
+                    double term_3 = v.val * source_g(x[0], x[1], t);
+                    double term_extra = -1 * s.val * v.val * (x[1] >= 63);
 
-                    double val = (term_2 + term_3 - term_1) * steps.dt / phi + s.val * v.val;
+                    double val = (term_2 + term_3 - term_1) * steps.dt / phi + s_val * v.val;
+                    // brute forcing the upper ceiling on saturation FOR NOW
+                    val = val + term_extra;
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
@@ -163,12 +218,43 @@ private:
         integration_timer.stop();
     }
 
+    void compute_rhs_p(double t) {
+        auto& rhs = p;
+
+        zero(rhs);
+
+        executor.for_each(elements(), [&](index_type e) {
+            auto U = element_rhs();
+
+            double J = jacobian(e);
+            for (auto q : quad_points()) {
+                double w = weight(q);
+                auto x = point(e, q);
+                for (auto a : dofs_on_element(e)) {
+                    auto aa = dof_global_to_local(e, a);
+                    value_type v = eval_basis(e, q, a);
+                    value_type s = eval_fun(s_prev, e, q);
+
+                    double term_1 = K * s.dy * v.val * g * rho_w / mu_w; 
+                    double term_2 = K * s.dy * v.val * g * rho_g / mu_g; 
+                    double term_3 = (source_w(x[0], x[1], t) + source_g(x[0], x[1], t)) * v.val;
+
+                    double val = term_1 - term_2 - term_3;
+                    U(aa[0], aa[1]) += val * w * J;
+                }
+            }
+
+            executor.synchronized([&]() { update_global_rhs(rhs, U, e); });
+        });
+    }
+
     void after() override {
         std::cout << "integration: " << static_cast<double>(integration_timer.get()) << std::endl;
     }
 
     void assemble_problem(ads::mumps::problem& problem) {
-        for (auto a : dofs(x, y)) {
+        executor.for_each(dofs(x, y), [&](auto a) {
+            std::vector<std::tuple<int, int, double>> vals_buf; 
             for (auto b : overlapping_dofs(a, x, y)) {
                 if (is_fixed(a, x, y))
                     continue;
@@ -184,10 +270,12 @@ private:
                         value_type ww = eval_basis(e, q, a, x, y);
                         value_type uu = eval_basis(e, q, b, x, y);
 
-                        double s = eval_fun(s_prev, e, q).val;
+                        double s = std::clamp(eval_fun(s_prev, e, q).val, 0.0, 1.0);
                         double diff_1 = (1 - s) / mu_w;
                         double diff_2 = s / mu_g;
                         double bwu = -1 * K * (diff_1 + diff_2) * grad_dot(uu, ww);
+
+                        //double bwu = grad_dot(uu, ww);
                         val += bwu * w * J;
                     }
                 }
@@ -195,52 +283,36 @@ private:
                 if (val != 0) {
                     int i = linear_index(a, x, y) + 1;
                     int j = linear_index(b, x, y) + 1;
-                    problem.add(i, j, val);
+                    vals_buf.push_back({i, j, val});
+                    // executor.synchronized([&]() { problem.add(i, j, val); });
                 }
             }
-        }
 
-        // 1's for Dirichlet BC
-        for_boundary_dofs(x, y, [&](index_type dof) {
-            if (is_fixed(dof, x, y)) {
-                int i = linear_index(dof, x, y) + 1;
-                problem.add(i, i, 1);
-            }
+            // 1's for Dirichlet BC
+            for_boundary_dofs(x, y, [&](index_type dof) {
+                if (is_fixed(dof, x, y)) {
+                    int i = linear_index(dof, x, y) + 1;
+                    vals_buf.push_back({i, i, 1});
+                    //executor.synchronized([&]() { problem.add(i, i, 1); });
+                }
+            });
+
+            executor.synchronized([&]() {
+                for (auto& [i, j, val] : vals_buf) {
+                    problem.add(i, j, val);
+                }
+            });
         });
     }
 
     bool is_fixed(index_type dof, const dimension& /*x*/, const dimension& /*y*/) const {
-        return dof[0] == 0 || dof[0] == x.dofs() - 1; //|| dof[1] == 0 || dof[1] == y.dofs() - 1;
+        //return false; //dof[0] == 0 && dof[1] == 0; //|| dof[1] == y.dofs() - 1;
+        return dof[0] == 0 || dof[0] == x.dofs() - 1; 
     }
 
-    void compute_rhs_p() {
-        auto& rhs = p;
-
-        zero(rhs);
-
-        executor.for_each(elements(), [&](index_type e) {
-            auto U = element_rhs();
-
-            double J = jacobian(e);
-            for (auto q : quad_points()) {
-                double w = weight(q);
-                for (auto a : dofs_on_element(e)) {
-                    auto aa = dof_global_to_local(e, a);
-                    value_type v = eval_basis(e, q, a);
-                    value_type s = eval_fun(s_prev, e, q);
-
-                    double term_1 = s.dy * v.val * g * rho_w / mu_w; 
-                    double term_2 = s.dy * v.val * g * rho_g / mu_g; 
-                    double term_3 = (q_w + q_g) * v.val;
-
-                    double val = term_1 - term_2 - term_3;
-                    U(aa[0], aa[1]) += val * w * J;
-                }
-            }
-
-            executor.synchronized([&]() { update_global_rhs(rhs, U, e); });
-        });
-    }
+    //bool is_fixed(index_type dof, const dimension& /*x*/, const dimension& /*y*/) const {
+    //    return dof[0] == 0 || dof[0] == x.dofs() - 1 || dof[1] == 0 || dof[1] == y.dofs() - 1;
+    //}
 
 };
 
