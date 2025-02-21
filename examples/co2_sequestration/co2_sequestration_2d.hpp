@@ -33,6 +33,8 @@ private:
     const double qg_x; // gas injection location - x
     const double qg_y; // gas injection location - y
     const double qg_rate; // gas injection rate
+    const int mesh_x;
+    const int mesh_y;
     bool verbose;
 
 public:
@@ -56,6 +58,8 @@ public:
     , qg_y{qg_y} 
     , qg_rate{qg_rate}
     , verbose{verbose}
+    , mesh_x{config.x.b}
+    , mesh_y{config.y.b}
     , output{x.B, y.B, 2 * config.x.elements, 2 * config.y.elements} { }
 
     double init_state(double x, double y) {
@@ -209,11 +213,12 @@ private:
                     double term_1 = s_val * grad_dot(p_here, v) * K / mu_g;
                     double term_2 = s_val * v.dy * K * rho_g * g / mu_g;
                     double term_3 = v.val * source_g(x[0], x[1], t);
-                    double term_extra = -1 * s.val * v.val * (x[1] >= 63);
+                    // NOTE! this term is a temporary enforcement of the upper ceiling on saturation
+                    double term_extra = -1 * s.val * v.val * (x[1] >= mesh_y - 1);
 
                     double val = (term_2 + term_3 - term_1) * steps.dt / phi + s_val * v.val;
                     // brute forcing the upper ceiling on saturation FOR NOW
-                    val = val + term_extra;
+                    val += term_extra;
                     U(aa[0], aa[1]) += val * w * J;
                 }
             }
