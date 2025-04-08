@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: MIT
 
 #include "co2_sequestration_2d.hpp"
+
 #include <iostream>
+
 #include <lyra/lyra.hpp>
 
 int main(int argc, char* argv[]) {
-
     double mesh_x;
     double mesh_y;
     int num_steps;
@@ -25,23 +26,31 @@ int main(int argc, char* argv[]) {
     double qg_x = -1;
     double qg_y = -1;
     double qg_rate = 1e-6;
+    std::string porosity_map = "none";
+    std::string permeability_map = "none";
 
-    auto cli = lyra::help(show_help)  //
-               | lyra::arg(mesh_x, "mesh_size - x")("mesh resolution in the x direction").required()  //
-               | lyra::arg(mesh_y, "mesh_size - y")("mesh resolution in the y direction").required()  //
-               | lyra::arg(num_steps, "num_steps")("number of time steps").required()  //
-               | lyra::arg(timestep_size, "timestep_size")("size of the timestep").required()  //
-               | lyra::opt(mu_w, "mu_w")["--mu_w"]("mu_w (parameter) - brine viscosity")  //
-               | lyra::opt(mu_g, "mu_g")["--mu_g"]("mu_g (parameter) - gas viscosity")  //
-               | lyra::opt(K, "K")["--K"]("K (parameter) - permeability tensor ") //
-               | lyra::opt(phi, "phi")["--phi"]("phi (parameter) - porosity") //
-               | lyra::opt(rho_w, "rho_w")["--rho_w"]("rho_w (parameter) - density of the brine") //
-               | lyra::opt(rho_g, "rho_g")["--rho_g"]("rho_g (parameter) - density of the gas") // 
-               | lyra::opt(g, "g")["--g"]("g (parameter) - gravitational acceleration") //
-               | lyra::opt(qg_x, "qg_x")["--qg_x"]("qg_x (parameter) - gas injection location in x direction") //
-               | lyra::opt(qg_y, "qg_y")["--qg_y"]("qg_y (parameter) - gas injection location in y direction") //
-               | lyra::opt(qg_rate, "qg_rate")["--qg_rate"]("qg_rate (parameter) - gas injection rate") //
-               | lyra::opt(verbose)["--verbose"];
+    auto cli =
+        lyra::help(show_help)                                                                  //
+        | lyra::arg(mesh_x, "mesh_size - x")("mesh resolution in the x direction").required()  //
+        | lyra::arg(mesh_y, "mesh_size - y")("mesh resolution in the y direction").required()  //
+        | lyra::arg(num_steps, "num_steps")("number of time steps").required()                 //
+        | lyra::arg(timestep_size, "timestep_size")("size of the timestep").required()         //
+        | lyra::opt(mu_w, "mu_w")["--mu_w"]("mu_w (parameter) - brine viscosity")              //
+        | lyra::opt(mu_g, "mu_g")["--mu_g"]("mu_g (parameter) - gas viscosity")                //
+        | lyra::opt(K, "K")["--K"]("K (parameter) - permeability tensor ")                     //
+        | lyra::opt(phi, "phi")["--phi"]("phi (parameter) - porosity")                         //
+        | lyra::opt(rho_w, "rho_w")["--rho_w"]("rho_w (parameter) - density of the brine")     //
+        | lyra::opt(rho_g, "rho_g")["--rho_g"]("rho_g (parameter) - density of the gas")       //
+        | lyra::opt(g, "g")["--g"]("g (parameter) - gravitational acceleration")               //
+        | lyra::opt(qg_x, "qg_x")["--qg_x"](
+            "qg_x (parameter) - gas injection location in x direction")  //
+        | lyra::opt(qg_y, "qg_y")["--qg_y"](
+            "qg_y (parameter) - gas injection location in y direction")                           //
+        | lyra::opt(qg_rate, "qg_rate")["--qg_rate"]("qg_rate (parameter) - gas injection rate")  //
+        | lyra::opt(porosity_map, "porosity_map")["--porosity_map"]("porosity map file path")     //
+        | lyra::opt(permeability_map, "permeability_map")["--permeability_map"](
+            "permeability map file path")  //
+        | lyra::opt(verbose)["--verbose"];
 
     auto const result = cli.parse({argc, argv});
 
@@ -82,17 +91,21 @@ int main(int argc, char* argv[]) {
         std::cout << "qg_x: " << qg_x << std::endl;
         std::cout << "qg_y: " << qg_y << std::endl;
         std::cout << "qg_rate: " << qg_rate << std::endl;
+        std::cout << "porosity_map: " << porosity_map << std::endl;
+        std::cout << "permeability_map: " << permeability_map << std::endl;
     }
 
     int n_elem_x = static_cast<int>(mesh_x);
     int n_elem_y = static_cast<int>(mesh_y);
 
-    ads::dim_config dim_x{2, 2 * n_elem_x, 0, mesh_x}; // {P, N} 2 - number of B-splines (P); higher P - more precision; 2-3 is okay
-    ads::dim_config dim_y{2, 2 * n_elem_y, 0, mesh_y}; 
+    ads::dim_config dim_x{2, 2 * n_elem_x, 0, mesh_x};
+    ads::dim_config dim_y{2, 2 * n_elem_y, 0, mesh_y};
     ads::timesteps_config steps{num_steps, timestep_size};
-    int ders = 1; // order of derivative 
+    int ders = 1;  // order of derivative
 
     ads::config_2d c{dim_x, dim_y, steps, ders};
-    auto sim = ads::problems::co2_sequestration_2d(c, mu_w, mu_g, K, phi, rho_w, rho_g, g, qg_x, qg_y, qg_rate, verbose);
+    auto sim = ads::problems::co2_sequestration_2d(c, mu_w, mu_g, K, phi, rho_w, rho_g, g, qg_x,
+                                                   qg_y, qg_rate, porosity_map, permeability_map,
+                                                   verbose);
     sim.run();
 }
