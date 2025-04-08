@@ -34,4 +34,3 @@ system_info = {
 print("\nSystem Information:")
 for key, value in system_info.items():
     print(f"{key}: {value}")
-

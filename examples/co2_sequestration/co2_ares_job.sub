@@ -19,4 +19,3 @@ mpirun ./co2_sequestration_2d $nx $ny $n_its $tstep --verbose --rho_g 479 --rho_
 
 module load python
 srun python co2_movie.py --n_iter $(($n_its/10)) --t_step $tstep --fps 5
-
