@@ -333,6 +333,9 @@ private:
                     } else {
                         phi_here = phi;
                     }
+
+                    // temporary porosity increase
+                    phi_here += 0.1;
                     double val = (term_2 + term_3 - term_1) * steps.dt / phi_here + s_val * v.val;
 
                     // NOTE! this term is a temporary enforcement of the upper ceiling on saturation
