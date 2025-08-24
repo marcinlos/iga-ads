@@ -165,20 +165,20 @@ def data_interpolator(data: np.ndarray, a_x: float = 25, b_x: float = 25, nsteps
 
 # interpolate the porosity and permeability data to a finer grid
 
-# poros_k1_interp = data_interpolator(poros_k1)
-# poros_k2_interp = data_interpolator(poros_k2)
-# poros_k3_interp = data_interpolator(poros_k3)
+poros_k1_interp = data_interpolator(poros_k1)
+poros_k2_interp = data_interpolator(poros_k2)
+poros_k3_interp = data_interpolator(poros_k3)
 
-# perm_k1_interp = data_interpolator(perm_k1)
-# perm_k2_interp = data_interpolator(perm_k2)
-# perm_k3_interp = data_interpolator(perm_k3)
+perm_k1_interp = data_interpolator(perm_k1)
+perm_k2_interp = data_interpolator(perm_k2)
+perm_k3_interp = data_interpolator(perm_k3)
 
 # wrap the interpolated data to ascii files
 
-# data_ascii_wrapper(poros_k1_interp, 'porosity_k1_interp.data', a_x=0, b_x=25, a_y=0, b_y=25)
-# data_ascii_wrapper(poros_k2_interp, 'porosity_k2_interp.data', a_x=0, b_x=25, a_y=0, b_y=25)
-# data_ascii_wrapper(poros_k3_interp, 'porosity_k3_interp.data', a_x=0, b_x=25, a_y=0, b_y=25)
+data_ascii_wrapper(poros_k1_interp, 'porosity_k1_interp.data', a_x=0, b_x=25, a_y=0, b_y=25)
+data_ascii_wrapper(poros_k2_interp, 'porosity_k2_interp.data', a_x=0, b_x=25, a_y=0, b_y=25)
+data_ascii_wrapper(poros_k3_interp, 'porosity_k3_interp.data', a_x=0, b_x=25, a_y=0, b_y=25)
 
-# data_ascii_wrapper(perm_k1_interp, 'permeability_k1_interp.data', a_x=0, b_x=25, a_y=0, b_y=25)
-# data_ascii_wrapper(perm_k2_interp, 'permeability_k2_interp.data', a_x=0, b_x=25, a_y=0, b_y=25)
-# data_ascii_wrapper(perm_k3_interp, 'permeability_k3_interp.data', a_x=0, b_x=25, a_y=0, b_y=25)
+data_ascii_wrapper(perm_k1_interp, 'permeability_k1_interp.data', a_x=0, b_x=25, a_y=0, b_y=25)
+data_ascii_wrapper(perm_k2_interp, 'permeability_k2_interp.data', a_x=0, b_x=25, a_y=0, b_y=25)
+data_ascii_wrapper(perm_k3_interp, 'permeability_k3_interp.data', a_x=0, b_x=25, a_y=0, b_y=25)
