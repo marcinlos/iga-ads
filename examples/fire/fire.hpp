@@ -67,16 +67,17 @@ private:
     double M = 2;
     double M1 = 1;
 
-    galois_executor executor{4};
+    galois_executor executor;
     output_manager<2> output;
 
 public:
-    explicit fire(const config_2d& config)
+    explicit fire(const config_2d& config, int threads)
     : Base{config}
     , u{shape()}
     , u_prev{shape()}
     , fuel{shape()}
     , fuel_prev{shape()}
+    , executor{threads}
     , output{x.B, y.B, 300} { }
 
     double init_state(double x, double y) {
