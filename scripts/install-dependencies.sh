@@ -80,6 +80,8 @@ cmake --install Lyra/build
 GALOIS_VER=6.0
 git clone --branch release-${GALOIS_VER} --depth=1 --quiet https://github.com/IntelligentSoftwareSystems/Galois
 
+sed -i '36i #include <optional>' Galois/tools/graph-convert/graph-convert.cpp
+
 mkdir -p Galois/build
 
 cmake \
