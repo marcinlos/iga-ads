@@ -205,3 +205,7 @@ add_example(dg_laplace MUMPS GALOIS
 add_example(poisson_2d MUMPS GALOIS
   SRC
   poisson/main.cpp)
+
+add_example(fire GALOIS
+  SRC
+  fire/fire.cpp)
