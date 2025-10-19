@@ -1,13 +1,13 @@
 @image:
-    podman build -t iga-ads:latest .
+    docker build -t iga-ads-spc:latest .
 
 @shell:
-    podman run \
+    docker run \
         --rm \
         --interactive \
         --tty \
         --volume .:/code:z \
-        iga-ads:latest \
+        iga-ads-spc:latest \
         bash
 
 @config:

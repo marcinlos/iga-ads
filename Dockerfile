@@ -25,7 +25,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 ENV CMAKE_GENERATOR=Ninja
 
-RUN --mount=type=bind,source=scripts/install-dependencies.sh,target=scripts/install-dependencies.sh,z \
+RUN --mount=type=bind,source=scripts/install-dependencies.sh,target=scripts/install-dependencies.sh \
     scripts/install-dependencies.sh /deps-build /deps
 
 COPY . .
