@@ -3,6 +3,7 @@
 
 #ifndef FIRE_FIRE_HPP
 #define FIRE_FIRE_HPP
+#define STB_IMAGE_IMPLEMENTATION
 
 #include <cmath>
 
@@ -10,6 +11,8 @@
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
 #include "ads/util.hpp"
+
+#include "stb_image.h"
 
 inline double falloff(double r, double R, double t) {
     if (t < r)
@@ -70,6 +73,9 @@ private:
     galois_executor executor{4};
     output_manager<2> output;
 
+    unsigned char* img = nullptr;
+    int img_width = 0, img_height = 0, img_channels = 0;
+
 public:
     explicit fire(const config_2d& config)
     : Base{config}
@@ -77,13 +83,25 @@ public:
     , u_prev{shape()}
     , fuel{shape()}
     , fuel_prev{shape()}
-    , output{x.B, y.B, 300} { }
+    , output{x.B, y.B, 300} {
+        std::printf("Loading wildfire_fuel.bmp...\n");
+        img = stbi_load("wildfire_fuel.bmp", &img_width, &img_height, &img_channels, 0);
+        if (!img) throw std::runtime_error("Cannot read the fuel file!");
+        std::printf("Success\n");
+    }
 
     double init_state(double x, double y) {
         double r = 10;
         double R = 30;
         return T0 + Tcomb * bump(r, R, x, y);
     };
+
+    double init_fuel(double x, double y) {
+        int position_x = std::clamp(static_cast<int>(x / 100.0 * (img_width - 1)), 0, img_width - 1);
+        int position_y = std::clamp(static_cast<int>((1.0 - y / 100.0) * (img_height - 1)), 0, img_height - 1);
+        unsigned char r = img[(position_y * img_width + position_x) * img_channels]; // look only at first chanel, the grey one
+        return r / 255.0;
+    }
 
 private:
     void before() override {
@@ -94,10 +112,7 @@ private:
         solve(u);
         output.to_file(u, "out_0.data");
 
-        auto fuel_init = [](double x, double y) {
-            if (x > y) return y / x;
-            return x / y;
-        };
+        auto fuel_init = [this](double x, double y) { return init_fuel(x, y); };
         projection(fuel, fuel_init);
         solve(fuel);
         output.to_file(fuel, "fuel_0.data");
