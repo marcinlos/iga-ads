@@ -24,6 +24,10 @@ find_package(lyra REQUIRED)
 # Problem definitions
 # --------------------------------------------------------------------
 
+add_example(wildfire GALOIS
+  SRC
+  wildfire/wildfire.cpp)
+
 add_example(heat_1d
   SRC
   heat/heat_1d.cpp)
