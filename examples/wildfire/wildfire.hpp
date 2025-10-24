@@ -46,10 +46,6 @@ private:
     // double C5 = 1;
     // double C6 = 1;
     // double T0 = 1;
-    // double bx = 40;
-    // double by = 20;
-    double bx = 0;
-    double by = 0;
 
     double ch = 1.0;
     double Ar = 5.7e-5;
@@ -130,6 +126,11 @@ private:
         solve(fuel);
     }
 
+    std::array<double, 2> compute_wind(double x, double y, double t) {
+        // TODO: implement
+        return {30, 30}; // bx, by
+    }
+
     void compute_rhs(double t) {
         auto& rhs = u;
         auto& rhs_fuel = fuel;
@@ -143,7 +144,13 @@ private:
             double J = jacobian(e);
             for (auto q : quad_points()) {
                 double w = weight(q);
-                auto x = point(e, q);
+                
+                std::array<double, 2> point_xy = point(e, q);
+                double x = point_xy[0];
+                double y = point_xy[1];
+                std::array<double, 2> wind = compute_wind(x, y, t);
+                double bx = wind[0];
+                double by = wind[1];
 
                 value_type u = eval_fun(u_prev, e, q);
                 value_type fuel = eval_fun(fuel_prev, e, q);
