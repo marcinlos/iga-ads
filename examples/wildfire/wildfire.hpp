@@ -23,9 +23,9 @@ inline double falloff(double r, double R, double t) {
     return std::pow((h - 1) * (h + 1), 2);
 }
 
-inline double bump(double r, double R, double x, double y) {
-    double dx = x - 50;
-    double dy = y - 50;
+inline double bump(double r, double R, double x, double y, double init_x, double init_y) {
+    double dx = x - init_x;
+    double dy = y - init_y;
     double t = std::sqrt(dx * dx + dy * dy) / 100;
     return falloff(r / 200, R / 200, t);
 }
@@ -87,9 +87,9 @@ public:
     }
 
     double init_state(double x, double y) {
-        double r = 10;
-        double R = 30;
-        return T0 + Tcomb * bump(r, R, x, y);
+        double r = 3;
+        double R = 10;
+        return T0 + Tcomb * bump(r, R, x, y, 65, 50);
     };
 
     double init_fuel(double x, double y) {
@@ -127,9 +127,24 @@ private:
     }
 
     std::array<double, 2> compute_wind(double x, double y, double t) {
-        // TODO: implement
-        return {30, 30}; // bx, by
+        double speed = 10.0;
+
+        if (y < 30.0) {
+            return {0.0, -speed};
+        }
+        double by;
+        double angle = (M_PI / 2.0) * (1.0 - std::exp(-t / 1500.0));
+        if ( y >= 70.0) {
+            by = 0.0;
+        } else {
+            by = -speed * std::sin(angle); 
+        }
+
+        double bx = -speed * std::cos(angle); 
+    
+        return {bx, by};
     }
+
 
     void compute_rhs(double t) {
         auto& rhs = u;
