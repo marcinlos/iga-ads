@@ -88,7 +88,7 @@ public:
 
     double init_state(double x, double y) {
         double r = 3;
-        double R = 10;
+        double R = 5;
         return T0 + Tcomb * bump(r, R, x, y, 65, 50);
     };
 

@@ -3,6 +3,7 @@
 from PIL import Image
 import numpy as np
 import os
+from PIL import ImageEnhance
 
 input_path = "map.png"
 output_name = "wildfire_fuel.bmp"
@@ -17,11 +18,20 @@ green_index = g / (0.3 + 0.7 * (r + b) / 2)
 green_index = np.clip(green_index, 0, 1)
 
 enhanced = green_index ** 0.5
+
+enhanced = np.power(enhanced, 2.2)
+
 enhanced = (enhanced - enhanced.min()) / (enhanced.max() - enhanced.min() + 1e-8)
-enhanced = np.clip(enhanced * 1.5, 0, 1)
+enhanced = np.clip((enhanced - 0.2) * 2.5, 0, 1)
+gamma = 1.5  
+enhanced = np.power(enhanced, gamma)
 
 gray = (enhanced * 255).astype(np.uint8)
 gray_img = Image.fromarray(gray)
+
+enhancer = ImageEnhance.Contrast(gray_img)
+gray_img = enhancer.enhance(3.0)
+
 gray_resized = gray_img.resize((100, 100), Image.BILINEAR)
 
 gray_resized.save(output_local)

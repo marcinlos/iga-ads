@@ -3,8 +3,6 @@ import matplotlib.pyplot as plt
 
 def compute_wind(y, t):
     speed = 10.0
-    if y < 30.0:
-        return 0.0, -speed
     angle = (np.pi / 2.0) * (1.0 - np.exp(-t / 1500.0))
     bx = -speed * np.cos(angle)
     by = -speed * np.sin(angle)
