@@ -1,3 +1,5 @@
+**/venv/
+
 # Editor files
 *.sw[a-p]
 *~
