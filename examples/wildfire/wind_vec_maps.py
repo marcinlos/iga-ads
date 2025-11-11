@@ -4,7 +4,7 @@ from PIL import Image
 import os
 
 # Parametry
-size = 100
+size = 20
 timesteps = [0, 25, 50, 75, 100]   # momenty w czasie
 os.makedirs("wind_maps", exist_ok=True)
 
@@ -47,9 +47,9 @@ for t in timesteps:
 
     # Wizualizacja
     plt.figure(figsize=(6, 5))
-    plt.quiver(X, Y, Bx, By, magnitude, cmap="coolwarm", scale=400)
+    plt.quiver(X, Y, Bx, By, magnitude, cmap="coolwarm", scale=2000)
     plt.colorbar(label="Wind magnitude")
-    plt.title(f"Wind Field at t={t}\nBx={Bx.mean():.2f}, By={By.mean():.2f}, |W|={magnitude.mean():.2f}")
+    plt.title(f"Wind Field at moment t={t}\nmean(Bx)={Bx.mean():.2f}, mean(By)={By.mean():.2f}, mean(|W|)={magnitude.mean():.2f}")
     plt.xlabel("X")
     plt.ylabel("Y")
     plt.tight_layout()
