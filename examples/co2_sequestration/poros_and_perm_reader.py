@@ -121,7 +121,7 @@ data_ascii_wrapper(perm_k3, 'permeability_k3.data')
 
 from scipy.interpolate import RegularGridInterpolator
 
-def data_interpolator(data: np.ndarray, a_x: float = 25, b_x: float = 25, nsteps_x: int = 100, a_y: float = 25, b_y: float = 25, nsteps_y: int = 100) -> np.ndarray:
+def data_interpolator(data: np.ndarray, a_x: float = 0, b_x: float = 25, nsteps_x: int = 100, a_y: float = 0, b_y: float = 25, nsteps_y: int = 100) -> np.ndarray:
     '''
     This function interpolates the data to a finer grid using RegularGridInterpolator from scipy.
 
@@ -132,13 +132,13 @@ def data_interpolator(data: np.ndarray, a_x: float = 25, b_x: float = 25, nsteps
         Must be of the same format as the data_reader() function output.
         I.e. 2D numpy array with the first dimension being the x-axis and the second dimension being the y-axis and the values being the porosity/permeability values.
     a_x: float
-        The starting value of the x-axis. Default is 25.
+        The starting value of the x-axis. Default is 0.
     b_x: float
         The ending value of the x-axis. Default is 25.
     nsteps_x: int
         The number of steps to interpolate the x-axis. Default is 100.
     a_y: float
-        The starting value of the y-axis. Default is 25.
+        The starting value of the y-axis. Default is 0.
     b_y: float
         The ending value of the y-axis. Default is 25.
     nsteps_y: int
@@ -155,13 +155,13 @@ def data_interpolator(data: np.ndarray, a_x: float = 25, b_x: float = 25, nsteps
 
     interpolator = RegularGridInterpolator((x, y), data, method='linear')
 
-    x_new = np.linspace(0, a_x, nsteps_x)
-    y_new = np.linspace(0, b_y, nsteps_y)
+    x_new = np.linspace(a_x, b_x, nsteps_x)
+    y_new = np.linspace(a_y, b_y, nsteps_y)
     xv, yv = np.meshgrid(x_new, y_new)
     points = np.array([xv.flatten(), yv.flatten()]).T
     interp_data = interpolator(points).reshape(nsteps_x, nsteps_y)
 
-    return interp_data.T
+    return interp_data
 
 # interpolate the porosity and permeability data to a finer grid
 
