@@ -10,6 +10,8 @@
 int main(int argc, char* argv[]) {
     double mesh_x;
     double mesh_y;
+    int resolution_x;
+    int resolution_y;
     std::array<int, 2> resolution{1, 1};
     int iter;
     double timestep_size;
@@ -34,7 +36,9 @@ int main(int argc, char* argv[]) {
         lyra::help(show_help)                                                                  //
         | lyra::arg(mesh_x, "mesh_size - x")("mesh resolution in the x direction").required()  //
         | lyra::arg(mesh_y, "mesh_size - y")("mesh resolution in the y direction").required()
-        | lyra::arg(resolution, "resolution")(
+        | lyra::arg(resolution_x, "resolution_x")(
+            "resolution of the PINN grid / S&P data i/o").required()  //
+        | lyra::arg(resolution_y, "resolution_y")(
             "resolution of the PINN grid / S&P data i/o").required()  //
         | lyra::arg(iter, "iter")("the current iteration").required()                 //
         | lyra::arg(timestep_size, "timestep_size")("size of the timestep").required()         //
@@ -67,6 +71,9 @@ int main(int argc, char* argv[]) {
         std::cout << cli << std::endl;
         std::exit(0);
     }
+
+    resolution[0] = resolution_x;
+    resolution[1] = resolution_y;
 
     // if the user does not specify gas injection location - set it to the middle of the mesh
     if (qg_x == -1) {

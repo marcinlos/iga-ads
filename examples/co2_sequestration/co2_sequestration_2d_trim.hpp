@@ -121,6 +121,7 @@ private:
                 data(i, j) = val;
             }
         }
+        std::cout << "Map data read from " << filename << " with size: " << nx << " x " << ny << std::endl;
         return data;
     }
 
@@ -198,11 +199,11 @@ private:
     void read_p_from_pinn(vector_type& v, const int iter) {
         auto name = str(boost::format("p_from_pinn_%d.data") % iter);
         vector_type data = read_map_data(name);
-
-
+        compute_rhs_projection(v, data);
+        solve(v);
     }
 
-    void compute_rhs_simple(double t, vector_type& v, const vector_type& v_pinn) {
+    void compute_rhs_projection(vector_type& v, const vector_type& v_pinn) {
 
         executor.for_each(elements(), [&](index_type e) {
             auto U = element_rhs();
@@ -239,17 +240,20 @@ private:
     }
 
     void read_s_from_iga(vector_type& v, const int iter) {
-        auto name = str(boost::format("s_from_iga_%d.data") % iter);
+        auto name = str(boost::format("s_to_iga_%d.data") % iter); // Make sure this matches output_s_to_iga
         std::ifstream ifs(name, std::ios::in);
         if (ifs.is_open()) {
+            int count = 0;
             for (auto idx : dofs()) {
                 double val;
                 ifs >> idx[0] >> idx[1] >> val;
                 v(idx[0], idx[1]) = val;
+                ++count;
             }
             ifs.close();
+            std::cout << "Read " << count << " values from " << name << std::endl;
         } else {
-            std::cerr << "Failed to open s_from_iga file for reading." << std::endl;
+            std::cerr << "Failed to open s_from_iga file for reading: " << name << std::endl;
         }
     }
 
@@ -295,11 +299,8 @@ private:
         // load the S and P data from files
         // load the coefficients!!! from the previous step
         if (iter > 0) {
-            auto p_from_data =
-            auto s_from_data =
-
-            p_prev = p_from_data;
-            s_prev = s_from_data;
+            read_s_from_iga(s_prev, iter - 1);
+            read_p_from_pinn(p_prev, iter - 1);
         }
         else{
             // if this is the first iteration, we use initial values
@@ -310,19 +311,23 @@ private:
         }
     }
 
-    void step(int /*iter*/, double t) override {
+    void step(int /*iter*/, double /*t*/) override {
         // solve for S after loading data for P
-        compute_rhs(t);
+        compute_rhs(iter * steps.dt);
         dirichlet_bc(s, boundary::left, x, y, [](double t) { return 0; });
         dirichlet_bc(s, boundary::right, x, y, [](double t) { return 0; });
         solve(s);
     }
 
-    void after_step(int iter, double /*t*/) override {
-        // output the S coefficients
+    void after_step(int /*iter*/, double /*t*/) override {
+        // output the S data to files
+        output_s_to_iga(s, iter);
+        output_s_to_pinn(s, resolution, iter);
 
         // save the plotting data
-        output.to_file(p, "p.out_%d.data", iter);
+        if (iter > 0) {
+            output.to_file(p_prev, "p.out_%d.data", iter - 1);
+        }
         output.to_file(s, "s.out_%d.data", iter);
         if (verbose) {
             std::cout << "Iteration " << iter << " passed" << std::endl;
@@ -379,4 +384,4 @@ private:
 
 }  // namespace ads::problems
 
-#endif
+#endif  // CO2_SEQUESTRATION_CO2_SEQUESTRATION_2D_TRIM_HPP
