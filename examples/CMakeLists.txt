@@ -213,3 +213,7 @@ add_example(co2_sequestration_2d
 add_example(co2_sequestration_2d_trim
   SRC
   co2_sequestration/co2_sequestration_2d_trim.cpp)
+  
+add_example(fire GALOIS
+  SRC
+  fire/fire.cpp)
