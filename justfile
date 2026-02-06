@@ -20,4 +20,4 @@
         -D CMAKE_PREFIX_PATH=/deps
 
 @build:
-    cmake --build /build -j4
+    cmake --build /build -j $(nproc)
