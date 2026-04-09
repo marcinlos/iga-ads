@@ -68,10 +68,9 @@ Options are specified as `-D option=value`, e.g.  `cmake -S . -B build -D ADS_US
 - `ADS_USE_MUMPS` - decides if MUMPS support is included (default: `OFF`)
 - `ADS_BUILD_PROBLEMS` - decides if the example problems are compiled (default: `ON`)
 - `ADS_BUILD_TOOLS` - decides if the supporting applications are compiled (default: `ON`)
+- `ADS_BUILD_TESTS` - decides if the tests are compiled (default: `ON`)
 - [`BUILD_SHARED_LIBS`](https://cmake.org/cmake/help/latest/variable/BUILD_SHARED_LIBS.html) -
   decides if the project is built as a shared library (default: `OFF`)
-- [`BUILD_TESTING`](https://cmake.org/cmake/help/latest/module/CTest.html) - decides if the tests
-  are compiled (default: `OFF`)
 
 ## Using the library
 

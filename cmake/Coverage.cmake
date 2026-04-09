@@ -54,7 +54,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
         --demangle-cpp
         --legend
         --branch-coverage
-    DEPENDS ads-suite
+    DEPENDS ads.tests
   )
 
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -85,7 +85,7 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
       ${ADS_LLVM_COV} show
         -instr-profile coverage.profdata
         -Xdemangler=c++filt
-        $<TARGET_FILE:ads-suite>
+        $<TARGET_FILE:ads.tests>
         ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/src
         > coverage.txt
@@ -95,10 +95,10 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         -output-dir=html
         -Xdemangler=c++filt
         -instr-profile coverage.profdata
-        $<TARGET_FILE:ads-suite>
+        $<TARGET_FILE:ads.tests>
         ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/src
-    DEPENDS ads-suite
+    DEPENDS ads.tests
   )
 
 endif()

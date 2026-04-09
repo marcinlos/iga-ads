@@ -134,7 +134,7 @@ jobs:
         run: cmake --build build --target ads-tools
 
       - name: Build tests
-        run: cmake --build build --target ads-suite
+        run: cmake --build build --target ads.tests
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
@@ -169,7 +169,7 @@ jobs:
           use-sanitizers: "address;undefined"
 
       - name: Build tests
-        run: cmake --build build --target ads-suite
+        run: cmake --build build --target ads.tests
 
       - name: Test
         run: ctest --test-dir build --output-on-failure
