@@ -72,7 +72,7 @@ find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
 target_link_libraries(ads-objects PUBLIC ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 
-find_package(Boost 1.58.0 REQUIRED)
+find_package(Boost 1.70 CONFIG REQUIRED)
 target_link_libraries(ads-objects PUBLIC Boost::boost)
 
 find_package(fmt 7.1 REQUIRED)

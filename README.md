@@ -22,7 +22,7 @@ time-dependent and stationary PDEs using isogeometric finite element method.
 
 #### Libraries
 - [BLAS](http://www.netlib.org/blas/) and [LAPACK](https://www.netlib.org/lapack/)
-- [Boost](https://www.boost.org/) (>= 1.58)
+- [Boost](https://www.boost.org/) (>= 1.70)
 - [{fmt}](https://github.com/fmtlib/fmt) (>= 7.1)
 
 #### Optional
