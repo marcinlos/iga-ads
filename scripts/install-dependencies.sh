@@ -58,7 +58,7 @@ cmake --build fmt/build
 cmake --install fmt/build
 
 # Install Lyra
-LYRA_VER=1.5.1
+LYRA_VER=1.7.0
 curl -sL https://github.com/bfgroup/Lyra/archive/refs/tags/${LYRA_VER}.tar.gz -o lyra.tar.gz
 tar xzf lyra.tar.gz
 rm lyra.tar.gz

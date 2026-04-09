@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
     auto const result = cli.parse({argc, argv});
 
     if (!result) {
-        std::cerr << "Error: " << result.errorMessage() << std::endl;
+        std::cerr << "Error: " << result.message() << std::endl;
         std::cerr << cli << std::endl;
         std::exit(1);
     }

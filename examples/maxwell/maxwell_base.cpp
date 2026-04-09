@@ -7,7 +7,7 @@
 
 void validate_args(lyra::cli const& cli, lyra::parse_result const& result, bool show_help) {
     if (!result) {
-        std::cerr << "Error: " << result.errorMessage() << std::endl;
+        std::cerr << "Error: " << result.message() << std::endl;
         std::cerr << cli << std::endl;
         std::exit(1);
     }
