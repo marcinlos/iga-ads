@@ -10,7 +10,5 @@ target_sources(ads-objects
     simulation/simulation_1d.cpp
     simulation/simulation_2d.cpp
     simulation/simulation_3d.cpp
+    "${CMAKE_CURRENT_BINARY_DIR}/version.cpp"
 )
-
-# Add configured source file with version information
-target_sources(ads-objects PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/version.cpp")
