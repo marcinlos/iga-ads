@@ -16,12 +16,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         just \
         gfortran \
         g++ \
-        cmake \
         ninja-build \
         liblapack-dev \
         libboost-all-dev \
         llvm-dev \
         libmumps-dev
+
+# Install cmake
+RUN --mount=type=bind,source=scripts/,target=scripts/ \
+    scripts/install-cmake.sh
 
 ENV CMAKE_GENERATOR=Ninja \
     CMAKE_COLOR_DIAGNOSTICS=ON
