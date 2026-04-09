@@ -1,10 +1,3 @@
-if (BUILD_SHARED_LIBS)
-  set_target_properties(ads-objects
-    PROPERTIES
-      POSITION_INDEPENDENT_CODE ON
-  )
-endif()
-
 target_sources(ads-objects
   PRIVATE
     basis_data.cpp
