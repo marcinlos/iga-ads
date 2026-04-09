@@ -79,7 +79,6 @@ cmake --install Lyra/build
 # Install Galois
 GALOIS_VER=6.0
 git clone --branch release-${GALOIS_VER} --depth=1 --quiet https://github.com/IntelligentSoftwareSystems/Galois
-sed -i '36i #include <optional>' Galois/tools/graph-convert/graph-convert.cpp
 
 sed -i '36i #include <optional>' Galois/tools/graph-convert/graph-convert.cpp
 sed -i '23s/.*/#include <cstdint>/' Galois/libgalois/include/galois/substrate/NumaMem.h
