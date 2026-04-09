@@ -64,9 +64,6 @@ target_include_directories(ads-objects
 # Dependencies
 # --------------------------------------------------------------------
 
-# Bundled with the project
-add_subdirectory(external)
-
 # Numerical libraries
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
