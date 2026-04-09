@@ -1,0 +1,23 @@
+if (BUILD_SHARED_LIBS)
+  set_target_properties(ads-objects
+    PROPERTIES
+      POSITION_INDEPENDENT_CODE ON
+  )
+endif()
+
+target_sources(ads-objects
+  PRIVATE
+    basis_data.cpp
+    form_matrix.cpp
+    bspline/bspline.cpp
+    executor/galois.cpp
+    quad/gauss_data.cpp
+    simulation/dimension.cpp
+    simulation/simulation_base.cpp
+    simulation/simulation_1d.cpp
+    simulation/simulation_2d.cpp
+    simulation/simulation_3d.cpp
+)
+
+# Add configured source file with version information
+target_sources(ads-objects PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/version.cpp")

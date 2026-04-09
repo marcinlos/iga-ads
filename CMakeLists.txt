@@ -94,7 +94,7 @@ endif()
 # Subdirectories
 # --------------------------------------------------------------------
 
-add_subdirectory(src)
+add_subdirectory(src/ads)
 add_subdirectory(examples)
 add_subdirectory(tools)
 
