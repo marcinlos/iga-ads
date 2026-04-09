@@ -23,7 +23,8 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         llvm-dev \
         libmumps-dev
 
-ENV CMAKE_GENERATOR=Ninja
+ENV CMAKE_GENERATOR=Ninja \
+    CMAKE_COLOR_DIAGNOSTICS=ON
 
 RUN --mount=type=bind,source=scripts/install-dependencies.sh,target=scripts/install-dependencies.sh,z \
     scripts/install-dependencies.sh /deps-build /deps
