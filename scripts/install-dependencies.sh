@@ -95,10 +95,12 @@ cmake \
   -D BUILD_TESTING=OFF
 
 cmake --build Galois/build --target galois_shmem
-cmake --build Galois/build --target graph-convert
-cmake --build Galois/build --target graph-convert-huge
 cmake --install Galois/build --component dev
 cmake --install Galois/build --component lib
+
+# Needed because Galois imported targets reference these
+cmake --build Galois/build --target graph-convert
+cmake --build Galois/build --target graph-convert-huge
 cmake --install Galois/build --component tools
 
 # Install Catch2
