@@ -18,7 +18,7 @@ time-dependent and stationary PDEs using isogeometric finite element method.
 #### Tools
 - Modern C++ compiler with C++17 support (GCC >= 7, Clang >= 6)
 - [CMake](https://cmake.org/)
-  (>= 3.13, 3.20 recommended for [presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html))
+  (>= 3.18, 3.20 recommended for [presets](https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html))
 
 #### Libraries
 - [BLAS](http://www.netlib.org/blas/) and [LAPACK](https://www.netlib.org/lapack/)
@@ -140,9 +140,6 @@ FetchContent_MakeAvailable(ADS)
 add_executable(example ...)
 target_link_libraries(example PRIVATE ADS::ADS)
 ```
-**Note:** `FetchContent_MakeAvailable` requires CMake >= 3.14, see
-[here](https://cmake.org/cmake/help/latest/module/FetchContent.html#fetch-content-canonical-pattern)
-for solution working in earlier versions.
 
 ## Citation
 

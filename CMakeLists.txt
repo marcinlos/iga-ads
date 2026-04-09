@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
 project(ADS
   VERSION 0.1.0
   DESCRIPTION "Isogeometric Finite Element Method framework"
@@ -70,7 +70,7 @@ add_subdirectory(external)
 # Numerical libraries
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
-target_link_libraries(ads-objects PUBLIC ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+target_link_libraries(ads-objects PUBLIC LAPACK::LAPACK BLAS::BLAS)
 
 find_package(Boost 1.70 CONFIG REQUIRED)
 target_link_libraries(ads-objects PUBLIC Boost::boost)
