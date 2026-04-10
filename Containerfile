@@ -22,6 +22,25 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         llvm-dev \
         libmumps-dev
 
+# Install recent clang tools
+RUN cat >> /etc/apt/sources.list <<-EOF
+    deb http://apt.llvm.org/questing/ llvm-toolchain-questing-22 main
+    deb-src http://apt.llvm.org/questing/ llvm-toolchain-questing-22 main
+EOF
+
+RUN curl -fLo /etc/apt/trusted.gpg.d/apt.llvm.org.asc https://apt.llvm.org/llvm-snapshot.gpg.key
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        clang-format-22 \
+        clang-tidy-22 \
+        && update-alternatives --install \
+            /usr/bin/clang-format clang-format /usr/bin/clang-format-22 1 \
+        && update-alternatives --install \
+            /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-22 1
+
 # Install cmake
 RUN --mount=type=bind,source=scripts/,target=scripts/ \
     scripts/install-cmake.sh
