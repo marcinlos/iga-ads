@@ -58,16 +58,12 @@ target_sources(
                 simulation/utils.hpp
                 solver/mumps.hpp
                 util/function_value.hpp
-                util/function_value
                 util/function_value/function_value_1d.hpp
                 util/function_value/function_value_2d.hpp
                 util/function_value/function_value_3d.hpp
                 util/io.hpp
-                util/iter
                 util/iter/product.hpp
-                util/math
                 util/math/vec.hpp
-                util/math/vec
                 util/math/vec/functions.hpp
                 util/math/vec/operators.hpp
                 util/math/vec/vec_2d.hpp
@@ -75,9 +71,7 @@ target_sources(
                 util/math/vec/vec_fwd.hpp
                 util/meta.hpp
                 util/multi_array.hpp
-                util/multi_array
                 util/multi_array/base.hpp
-                util/multi_array/ordering
                 util/multi_array/ordering/reverse.hpp
                 util/multi_array/ordering/standard.hpp
                 util/multi_array/reshape.hpp
