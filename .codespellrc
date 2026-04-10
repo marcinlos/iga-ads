@@ -1,4 +1,3 @@
 [codespell]
-skip = .git,external,*build*,.mypy_cache
 quiet-level = 7
-ignore-words-list = dof,bu
+ignore-words = .codespell-ignore
