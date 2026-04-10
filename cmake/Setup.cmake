@@ -15,6 +15,3 @@ endif()
 add_library(ads-options-public INTERFACE)
 add_library(ads-options-private INTERFACE)
 target_compile_features(ads-options-public INTERFACE cxx_std_17)
-
-# Ensure BUILD_TESTING is defined
-include(CTest)
