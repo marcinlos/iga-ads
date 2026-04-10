@@ -41,6 +41,9 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         && update-alternatives --install \
             /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-22 1
 
+# Install prek
+COPY --from=ghcr.io/j178/prek:v0.3.8 /prek /usr/local/bin/
+
 # Install cmake
 RUN --mount=type=bind,source=scripts/,target=scripts/ \
     scripts/install-cmake.sh
