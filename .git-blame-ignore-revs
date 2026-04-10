@@ -7,3 +7,7 @@
 # Wed Jul 7 20:39:16 2021 +0200
 # Run clang-format on the entire codebase
 a3b39f86a12bac78de8d1b37de427f30f3590a9b
+
+# Fri Apr 10 19:22:21 2026 +0200
+# Reformat CMake files with Gersemi
+8f8d435abdd6b4852cad243f5385ab516c6e8e10
