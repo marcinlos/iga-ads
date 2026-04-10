@@ -105,8 +105,14 @@ endif()
 # --------------------------------------------------------------------
 
 add_subdirectory(src/ads)
-add_subdirectory(examples)
-add_subdirectory(tools)
+
+if(ADS_BUILD_PROBLEMS)
+    add_subdirectory(examples)
+endif()
+
+if(ADS_BUILD_TOOLS)
+    add_subdirectory(tools)
+endif()
 
 if(ADS_BUILD_TESTS)
     enable_testing()

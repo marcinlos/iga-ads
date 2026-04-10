@@ -1,7 +1,3 @@
-if (NOT ADS_BUILD_TOOLS)
-  return()
-endif()
-
 include(AddProgram)
 
 # Custom target that depends on all tools
