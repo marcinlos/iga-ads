@@ -11,6 +11,7 @@ install(
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
     COMPONENT ads-devel
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILE_SET HEADERS COMPONENT ads-devel
 )
 
 # Install targets from the export set (library and target definitions)
@@ -45,19 +46,4 @@ install(
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/ads"
   COMPONENT ads-devel
   FILES_MATCHING PATTERN "Find*"
-)
-
-# Copy public header files
-install(
-  DIRECTORY include/
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  COMPONENT ads-devel
-  FILES_MATCHING PATTERN "*.hpp"
-)
-
-# Copy config header
-install(
-  DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/include/"
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-  COMPONENT ads-devel
 )

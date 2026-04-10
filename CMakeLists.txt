@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
 project(ADS
   VERSION 0.1.0
   DESCRIPTION "Isogeometric Finite Element Method framework"
@@ -67,12 +67,12 @@ target_link_libraries(ADS PUBLIC ads-objects)
 target_link_libraries(ads-objects PUBLIC ads-options-public)
 target_link_libraries(ads-objects PRIVATE ads-options-private)
 
-configure_file(include/ads/config.hpp.in include/ads/config.hpp @ONLY)
-
-target_include_directories(ads-objects
+target_sources(ads-objects
   PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
+    FILE_SET HEADERS
+    BASE_DIRS
+      include
+      ${CMAKE_CURRENT_BINARY_DIR}/include
 )
 
 # --------------------------------------------------------------------
@@ -105,6 +105,7 @@ endif()
 # --------------------------------------------------------------------
 
 add_subdirectory(src/ads)
+add_subdirectory(include/ads)
 
 if(ADS_BUILD_PROBLEMS)
     add_subdirectory(examples)
