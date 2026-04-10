@@ -48,196 +48,146 @@ find_package(lyra REQUIRED)
 # Problem definitions
 # --------------------------------------------------------------------
 
-add_example(heat_1d
-  SRC
-  heat/heat_1d.cpp)
+add_example(heat_1d SRC heat/heat_1d.cpp)
 
-add_example(heat_2d GALOIS
-  SRC
-  heat/heat_2d.cpp)
+add_example(heat_2d GALOIS SRC heat/heat_2d.cpp)
 
-add_example(heat_3d
-  SRC
-  heat/heat_3d.cpp)
+add_example(heat_3d SRC heat/heat_3d.cpp)
 
-add_example(scalability GALOIS
-  SRC
-  scalability/main.cpp)
+add_example(scalability GALOIS SRC scalability/main.cpp)
 
-add_example(flow GALOIS
-  SRC
-  flow/main.cpp)
+add_example(flow GALOIS SRC flow/main.cpp)
 
-add_example(linear_elasticity GALOIS
-  SRC
-  elasticity/main.cpp)
+add_example(linear_elasticity GALOIS SRC elasticity/main.cpp)
 
-add_example(elasticity_victor GALOIS
-  SRC
-  elasticity/victor.cpp)
+add_example(elasticity_victor GALOIS SRC elasticity/victor.cpp)
 
-add_example(elasticity_pouria GALOIS
-  SRC
-  elasticity/elasticity_pouria.cpp)
+add_example(elasticity_pouria GALOIS SRC elasticity/elasticity_pouria.cpp)
 
-add_example(stokes_split MUMPS GALOIS
-  SRC
-  stokes/main_split.cpp)
+add_example(stokes_split MUMPS GALOIS SRC stokes/main_split.cpp)
 
-add_example(validation GALOIS
-  SRC
-  validation/main.cpp)
+add_example(validation GALOIS SRC validation/main.cpp)
 
-add_example(pollution GALOIS
-  SRC
-  pollution/main.cpp)
+add_example(pollution GALOIS SRC pollution/main.cpp)
 
-add_example(pollution_dpg GALOIS
-  SRC
-  pollution/dpg.cpp)
+add_example(pollution_dpg GALOIS SRC pollution/dpg.cpp)
 
-add_example(pollution_dpg_3d GALOIS
-  SRC
-  pollution/dpg3d.cpp)
+add_example(pollution_dpg_3d GALOIS SRC pollution/dpg3d.cpp)
 
-add_example(victor GALOIS
-  SRC
-  victor/main.cpp)
+add_example(victor GALOIS SRC victor/main.cpp)
 
-add_example(erikkson GALOIS
-  SRC
-  erikkson/main.cpp)
+add_example(erikkson GALOIS SRC erikkson/main.cpp)
 
-add_example(erikkson_mumps MUMPS GALOIS
-  SRC
-  erikkson/main_mumps.cpp)
+add_example(erikkson_mumps MUMPS GALOIS SRC erikkson/main_mumps.cpp)
 
-add_example(erikkson_inverse MUMPS GALOIS
-  SRC
-    erikkson/main_inverse.cpp
-    erikkson/inverse.cpp
-  LIBS
-    bfg::lyra
+add_example(
+    erikkson_inverse
+    MUMPS
+    GALOIS
+    SRC erikkson/main_inverse.cpp erikkson/inverse.cpp
+    LIBS bfg::lyra
 )
 
-add_example(inverse_postprocess MUMPS GALOIS
-  SRC
-    erikkson/inverse_postprocess.cpp
-    erikkson/inverse.cpp
-  LIBS
-    bfg::lyra
-)
-add_example(erikkson_nonstationary MUMPS GALOIS
-  SRC
-  erikkson/main_nonstationary.cpp)
-
-add_example(multistep GALOIS
-  SRC
-  multistep/main.cpp
-  multistep/scheme.cpp)
-
-add_example(stokes MUMPS GALOIS
-  SRC
-  stokes/main.cpp)
-
-add_example(stokes_dg MUMPS GALOIS
-  SRC
-  stokes/main_dg.cpp)
-
-add_example(stokes_nonstationary MUMPS GALOIS
-  SRC
-  stokes/main_nonstationary.cpp)
-
-add_example(stokes_projection MUMPS GALOIS
-  SRC
-  stokes/main_projection.cpp)
-
-add_example(demkowicz GALOIS
-  SRC
-  demkowicz/main.cpp)
-
-add_example(cg MUMPS GALOIS
-  SRC
-    cg/main.cpp
-    cg/shishkin.cpp
-  LIBS
-    bfg::lyra
+add_example(
+    inverse_postprocess
+    MUMPS
+    GALOIS
+    SRC erikkson/inverse_postprocess.cpp erikkson/inverse.cpp
+    LIBS bfg::lyra
 )
 
-add_library(ads-example-maxwell-common OBJECT
-  maxwell/state.cpp
-  maxwell/spaces.cpp
-  maxwell/results.cpp
-  maxwell/maxwell_base.cpp
+add_example(
+    erikkson_nonstationary
+    MUMPS
+    GALOIS
+    SRC erikkson/main_nonstationary.cpp
 )
 
-target_link_libraries(ads-example-maxwell-common PUBLIC
-  ADS
-  ads-options-private
-  bfg::lyra
-)
+add_example(multistep GALOIS SRC multistep/main.cpp multistep/scheme.cpp)
 
-add_example(maxwell_uniform GALOIS
-  SRC
-    maxwell/main_uniform.cpp
-  LIBS
+add_example(stokes MUMPS GALOIS SRC stokes/main.cpp)
+
+add_example(stokes_dg MUMPS GALOIS SRC stokes/main_dg.cpp)
+
+add_example(stokes_nonstationary MUMPS GALOIS SRC stokes/main_nonstationary.cpp)
+
+add_example(stokes_projection MUMPS GALOIS SRC stokes/main_projection.cpp)
+
+add_example(demkowicz GALOIS SRC demkowicz/main.cpp)
+
+add_example(cg MUMPS GALOIS SRC cg/main.cpp cg/shishkin.cpp LIBS bfg::lyra)
+
+add_library(
     ads-example-maxwell-common
+    OBJECT
+    maxwell/state.cpp
+    maxwell/spaces.cpp
+    maxwell/results.cpp
+    maxwell/maxwell_base.cpp
 )
 
-add_example(maxwell_head MUMPS GALOIS
-  SRC
-    maxwell/main_head.cpp
-    maxwell/head_data.cpp
-    maxwell/maxwell_head_problem.cpp
-  LIBS
+target_link_libraries(
     ads-example-maxwell-common
+    PUBLIC ADS ads-options-private bfg::lyra
 )
 
-add_example(maxwell_ads GALOIS
-  SRC
-    maxwell/main_ads.cpp
-    maxwell/head_data.cpp
-    maxwell/maxwell_head_problem.cpp
-  LIBS
-    ads-example-maxwell-common
+add_example(
+    maxwell_uniform
+    GALOIS
+    SRC maxwell/main_uniform.cpp
+    LIBS ads-example-maxwell-common
 )
 
-add_example(tumor GALOIS
-  SRC
-  tumor/vasculature/plot.cpp
-  tumor/vasculature/vasculature.cpp
-  tumor/tumor.cpp
-  tumor/tumor_main.cpp)
+add_example(
+    maxwell_head
+    MUMPS
+    GALOIS
+    SRC
+        maxwell/main_head.cpp
+        maxwell/head_data.cpp
+        maxwell/maxwell_head_problem.cpp
+    LIBS ads-example-maxwell-common
+)
 
-add_example(tumor_3d GALOIS
-  SRC
-  tumor/3d/vasculature_parser.cpp
-  tumor/3d/main.cpp)
+add_example(
+    maxwell_ads
+    GALOIS
+    SRC
+        maxwell/main_ads.cpp
+        maxwell/head_data.cpp
+        maxwell/maxwell_head_problem.cpp
+    LIBS ads-example-maxwell-common
+)
 
-add_example(implicit GALOIS
-  SRC
-  implicit/main.cpp)
+add_example(
+    tumor
+    GALOIS
+    SRC
+        tumor/vasculature/plot.cpp
+        tumor/vasculature/vasculature.cpp
+        tumor/tumor.cpp
+        tumor/tumor_main.cpp
+)
 
-add_example(coupled GALOIS
-  SRC
-  implicit/coupled.cpp)
+add_example(
+    tumor_3d
+    GALOIS
+    SRC tumor/3d/vasculature_parser.cpp tumor/3d/main.cpp
+)
 
-add_example(dg_laplace MUMPS GALOIS
-  SRC
-  dg/laplace.cpp)
+add_example(implicit GALOIS SRC implicit/main.cpp)
 
-add_example(poisson_2d MUMPS GALOIS
-  SRC
-  poisson/main.cpp)
+add_example(coupled GALOIS SRC implicit/coupled.cpp)
 
-add_example(co2_sequestration_2d
-  SRC
-  co2_sequestration/co2_sequestration_2d.cpp)
+add_example(dg_laplace MUMPS GALOIS SRC dg/laplace.cpp)
 
-add_example(co2_sequestration_2d_trim
-  SRC
-  co2_sequestration/co2_sequestration_2d_trim.cpp)
-  
-add_example(fire GALOIS
-  SRC
-  fire/fire.cpp)
+add_example(poisson_2d MUMPS GALOIS SRC poisson/main.cpp)
+
+add_example(co2_sequestration_2d SRC co2_sequestration/co2_sequestration_2d.cpp)
+
+add_example(
+    co2_sequestration_2d_trim
+    SRC co2_sequestration/co2_sequestration_2d_trim.cpp
+)
+
+add_example(fire GALOIS SRC fire/fire.cpp)

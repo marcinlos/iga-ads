@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.23 FATAL_ERROR)
-project(ADS
-  VERSION 0.1.0
-  DESCRIPTION "Isogeometric Finite Element Method framework"
-  LANGUAGES CXX
+project(
+    ADS
+    VERSION 0.1.0
+    DESCRIPTION "Isogeometric Finite Element Method framework"
+    LANGUAGES CXX
 )
 
 # General project-wide settings
@@ -19,25 +20,29 @@ option(ADS_USE_MUMPS "Use MUMPS solver. Values: { ON, OFF }." OFF)
 option(ADS_USE_GALOIS "Use Galois framework. Values: { ON, OFF }." OFF)
 
 option(
-  ADS_BUILD_PROBLEMS
-  "Build example problems. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
-  ${PROJECT_IS_TOP_LEVEL}
+    ADS_BUILD_PROBLEMS
+    "Build example problems. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
+    ${PROJECT_IS_TOP_LEVEL}
 )
 
 option(
-  ADS_BUILD_TOOLS
-  "Build supporting applications. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
-  ${PROJECT_IS_TOP_LEVEL}
+    ADS_BUILD_TOOLS
+    "Build supporting applications. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
+    ${PROJECT_IS_TOP_LEVEL}
 )
 
 option(
-  ADS_BUILD_TESTS
-  "Enable building tests. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
-  ${PROJECT_IS_TOP_LEVEL}
+    ADS_BUILD_TESTS
+    "Enable building tests. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
+    ${PROJECT_IS_TOP_LEVEL}
 )
 
 option(ADS_ENABLE_COVERAGE "Code coverage" OFF)
-set(ADS_USE_SANITIZERS "" CACHE STRING "List of sanitizers to use (semicolon separated)")
+set(ADS_USE_SANITIZERS
+    ""
+    CACHE STRING
+    "List of sanitizers to use (semicolon separated)"
+)
 
 # --------------------------------------------------------------------
 # Other settings
@@ -67,12 +72,13 @@ target_link_libraries(ADS PUBLIC ads-objects)
 target_link_libraries(ads-objects PUBLIC ads-options-public)
 target_link_libraries(ads-objects PRIVATE ads-options-private)
 
-target_sources(ads-objects
-  PUBLIC
-    FILE_SET HEADERS
-    BASE_DIRS
-      include
-      ${CMAKE_CURRENT_BINARY_DIR}/include
+target_sources(
+    ads-objects
+    PUBLIC
+        FILE_SET HEADERS
+            BASE_DIRS #
+                include
+                "${CMAKE_CURRENT_BINARY_DIR}/include"
 )
 
 # --------------------------------------------------------------------
@@ -90,14 +96,14 @@ target_link_libraries(ads-objects PUBLIC Boost::boost)
 find_package(fmt 7.1 REQUIRED)
 target_link_libraries(ads-objects PUBLIC fmt::fmt)
 
-if (ADS_USE_MUMPS)
-  find_package(MUMPS REQUIRED)
-  target_link_libraries(ads-objects PUBLIC MUMPS::MUMPS)
+if(ADS_USE_MUMPS)
+    find_package(MUMPS REQUIRED)
+    target_link_libraries(ads-objects PUBLIC MUMPS::MUMPS)
 endif()
 
-if (ADS_USE_GALOIS)
-  find_package(Galois 6.0 REQUIRED)
-  target_link_libraries(ads-objects PUBLIC Galois::shmem)
+if(ADS_USE_GALOIS)
+    find_package(Galois 6.0 REQUIRED)
+    target_link_libraries(ads-objects PUBLIC Galois::shmem)
 endif()
 
 # --------------------------------------------------------------------

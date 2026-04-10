@@ -1,6 +1,6 @@
 # No need for packaging as a subproject
-if (NOT PROJECT_IS_TOP_LEVEL)
-  return()
+if(NOT PROJECT_IS_TOP_LEVEL)
+    return()
 endif()
 
 # Metadata
@@ -28,12 +28,12 @@ set(CPACK_ARCHIVE_ADS-TOOLS_FILE_NAME "${CPACK_PACKAGE_FILE_NAME}-tools")
 # Settings for source package
 set(CPACK_SOURCE_GENERATOR "TGZ")
 set(CPACK_SOURCE_IGNORE_FILES
-  /\\.git
-  /CMakeUserPresets.json
-  /.*build.*
-  __pycache__/
-  \\.swp
-  /\\.idea
+    /\\.git
+    /CMakeUserPresets.json
+    /.*build.*
+    __pycache__/
+    \\.swp
+    /\\.idea
 )
 
 include(CPack)

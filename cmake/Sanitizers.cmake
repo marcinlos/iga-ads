@@ -1,5 +1,5 @@
-if (NOT ADS_USE_SANITIZERS)
-  return()
+if(NOT ADS_USE_SANITIZERS)
+    return()
 endif()
 
 list(JOIN ADS_USE_SANITIZERS "," SANITIZER_LIST)
@@ -15,7 +15,9 @@ string(TOUPPER "${CMAKE_BUILD_TYPE}" UPPER_BUILD_TYPE)
 
 # Enable symbol info for build types that usually omit it
 # Without it stack traces have no line numbers
-if (NOT UPPER_BUILD_TYPE STREQUAL "DEBUG" AND
-    NOT UPPER_BUILD_TYPE STREQUAL "RELWITHDEBINFO")
-  target_compile_options(ads-options-public INTERFACE -g)
+if(
+    NOT UPPER_BUILD_TYPE STREQUAL "DEBUG"
+    AND NOT UPPER_BUILD_TYPE STREQUAL "RELWITHDEBINFO"
+)
+    target_compile_options(ads-options-public INTERFACE -g)
 endif()
