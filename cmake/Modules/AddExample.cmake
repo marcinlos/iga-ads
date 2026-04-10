@@ -14,6 +14,10 @@ function(add_example name)
         ${ARGN}
     )
 
+    if(arg_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Bad arguments: ${arg_UNPARSED_ARGUMENTS}")
+    endif()
+
     set(_target_name "ads.example.${name}")
     set(_define_target TRUE)
 
