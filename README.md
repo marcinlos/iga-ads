@@ -17,7 +17,7 @@ time-dependent and stationary PDEs using isogeometric finite element method.
 
 #### Tools
 - Modern C++ compiler with C++17 support (GCC >= 7, Clang >= 6)
-- [CMake](https://cmake.org/) = 3.23
+- [CMake](https://cmake.org/) >= 3.25
 
 #### Libraries
 - [BLAS](http://www.netlib.org/blas/) and [LAPACK](https://www.netlib.org/lapack/)
