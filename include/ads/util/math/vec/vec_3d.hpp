@@ -4,6 +4,8 @@
 #ifndef ADS_UTIL_MATH_VEC_VEC_3D_HPP
 #define ADS_UTIL_MATH_VEC_VEC_3D_HPP
 
+#include "ads/util/math/vec/vec_fwd.hpp"
+
 namespace ads::math {
 
 template <>

@@ -4,6 +4,8 @@
 #ifndef ADS_UTIL_MATH_VEC_FUNCTIONS_HPP
 #define ADS_UTIL_MATH_VEC_FUNCTIONS_HPP
 
+#include <cmath>
+
 #include "ads/util/math/vec/vec_2d.hpp"
 #include "ads/util/math/vec/vec_3d.hpp"
 #include "ads/util/math/vec/vec_fwd.hpp"

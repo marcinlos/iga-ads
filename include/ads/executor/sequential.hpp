@@ -4,6 +4,7 @@
 #ifndef ADS_EXECUTOR_SEQUENTIAL_HPP
 #define ADS_EXECUTOR_SEQUENTIAL_HPP
 
+#include <algorithm>
 #include <iterator>
 #include <utility>
 
