@@ -11,13 +11,6 @@ if (NOT CMAKE_BUILD_TYPE AND NOT GENERATOR_IS_MULTI_CONFIG)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
 
-# Detect whether ADS is build as top-level project
-if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-  set(ADS_IS_TOP_LEVEL TRUE)
-else()
-  set(ADS_IS_TOP_LEVEL FALSE)
-endif()
-
 # Imaginary libraries to propagate settings
 add_library(ads-options-public INTERFACE)
 add_library(ads-options-private INTERFACE)

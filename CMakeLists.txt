@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.21 FATAL_ERROR)
 project(ADS
   VERSION 0.1.0
   DESCRIPTION "Isogeometric Finite Element Method framework"

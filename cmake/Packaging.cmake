@@ -1,5 +1,5 @@
 # No need for packaging as a subproject
-if (NOT ADS_IS_TOP_LEVEL)
+if (NOT PROJECT_IS_TOP_LEVEL)
   return()
 endif()
 
