@@ -50,5 +50,3 @@ if (Git_FOUND)
 else()
   message(STATUS "Git not available, no commit SHA")
 endif()
-
-configure_file(src/ads/version.cpp.in src/ads/version.cpp @ONLY)

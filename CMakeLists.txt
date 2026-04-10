@@ -8,6 +8,9 @@ project(ADS
 # General project-wide settings
 include(cmake/Setup.cmake)
 
+# Version information
+include(cmake/Version.cmake)
+
 # --------------------------------------------------------------------
 # Build options
 # --------------------------------------------------------------------
@@ -48,9 +51,6 @@ include(cmake/Sanitizers.cmake)
 
 # Code coverage
 include(cmake/Coverage.cmake)
-
-# Version information
-include(cmake/Version.cmake)
 
 # --------------------------------------------------------------------
 # Target library definition

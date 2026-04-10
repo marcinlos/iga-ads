@@ -1,3 +1,5 @@
+configure_file(version.cpp.in version.cpp @ONLY)
+
 target_sources(ads-objects
   PRIVATE
     basis_data.cpp
