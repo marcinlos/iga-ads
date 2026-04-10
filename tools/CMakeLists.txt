@@ -1,22 +1,18 @@
-include(AddProgram)
-
 # Custom target that depends on all tools
-add_custom_target(ads-tools)
+add_custom_target(ads.tools)
 
-# Helper function prefixing target and executable names with "ads-"
-function(add_tool name)
-  set(TARGET_NAME "ads-${name}")
-
-  add_program(${TARGET_NAME} ${ARGN})
-
-  if (TARGET ${TARGET_NAME})
-    install(TARGETS ${TARGET_NAME} COMPONENT ads-tools)
-    add_dependencies(ads-tools ${TARGET_NAME})
-  endif()
-endfunction()
-
-# --------------------------------------------------------------------
-# Tool definitions
-# --------------------------------------------------------------------
-
-add_tool(error GALOIS SRC error.cpp)
+if(ADS_USE_GALOIS)
+    add_executable(ads.tools.error error.cpp)
+    target_link_libraries(
+        ads.tools.error
+        PRIVATE #
+            ADS::ADS
+            ads-options-private
+    )
+    set_target_properties(
+        ads.tools.error
+        PROPERTIES #
+            OUTPUT_NAME ads-error
+    )
+    add_dependencies(ads.tools ads.tools.error)
+endif()
