@@ -12,10 +12,20 @@ include(cmake/Setup.cmake)
 # Build options
 # --------------------------------------------------------------------
 
-option(ADS_USE_MUMPS "Use MUMPS solver" OFF)
-option(ADS_USE_GALOIS "Use Galois framework" OFF)
-option(ADS_BUILD_PROBLEMS "Build example problems" ON)
-option(ADS_BUILD_TOOLS "Build supporting applications" ON)
+option(ADS_USE_MUMPS "Use MUMPS solver. Values: { ON, OFF }." OFF)
+option(ADS_USE_GALOIS "Use Galois framework. Values: { ON, OFF }." OFF)
+
+option(
+  ADS_BUILD_PROBLEMS
+  "Build example problems. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
+  ${PROJECT_IS_TOP_LEVEL}
+)
+
+option(
+  ADS_BUILD_TOOLS
+  "Build supporting applications. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
+  ${PROJECT_IS_TOP_LEVEL}
+)
 
 option(
   ADS_BUILD_TESTS
