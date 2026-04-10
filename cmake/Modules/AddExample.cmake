@@ -7,7 +7,7 @@ function(add_example name)
     set(multi_value_args LIBS SRC)
 
     cmake_parse_arguments(
-        PROGRAM
+        arg
         "${optional_deps}"
         "${single_value_args}"
         "${multi_value_args}"
@@ -18,19 +18,19 @@ function(add_example name)
     set(_define_target TRUE)
 
     foreach(_dep IN LISTS optional_deps)
-        if(PROGRAM_${_dep} AND NOT ADS_USE_${_dep})
+        if(arg_${_dep} AND NOT ADS_USE_${_dep})
             set(_define_target FALSE)
         endif()
     endforeach()
 
     if(_define_target)
-        add_executable(${_target_name} ${PROGRAM_SRC})
+        add_executable(${_target_name} ${arg_SRC})
         target_link_libraries(
             ${_target_name}
             PRIVATE #
                 ADS::ADS
                 ads-options-private
-                ${PROGRAM_LIBS}
+                ${arg_LIBS}
         )
         set_target_properties(
             ${_target_name}
