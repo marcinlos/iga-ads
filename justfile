@@ -29,6 +29,7 @@ build_dir := "/build"
 
 @config:
     cmake \
+        --fresh \
         -S /code \
         -B {{build_dir}} \
         -D CMAKE_BUILD_TYPE=Release \
