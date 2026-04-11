@@ -130,5 +130,7 @@ endif()
 # Installation & distribution
 # --------------------------------------------------------------------
 
-include(cmake/Installation.cmake)
-include(cmake/Packaging.cmake)
+if(PROJECT_IS_TOP_LEVEL)
+    include(cmake/Installation.cmake)
+    include(cmake/Packaging.cmake)
+endif()
