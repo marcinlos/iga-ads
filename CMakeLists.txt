@@ -93,7 +93,7 @@ target_link_libraries(ads-objects PUBLIC LAPACK::LAPACK BLAS::BLAS)
 find_package(Boost 1.70 CONFIG REQUIRED)
 target_link_libraries(ads-objects PUBLIC Boost::boost)
 
-find_package(fmt 7.1 REQUIRED)
+find_package(fmt 7.1 CONFIG REQUIRED)
 target_link_libraries(ads-objects PUBLIC fmt::fmt)
 
 if(ADS_USE_MUMPS)
@@ -102,7 +102,7 @@ if(ADS_USE_MUMPS)
 endif()
 
 if(ADS_USE_GALOIS)
-    find_package(Galois 6.0 REQUIRED)
+    find_package(Galois 6.0 CONFIG REQUIRED)
     target_link_libraries(ads-objects PUBLIC Galois::shmem)
 endif()
 

@@ -2,7 +2,7 @@
 add_custom_target(ads.examples)
 
 # Used by many examples to parse command arguments
-find_package(lyra REQUIRED)
+find_package(lyra CONFIG REQUIRED)
 
 # Problem definitions
 add_subdirectory(heat)
