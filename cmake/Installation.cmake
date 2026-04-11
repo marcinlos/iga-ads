@@ -1,5 +1,3 @@
-include(GNUInstallDirs)
-
 # Define an export set for the main library
 install(
     TARGETS ADS ads-objects ads-options-public ads-options-private
