@@ -1,5 +1,3 @@
-include(AddExample)
-
 add_example(erikkson GALOIS SRC main.cpp)
 
 add_example(erikkson_mumps MUMPS GALOIS SRC main_mumps.cpp)

@@ -1,5 +1,3 @@
-include(AddExample)
-
 add_example(co2_sequestration_2d SRC co2_sequestration_2d.cpp)
 
 add_example(co2_sequestration_2d_trim SRC co2_sequestration_2d_trim.cpp)

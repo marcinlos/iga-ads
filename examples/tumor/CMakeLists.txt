@@ -1,5 +1,3 @@
-include(AddExample)
-
 add_example(
     tumor
     GALOIS

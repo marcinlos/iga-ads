@@ -1,5 +1,3 @@
-include(AddExample)
-
 add_library(
     ads.example.maxwell.common
     OBJECT

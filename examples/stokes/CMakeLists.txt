@@ -1,5 +1,3 @@
-include(AddExample)
-
 add_example(stokes_split MUMPS GALOIS SRC main_split.cpp)
 add_example(stokes MUMPS GALOIS SRC main.cpp)
 add_example(stokes_dg MUMPS GALOIS SRC main_dg.cpp)
