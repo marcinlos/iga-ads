@@ -35,7 +35,9 @@ build_dir := "/build"
         -D CMAKE_BUILD_TYPE=Release \
         -D ADS_USE_GALOIS=ON \
         -D ADS_USE_MUMPS=ON \
-        -D CMAKE_PREFIX_PATH=/deps
+        -D CMAKE_PREFIX_PATH=/deps \
+        -D CMAKE_INSTALL_LIBDIR=lib \
+        -D CMAKE_INSTALL_PREFIX=/opt/ads
 
 @build CORES="$(nproc)":
     cmake \
