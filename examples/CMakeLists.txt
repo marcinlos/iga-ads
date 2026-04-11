@@ -24,3 +24,18 @@ add_subdirectory(implicit)
 add_subdirectory(dg)
 add_subdirectory(co2_sequestration)
 add_subdirectory(fire)
+
+# Installation rules for example executables
+get_target_property(
+    ADS_EXAMPLES_TARGETS
+    ads.examples
+    MANUALLY_ADDED_DEPENDENCIES
+)
+
+if(ADS_EXAMPLES_TARGETS)
+    install(
+        TARGETS ${ADS_EXAMPLES_TARGETS}
+        COMPONENT ads-examples
+        EXCLUDE_FROM_ALL
+    )
+endif()

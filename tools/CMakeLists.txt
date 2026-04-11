@@ -16,3 +16,10 @@ if(ADS_USE_GALOIS)
     )
     add_dependencies(ads.tools ads.tools.error)
 endif()
+
+# Installation rules for tools
+get_target_property(ADS_TOOLS_TARGETS ads.tools MANUALLY_ADDED_DEPENDENCIES)
+
+if(ADS_TOOLS_TARGETS)
+    install(TARGETS ${ADS_TOOLS_TARGETS} COMPONENT ads-dev)
+endif()
