@@ -4,8 +4,8 @@ include(GNUInstallDirs)
 install(
     TARGETS ADS ads-objects ads-options-public ads-options-private
     EXPORT ads-targets
-    LIBRARY COMPONENT ads-rt
-    ARCHIVE COMPONENT ads-dev
+    LIBRARY COMPONENT ads
+    ARCHIVE COMPONENT ads
     FILE_SET HEADERS COMPONENT ads-dev
 )
 
