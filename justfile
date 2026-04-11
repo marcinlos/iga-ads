@@ -2,6 +2,7 @@
 # https://just.systems/man/en/
 
 image := "iga-ads:latest"
+container_name := "iga-ads-dev"
 tool := env("CONTAINER_TOOL", "docker")
 build_dir := "/build"
 
@@ -18,13 +19,25 @@ build_dir := "/build"
         .
 
 # Start the development container
-@shell:
+@start: && shell
     {{tool}} run \
         --rm \
-        --interactive \
+        --detach \
         --tty \
         --volume .:/code:z \
-        {{image}} \
+        --name {{container_name}} \
+        {{image}}
+
+# Stop the development container
+@stop:
+    {{tool}} kill {{container_name}}
+
+# Start a shell in the development container
+@shell:
+    {{tool}} exec \
+        --interactive \
+        --tty \
+        {{container_name}} \
         bash
 
 @config:
