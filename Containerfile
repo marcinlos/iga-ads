@@ -51,7 +51,10 @@ RUN --mount=type=bind,source=scripts/,target=scripts/ \
 ENV CMAKE_GENERATOR=Ninja \
     CMAKE_COLOR_DIAGNOSTICS=ON
 
-RUN --mount=type=bind,source=scripts/install-dependencies.sh,target=scripts/install-dependencies.sh,z \
+RUN --mount=type=bind,source=scripts/install-dependencies.sh,target=scripts/install-dependencies.sh \
     scripts/install-dependencies.sh /deps-build /deps
 
 COPY . .
+
+# Workaround for docker
+RUN git config --global --add safe.directory /code

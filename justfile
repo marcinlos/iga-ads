@@ -1,8 +1,13 @@
+tool := env("CONTAINER_TOOL", "docker")
+
 @image:
-    podman build -t iga-ads:latest .
+    {{tool}} build        \
+        -f Containerfile  \
+        -t iga-ads:latest \
+        .
 
 @shell:
-    podman run \
+    {{tool}} run \
         --rm \
         --interactive \
         --tty \
