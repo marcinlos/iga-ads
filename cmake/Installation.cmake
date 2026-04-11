@@ -19,7 +19,11 @@ install(
 
 include(CMakePackageConfigHelpers)
 
-configure_file(cmake/ads-config.cmake.in ads-config.cmake @ONLY)
+configure_file(
+    "${PROJECT_SOURCE_DIR}/cmake/ads-config.cmake.in"
+    ads-config.cmake
+    @ONLY
+)
 
 write_basic_package_version_file(
     "${CMAKE_CURRENT_BINARY_DIR}/ads-version.cmake"
