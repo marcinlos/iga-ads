@@ -42,6 +42,10 @@ build_dir := "/build"
         --build {{build_dir}} \
         --parallel {{CORES}}
 
+# Run all the linter tools
+@lint:
+    prek run --all-files
+
 # Check that public headers are self-sufficient
 @verify-headers:
     cmake \
