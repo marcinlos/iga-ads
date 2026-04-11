@@ -34,7 +34,6 @@ build_dir := "/build"
         -D CMAKE_BUILD_TYPE=Release \
         -D ADS_USE_GALOIS=ON \
         -D ADS_USE_MUMPS=ON \
-        -D CMAKE_VERIFY_INTERFACE_HEADER_SETS=ON \
         -D CMAKE_PREFIX_PATH=/deps
 
 @build CORES="$(nproc)":
