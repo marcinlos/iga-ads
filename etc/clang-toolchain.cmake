@@ -1,0 +1,25 @@
+include_guard(GLOBAL)
+
+include("${CMAKE_CURRENT_LIST_DIR}/common.cmake")
+
+set(CMAKE_C_COMPILER clang-22)
+set(CMAKE_CXX_COMPILER clang++-22)
+
+string(
+    JOIN " "
+    WARNING_FLAGS #
+    "${WARNING_FLAGS}"
+    -Wno-sign-conversion
+)
+
+set(BASE_FLAGS "${WARNING_FLAGS} ${SANITIZER_FLAGS}")
+
+set(DEBUG_FLAGS "-O0 -fno-inline -g3 ${BASE_FLAGS}")
+
+set(CMAKE_C_FLAGS_DEBUG_INIT "${BASE_FLAGS}")
+set(CMAKE_CXX_FLAGS_DEBUG_INIT "${BASE_FLAGS}")
+
+set(RELEASE_FLAGS "-O2 ${BASE_FLAGS}")
+
+set(CMAKE_C_FLAGS_RELEASE_INIT "${RELEASE_FLAGS}")
+set(CMAKE_CXX_FLAGS_RELEASE_INIT "${RELEASE_FLAGS}")

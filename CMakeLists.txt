@@ -37,22 +37,17 @@ option(
     ${PROJECT_IS_TOP_LEVEL}
 )
 
-option(ADS_ENABLE_COVERAGE "Code coverage" OFF)
-set(ADS_USE_SANITIZERS
-    ""
-    CACHE STRING
-    "List of sanitizers to use (semicolon separated)"
+option(
+    ADS_DEV_SANITIZERS
+    "Build with sanitizers enabled. Default: OFF. Values: { ON, OFF }."
+    OFF
 )
+
+option(ADS_ENABLE_COVERAGE "Code coverage" OFF)
 
 # --------------------------------------------------------------------
 # Other settings
 # --------------------------------------------------------------------
-
-# Compiler warning options
-include(cmake/Warnings.cmake)
-
-# Sanitizers
-include(cmake/Sanitizers.cmake)
 
 # Code coverage
 include(cmake/Coverage.cmake)

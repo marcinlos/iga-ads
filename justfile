@@ -46,6 +46,7 @@ build_dir := "/build"
         -S /code \
         -B {{build_dir}} \
         -D CMAKE_BUILD_TYPE=Release \
+        -D CMAKE_TOOLCHAIN_FILE=etc/gcc-toolchain.cmake \
         -D ADS_USE_GALOIS=ON \
         -D ADS_USE_MUMPS=ON \
         -D CMAKE_PREFIX_PATH=/deps \
