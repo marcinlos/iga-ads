@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# This file is intended to be used as a pre-commit git hook for commits made
+# outside the container. It invokes prek inside the container, which is assumed
+# to be running.
+
+TOOL="${CONTAINER_TOOL:-docker}"
+NAME="${CONTAINER_NAME:-iga-ads-dev}"
+
+exec "${TOOL}" exec \
+    --workdir /code \
+    "${NAME}" \
+    .git/hooks/invoke-prek

@@ -66,3 +66,17 @@ build_dir := "/build"
     cmake \
         --build {{build_dir}} \
         --target all_verify_interface_header_sets
+
+# Install git hooks running inside the development container
+@install-hooks:
+    {{tool}} exec \
+        {{container_name}} \
+        prek install
+    mv .git/hooks/pre-commit .git/hooks/invoke-prek
+    ln --symbolic --force \
+        ../../hooks/pre-commit \
+        .git/hooks/
+
+# Remove git hooks installed by `install-hooks`
+@clear-hooks:
+    rm -f .git/hooks/{pre-commit,pre-commit.legacy,invoke-prek}
