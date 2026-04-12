@@ -1,0 +1,25 @@
+[[repos]]
+repo = "builtin"
+hooks = [
+  { id = "trailing-whitespace" },
+  { id = "end-of-file-fixer" },
+  { id = "mixed-line-ending" },
+  { id = "check-added-large-files" },
+  { id = "check-yaml" },
+  { id = "check-json" },
+  { id = "check-toml" },
+  { id = "check-merge-conflict" },
+  { id = "check-case-conflict" }
+]
+
+# CMake formatter
+[[repos]]
+repo = "https://github.com/BlankSpruce/gersemi"
+rev = "0.26.1"
+hooks = [{ id = "gersemi" }]
+
+# Spellcheck
+[[repos]]
+repo = "https://github.com/codespell-project/codespell"
+rev = "v2.4.1"
+hooks = [{ id = "codespell" }]
