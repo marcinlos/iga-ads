@@ -18,7 +18,7 @@ target_sources(
 target_link_libraries(
     ads.tests
     PRIVATE #
-        ADS::ADS
+        ads::ads
         Catch2::Catch2WithMain
 )
 

@@ -6,8 +6,7 @@ if(ADS_USE_GALOIS)
     target_link_libraries(
         ads.tools.error
         PRIVATE #
-            ADS::ADS
-            ads-options-private
+            ads::ads
     )
     set_target_properties(
         ads.tools.error

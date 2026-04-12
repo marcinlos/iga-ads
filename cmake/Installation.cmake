@@ -1,6 +1,6 @@
 # Define an export set for the main library
 install(
-    TARGETS ADS ads-objects ads-options-public ads-options-private
+    TARGETS ads
     EXPORT ads-targets
     LIBRARY COMPONENT ads
     ARCHIVE COMPONENT ads

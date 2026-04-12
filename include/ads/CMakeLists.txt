@@ -1,13 +1,13 @@
 configure_file(config.hpp.in config.hpp @ONLY)
 
 set_target_properties(
-    ads-objects
+    ads
     PROPERTIES #
         VERIFY_INTERFACE_HEADER_SETS ON
 )
 
 target_sources(
-    ads-objects
+    ads
     PUBLIC
         FILE_SET HEADERS
             FILES

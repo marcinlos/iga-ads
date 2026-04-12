@@ -70,8 +70,5 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     )
 endif()
 
-target_compile_options(ads-options-private INTERFACE ${ADS_CXX_FLAGS_COVERAGE})
-target_link_options(
-    ads-options-private
-    INTERFACE ${ADS_EXE_LINKER_FLAGS_COVERAGE}
-)
+target_compile_options(ADS PRIVATE ${ADS_CXX_FLAGS_COVERAGE})
+target_link_options(ADS PRIVATE ${ADS_EXE_LINKER_FLAGS_COVERAGE})

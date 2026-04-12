@@ -1,7 +1,7 @@
 configure_file(version.cpp.in version.cpp @ONLY)
 
 target_sources(
-    ads-objects
+    ads
     PRIVATE
         basis_data.cpp
         form_matrix.cpp

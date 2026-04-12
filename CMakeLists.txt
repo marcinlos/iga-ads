@@ -56,19 +56,12 @@ include(cmake/Coverage.cmake)
 # Target library definition
 # --------------------------------------------------------------------
 
-add_library(ADS)
-add_library(ADS::ADS ALIAS ADS)
-set_target_properties(ADS PROPERTIES OUTPUT_NAME ads)
-
-add_library(ads-objects OBJECT)
-target_link_libraries(ADS PUBLIC ads-objects)
-
-# Apply project settings
-target_link_libraries(ads-objects PUBLIC ads-options-public)
-target_link_libraries(ads-objects PRIVATE ads-options-private)
+add_library(ads)
+add_library(ads::ads ALIAS ads)
+target_compile_features(ads INTERFACE cxx_std_17)
 
 target_sources(
-    ads-objects
+    ads
     PUBLIC
         FILE_SET HEADERS
             BASE_DIRS #
@@ -80,25 +73,28 @@ target_sources(
 # Dependencies
 # --------------------------------------------------------------------
 
-# Numerical libraries
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
-target_link_libraries(ads-objects PUBLIC LAPACK::LAPACK BLAS::BLAS)
-
 find_package(Boost 1.70 CONFIG REQUIRED)
-target_link_libraries(ads-objects PUBLIC Boost::boost)
-
 find_package(fmt 7.1 CONFIG REQUIRED)
-target_link_libraries(ads-objects PUBLIC fmt::fmt)
+
+target_link_libraries(
+    ads
+    PUBLIC #
+        LAPACK::LAPACK
+        BLAS::BLAS
+        Boost::boost
+        fmt::fmt
+)
 
 if(ADS_USE_MUMPS)
     find_package(MUMPS REQUIRED)
-    target_link_libraries(ads-objects PUBLIC MUMPS::MUMPS)
+    target_link_libraries(ads PUBLIC MUMPS::MUMPS)
 endif()
 
 if(ADS_USE_GALOIS)
     find_package(Galois 6.0 CONFIG REQUIRED)
-    target_link_libraries(ads-objects PUBLIC Galois::shmem)
+    target_link_libraries(ads PUBLIC Galois::shmem)
 endif()
 
 # --------------------------------------------------------------------

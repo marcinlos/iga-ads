@@ -41,9 +41,9 @@ cmake --build build-dir --parallel
 ```
 where `OPTIONS` are additional build settings described [below](#build-options).
 By default this builds the entire project, including examples and supporting applications.
-To build only the library, add `--target ADS` to the last command:
+To build only the library, add `--target ads` to the last command:
 ```bash
-cmake --build build-dir --parallel --target ADS
+cmake --build build-dir --parallel --target ads
 ```
 
 Once the library is compiled, in can be installed using
@@ -84,7 +84,7 @@ add the following to you `CMakeLists.txt`:
 ```cmake
 find_package(ADS 0.1.0 REQUIRED)
 add_executable(example ...)
-target_link_libraries(example PRIVATE ADS::ADS)
+target_link_libraries(example PRIVATE ads::ads)
 ```
 Note that if the library has been installed in a non-standard location,
 it may be necessary to inform CMake about it via
@@ -114,7 +114,7 @@ set(ADS_BUILD_TOOLS OFF)
 
 add_subdirectory(ads)
 add_executable(example ...)
-target_link_libraries(example PRIVATE ADS::ADS)
+target_link_libraries(example PRIVATE ads::ads)
 ```
 
 #### Using `FetchContent`
@@ -136,7 +136,7 @@ set(ADS_BUILD_TOOLS OFF)
 
 FetchContent_MakeAvailable(ADS)
 add_executable(example ...)
-target_link_libraries(example PRIVATE ADS::ADS)
+target_link_libraries(example PRIVATE ads::ads)
 ```
 
 ## Citation

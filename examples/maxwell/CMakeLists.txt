@@ -10,8 +10,7 @@ add_library(
 target_link_libraries(
     ads.example.maxwell.common
     PUBLIC #
-        ADS::ADS
-        ads-options-private
+        ads::ads
         bfg::lyra
 )
 

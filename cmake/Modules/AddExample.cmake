@@ -32,8 +32,7 @@ function(add_example name)
         target_link_libraries(
             ${_target_name}
             PRIVATE #
-                ADS::ADS
-                ads-options-private
+                ads::ads
                 ${arg_LIBS}
         )
         set_target_properties(
