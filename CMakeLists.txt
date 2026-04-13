@@ -6,8 +6,7 @@ project(
     LANGUAGES CXX
 )
 
-# General project-wide settings
-include(cmake/Setup.cmake)
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules/")
 
 # Version information
 include(cmake/Version.cmake)
