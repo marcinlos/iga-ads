@@ -11,6 +11,8 @@ list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/Modules/")
 # Version information
 include(cmake/Version.cmake)
 
+enable_testing()
+
 # --------------------------------------------------------------------
 # Build options
 # --------------------------------------------------------------------
@@ -125,7 +127,6 @@ if(ADS_BUILD_TOOLS)
 endif()
 
 if(ADS_BUILD_TESTS)
-    enable_testing()
     add_subdirectory(tests/ads)
 endif()
 
