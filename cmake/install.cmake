@@ -1,3 +1,5 @@
+include_guard(GLOBAL)
+
 # Define an export set for the main library
 install(
     TARGETS ads

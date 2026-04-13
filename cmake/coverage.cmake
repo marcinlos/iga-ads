@@ -1,4 +1,6 @@
-if(NOT ADS_ENABLE_COVERAGE)
+include_guard(GLOBAL)
+
+if(NOT ADS_DEV_COVERAGE)
     return()
 endif()
 

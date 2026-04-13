@@ -1,3 +1,5 @@
+include_guard(GLOBAL)
+
 # Metadata
 set(CPACK_GENERATOR "TGZ")
 set(CPACK_PACKAGE_NAME "ADS")

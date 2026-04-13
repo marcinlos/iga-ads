@@ -1,3 +1,5 @@
+include_guard(GLOBAL)
+
 # Possibly modified below
 set(ADS_VERSION_FULL "${ADS_VERSION}")
 
