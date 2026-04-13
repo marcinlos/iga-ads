@@ -15,8 +15,17 @@ include(cmake/Version.cmake)
 # Build options
 # --------------------------------------------------------------------
 
-option(ADS_USE_MUMPS "Use MUMPS solver. Values: { ON, OFF }." OFF)
-option(ADS_USE_GALOIS "Use Galois framework. Values: { ON, OFF }." OFF)
+option(
+    ADS_USE_MUMPS
+    "Use the MUMPS linear solver. Default: OFF. Values: { ON, OFF }."
+    OFF
+)
+
+option(
+    ADS_USE_GALOIS
+    "Use the Galois framework. Default: OFF. Values: { ON, OFF }."
+    OFF
+)
 
 option(
     ADS_BUILD_PROBLEMS
@@ -26,23 +35,27 @@ option(
 
 option(
     ADS_BUILD_TOOLS
-    "Build supporting applications. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
+    "Build supporting tools. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
     ${PROJECT_IS_TOP_LEVEL}
 )
 
 option(
     ADS_BUILD_TESTS
-    "Enable building tests. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
+    "Build tests. Default: ${PROJECT_IS_TOP_LEVEL}. Values: { ON, OFF }."
     ${PROJECT_IS_TOP_LEVEL}
 )
 
 option(
     ADS_DEV_SANITIZERS
-    "Build with sanitizers enabled. Default: OFF. Values: { ON, OFF }."
+    "Enable sanitizers. Default: OFF. Values: { ON, OFF }."
     OFF
 )
 
-option(ADS_ENABLE_COVERAGE "Code coverage" OFF)
+option(
+    ADS_DEV_COVERAGE
+    "Gather code coverage data. Default: OFF. Values: { ON, OFF}."
+    OFF
+)
 
 # --------------------------------------------------------------------
 # Other settings
