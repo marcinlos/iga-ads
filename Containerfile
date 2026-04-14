@@ -9,7 +9,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get update && \
     apt-get install -y --no-install-recommends \
         software-properties-common \
+        pkg-config \
         libzstd-dev \
+        zip \
+        unzip \
         git \
         curl \
         ca-certificates \
@@ -47,6 +50,14 @@ COPY --from=ghcr.io/j178/prek:v0.3.8 /prek /usr/local/bin/
 # Install cmake
 RUN --mount=type=bind,source=scripts/,target=scripts/ \
     scripts/install-cmake.sh
+
+# Setup vcpkg
+RUN git clone https://github.com/microsoft/vcpkg.git --depth=1 /opt/vcpkg && \
+    /opt/vcpkg/bootstrap-vcpkg.sh
+
+ENV VCPKG_ROOT=/opt/vcpkg
+
+RUN ln -s "${VCPKG_ROOT}/vcpkg" /usr/local/bin/vcpkg
 
 ENV CMAKE_GENERATOR=Ninja \
     CMAKE_COLOR_DIAGNOSTICS=ON \
