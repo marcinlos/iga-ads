@@ -1,1 +1,1 @@
-add_example(fire GALOIS SRC fire.cpp)
+add_example(fire GALOIS SRC fire.cpp LIBS bfg::lyra)

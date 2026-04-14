@@ -56,29 +56,31 @@ private:
     double kappa = 0.3;
     double xi = 2e-2;
     double sigma = 5.67e-8;
-    double eps = 0.05; // "percentage error"
+    double eps = 0.05;  // "percentage error"
     double delta_x = 3.5e-2 / eps;
     double delta_z = 1.5 * eps;
     double T0 = 300;
     double Tcomb = 1200;
     double Tig = 800;
-    double Ta = 300; // ???
+    double Ta = 300;  // ???
 
     double M = 2;
     double M1 = 1;
 
     galois_executor executor;
     output_manager<2> output;
+    int plot_every;
 
 public:
-    explicit fire(const config_2d& config, int threads)
+    explicit fire(const config_2d& config, int threads, int plot_every)
     : Base{config}
     , u{shape()}
     , u_prev{shape()}
     , fuel{shape()}
     , fuel_prev{shape()}
     , executor{threads}
-    , output{x.B, y.B, 300} { }
+    , output{x.B, y.B, 300}
+    , plot_every{plot_every} { }
 
     double init_state(double x, double y) {
         double r = 10;
@@ -137,12 +139,12 @@ private:
                     double inv = 1.0 / (rho * cp);
 
                     double delta = u.val > Tig && fuel.val > 0.2 ? 1.0 : 0.0;
-                    double hc = -70; // enthalpy
-                    double r = delta * Ar * u.val * std::exp(-Ta / u.val) ;
-                    double Rc = - 1e4 * rho * ch * hc * M / M1 * r;
-                    double Qw = - rho * cw * (bx * u.dx + by * u.dy);
-                    double qc = - kappa * grad_dot(u, v);
-                    double qd = 0.0; // omitted
+                    double hc = -70;  // enthalpy
+                    double r = delta * Ar * u.val * std::exp(-Ta / u.val);
+                    double Rc = -1e4 * rho * ch * hc * M / M1 * r;
+                    double Qw = -rho * cw * (bx * u.dx + by * u.dy);
+                    double qc = -kappa * grad_dot(u, v);
+                    double qd = 0.0;  // omitted
                     double qr = -4 * sigma * eps * delta_x * std::pow(u.val, 3) * grad_dot(u, v);
                     double Qconv = xi * (T0 - u.val);
                     double Qrz = sigma * eps / delta_z * (std::pow(T0, 4) - std::pow(u.val, 4));
@@ -150,7 +152,7 @@ private:
                     double val = (Rc + Qw + Qconv + Qrz) * v.val + qc + qd + qr;
                     U(aa[0], aa[1]) += (u.val * v.val + steps.dt * inv * val) * w * J;
 
-                    double fval = - delta * 3e2 * r * fuel.val * v.val;
+                    double fval = -delta * 3e2 * r * fuel.val * v.val;
                     F(aa[0], aa[1]) += (fuel.val * v.val + steps.dt * fval) * w * J;
                 }
             }
@@ -160,17 +162,13 @@ private:
     }
 
     void after_step(int iter, double /*t*/) override {
-        auto i = iter  +1;
-        if (i % 10 == 0) {
+        auto i = iter + 1;
+        if (i % plot_every == 0) {
             std::cout << "Step " << i << std::endl;
             output.to_file(u, "out_%d.data", i);
             output.to_file(fuel, "fuel_%d.data", i);
         }
     }
-
-    // double forcing(point_type x, double /*t*/) const {
-    //     return 0;
-    // }
 };
 
 }  // namespace ads::problems
