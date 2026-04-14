@@ -2,15 +2,26 @@ include_guard(GLOBAL)
 
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
-find_package(Boost 1.70 CONFIG REQUIRED)
 find_package(fmt 7.1 CONFIG REQUIRED)
+find_package(
+    Boost
+    1.70
+    CONFIG
+    REQUIRED
+    COMPONENTS #
+        format
+        iterator
+        range
+)
 
 target_link_libraries(
     ads
     PUBLIC #
         LAPACK::LAPACK
         BLAS::BLAS
-        Boost::boost
+        Boost::format
+        Boost::iterator
+        Boost::range
         fmt::fmt
 )
 

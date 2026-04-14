@@ -1,0 +1,13 @@
+{
+  "name": "ads",
+  "version": "0.1.0",
+  "dependencies": [
+    "fmt",
+    "catch2",
+    "galois",
+    "boost-format",
+    "boost-iterator",
+    "boost-range",
+    "bfgroup-lyra"
+  ]
+}

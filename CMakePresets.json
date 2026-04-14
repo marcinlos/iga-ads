@@ -16,7 +16,11 @@
         "CMAKE_CXX_STANDARD_REQUIRED": "ON",
         "CMAKE_CXX_EXTENSIONS": "OFF",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-        "CMAKE_INSTALL_LIBDIR": "lib"
+        "CMAKE_INSTALL_LIBDIR": "lib",
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        }
       }
     },
     {
@@ -37,7 +41,7 @@
       "name": "_base-gcc",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": {
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": {
           "type": "FILEPATH",
           "value": "${sourceDir}/etc/gcc-toolchain.cmake"
         }
@@ -47,7 +51,7 @@
       "name": "_base-clang",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_TOOLCHAIN_FILE": {
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": {
           "type": "FILEPATH",
           "value": "${sourceDir}/etc/clang-toolchain.cmake"
         }

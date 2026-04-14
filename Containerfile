@@ -10,7 +10,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get install -y --no-install-recommends \
         software-properties-common \
         pkg-config \
-        libzstd-dev \
         zip \
         unzip \
         git \
@@ -21,8 +20,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         g++ \
         ninja-build \
         liblapack-dev \
-        libboost-all-dev \
-        llvm-dev \
         libmumps-dev
 
 # Install recent clang tools
@@ -55,19 +52,20 @@ RUN --mount=type=bind,source=scripts/,target=scripts/ \
 RUN git clone https://github.com/microsoft/vcpkg.git --depth=1 /opt/vcpkg && \
     /opt/vcpkg/bootstrap-vcpkg.sh
 
-ENV VCPKG_ROOT=/opt/vcpkg
+ENV VCPKG_ROOT=/opt/vcpkg \
+    VCPKG_FORCE_SYSTEM_BINARIES=ON
 
 RUN ln -s "${VCPKG_ROOT}/vcpkg" /usr/local/bin/vcpkg
 
 ENV CMAKE_GENERATOR=Ninja \
     CMAKE_COLOR_DIAGNOSTICS=ON \
-    CMAKE_PREFIX_PATH=/deps \
     CMAKE_INSTALL_PREFIX=/opt/ads
 
-RUN --mount=type=bind,source=scripts/install-dependencies.sh,target=scripts/install-dependencies.sh \
-    --mount=type=bind,source=scripts/galois.patch,target=scripts/galois.patch \
-    scripts/install-dependencies.sh /deps-build /deps && rm -rf /deps-build
-
+# Populate vcpkg binary cache
+RUN --mount=type=bind,source=vcpkg.json,target=vcpkg.json \
+    --mount=type=bind,source=vcpkg-configuration.json,target=vcpkg-configuration.json \
+    --mount=type=bind,source=vcpkg,target=vcpkg \
+    vcpkg install && rm -rf vcpkg_installed
 
 COPY . .
 
