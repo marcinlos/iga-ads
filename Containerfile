@@ -58,3 +58,5 @@ COPY . .
 
 # Workaround for docker
 RUN git config --global --add safe.directory /code
+
+RUN prek prepare-hooks
