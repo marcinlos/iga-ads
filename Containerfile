@@ -49,7 +49,9 @@ RUN --mount=type=bind,source=scripts/,target=scripts/ \
     scripts/install-cmake.sh
 
 ENV CMAKE_GENERATOR=Ninja \
-    CMAKE_COLOR_DIAGNOSTICS=ON
+    CMAKE_COLOR_DIAGNOSTICS=ON \
+    CMAKE_PREFIX_PATH=/deps \
+    CMAKE_INSTALL_PREFIX=/opt/ads
 
 RUN --mount=type=bind,source=scripts/install-dependencies.sh,target=scripts/install-dependencies.sh \
     scripts/install-dependencies.sh /deps-build /deps && rm -rf /deps-build

@@ -1,53 +1,203 @@
 {
-  "version": 2,
+  "version": 10,
   "cmakeMinimumRequired": {
     "major": 3,
-    "minor": 19,
+    "minor": 25,
     "patch": 0
   },
   "configurePresets": [
     {
-      "name": "base",
-      "generator": "Unix Makefiles",
-      "binaryDir": "${sourceDir}/build/${presetName}",
-      "hidden": true
-    }, {
-      "name": "with-libs",
+      "name": "_base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "/build",
+      "cacheVariables": {
+        "CMAKE_CXX_STANDARD": "17",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON",
+        "CMAKE_CXX_EXTENSIONS": "OFF",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_INSTALL_LIBDIR": "lib"
+      }
+    },
+    {
+      "name": "_base-debug",
       "hidden": true,
       "cacheVariables": {
-        "ADS_USE_GALOIS": "ON",
-        "ADS_USE_MUMPS": "ON"
+        "CMAKE_BUILD_TYPE": "Debug"
       }
-    }, {
-      "name": "debug",
-      "inherits": "base",
+    },
+    {
+      "name": "_base-release",
       "hidden": true,
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
-    }, {
-      "name": "release",
-      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "_base-gcc",
       "hidden": true,
-      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
-    }, {
-      "name": "basic-debug",
-      "inherits": "debug",
-      "displayName": "Basic (debug)",
-      "description": "Basic build with no optional libraries"
-    }, {
-      "name": "basic-release",
-      "inherits": "release",
-      "displayName": "Basic (release)",
-      "description": "Basic build with no optional libraries"
-    }, {
-      "name": "standard-debug",
-      "inherits": ["debug", "with-libs"],
-      "displayName": "Standard (debug)",
-      "description": "Standard build with Galois and MUMPS (debug)"
-    }, {
-      "name": "standard-release",
-      "inherits": ["release", "with-libs"],
-      "displayName": "Standard (release)",
-      "description": "Standard build with Galois and MUMPS (release)"
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "${sourceDir}/etc/gcc-toolchain.cmake"
+        }
+      }
+    },
+    {
+      "name": "_base-clang",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "${sourceDir}/etc/clang-toolchain.cmake"
+        }
+      }
+    },
+    {
+      "name": "_base-full",
+      "hidden": true,
+      "cacheVariables": {
+        "ADS_USE_GALOIS": {
+          "type": "BOOL",
+          "value": "ON"
+        },
+        "ADS_USE_MUMPS": {
+          "type": "BOOL",
+          "value": "ON"
+        }
+      }
+    },
+    {
+      "name": "gcc-debug",
+      "displayName": "GCC debug",
+      "inherits": [
+        "_base",
+        "_base-full",
+        "_base-debug",
+        "_base-gcc"
+      ]
+    },
+    {
+      "name": "gcc-release",
+      "displayName": "GCC release",
+      "inherits": [
+        "_base",
+        "_base-full",
+        "_base-release",
+        "_base-gcc"
+      ]
+    },
+    {
+      "name": "clang-debug",
+      "displayName": "Clang debug",
+      "inherits": [
+        "_base",
+        "_base-full",
+        "_base-debug",
+        "_base-clang"
+      ]
+    },
+    {
+      "name": "clang-release",
+      "displayName": "Clang release",
+      "inherits": [
+        "_base",
+        "_base-full",
+        "_base-release",
+        "_base-clang"
+      ]
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "_base-full",
+      "hidden": true,
+      "description": "Build all the components",
+      "targets": ["all"]
+    },
+    {
+      "name": "gcc-debug",
+      "displayName": "GCC Debug",
+      "configurePreset": "gcc-debug",
+      "inherits": ["_base-full"]
+    },
+    {
+      "name": "gcc-release",
+      "displayName": "GCC Release",
+      "configurePreset": "gcc-release",
+      "inherits": ["_base-full"]
+    },
+    {
+      "name": "clang-debug",
+      "displayName": "Clang Debug",
+      "configurePreset": "clang-debug",
+      "inherits": ["_base-full"]
+    },
+    {
+      "name": "clang-release",
+      "displayName": "Clang Release",
+      "configurePreset": "clang-release",
+      "inherits": ["_base-full"]
+    },
+    {
+      "name": "_base-minimal",
+      "hidden": true,
+      "description": "Build library without other components",
+      "targets": ["ads"]
+    },
+    {
+      "name": "gcc-debug-minimal",
+      "displayName": "GCC Debug Minimal",
+      "configurePreset": "gcc-debug",
+      "inherits": ["_base-minimal"]
+    },
+    {
+      "name": "gcc-release-minimal",
+      "displayName": "GCC Release Minimal",
+      "configurePreset": "gcc-release",
+      "inherits": ["_base-minimal"]
+    },
+    {
+      "name": "clang-debug-minimal",
+      "displayName": "Clang Debug Minimal",
+      "configurePreset": "clang-debug",
+      "inherits": ["_base-minimal"]
+    },
+    {
+      "name": "clang-release-minimal",
+      "displayName": "Clang Release Minimal",
+      "configurePreset": "clang-release",
+      "inherits": ["_base-minimal"]
+    },
+    {
+      "name": "_base-library",
+      "hidden": true,
+      "description": "Build library and tests",
+      "targets": ["ads", "ads.tests"]
+    },
+    {
+      "name": "gcc-debug-library",
+      "displayName": "GCC Debug Library",
+      "configurePreset": "gcc-debug",
+      "inherits": ["_base-library"]
+    },
+    {
+      "name": "gcc-release-library",
+      "displayName": "GCC Release Library",
+      "configurePreset": "gcc-release",
+      "inherits": ["_base-library"]
+    },
+    {
+      "name": "clang-debug-library",
+      "displayName": "Clang Debug Library",
+      "configurePreset": "clang-debug",
+      "inherits": ["_base-library"]
+    },
+    {
+      "name": "clang-release-library",
+      "displayName": "Clang Release Library",
+      "configurePreset": "clang-release",
+      "inherits": ["_base-library"]
     }
   ]
 }

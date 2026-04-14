@@ -40,23 +40,21 @@ build_dir := "/build"
         {{container_name}} \
         bash
 
-@config:
+@config PRESET="gcc-release":
     cmake \
         --fresh \
-        -S /code \
+        -S . \
         -B {{build_dir}} \
-        -D CMAKE_BUILD_TYPE=Release \
-        -D CMAKE_TOOLCHAIN_FILE=etc/gcc-toolchain.cmake \
-        -D ADS_USE_GALOIS=ON \
-        -D ADS_USE_MUMPS=ON \
-        -D CMAKE_PREFIX_PATH=/deps \
-        -D CMAKE_INSTALL_LIBDIR=lib \
-        -D CMAKE_INSTALL_PREFIX=/opt/ads
+        --preset={{PRESET}}
 
 @build CORES="$(nproc)":
     cmake \
         --build {{build_dir}} \
         --parallel {{CORES}}
+
+@install:
+    cmake --install {{build_dir}}
+    cmake --install {{build_dir}} --component ads-examples
 
 # Run all the linter tools
 @lint:
