@@ -52,7 +52,8 @@ ENV CMAKE_GENERATOR=Ninja \
     CMAKE_COLOR_DIAGNOSTICS=ON
 
 RUN --mount=type=bind,source=scripts/install-dependencies.sh,target=scripts/install-dependencies.sh \
-    scripts/install-dependencies.sh /deps-build /deps
+    scripts/install-dependencies.sh /deps-build /deps && rm -rf /deps-build
+
 
 COPY . .
 
