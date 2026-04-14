@@ -17,6 +17,8 @@ fi
 
 set -ex
 
+IGA_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." &> /dev/null && pwd)
+
 BUILD_DIR=${1}
 INSTALL_DIR=${2}
 
@@ -80,8 +82,7 @@ cmake --install Lyra/build
 GALOIS_VER=6.0
 git clone --branch release-${GALOIS_VER} --depth=1 --quiet https://github.com/IntelligentSoftwareSystems/Galois
 
-sed -i '23s/.*/#include <cstdint>/' Galois/libgalois/include/galois/substrate/NumaMem.h
-sed -i '103s/1024/8192/' Galois/libgalois/src/HWTopoLinux.cpp
+git -C Galois apply "${IGA_DIR}/scripts/galois.patch"
 
 mkdir -p Galois/build
 

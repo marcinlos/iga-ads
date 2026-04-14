@@ -1,3 +1,6 @@
+# Do not touch patch files
+exclude = { glob = "*.patch" }
+
 [[repos]]
 repo = "builtin"
 hooks = [

@@ -54,6 +54,7 @@ ENV CMAKE_GENERATOR=Ninja \
     CMAKE_INSTALL_PREFIX=/opt/ads
 
 RUN --mount=type=bind,source=scripts/install-dependencies.sh,target=scripts/install-dependencies.sh \
+    --mount=type=bind,source=scripts/galois.patch,target=scripts/galois.patch \
     scripts/install-dependencies.sh /deps-build /deps && rm -rf /deps-build
 
 
