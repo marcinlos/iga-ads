@@ -81,6 +81,7 @@ GALOIS_VER=6.0
 git clone --branch release-${GALOIS_VER} --depth=1 --quiet https://github.com/IntelligentSoftwareSystems/Galois
 
 sed -i '23s/.*/#include <cstdint>/' Galois/libgalois/include/galois/substrate/NumaMem.h
+sed -i '103s/1024/8192/' Galois/libgalois/src/HWTopoLinux.cpp
 
 mkdir -p Galois/build
 
