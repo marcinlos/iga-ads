@@ -10,6 +10,7 @@
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
 #include "ads/solver/mumps.hpp"
+#include "manufactured.hpp"
 #include "params.hpp"
 
 using namespace ads;
@@ -86,6 +87,7 @@ private:
     output_manager<2> output;
 
     scheme method;
+    solution manufactured;
 
 public:
     fire_implicit(dimension const& trial_x, dimension const& trial_y,  //
@@ -127,7 +129,7 @@ public:
     , executor{threads}
     , output{Ux.B, Uy.B, 300}
     , method{method}
-    { }
+    , manufactured{params, beta[0], beta[1]} { }
 
 private:
     struct matrix_set {
@@ -285,9 +287,7 @@ private:
     }
 
     double init_state(double x, double y) {
-        double r = 10;
-        double R = 30;
-        return params.T0 + params.Tcomb * bump(r, R, x, y);
+        return manufactured.exact(x, y, 0).val;
     }
 
     void before() override {
@@ -379,7 +379,7 @@ private:
     void step(int /*iter*/, double t) override {
         auto dt = steps.dt;
 
-        auto f = [&](point_type x, double s) { return 0.0; };
+        auto f = [&](point_type x, double s) { return manufactured.forcing(x[0], x[1], s); };
         auto F = [&](double s) { return [&, s](point_type x) { return f(x, s); }; };
         auto Favg = [&](double s1, double s2) {
             return [=, &f](point_type x) { return 0.5 * (f(x, s1) + f(x, s2)); };
@@ -423,9 +423,9 @@ private:
     void after_step(int iter, double t) override {
         auto const i = iter + 1;
         if (i % save_every == 0) {
-            std::cout << "Step " << i << " " << t + steps.dt << std::endl;
-            output.to_file(u, "out_%d.data", i);
-            output.to_file(fuel, "fuel_%d.data", i);
+            // report_errors(i, t + steps.dt);
+            // output.to_file(u, "out_%d.data", i);
+            // output.to_file(fuel, "fuel_%d.data", i);
         }
     }
 
@@ -436,6 +436,7 @@ private:
                 sol << i << " " << j << " " << u(i, j) << std::endl;
             }
         }
+        report_errors(steps.step_count, 1.0);
     }
 
     template <typename VecR, typename VecU, typename Fun>
@@ -487,9 +488,11 @@ private:
                     double Lx = diff * T.dx * v.dx + bx * T.dx * v.val;
                     double Ly = diff * T.dy * v.dy + by * T.dy * v.val;
 
-                    double delta = T.val > Tig && fuel.val > 0.2 ? 1.0 : 0.0;
+                    // double delta = T.val > Tig && fuel.val > 0.2 ? 1.0 : 0.0;
+                    double delta = T.val > Tig /*&& fuel.val > 0.2*/ ? 1.0 : 0.0;
                     double r = delta * Ar * T.val * std::exp(-Ta / T.val);
-                    double Rc = -1e4 * rho * ch * hc * M_param / M1 * r;
+                    // double Rc = -1e4 * rho * ch * hc * M_param / M1 * r;
+                    double Rc = -1e3 * rho * ch * hc * M_param / M1 * r;
                     double Qw = 0;    // -rho * cw * (bx * T.dx + by * T.dy);
                     double qc = 0;    // -kappa * grad_dot(u, v);
                     double qd = 0.0;  // omitted
@@ -543,5 +546,40 @@ private:
             }
             executor.synchronized([&] { update_global_rhs(rhs, F, e, Ux, Uy); });
         });
+    }
+
+    auto errorL2(vector_type const& u, double t) const -> double {
+        auto sol = [&](point_type x) { return manufactured.exact(x[0], x[1], t); };
+
+        return Base::errorL2(u, Ux, Uy, sol);
+    }
+
+    auto errorH1(vector_type const& u, double t) const -> double {
+        auto sol = [&](point_type x) { return manufactured.exact(x[0], x[1], t); };
+
+        return Base::errorH1(u, Ux, Uy, sol);
+    }
+
+    auto rel_errorL2(vector_type const& u, double t) const -> double {
+        auto sol = [&](point_type x) { return manufactured.exact(x[0], x[1], t); };
+        return Base::errorL2(u, Ux, Uy, sol) / Base::normL2(Ux, Uy, sol) * 100;
+    }
+
+    auto rel_errorH1(vector_type const& u, double t) const -> double {
+        auto sol = [&](point_type x) { return manufactured.exact(x[0], x[1], t); };
+        return Base::errorH1(u, Ux, Uy, sol) / Base::normH1(Ux, Uy, sol) * 100;
+    }
+
+    auto report_errors(int iter, double t) const -> void {
+        auto const e_L2 = errorL2(u, t);
+        auto const e_H1 = errorH1(u, t);
+        auto const rel_L2 = rel_errorL2(u, t);
+        auto const rel_H1 = rel_errorH1(u, t);
+
+        std::cout << "Step " << iter                    //
+                  << "  t: " << t                       //
+                  << "  L2: " << e_L2 << " " << rel_L2  //
+                  << "  H1: " << e_H1 << " " << rel_H1  //
+                  << std::endl;
     }
 };
