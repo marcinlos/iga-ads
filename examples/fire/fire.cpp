@@ -5,6 +5,8 @@
 
 #include <lyra/lyra.hpp>
 
+#include "params.hpp"
+
 int main(int argc, char* argv[]) {
     int n = 200;
     int p = 2;
@@ -49,6 +51,7 @@ int main(int argc, char* argv[]) {
     int ders = 1;
 
     ads::config_2d c{dim, dim, steps, ders};
-    ads::problems::fire sim{c, threads, plot_every};
+    auto params = fire_params{};
+    ads::problems::fire sim{c, params, threads, plot_every};
     sim.run();
 }

@@ -10,6 +10,7 @@
 #include "ads/output_manager.hpp"
 #include "ads/simulation.hpp"
 #include "ads/util.hpp"
+#include "params.hpp"
 
 inline double falloff(double r, double R, double t) {
     if (t < r)
@@ -36,48 +37,23 @@ private:
 
     vector_type fuel, fuel_prev;
 
-    // double C1 = 1;
-    // double C2 = 1;
-    // double C3 = 1;
-    // double C4 = 1;
-    // double C5 = 1;
-    // double C6 = 1;
-    // double T0 = 1;
-    // double bx = 40;
-    // double by = 20;
     double bx = 0;
     double by = 0;
 
-    double ch = 1.0;
-    double Ar = 5.7e-5;
-    double rho = 1.293;
-    double cp = 1.0;
-    double cw = 0.5;
-    double kappa = 0.3;
-    double xi = 2e-2;
-    double sigma = 5.67e-8;
-    double eps = 0.05;  // "percentage error"
-    double delta_x = 3.5e-2 / eps;
-    double delta_z = 1.5 * eps;
-    double T0 = 300;
-    double Tcomb = 1200;
-    double Tig = 800;
-    double Ta = 300;  // ???
-
-    double M = 2;
-    double M1 = 1;
+    fire_params params;
 
     galois_executor executor;
     output_manager<2> output;
     int plot_every;
 
 public:
-    explicit fire(const config_2d& config, int threads, int plot_every)
+    explicit fire(const config_2d& config, fire_params const& params, int threads, int plot_every)
     : Base{config}
     , u{shape()}
     , u_prev{shape()}
     , fuel{shape()}
     , fuel_prev{shape()}
+    , params{params}
     , executor{threads}
     , output{x.B, y.B, 300}
     , plot_every{plot_every} { }
@@ -85,7 +61,7 @@ public:
     double init_state(double x, double y) {
         double r = 10;
         double R = 30;
-        return T0 + Tcomb * bump(r, R, x, y);
+        return params.T0 + params.Tcomb * bump(r, R, x, y);
     }
 
 private:
@@ -121,6 +97,27 @@ private:
 
         zero(rhs);
         zero(rhs_fuel);
+
+        auto const ch = params.ch;
+        auto const Ar = params.Ar;
+        auto const rho = params.rho;
+        auto const cp = params.cp;
+        auto const cw = params.cw;
+        auto const kappa = params.kappa;
+        auto const xi = params.xi;
+        auto const sigma = params.sigma;
+        auto const hc = params.hc;
+        auto const eps = params.eps;
+        auto const delta_x = params.delta_x;
+        auto const delta_z = params.delta_z;
+        auto const T0 = params.T0;
+        auto const Tig = params.Tig;
+        auto const Ta = params.Ta;
+        auto const M = params.M;
+        auto const M1 = params.M1;
+
+        double inv = 1.0 / (rho * cp);
+
         executor.for_each(elements(), [&](index_type e) {
             auto U = element_rhs();
             auto F = element_rhs();
@@ -136,10 +133,8 @@ private:
                 for (auto a : dofs_on_element(e)) {
                     auto aa = dof_global_to_local(e, a);
                     value_type v = eval_basis(e, q, a);
-                    double inv = 1.0 / (rho * cp);
 
                     double delta = u.val > Tig && fuel.val > 0.2 ? 1.0 : 0.0;
-                    double hc = -70;  // enthalpy
                     double r = delta * Ar * u.val * std::exp(-Ta / u.val);
                     double Rc = -1e4 * rho * ch * hc * M / M1 * r;
                     double Qw = -rho * cw * (bx * u.dx + by * u.dy);
