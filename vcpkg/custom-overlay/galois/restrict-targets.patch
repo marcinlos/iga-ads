@@ -1,0 +1,30 @@
+diff --git c/CMakeLists.txt i/CMakeLists.txt
+index 2b7fad2a6..672c5a3b5 100644
+--- c/CMakeLists.txt
++++ i/CMakeLists.txt
+@@ -46,6 +46,7 @@ set(GALOIS_NUM_TEST_GPUS "0" CACHE STRING "Number of test GPUs to use (on a sing
+ set(GALOIS_USE_LCI OFF CACHE BOOL "Use LCI network runtime instead of MPI")
+ set(GALOIS_USE_BARE_MPI OFF CACHE BOOL "Use MPI directly (no dedicated network-runtime thread)")
+ set(GALOIS_NUM_TEST_THREADS "" CACHE STRING "Maximum number of threads to use when running tests (default: number of physical cores)")
++set(GALOIS_BUILD_ADDONS OFF CACHE BOOL "Build additional targets")
+ 
+ if(NOT GALOIS_NUM_TEST_THREADS)
+   cmake_host_system_information(RESULT GALOIS_NUM_TEST_THREADS QUERY NUMBER_OF_PHYSICAL_CORES)
+@@ -219,11 +220,13 @@ endif()
+ add_subdirectory(libpangolin)
+ 
+ # Applications (apps)
+-add_subdirectory(lonestar)
++if(GALOIS_BUILD_ADDONS)
++  add_subdirectory(lonestar)
+ 
+-add_subdirectory(scripts)
+-add_subdirectory(inputs)
+-add_subdirectory(tools)
++  add_subdirectory(scripts)
++  add_subdirectory(inputs)
++  add_subdirectory(tools)
++endif()
+ 
+ if(USE_EXP)
+   add_subdirectory(lonestar/experimental)

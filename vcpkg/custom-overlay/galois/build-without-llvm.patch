@@ -1,0 +1,31 @@
+diff --git c/CMakeLists.txt i/CMakeLists.txt
+index 672c5a3b5..66f7dc489 100644
+--- c/CMakeLists.txt
++++ i/CMakeLists.txt
+@@ -156,17 +156,19 @@ endif()
+ 
+ find_package(Boost 1.58.0 REQUIRED COMPONENTS serialization iostreams)
+ 
+-find_package(LLVM REQUIRED CONFIG)
+-if("${LLVM_PACKAGE_VERSION}" VERSION_LESS "7")
++if(GALOIS_BUILD_ADDONS)
++  find_package(LLVM REQUIRED CONFIG)
++  if("${LLVM_PACKAGE_VERSION}" VERSION_LESS "7")
+   message(FATAL_ERROR "LLVM 7 or greater is required.")
+-endif()
+-if(NOT DEFINED LLVM_ENABLE_RTTI)
++  endif()
++  if(NOT DEFINED LLVM_ENABLE_RTTI)
+   message(FATAL_ERROR "Could not determine if LLVM has RTTI enabled.")
+-endif()
+-if(NOT ${LLVM_ENABLE_RTTI})
++  endif()
++  if(NOT ${LLVM_ENABLE_RTTI})
+   message(FATAL_ERROR "Galois requires a build of LLVM that includes RTTI. Most package managers do this already, but if you built LLVM from source you need to configure it with `-DLLVM_ENABLE_RTTI=ON`")
++  endif()
++  target_include_directories(LLVMSupport INTERFACE ${LLVM_INCLUDE_DIRS})
+ endif()
+-target_include_directories(LLVMSupport INTERFACE ${LLVM_INCLUDE_DIRS})
+ 
+ include(HandleSanitizer)
+ 

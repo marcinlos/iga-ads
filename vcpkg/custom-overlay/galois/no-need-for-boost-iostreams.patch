@@ -1,0 +1,26 @@
+diff --git c/CMakeLists.txt i/CMakeLists.txt
+index bf5300fbf..b55483a0f 100644
+--- c/CMakeLists.txt
++++ i/CMakeLists.txt
+@@ -155,7 +155,7 @@ if(NOT HAVE_HUGEPAGES AND GALOIS_STRICT_CONFIG)
+   message(FATAL_ERROR "Need huge pages")
+ endif()
+ 
+-find_package(Boost 1.70.0 REQUIRED CONFIG COMPONENTS serialization iostreams)
++find_package(Boost 1.70.0 REQUIRED CONFIG COMPONENTS serialization)
+ 
+ if(GALOIS_BUILD_ADDONS)
+   find_package(LLVM REQUIRED CONFIG)
+diff --git c/cmake/GaloisConfig.cmake.in i/cmake/GaloisConfig.cmake.in
+index 3cad4cc64..f57a27d4a 100644
+--- c/cmake/GaloisConfig.cmake.in
++++ i/cmake/GaloisConfig.cmake.in
+@@ -12,7 +12,7 @@ include(CMakeFindDependencyMacro)
+ 
+ 
+ find_dependency(Threads REQUIRED)
+-find_dependency(Boost 1.70.0 REQUIRED CONFIG COMPONENTS serialization iostreams)
++find_dependency(Boost 1.70.0 REQUIRED CONFIG COMPONENTS serialization)
+ if (@GALOIS_ENABLE_DIST@)
+   find_dependency(MPI REQUIRED)
+ endif()

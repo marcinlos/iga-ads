@@ -1,0 +1,24 @@
+diff --git c/cmake/GaloisConfig.cmake.in i/cmake/GaloisConfig.cmake.in
+index 0459f092a..f7c480c4f 100644
+--- c/cmake/GaloisConfig.cmake.in
++++ i/cmake/GaloisConfig.cmake.in
+@@ -6,19 +6,10 @@
+ #   ...
+ #   (see GaloisTargets.cmake for all of them)
+ #
+-# It defines the following variables for legacy importing:
+-#   Galois_INCLUDE_DIRS
+-#   Galois_LIBRARIES
+-#   Galois_LIBRARY_DIRS
+-#   Galois_BIN_DIRS
+ include(CMakeFindDependencyMacro)
+ 
+ @PACKAGE_INIT@
+ 
+-set_and_check(Galois_INCLUDE_DIRS "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
+-set_and_check(Galois_LIBRARY_DIRS "@PACKAGE_CMAKE_INSTALL_LIBDIR@")
+-set_and_check(Galois_BIN_DIRS "@PACKAGE_CMAKE_INSTALL_BINDIR@")
+-set(Galois_LIBRARIES galois_shmem)
+ 
+ find_dependency(Threads REQUIRED)
+ find_dependency(Boost 1.58.0 REQUIRED COMPONENTS serialization iostreams)

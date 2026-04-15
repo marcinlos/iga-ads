@@ -1,0 +1,4 @@
+Galois provides CMake targets:
+
+find_package(Galois CONFIG REQUIRED)
+target_link_libraries(main PRIVATE Galois::shmem)

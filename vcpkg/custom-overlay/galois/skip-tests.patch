@@ -1,0 +1,27 @@
+diff --git c/CMakeLists.txt i/CMakeLists.txt
+index 66f7dc489..f6e789267 100644
+--- c/CMakeLists.txt
++++ i/CMakeLists.txt
+@@ -47,6 +47,7 @@ set(GALOIS_USE_LCI OFF CACHE BOOL "Use LCI network runtime instead of MPI")
+ set(GALOIS_USE_BARE_MPI OFF CACHE BOOL "Use MPI directly (no dedicated network-runtime thread)")
+ set(GALOIS_NUM_TEST_THREADS "" CACHE STRING "Maximum number of threads to use when running tests (default: number of physical cores)")
+ set(GALOIS_BUILD_ADDONS OFF CACHE BOOL "Build additional targets")
++set(GALOIS_BUILD_TESTS OFF CACHE BOOL "Build tests")
+ 
+ if(NOT GALOIS_NUM_TEST_THREADS)
+   cmake_host_system_information(RESULT GALOIS_NUM_TEST_THREADS QUERY NUMBER_OF_PHYSICAL_CORES)
+diff --git c/libgalois/CMakeLists.txt i/libgalois/CMakeLists.txt
+index 8e9d56d48..a8f3b70a2 100644
+--- c/libgalois/CMakeLists.txt
++++ i/libgalois/CMakeLists.txt
+@@ -104,7 +104,9 @@ if (VTune_FOUND)
+ endif()
+ 
+ 
+-add_subdirectory(test)
++if (GALOIS_BUILD_TESTS)
++  add_subdirectory(test)
++endif()
+ 
+ install(
+   DIRECTORY include/
