@@ -12,7 +12,6 @@ enable_testing()
 
 include(cmake/version.cmake)
 include(cmake/options.cmake)
-include(cmake/coverage.cmake)
 
 # Target library definition
 add_library(ads)
@@ -28,6 +27,7 @@ target_sources(
                 "${CMAKE_CURRENT_BINARY_DIR}/include"
 )
 
+include(cmake/coverage.cmake)
 include(cmake/dependencies.cmake)
 
 # Subdirectories

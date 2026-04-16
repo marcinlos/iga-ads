@@ -15,29 +15,49 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
     add_custom_target(
         coverage
+        WORKING_DIRECTORY "${PROJECT_BINARY_DIR}"
         COMMAND
-            ${ADS_LCOV} --zerocounters --directory ${PROJECT_BINARY_DIR} --rc
-            lcov_branch_coverage=1
+            ${ADS_LCOV} #
+            --zerocounters #
+            --directory . #
+            --rc branch_coverage=1
         COMMAND
-            ${ADS_LCOV} --capture --initial --directory ${PROJECT_BINARY_DIR}
-            --output-file baseline.info --rc lcov_branch_coverage=1
+            ${ADS_LCOV} #
+            --capture #
+            --initial #
+            --directory . #
+            --output-file baseline.info #
+            --rc branch_coverage=1
         COMMAND ${CMAKE_CTEST_COMMAND}
         COMMAND
-            ${ADS_LCOV} --capture --directory ${PROJECT_BINARY_DIR}
-            --output-file tests.info --rc lcov_branch_coverage=1
+            ${ADS_LCOV} #
+            --capture #
+            --directory . #
+            --output-file tests.info #
+            --rc branch_coverage=1
         COMMAND
-            ${ADS_LCOV} --add-tracefile baseline.info --add-tracefile tests.info
-            --output-file coverage-full.info --rc lcov_branch_coverage=1
+            ${ADS_LCOV} #
+            --add-tracefile baseline.info #
+            --add-tracefile tests.info #
+            --output-file coverage-full.info #
+            --rc branch_coverage=1
         COMMAND
-            ${ADS_LCOV} --extract coverage-full.info
-            '${PROJECT_SOURCE_DIR}/src/*' '${PROJECT_SOURCE_DIR}/include/*'
-            --output-file coverage.info --rc lcov_branch_coverage=1
+            ${ADS_LCOV} #
+            --extract coverage-full.info #
+            '${PROJECT_SOURCE_DIR}/src/*' #
+            '${PROJECT_SOURCE_DIR}/include/*' #
+            --output-file coverage.info #
+            --rc branch_coverage=1
         COMMAND
-            ${ADS_GENHTML} coverage.info --prefix ${PROJECT_SOURCE_DIR}
-            --output-directory html --show-details --title "ADS coverage"
-            --demangle-cpp --legend --branch-coverage
-        DEPENDS ads.tests
+            ${ADS_GENHTML} coverage.info #
+            --output-directory html #
+            --show-details #
+            --title "ADS coverage" #
+            --demangle-cpp #
+            --legend #
+            --branch-coverage
     )
+    add_dependencies(coverage ads.tests)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(ADS_CXX_FLAGS_COVERAGE
         -fprofile-instr-generate
@@ -72,5 +92,5 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     )
 endif()
 
-target_compile_options(ADS PRIVATE ${ADS_CXX_FLAGS_COVERAGE})
-target_link_options(ADS PRIVATE ${ADS_EXE_LINKER_FLAGS_COVERAGE})
+target_compile_options(ads PRIVATE ${ADS_CXX_FLAGS_COVERAGE})
+target_link_options(ads PUBLIC ${ADS_EXE_LINKER_FLAGS_COVERAGE})
