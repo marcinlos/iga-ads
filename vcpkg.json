@@ -2,6 +2,10 @@
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "name": "ads",
   "version": "0.1.0",
+  "description": "C++ Isogeometric Finite Element Method framework",
+  "homepage": "https://github.com/marcinlos/iga-ads",
+  "license": "MIT",
+  "maintainers": "Marcin Łoś <marcin.los.91@gmail.com>",
   "dependencies": [
     "fmt",
     "catch2",
