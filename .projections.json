@@ -40,7 +40,9 @@
             "tests/**",
             "examples/**",
             "cmake/**",
-            "external/**"
+            "vcpkg/**",
+            "etc/**",
+            ".github/**"
         ]
     }
 }
