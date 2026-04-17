@@ -4,7 +4,7 @@
 image := "iga-ads:latest"
 container_name := "iga-ads-dev"
 tool := env("CONTAINER_TOOL", "docker")
-build_dir := "/build"
+build_dir := env("BUILD_DIR", "/build")
 
 @_default:
     just --list

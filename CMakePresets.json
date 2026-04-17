@@ -10,7 +10,7 @@
       "name": "_base",
       "hidden": true,
       "generator": "Ninja",
-      "binaryDir": "/build",
+      "binaryDir": "$env{BUILD_DIR}",
       "cacheVariables": {
         "CMAKE_CXX_STANDARD": "17",
         "CMAKE_CXX_STANDARD_REQUIRED": "ON",
