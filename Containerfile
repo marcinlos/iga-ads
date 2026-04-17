@@ -67,9 +67,12 @@ RUN --mount=type=bind,source=vcpkg.json,target=vcpkg.json \
     --mount=type=bind,source=vcpkg,target=vcpkg \
     vcpkg install && rm -rf vcpkg_installed
 
-COPY . .
-
 # Workaround for docker
 RUN git config --global --add safe.directory /code
 
-RUN prek prepare-hooks
+# Pre-install prek hooks
+RUN --mount=type=bind,source=prek.toml,target=prek.toml \
+    # prek needs a git repo \
+    git init -b main . && \
+    prek prepare-hooks && \
+    rm -rf .git
