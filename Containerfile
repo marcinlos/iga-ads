@@ -11,6 +11,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     apt-get install -y --no-install-recommends \
         software-properties-common \
         pkg-config \
+        libicu-dev \
         zip \
         unzip \
         git \
