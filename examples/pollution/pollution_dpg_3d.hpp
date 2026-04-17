@@ -196,7 +196,7 @@ private:
 
         double r2 = std::min((dx * dx + dy * dy + dz * dz), 1.0);
         return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);  // g/m^3
-    };
+    }
 
     void prepare_implicit_matrices() {
         // MUVx.zero();

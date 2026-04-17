@@ -89,7 +89,7 @@ public:
         initial state of the gas saturation - zero for now
         */
         return 0;
-    };
+    }
 
     double source_g(double x, double y, double t) {
         double dx = x - qg_x;

@@ -84,7 +84,7 @@ public:
         return 0.5 * ((r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1));
         */
         return 0;
-    };
+    }
 
     double source_g(double x, double y, double t) {
         double dx = x - qg_x;

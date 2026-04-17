@@ -25,7 +25,7 @@ public:
     , u_prev{shape()}
     , output{x.B, y.B, 200} { }
 
-    double init_state(double x, double y) { return fi(x, y) * sc(0); };
+    double init_state(double x, double y) { return fi(x, y) * sc(0); }
 
 private:
     void solve(vector_type& v) {

@@ -334,7 +334,7 @@ public:
                      + pow(x, 4) * (12 + (yy - y));
 
         return -424 + 156 * e + (yy - y) * (-456 + ex * a);
-    };
+    }
 
     auto vx(point p) const noexcept -> double {
         using std::exp;

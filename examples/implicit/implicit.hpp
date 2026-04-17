@@ -40,7 +40,7 @@ public:
         double dy = y - 0.5;
         double r2 = std::min(12 * (dx * dx + dy * dy), 1.0);
         return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
-    };
+    }
 
 private:
     void matrix(lin::band_matrix& K, const basis_data& d, double h) {

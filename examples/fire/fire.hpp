@@ -84,7 +84,7 @@ public:
         double r = 10;
         double R = 30;
         return T0 + Tcomb * bump(r, R, x, y);
-    };
+    }
 
 private:
     void before() override {

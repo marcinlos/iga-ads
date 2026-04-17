@@ -15,7 +15,7 @@ using point_type = std::array<double, 3>;
 template <typename Self>
 class maxwell_problem {
 private:
-    auto self() const -> Self const& { return static_cast<Self const&>(*this); };
+    auto self() const -> Self const& { return static_cast<Self const&>(*this); }
 
 public:
     auto E1_at(double t) const {

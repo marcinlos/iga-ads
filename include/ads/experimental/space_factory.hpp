@@ -22,7 +22,7 @@ public:
         return space;
     }
 
-    auto dim() const -> ads::global_dof { return offset_; };
+    auto dim() const -> ads::global_dof { return offset_; }
 };
 
 }  // namespace ads

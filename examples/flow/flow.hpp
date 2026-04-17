@@ -38,7 +38,7 @@ public:
         double r = 0.1;
         double R = 0.5;
         return ads::bump(r, R, x, y, z);
-    };
+    }
 
 private:
     void before() override {

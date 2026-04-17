@@ -154,7 +154,7 @@ private:
         double r2 = std::min((dx * dx + dy * dy), 1.0);
         return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
         // return 0;
-    };
+    }
 
     void before() override {
         prepare_matrices();

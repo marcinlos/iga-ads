@@ -34,7 +34,7 @@ public:
         // double r2 = std::min(8 * (dx * dx + dy * dy), 1.0);
         // return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
         return 0;
-    };
+    }
 
 private:
     void solve(vector_type& v) {

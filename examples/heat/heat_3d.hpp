@@ -25,7 +25,7 @@ public:
         double dz = z - 0.5;
         double r2 = std::min(8 * (dx * dx + dy * dy + dz * dz), 1.0);
         return (r2 - 1) * (r2 - 1) * (r2 + 1) * (r2 + 1);
-    };
+    }
 
 private:
     void before() override {
