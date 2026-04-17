@@ -1,6 +1,7 @@
 FROM ubuntu:25.10
 
 WORKDIR /code
+ENV BUILD_DIR=/build
 
 ENV DEBIAN_FRONTEND=noninteractive
 
