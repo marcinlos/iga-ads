@@ -5,6 +5,7 @@
 
 # Build directory
 /*build*/
+/out/
 
 # IDE files
 /.idea/
