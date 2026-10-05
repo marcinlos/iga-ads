@@ -69,6 +69,7 @@ private:
     };
 
     vector_type u;
+    vector_type u_prev;
     residuum r;
     vector_type solver_buffer;
     std::vector<double> full_rhs;
@@ -120,6 +121,7 @@ public:
     , AUUx{Ux.dofs(), Ux.dofs()}
     , AUUy{Uy.dofs(), Uy.dofs()}
     , u{{Ux.dofs(), Uy.dofs()}}
+    , u_prev{{Ux.dofs(), Uy.dofs()}}
     , r{vector_type{{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy}
     , solver_buffer{{Ux.dofs(), Uy.dofs()}}
     , full_rhs(Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs())
@@ -315,22 +317,36 @@ private:
         swap(fuel, fuel_prev);
     }
 
-    void copy_solution(const vector_view& u_rhs, const vector_view& r_rhs, vector_type& u) {
-        for (auto i = 0; i < Ux.dofs(); ++i) {
-            for (auto j = 0; j < Uy.dofs(); ++j) {
-                u(i, j) = u_rhs(i, j);
-            }
-        }
-        r = residuum{vector_type{{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy};
+    template <typename Src, typename Dest>
+    void copy_vector(const Src& src, Dest& dest, const dimension& Vx, const dimension& Vy) const {
         for (auto i = 0; i < Vx.dofs(); ++i) {
             for (auto j = 0; j < Vy.dofs(); ++j) {
-                r.data(i, j) = r_rhs(i, j);
+                dest(i, j) = src(i, j);
             }
         }
     }
 
+    void copy_solution(const vector_view& u_rhs, const vector_view& r_rhs, vector_type& u) {
+        copy_vector(u_rhs, u, Ux, Uy);
+
+        r = residuum{vector_type{{Vx.dofs(), Vy.dofs()}}, &Vx, &Vy};
+        copy_vector(r_rhs, r.data, Vx, Vy);
+    }
+
+    vector_type compute_predictor() const {
+        vector_type u_pred{{Ux.dofs(), Uy.dofs()}};
+
+        for (auto i = 0; i < Ux.dofs(); ++i) {
+            for (auto j = 0; j < Uy.dofs(); ++j) {
+                u_pred(i, j) = 1.5 * u(i, j) - 0.5 * u_prev(i, j);
+            }
+        }
+
+        return u_pred;
+    }
+
     template <typename Fun>
-    void substep(vector_type& u, bool x_refine, bool y_refine, double Lx_lhs, double Ly_lhs,
+    void substep(vector_type& u, const vector_type& u_pred, bool x_refine, bool y_refine, double Lx_lhs, double Ly_lhs,
                  double Lx_rhs, double Ly_rhs, double dt, Fun&& f) {
         dimension& Vx = x_refine ? this->Vx : Ux;
         dimension& Vy = y_refine ? this->Vy : Uy;
@@ -342,22 +358,23 @@ private:
         vector_view u_rhs{full_rhs.data() + r_rhs.size(), {Ux.dofs(), Uy.dofs()}};
 
         std::fill(begin(full_rhs), end(full_rhs), 0);
-        compute_rhs(Lx_rhs, Ly_rhs, Vx, Vy, r_rhs, u_rhs, dt, std::forward<Fun>(f));
+        compute_rhs(u_pred, Lx_rhs, Ly_rhs, Vx, Vy, r_rhs, u_rhs, dt, std::forward<Fun>(f));
 
         int size = Vx.dofs() * Vy.dofs() + Ux.dofs() * Uy.dofs();
         mumps::problem problem(full_rhs.data(), size);
         assemble_problem(problem, Lx_lhs, Ly_lhs, sx, sy, Vx, Vy, matrices(x_refine, y_refine));
         solver.solve(problem);
 
+        copy_vector(u, u_prev, Ux, Uy);
         copy_solution(u_rhs, r_rhs, u);
     }
 
     template <typename Fun>
-    void fast_substep(vector_type& u, bool x_refine, bool y_refine, double Lx_lhs, double Ly_lhs,
+    void fast_substep(vector_type& u, const vector_type& u_pred, bool x_refine, bool y_refine, double Lx_lhs, double Ly_lhs,
                       double Lx_rhs, double Ly_rhs, double dt, Fun&& f) {
         vector_type r_rhs{{Ux.dofs(), Uy.dofs()}};
         vector_type u_rhs{{Ux.dofs(), Uy.dofs()}};
-        compute_rhs(Lx_rhs, Ly_rhs, Ux, Uy, r_rhs, u_rhs, dt, std::forward<Fun>(f));
+        compute_rhs(u_pred, Lx_rhs, Ly_rhs, Ux, Uy, r_rhs, u_rhs, dt, std::forward<Fun>(f));
 
         int size = Ux.dofs() * Uy.dofs() + Ux.dofs() * Uy.dofs();
         auto [Ax, Ay] = assemble_problem_ads(Lx_lhs, Ly_lhs);
@@ -368,6 +385,8 @@ private:
         lin::factorize(Ax, ctx_x);
         lin::factorize(Ay, ctx_y);
         ads_solve(r_rhs, solver_buffer, dim_data{Ax, ctx_x}, dim_data{Ay, ctx_y});
+
+        copy_vector(u, u_prev, Ux, Uy);
 
         for (auto i = 0; i < Ux.dofs(); ++i) {
             for (auto j = 0; j < Uy.dofs(); ++j) {
@@ -386,29 +405,31 @@ private:
         };
         auto zero = [&](point_type) { return 0; };
 
+        auto u_pred = compute_predictor();
+
         // clang-format off
         if (method == scheme::FE) {
-            fast_substep(u, true, true, 0, 0, dt, dt, dt, F(t));
+            fast_substep(u, u_pred, true, true, 0, 0, dt, dt, dt, F(t));
         }
         if (method == scheme::BE) {
-            substep(u, true, true, dt, dt, 0, 0, dt, F(t + dt));
+            substep(u, u_pred, true, true, dt, dt, 0, 0, dt, F(t + dt));
         }
         if (method == scheme::CN) {
-            substep(u, true, true,   dt/2, dt/2, -dt/2, -dt/2,   dt, Favg(t, t + dt));
+            substep(u, u_pred, true, true,   dt/2, dt/2, -dt/2, -dt/2,   dt, Favg(t, t + dt));
         }
         if (method == scheme::peaceman_rachford) {
-            fast_substep(u, true, true,   dt/2,    0,     0, -dt/2,   dt/2, F(t + dt/2));
-            fast_substep(u, true, true,      0, dt/2, -dt/2,     0,   dt/2, F(t + dt/2));
+            fast_substep(u, u_pred, true, true,   dt/2,    0,     0, -dt/2,   dt/2, F(t + dt/2));
+            fast_substep(u, u_pred, true, true,      0, dt/2, -dt/2,     0,   dt/2, F(t + dt/2));
         }
         if (method == scheme::strang_BE) {
-            fast_substep(u, false, true,    dt/2,  0,   0, 0,   dt/2, F(t + dt/2));
-            fast_substep(u, true,  false,      0, dt,   0, 0,      0, zero);
-            fast_substep(u, false, true,    dt/2,  0,   0, 0,   dt/2, F(t + dt));
+            fast_substep(u, u_pred, false, true,    dt/2,  0,   0, 0,   dt/2, F(t + dt/2));
+            fast_substep(u, u_pred, true,  false,      0, dt,   0, 0,      0, zero);
+            fast_substep(u, u_pred, false, true,    dt/2,  0,   0, 0,   dt/2, F(t + dt));
         }
         if (method == scheme::strang_CN) {
-            fast_substep(u, false,  true,   dt/4,    0,   -dt/4,     0,   dt/2, Favg(t, t + dt/2));
-            fast_substep(u, true,  false,      0, dt/2,       0, -dt/2,      0, zero);
-            fast_substep(u, false,  true,   dt/4,    0,   -dt/4,     0,   dt/2, Favg(t + dt/2, t + dt));
+            fast_substep(u, u_pred, false,  true,   dt/4,    0,   -dt/4,     0,   dt/2, Favg(t, t + dt/2));
+            fast_substep(u, u_pred, true,  false,      0, dt/2,       0, -dt/2,      0, zero);
+            fast_substep(u, u_pred, false,  true,   dt/4,    0,   -dt/4,     0,   dt/2, Favg(t + dt/2, t + dt));
         }
         // clang-format on
 
@@ -440,7 +461,7 @@ private:
     }
 
     template <typename VecR, typename VecU, typename Fun>
-    void compute_rhs(double cx, double cy, const dimension& Vx, const dimension& Vy, VecR& r_rhs,
+    void compute_rhs(const vector_type& u_pred, double cx, double cy, const dimension& Vx, const dimension& Vy, VecR& r_rhs,
                      VecU& u_rhs, double dt, Fun&& F) {
         auto const ch = params.ch;
         auto const Ar = params.Ar;
@@ -477,6 +498,7 @@ private:
                 auto x = point(e, q);
 
                 value_type T = eval(u, e, q, Ux, Uy);
+                value_type T_pred = eval(u_pred, e, q, Ux, Uy);
                 value_type fuel = eval(fuel_prev, e, q, Ux, Uy);
                 auto const Fx = F(x);
 
@@ -496,11 +518,15 @@ private:
                     double Qw = 0;    // -rho * cw * (bx * T.dx + by * T.dy);
                     double qc = 0;    // -kappa * grad_dot(u, v);
                     double qd = 0.0;  // omitted
-                    double qr = -4 * sigma * eps * delta_x * std::pow(T.val, 3) * grad_dot(T, v);
+                    double qr = -4 * sigma * eps * delta_x * std::pow(T_pred.val, 3) * grad_dot(T, v);
                     double Qconv = xi * (T0 - T.val);
-                    double Qrz = sigma * eps / delta_z * (std::pow(T0, 4) - std::pow(T.val, 4));
+                    double Qrz = sigma * eps / delta_z * (std::pow(T0, 4) - std::pow(T_pred.val, 4));
                     // double rhs = (Rc + Qw + Qconv + Qrz + Fx) * v.val + qc + qd + qr;
-                    double rhs = (Rc + Qconv + Qrz + Fx) * v.val + qr;
+                    // double rhs = (Rc + Qconv + Qrz + Fx) * v.val + qr;
+
+
+                    double rhs = (Qrz + Fx) * v.val + qr;
+                    // double rhs = (Qconv + Fx) * v.val;
 
                     double lv = M + cx * Lx + cy * Ly + dt * inv * rhs;
                     double val = -lv;

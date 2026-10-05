@@ -96,7 +96,10 @@ struct solution {
         double div_qr = -4 * p.sigma * p.eps * p.delta_x * std::pow(T.val, 3) * lap;
         double Qconv = p.xi * (p.T0 - T.val);
         double Qrz = p.sigma * p.eps / p.delta_z * (std::pow(p.T0, 4) - std::pow(T.val, 4));
-        double rhs = Rc + Qconv + Qrz - div_qr;
+        // double rhs = Rc + Qconv + Qrz - div_qr;
+
+        // double rhs = Qconv;
+        double rhs = Qrz - div_qr;
 
         return
             // rho * cp * dT/dt
