@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.18)
+project(heat)
+find_package(ADS 0.1.0 REQUIRED)
+add_executable(heat_1d heat_1d.cpp)
+target_link_libraries(heat_1d PRIVATE ADS::ADS)
